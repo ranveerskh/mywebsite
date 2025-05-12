@@ -1,35 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { MessageSquare, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-
-// Firebase config and initialization
-const firebaseConfig = {
-  apiKey: "AIzaSyArK5kSgnILIoUnAYyH2Rb7yoaxfNvQjvc",
-  authDomain: "mywebsite-da973.firebaseapp.com",
-  projectId: "mywebsite-da973",
-  storageBucket: "mywebsite-da973.firebasestorage.app",
-  messagingSenderId: "255877856824",
-  appId: "1:255877856824:web:31ff30b1368116549670cd"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 export default function HomePage() {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const querySnapshot = await getDocs(collection(db, 'projects'));
-      const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setProjects(items);
-    };
-    fetchProjects();
-  }, []);
+  const projects = [
+    {
+      id: 1,
+      title: 'Restaurant Website',
+      description: 'Modern design with menu and gallery',
+      image: 'https://via.placeholder.com/400x250?text=Restaurant+Site',
+      url: '#'
+    },
+    {
+      id: 2,
+      title: 'Portfolio Website',
+      description: 'Clean personal portfolio with blog',
+      image: 'https://via.placeholder.com/400x250?text=Portfolio+Site',
+      url: '#'
+    },
+    {
+      id: 3,
+      title: 'Business Landing Page',
+      description: 'One-page design with service sections',
+      image: 'https://via.placeholder.com/400x250?text=Business+Site',
+      url: '#'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
@@ -37,7 +33,7 @@ export default function HomePage() {
       <section className="text-center py-16 px-4 bg-gradient-to-r from-blue-100 to-blue-50">
         <h1 className="text-4xl font-bold mb-4">Custom Websites for Your Business</h1>
         <p className="text-lg mb-6">Fast, responsive, and affordable websites with 1-year free maintenance.</p>
-        <Button className="px-6 py-2 text-lg">See My Work</Button>
+        <button className="px-6 py-2 text-lg bg-blue-600 text-white rounded hover:bg-blue-700">See My Work</button>
       </section>
 
       {/* Why Choose Me */}
@@ -66,20 +62,20 @@ export default function HomePage() {
       <section className="px-6 py-12 bg-gray-50">
         <h2 className="text-3xl font-semibold text-center mb-8">Featured Projects</h2>
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {projects.map((project, i) => (
+          {projects.map((project) => (
             <motion.a 
-              key={project.id || i}
+              key={project.id}
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.03 }}
-              className="block rounded-2xl shadow hover:shadow-lg overflow-hidden"
+              className="block rounded-2xl shadow hover:shadow-lg overflow-hidden bg-white"
             >
               <img src={project.image} alt={project.title} className="w-full h-52 object-cover" />
-              <CardContent>
+              <div className="p-4">
                 <h3 className="text-xl font-bold mb-1">{project.title}</h3>
                 <p className="text-sm text-gray-600">{project.description}</p>
-              </CardContent>
+              </div>
             </motion.a>
           ))}
         </div>
@@ -89,7 +85,7 @@ export default function HomePage() {
       <section className="px-6 py-12 max-w-4xl mx-auto">
         <h2 className="text-2xl font-semibold text-center mb-6 flex justify-center items-center gap-2"><Star size={20} /> What Clients Say</h2>
         <div className="bg-white rounded-2xl shadow p-6">
-          <p className="italic text-gray-700 mb-2">\"Ranveer created a website for my small food business and it’s amazing. I started getting more customers right after launch.\"</p>
+          <p className="italic text-gray-700 mb-2">"Ranveer created a website for my small food business and it’s amazing. I started getting more customers right after launch."</p>
           <p className="text-sm font-semibold">– Aman, Owner of Spice Hut</p>
         </div>
       </section>
