@@ -1,0 +1,113 @@
+import React, { useEffect, useState } from 'react';
+import { CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+
+// Firebase config and initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyArK5kSgnILIoUnAYyH2Rb7yoaxfNvQjvc",
+  authDomain: "mywebsite-da973.firebaseapp.com",
+  projectId: "mywebsite-da973",
+  storageBucket: "mywebsite-da973.firebasestorage.app",
+  messagingSenderId: "255877856824",
+  appId: "1:255877856824:web:31ff30b1368116549670cd"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export default function HomePage() {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const querySnapshot = await getDocs(collection(db, 'projects'));
+      const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setProjects(items);
+    };
+    fetchProjects();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-white text-gray-800">
+      {/* Hero Section */}
+      <section className="text-center py-16 px-4 bg-gradient-to-r from-blue-100 to-blue-50">
+        <h1 className="text-4xl font-bold mb-4">Custom Websites for Your Business</h1>
+        <p className="text-lg mb-6">Fast, responsive, and affordable websites with 1-year free maintenance.</p>
+        <Button className="px-6 py-2 text-lg">See My Work</Button>
+      </section>
+
+      {/* Why Choose Me */}
+      <section className="grid md:grid-cols-2 gap-6 px-6 py-12 max-w-5xl mx-auto">
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Why People Trust Me</h2>
+          <ul className="list-disc ml-5 space-y-2">
+            <li>1-Year Free Maintenance</li>
+            <li>Fully Responsive Design</li>
+            <li>Fast Delivery</li>
+            <li>Customizable for Any Business</li>
+          </ul>
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">What You'll Get</h2>
+          <ul className="list-disc ml-5 space-y-2">
+            <li>Modern UI with Tailwind + React</li>
+            <li>WhatsApp & Email Integration</li>
+            <li>SEO Optimized</li>
+            <li>Hosted on Netlify or Firebase</li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Project Catalog */}
+      <section className="px-6 py-12 bg-gray-50">
+        <h2 className="text-3xl font-semibold text-center mb-8">Featured Projects</h2>
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {projects.map((project, i) => (
+            <motion.a 
+              key={project.id || i}
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.03 }}
+              className="block rounded-2xl shadow hover:shadow-lg overflow-hidden"
+            >
+              <img src={project.image} alt={project.title} className="w-full h-52 object-cover" />
+              <CardContent>
+                <h3 className="text-xl font-bold mb-1">{project.title}</h3>
+                <p className="text-sm text-gray-600">{project.description}</p>
+              </CardContent>
+            </motion.a>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="px-6 py-12 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-semibold text-center mb-6 flex justify-center items-center gap-2"><Star size={20} /> What Clients Say</h2>
+        <div className="bg-white rounded-2xl shadow p-6">
+          <p className="italic text-gray-700 mb-2">\"Ranveer created a website for my small food business and it’s amazing. I started getting more customers right after launch.\"</p>
+          <p className="text-sm font-semibold">– Aman, Owner of Spice Hut</p>
+        </div>
+      </section>
+
+      {/* Floating WhatsApp Button */}
+      <a 
+        href="https://wa.me/11234567890?text=Hi%2C%20I%27m%20interested%20in%20a%20website%20for%20my%20business"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg z-50"
+      >
+        <MessageSquare size={24} />
+      </a>
+
+      {/* Footer */}
+      <footer className="text-center text-sm text-gray-500 py-6 border-t mt-12">
+        © {new Date().getFullYear()} Ranveer Singh | Web Designer
+      </footer>
+    </div>
+  );
+}
