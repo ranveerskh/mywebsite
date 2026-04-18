@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Profile</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .wrap {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .topbar h1 {
+      font-size: 28px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn, button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-back {
+      background: #334155;
+      color: #fff;
+    }
+
+    .btn-logout {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      outline: none;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .check-row input {
+      width: auto;
+      transform: scale(1.1);
+    }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .meta-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .meta-item small {
+      display: block;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .meta-item span {
+      font-weight: 700;
+    }
+
+    .save-btn {
+      width: 100%;
+      background: #38bdf8;
+      color: #082f49;
+      font-size: 16px;
+      margin-top: 8px;
+    }
+
+    .save-btn:hover {
+      opacity: 0.95;
+    }
+
+    .message {
+      margin-top: 14px;
+      min-height: 22px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .success {
+      color: #86efac;
+    }
+
+    .error {
+      color: #fda4af;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px 10px;
+      color: #cbd5e1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      .meta-box {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Edit Profile</h1>
+      <div class="top-actions">
+        <a href="feed.html" class="btn btn-back">Back to Feed</a>
+        <button id="logoutBtn" class="btn btn-logout">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="loading" class="loading">Loading profile...</div>
+
+      <div id="profileContent" class="hidden">
+        <h2 class="section-title">Your Profile</h2>
+
+        <div class="meta-box">
+          <div class="meta-item">
+            <small>Email</small>
+            <span id="emailText">-</span>
+          </div>
+          <div class="meta-item">
+            <small>Verified Status</small>
+            <span id="verifiedText">No</span>
+          </div>
+        </div>
+
+        <form id="profileForm">
+          <div class="field">
+            <label for="displayName">Display Name</label>
+            <input type="text" id="displayName" placeholder="Your public profile name" required />
+          </div>
+
+          <div class="field">
+            <label for="city">City</label>
+            <input type="text" id="city" placeholder="Your city" />
+          </div>
+
+          <div class="field">
+            <label for="bio">Bio</label>
+            <textarea id="bio" placeholder="Write a short bio..."></textarea>
+          </div>
+
+          <div class="check-row">
+            <input type="checkbox" id="cityVisible" />
+            <label for="cityVisible" style="margin:0;">Show my city on profile</label>
+          </div>
+
+          <div class="check-row">
+            <input type="checkbox" id="isPrivate" />
+            <label for="isPrivate" style="margin:0;">Make my profile private</label>
+          </div>
+
+          <button type="submit" class="save-btn" id="saveBtn">Save Profile</button>
+          <div id="message" class="message"></div>
+        </form>
+
+        <div class="note">
+          Your real name is not shown here. It stays private for verification/admin use only.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import {
+      onAuthStateChanged,
+      signOut,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const loading = document.getElementById("loading");
+    const profileContent = document.getElementById("profileContent");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profileForm = document.getElementById("profileForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const message = document.getElementById("message");
+
+    const emailText = document.getElementById("emailText");
+    const verifiedText = document.getElementById("verifiedText");
+
+    const displayNameInput = document.getElementById("displayName");
+    const cityInput = document.getElementById("city");
+    const bioInput = document.getElementById("bio");
+    const cityVisibleInput = document.getElementById("cityVisible");
+    const isPrivateInput = document.getElementById("isPrivate");
+
+    let currentUser = null;
+
+    function showMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      emailText.textContent = user.email || "-";
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+
+          displayNameInput.value = data.displayName || user.displayName || "";
+          cityInput.value = data.city || "";
+          bioInput.value = data.bio || "";
+          cityVisibleInput.checked = data.cityVisible || false;
+          isPrivateInput.checked = data.isPrivate || false;
+          verifiedText.textContent = data.isVerified ? "Yes" : "No";
+        } else {
+          displayNameInput.value = user.displayName || "";
+          cityInput.value = "";
+          bioInput.value = "";
+          cityVisibleInput.checked = false;
+          isPrivateInput.checked = false;
+          verifiedText.textContent = "No";
+
+          await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email || "",
+            displayName: user.displayName || "",
+            city: "",
+            bio: "",
+            cityVisible: false,
+            isPrivate: false,
+            isVerified: false,
+            isAdult: true,
+            createdAt: serverTimestamp()
+          }, { merge: true });
+        }
+
+        loading.classList.add("hidden");
+        profileContent.classList.remove("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Error loading profile.";
+      }
+    });
+
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser) return;
+
+      const displayName = displayNameInput.value.trim();
+      const city = cityInput.value.trim();
+      const bio = bioInput.value.trim();
+      const cityVisible = cityVisibleInput.checked;
+      const isPrivate = isPrivateInput.checked;
+
+      if (!displayName) {
+        showMessage("Display name is required.", "error");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+
+        await updateDoc(userRef, {
+          displayName,
+          city,
+          bio,
+          cityVisible,
+          isPrivate,
+          updatedAt: serverTimestamp()
+        });
+
+        await updateProfile(currentUser, {
+          displayName: displayName
+        });
+
+        showMessage("Profile updated successfully.", "success");
+      } catch (error) {
+        console.error(error);
+        showMessage("Could not save profile.", "error");
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Profile";
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error(error);
+        showMessage("Logout failed.", "error");
+      }
+    });
+  </script>
+</body>
+</html>
