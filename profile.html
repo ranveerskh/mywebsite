@@ -20,7 +20,7 @@
     }
 
     .wrap {
-      max-width: 700px;
+      max-width: 760px;
       margin: 0 auto;
     }
 
@@ -148,6 +148,59 @@
       font-weight: 700;
     }
 
+    .photo-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .photo-preview-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .photo-preview {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      object-fit: cover;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .photo-placeholder {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .photo-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .coming-soon-btn {
+      background: #475569;
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
     .save-btn {
       width: 100%;
       background: #38bdf8;
@@ -186,9 +239,16 @@
     }
 
     .note {
-      margin-top: 14px;
+      margin-top: 10px;
       font-size: 12px;
       color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .small-note {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 8px;
       line-height: 1.5;
     }
 
@@ -227,6 +287,28 @@
           <div class="meta-item">
             <small>Verified Status</small>
             <span id="verifiedText">No</span>
+          </div>
+        </div>
+
+        <div class="photo-card">
+          <div class="photo-preview-wrap">
+            <img id="photoPreview" class="photo-preview hidden" alt="Profile Preview" />
+            <div id="photoPlaceholder" class="photo-placeholder">
+              No profile photo yet
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="photoURL">Profile Photo Link</label>
+            <input type="text" id="photoURL" placeholder="Paste direct image link (jpg, png, webp)" />
+            <div class="small-note">
+              Example: https://example.com/photo.jpg
+            </div>
+          </div>
+
+          <div class="photo-actions">
+            <button type="button" id="previewBtn" class="btn btn-back">Preview Link</button>
+            <button type="button" class="btn coming-soon-btn" disabled>Upload Photo Coming Soon</button>
           </div>
         </div>
 
@@ -287,6 +369,7 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const profileForm = document.getElementById("profileForm");
     const saveBtn = document.getElementById("saveBtn");
+    const previewBtn = document.getElementById("previewBtn");
     const message = document.getElementById("message");
 
     const emailText = document.getElementById("emailText");
@@ -297,6 +380,10 @@
     const bioInput = document.getElementById("bio");
     const cityVisibleInput = document.getElementById("cityVisible");
     const isPrivateInput = document.getElementById("isPrivate");
+    const photoURLInput = document.getElementById("photoURL");
+
+    const photoPreview = document.getElementById("photoPreview");
+    const photoPlaceholder = document.getElementById("photoPlaceholder");
 
     let currentUser = null;
 
@@ -304,6 +391,46 @@
       message.textContent = text;
       message.className = `message ${type}`;
     }
+
+    function showPreview(url) {
+      const cleanUrl = (url || "").trim();
+
+      if (!cleanUrl) {
+        photoPreview.classList.add("hidden");
+        photoPreview.removeAttribute("src");
+        photoPlaceholder.classList.remove("hidden");
+        photoPlaceholder.textContent = "No profile photo yet";
+        return;
+      }
+
+      photoPreview.src = cleanUrl;
+      photoPreview.classList.remove("hidden");
+      photoPlaceholder.classList.add("hidden");
+    }
+
+    photoPreview.addEventListener("error", () => {
+      photoPreview.classList.add("hidden");
+      photoPlaceholder.classList.remove("hidden");
+      photoPlaceholder.textContent = "Image could not be loaded";
+    });
+
+    photoPreview.addEventListener("load", () => {
+      photoPreview.classList.remove("hidden");
+      photoPlaceholder.classList.add("hidden");
+    });
+
+    previewBtn.addEventListener("click", () => {
+      const url = photoURLInput.value.trim();
+
+      if (!url) {
+        showMessage("Paste a photo link first.", "error");
+        showPreview("");
+        return;
+      }
+
+      showPreview(url);
+      showMessage("Preview updated.", "success");
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -326,13 +453,17 @@
           bioInput.value = data.bio || "";
           cityVisibleInput.checked = data.cityVisible || false;
           isPrivateInput.checked = data.isPrivate || false;
+          photoURLInput.value = data.photoURL || "";
           verifiedText.textContent = data.isVerified ? "Yes" : "No";
+
+          showPreview(data.photoURL || "");
         } else {
           displayNameInput.value = user.displayName || "";
           cityInput.value = "";
           bioInput.value = "";
           cityVisibleInput.checked = false;
           isPrivateInput.checked = false;
+          photoURLInput.value = "";
           verifiedText.textContent = "No";
 
           await setDoc(userRef, {
@@ -345,8 +476,11 @@
             isPrivate: false,
             isVerified: false,
             isAdult: true,
+            photoURL: "",
             createdAt: serverTimestamp()
           }, { merge: true });
+
+          showPreview("");
         }
 
         loading.classList.add("hidden");
@@ -367,6 +501,7 @@
       const bio = bioInput.value.trim();
       const cityVisible = cityVisibleInput.checked;
       const isPrivate = isPrivateInput.checked;
+      const photoURL = photoURLInput.value.trim();
 
       if (!displayName) {
         showMessage("Display name is required.", "error");
@@ -385,6 +520,7 @@
           bio,
           cityVisible,
           isPrivate,
+          photoURL,
           updatedAt: serverTimestamp()
         });
 
@@ -392,6 +528,7 @@
           displayName: displayName
         });
 
+        showPreview(photoURL);
         showMessage("Profile updated successfully.", "success");
       } catch (error) {
         console.error(error);
