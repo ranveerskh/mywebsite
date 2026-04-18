@@ -3,24 +3,244 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld Feed</title>
+  <title>BareWorld - Feed</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .wrap {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .topbar h1 {
+      font-size: 30px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-profile {
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .btn-logout {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 22px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .loading {
+      text-align: center;
+      color: #cbd5e1;
+      padding: 30px 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .avatar-placeholder {
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      color: #94a3b8;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .profile-main h2 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .bio {
+      margin-top: 10px;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .info-box small {
+      display: block;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .info-box span {
+      font-weight: 700;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .welcome-box {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .welcome-box h3 {
+      margin-bottom: 8px;
+      font-size: 20px;
+    }
+
+    .welcome-box p {
+      color: #dbeafe;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header {
+        align-items: flex-start;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to BareWorld</h1>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>BareWorld</h1>
+      <div class="top-actions">
+        <a href="profile.html" class="btn btn-profile">Edit Profile</a>
+        <button id="logoutBtn" class="btn btn-logout">Logout</button>
+      </div>
+    </div>
 
-  <p id="loading">Loading profile...</p>
+    <div class="card">
+      <div id="loading" class="loading">Loading your profile...</div>
 
-  <div id="profileBox" style="display:none;">
-    <p><strong>Email:</strong> <span id="email"></span></p>
-    <p><strong>Display Name:</strong> <span id="displayName"></span></p>
-    <p><strong>City:</strong> <span id="city"></span></p>
-    <p><strong>Profile Type:</strong> <span id="profileType"></span></p>
-    <p><strong>Verified:</strong> <span id="verified"></span></p>
+      <div id="feedContent" class="hidden">
+        <div class="profile-header">
+          <img id="avatar" class="avatar hidden" alt="Profile Photo" />
+          <div id="avatarPlaceholder" class="avatar-placeholder">No profile photo</div>
 
-    <br>
-    <a href="profile.html">Edit Profile</a>
-    <br><br>
-    <button id="logoutBtn">Logout</button>
+          <div class="profile-main">
+            <h2 id="displayName">Member</h2>
+            <div class="muted" id="email">-</div>
+            <div class="bio" id="bio">No bio added yet.</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="info-box">
+            <small>City</small>
+            <span id="city">Hidden</span>
+          </div>
+
+          <div class="info-box">
+            <small>Profile Type</small>
+            <span id="profileType">Public</span>
+          </div>
+
+          <div class="info-box">
+            <small>Verified</small>
+            <span id="verified">No</span>
+          </div>
+
+          <div class="info-box">
+            <small>User ID</small>
+            <span id="uid">-</span>
+          </div>
+        </div>
+
+        <div class="welcome-box">
+          <h3>Welcome back</h3>
+          <p>
+            Tera account sahi chal reha aa. Hun agge asi posts, nearby members,
+            te events wala system bana sakde haan.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -35,13 +255,41 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
-    const profileBox = document.getElementById("profileBox");
-    const emailEl = document.getElementById("email");
+    const feedContent = document.getElementById("feedContent");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const avatar = document.getElementById("avatar");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+
     const displayNameEl = document.getElementById("displayName");
+    const emailEl = document.getElementById("email");
+    const bioEl = document.getElementById("bio");
     const cityEl = document.getElementById("city");
     const profileTypeEl = document.getElementById("profileType");
     const verifiedEl = document.getElementById("verified");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const uidEl = document.getElementById("uid");
+
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatar.removeAttribute("src");
+        avatarPlaceholder.classList.remove("hidden");
+        avatarPlaceholder.textContent = "No profile photo";
+        return;
+      }
+
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
+
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+      avatarPlaceholder.textContent = "Photo could not be loaded";
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -50,36 +298,46 @@
       }
 
       try {
+        emailEl.textContent = user.email || "-";
+        uidEl.textContent = user.uid || "-";
+
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-        emailEl.textContent = user.email || "";
-        
         if (userSnap.exists()) {
           const data = userSnap.data();
 
-          displayNameEl.textContent = data.displayName || "";
-          cityEl.textContent = data.cityVisible ? (data.city || "") : "Hidden";
+          displayNameEl.textContent = data.displayName || user.displayName || "Member";
+          bioEl.textContent = data.bio?.trim() ? data.bio : "No bio added yet.";
+          cityEl.textContent = data.cityVisible ? (data.city || "Not added") : "Hidden";
           profileTypeEl.textContent = data.isPrivate ? "Private" : "Public";
           verifiedEl.textContent = data.isVerified ? "Yes" : "No";
+
+          showAvatar(data.photoURL || "");
         } else {
-          displayNameEl.textContent = "No profile found";
-          cityEl.textContent = "-";
-          profileTypeEl.textContent = "-";
-          verifiedEl.textContent = "-";
+          displayNameEl.textContent = user.displayName || "Member";
+          bioEl.textContent = "No profile found yet.";
+          cityEl.textContent = "Hidden";
+          profileTypeEl.textContent = "Public";
+          verifiedEl.textContent = "No";
+          showAvatar("");
         }
 
-        loading.style.display = "none";
-        profileBox.style.display = "block";
-      } catch (err) {
-        loading.textContent = "Error loading profile";
-        console.error(err);
+        loading.classList.add("hidden");
+        feedContent.classList.remove("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Error loading profile.";
       }
     });
 
     logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error(error);
+      }
     });
   </script>
 </body>
