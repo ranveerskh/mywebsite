@@ -14,7 +14,7 @@
       padding: 20px;
     }
 
-    .wrap { max-width: 900px; margin: 0 auto; }
+    .wrap { max-width: 980px; margin: 0 auto; }
 
     .topbar {
       display: flex;
@@ -46,6 +46,8 @@
     .btn-feed { background: #38bdf8; color: #082f49; }
     .btn-edit { background: #22c55e; color: #052e16; }
     .btn-nearby { background: #64748b; color: #fff; }
+    .btn-events { background: #f59e0b; color: #3b2200; }
+    .btn-create { background: #a78bfa; color: #1e1b4b; }
 
     .card {
       background: rgba(255,255,255,0.08);
@@ -54,6 +56,7 @@
       padding: 24px;
       backdrop-filter: blur(12px);
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      margin-bottom: 18px;
     }
 
     .loading {
@@ -140,27 +143,110 @@
       word-break: break-word;
     }
 
-    .welcome-box {
-      margin-top: 20px;
-      padding: 18px;
+    .section-title {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .event-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
       border-radius: 18px;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 16px;
     }
 
-    .welcome-box h3 {
-      margin-bottom: 8px;
-      font-size: 20px;
+    .event-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      line-height: 1.4;
     }
 
-    .welcome-box p {
-      color: #dbeafe;
+    .event-meta {
+      display: grid;
+      gap: 7px;
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .event-desc {
+      color: #e2e8f0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-public {
+      background: rgba(56,189,248,0.14);
+      color: #bae6fd;
+      border: 1px solid rgba(56,189,248,0.25);
+    }
+
+    .badge-private {
+      background: rgba(251,191,36,0.14);
+      color: #fde68a;
+      border: 1px solid rgba(251,191,36,0.25);
+    }
+
+    .badge-created {
+      background: rgba(34,197,94,0.14);
+      color: #bbf7d0;
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .empty-box {
+      text-align: center;
+      padding: 26px 10px;
+      color: #94a3b8;
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+    }
+
+    .small-note {
+      margin-top: 18px;
+      color: #94a3b8;
+      font-size: 12px;
       line-height: 1.6;
     }
 
+    @media (max-width: 850px) {
+      .events-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 700px) {
-      .grid { grid-template-columns: 1fr; }
-      .profile-header { align-items: flex-start; }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -172,6 +258,8 @@
         <a href="feed.html" class="btn btn-feed">Feed</a>
         <a href="edit-profile.html" class="btn btn-edit">Edit Profile</a>
         <a href="nearby.html" class="btn btn-nearby">Nearby</a>
+        <a href="events.html" class="btn btn-events">Events</a>
+        <a href="create-event.html" class="btn btn-create">Create Event</a>
       </div>
     </div>
 
@@ -221,14 +309,21 @@
             <span id="photoStatus">No photo</span>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="welcome-box">
-          <h3>Your public profile preview</h3>
-          <p>
-            Eh page show karda aa ke tera profile data kidda lag reha aa.
-            Gender te city sirf odon public mann laye jande ne jadon tu unhan nu visible rakheya hove.
-          </p>
-        </div>
+    <div class="card">
+      <div class="section-title">My Created Events</div>
+      <div id="createdEventsGrid" class="events-grid hidden"></div>
+      <div id="createdEmpty" class="empty-box hidden">You have not created any events yet.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">My Joined Events</div>
+      <div id="joinedEventsGrid" class="events-grid hidden"></div>
+      <div id="joinedEmpty" class="empty-box hidden">You have not joined any events yet.</div>
+      <div class="small-note">
+        Joined events are loaded from the event members list.
       </div>
     </div>
   </div>
@@ -240,7 +335,9 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       doc,
-      getDoc
+      getDoc,
+      collection,
+      getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
@@ -258,6 +355,11 @@
     const verifiedEl = document.getElementById("verified");
     const uidEl = document.getElementById("uid");
     const photoStatusEl = document.getElementById("photoStatus");
+
+    const createdEventsGrid = document.getElementById("createdEventsGrid");
+    const createdEmpty = document.getElementById("createdEmpty");
+    const joinedEventsGrid = document.getElementById("joinedEventsGrid");
+    const joinedEmpty = document.getElementById("joinedEmpty");
 
     function showAvatar(url) {
       const cleanUrl = (url || "").trim();
@@ -298,6 +400,82 @@
       return map[gender] || "Not added";
     }
 
+    function renderEvents(list, container, emptyEl, typeLabel) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(event => {
+        const card = document.createElement("div");
+        card.className = "event-card";
+
+        card.innerHTML = `
+          <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
+
+          <div class="badge-row">
+            <span class="badge ${event.visibility === "private" ? "badge-private" : "badge-public"}">
+              ${event.visibility === "private" ? "Private" : "Public"}
+            </span>
+            <span class="badge badge-created">${typeLabel}</span>
+          </div>
+
+          <div class="event-meta">
+            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
+            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
+          </div>
+
+          <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    async function loadEventsForUser(uid) {
+      const eventsSnap = await getDocs(collection(db, "events"));
+      const allEvents = eventsSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+
+      const createdEvents = allEvents.filter(event => event.creatorId === uid);
+
+      const joinedChecks = await Promise.all(
+        allEvents.map(async (event) => {
+          if (event.creatorId === uid) return null;
+
+          try {
+            const joinRef = doc(db, "events", event.id, "members", uid);
+            const joinSnap = await getDoc(joinRef);
+            return joinSnap.exists() ? event : null;
+          } catch (error) {
+            console.error("Join check error:", error);
+            return null;
+          }
+        })
+      );
+
+      const joinedEvents = joinedChecks.filter(Boolean);
+
+      renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
+      renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -331,6 +509,8 @@
           verifiedEl.textContent = "No";
           showAvatar("");
         }
+
+        await loadEventsForUser(user.uid);
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
