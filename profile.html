@@ -3,407 +3,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - My Profile</title>
+  <title>BareWorld - Profile</title>
   <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-      font-family:Arial,sans-serif;
-    }
-
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
       --bg:#0b1020;
       --card:#121931;
-      --card-soft:#161f3d;
-      --line:rgba(255,255,255,0.08);
-      --text:#ffffff;
+      --soft:#161f3d;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
-      --red:#ff5d73;
       --purple:#a78bfa;
     }
-
     body{
-      background:linear-gradient(180deg,#070b16 0%, #0d1326 100%);
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
       color:var(--text);
       min-height:100vh;
       padding:14px 14px 92px;
     }
-
-    .app{
-      max-width:720px;
-      margin:0 auto;
-    }
-
+    .app{max-width:760px;margin:0 auto}
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:30;
+      position:sticky;top:0;z-index:30;
       backdrop-filter:blur(14px);
-      background:rgba(11,16,32,0.82);
-      border:1px solid rgba(255,255,255,0.04);
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
       border-radius:18px;
       padding:12px 14px;
       margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
     }
-
-    .brand-wrap{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-
-    .brand{
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-
-    .brand-sub{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .top-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
     .chip-btn{
-      border:none;
-      background:var(--card-soft);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:700;
-      cursor:pointer;
-      border:1px solid var(--line);
+      border:none;background:var(--soft);color:#fff;border-radius:12px;
+      padding:10px 12px;text-decoration:none;font-size:13px;font-weight:700;
+      cursor:pointer;border:1px solid var(--line);display:inline-block;
     }
-
     .panel{
-      background:rgba(18,25,49,0.88);
+      background:rgba(18,25,49,.88);
       border:1px solid var(--line);
       border-radius:22px;
       padding:16px;
       margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.18);
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
     }
+    .loading{text-align:center;color:var(--muted);padding:28px 10px}
+    .hidden{display:none!important}
 
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:28px 10px;
-    }
-
-    .hidden{
-      display:none !important;
-    }
-
-    .profile-header{
-      display:flex;
+    .profile-head{
+      display:grid;
+      grid-template-columns:92px 1fr;
       gap:16px;
-      align-items:flex-start;
-      margin-bottom:16px;
-      flex-wrap:wrap;
+      align-items:start;
     }
-
     .avatar{
-      width:96px;
-      height:96px;
-      border-radius:50%;
-      object-fit:cover;
-      border:1px solid rgba(255,255,255,0.10);
-      background:#1b2445;
-      flex-shrink:0;
+      width:92px;height:92px;border-radius:50%;object-fit:cover;
+      background:#1b2445;border:1px solid rgba(255,255,255,.1);
     }
-
     .avatar-placeholder{
-      width:96px;
-      height:96px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:10px;
-      background:#1b2445;
-      border:1px solid rgba(255,255,255,0.10);
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-      flex-shrink:0;
+      width:92px;height:92px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      padding:8px;background:#1b2445;border:1px solid rgba(255,255,255,.1);
+      color:var(--muted);font-size:12px;line-height:1.3;
     }
-
-    .profile-main{
-      flex:1;
-      min-width:220px;
+    .name-row{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      margin-bottom:10px;
     }
-
-    .profile-main h2{
-      font-size:24px;
-      margin-bottom:6px;
-      line-height:1.2;
-    }
-
-    .subtext{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-      margin-bottom:8px;
-      word-break:break-word;
-    }
-
+    .display-name{font-size:24px;font-weight:800;line-height:1.2}
     .bio{
-      color:#e8eeff;
-      line-height:1.7;
-      font-size:14px;
-      white-space:pre-wrap;
-      word-break:break-word;
+      color:#e8eeff;line-height:1.7;font-size:14px;
+      white-space:pre-wrap;word-break:break-word;margin-top:8px;
+    }
+    .action-row{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;
+    }
+    .action-btn{
+      border:none;border-radius:12px;padding:10px 14px;
+      font-size:13px;font-weight:800;text-decoration:none;display:inline-block;cursor:pointer;
+    }
+    .btn-edit{background:rgba(76,201,255,.14);color:#d8f7ff}
+    .btn-settings{background:rgba(167,139,250,.14);color:#e8defd}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:16px;
+    }
+    .stat{
+      background:#0f1630;border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;
+    }
+    .stat-value{font-size:18px;font-weight:800;margin-bottom:4px}
+    .stat-label{font-size:12px;color:var(--muted);line-height:1.4}
+
+    .tabs{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px;
+    }
+    .tab-btn{
+      border:none;background:#0f1630;color:#c9d5ff;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:12px 10px;font-weight:800;font-size:13px;cursor:pointer;
+    }
+    .tab-btn.active{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
     }
 
-    .stats-grid{
+    .posts-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .stat-card{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:16px;
-      padding:14px 10px;
-      text-align:center;
-    }
-
-    .stat-value{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:4px;
-    }
-
-    .stat-label{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-top:14px;
-    }
-
-    .info-box{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .info-box small{
-      display:block;
-      color:var(--muted);
-      margin-bottom:8px;
-      font-size:12px;
-    }
-
-    .info-box span{
-      color:#fff;
-      font-size:14px;
-      font-weight:700;
-      word-break:break-word;
-      line-height:1.5;
-    }
-
-    .section-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:12px;
-    }
-
-    .section-title{
-      font-size:20px;
-      font-weight:800;
-    }
-
-    .section-note{
-      color:var(--muted);
-      font-size:12px;
-    }
-
-    .events-grid{
-      display:grid;
-      gap:12px;
-    }
-
-    .event-card{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:18px;
-      padding:14px;
-    }
-
-    .event-title{
-      font-size:17px;
-      font-weight:800;
-      margin-bottom:10px;
-      line-height:1.4;
-    }
-
-    .badge-row{
-      display:flex;
       gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
     }
-
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-    }
-
-    .badge-public{
-      background:rgba(76,201,255,0.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,0.20);
-    }
-
-    .badge-private{
-      background:rgba(245,185,66,0.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,0.20);
-    }
-
-    .badge-created{
-      background:rgba(61,220,132,0.14);
-      color:#c9f7dd;
-      border:1px solid rgba(61,220,132,0.20);
-    }
-
-    .badge-joined{
-      background:rgba(167,139,250,0.14);
-      color:#e8defd;
-      border:1px solid rgba(167,139,250,0.20);
-    }
-
-    .event-meta{
-      display:grid;
-      gap:6px;
-      color:#d7def5;
-      font-size:13px;
-      line-height:1.6;
-      margin-bottom:10px;
-    }
-
-    .event-desc{
-      color:#e8eeff;
-      line-height:1.6;
-      font-size:14px;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .empty-box{
-      text-align:center;
-      padding:24px 10px;
-      color:var(--muted);
-      background:#0f1630;
+    .post-tile{
+      aspect-ratio:1/1;
       border-radius:16px;
-      border:1px dashed rgba(255,255,255,0.08);
+      overflow:hidden;
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      position:relative;
+    }
+    .post-tile img{
+      width:100%;height:100%;object-fit:cover;display:block;
+    }
+    .post-fallback{
+      width:100%;height:100%;padding:10px;
+      display:flex;align-items:flex-end;
+      color:#e8eeff;font-size:12px;line-height:1.5;
+      background:linear-gradient(180deg,#19244a,#0f1630);
+    }
+
+    .events-grid{display:grid;gap:12px}
+    .event-card{
+      background:#0f1630;border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:14px;
+    }
+    .event-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
+    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;
+      font-size:12px;font-weight:700;
+    }
+    .badge-public{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .badge-created{background:rgba(61,220,132,.14);color:#c9f7dd;border:1px solid rgba(61,220,132,.20)}
+    .badge-joined{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+    .event-meta{display:grid;gap:6px;color:#d7def5;font-size:13px;line-height:1.6;margin-bottom:10px}
+    .event-desc{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word}
+
+    .network-section{margin-bottom:18px}
+    .network-title{font-size:16px;font-weight:800;margin-bottom:10px}
+    .network-list{display:grid;gap:10px}
+    .person-card{
+      background:#0f1630;border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center;
+    }
+    .person-avatar,.person-avatar-placeholder{
+      width:52px;height:52px;border-radius:50%;flex-shrink:0;
+      border:1px solid rgba(255,255,255,.08);background:#1b2445;
+    }
+    .person-avatar{object-fit:cover}
+    .person-avatar-placeholder{
+      display:flex;align-items:center;justify-content:center;
+      color:var(--muted);font-size:10px;text-align:center;padding:6px;
+    }
+    .person-body{min-width:0;flex:1}
+    .person-name{font-size:15px;font-weight:800;line-height:1.3}
+    .person-name a{color:#fff;text-decoration:none}
+    .person-name a:hover{text-decoration:underline}
+    .person-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-top:3px}
+    .empty-box{
+      text-align:center;padding:24px 10px;color:var(--muted);
+      background:#0f1630;border-radius:16px;border:1px dashed rgba(255,255,255,.08);
     }
 
     .bottom-nav{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:12px;
-      width:min(720px, calc(100% - 20px));
-      background:rgba(12,18,35,0.92);
-      border:1px solid rgba(255,255,255,0.08);
+      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;
+      width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);
+      border:1px solid rgba(255,255,255,.08);
       backdrop-filter:blur(18px);
-      border-radius:20px;
-      padding:8px;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:8px;
-      z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,0.25);
+      border-radius:20px;padding:8px;
+      display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+      z-index:50;box-shadow:0 20px 40px rgba(0,0,0,.25);
     }
-
     .nav-link{
-      text-decoration:none;
-      color:#b9c4e3;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      padding:10px 6px;
-      border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      text-decoration:none;color:#b9c4e3;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;
+      font-size:11px;font-weight:700;min-height:58px;
     }
-
-    .nav-link .icon{
-      font-size:18px;
-      line-height:1;
-    }
-
-    .nav-link.active{
-      background:rgba(76,201,255,0.14);
-      color:#d8f7ff;
-    }
+    .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{background:rgba(76,201,255,.14);color:#d8f7ff}
 
     @media (max-width:700px){
-      body{
-        padding:12px 12px 92px;
-      }
-
-      .topbar{
-        padding:10px 12px;
-      }
-
-      .brand{
-        font-size:20px;
-      }
-
-      .chip-btn{
-        padding:9px 10px;
-        font-size:12px;
-      }
-
-      .grid{
-        grid-template-columns:1fr;
-      }
-
-      .stats-grid{
-        grid-template-columns:1fr 1fr 1fr;
-      }
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .chip-btn{padding:9px 10px;font-size:12px}
+      .stats{grid-template-columns:repeat(4,1fr)}
+      .profile-head{grid-template-columns:78px 1fr}
+      .avatar,.avatar-placeholder{width:78px;height:78px}
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="brand-wrap">
+      <div>
         <div class="brand">BareWorld</div>
         <div class="brand-sub">My profile</div>
       </div>
@@ -415,87 +226,93 @@
     </div>
 
     <div class="panel">
-      <div id="loading" class="loading">Loading your profile...</div>
+      <div id="loading" class="loading">Loading profile...</div>
 
       <div id="content" class="hidden">
-        <div class="profile-header">
+        <div class="profile-head">
           <img id="avatar" class="avatar hidden" alt="Profile Photo" />
-          <div id="avatarPlaceholder" class="avatar-placeholder">No profile photo</div>
+          <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-          <div class="profile-main">
-            <h2 id="displayName">Member</h2>
-            <div class="subtext" id="email">-</div>
+          <div>
+            <div class="name-row">
+              <div class="display-name" id="displayName">Member</div>
+            </div>
+
             <div class="bio" id="bio">No bio added yet.</div>
+
+            <div class="action-row">
+              <a href="edit-profile.html" class="action-btn btn-edit">Edit Profile</a>
+              <a href="settings.html" class="action-btn btn-settings">Settings</a>
+            </div>
           </div>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-value" id="createdEventsCount">0</div>
-            <div class="stat-label">Created Events</div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="postsCount">0</div>
+            <div class="stat-label">Posts</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" id="joinedEventsCount">0</div>
-            <div class="stat-label">Joined Events</div>
+          <div class="stat">
+            <div class="stat-value" id="followersCount">0</div>
+            <div class="stat-label">Followers</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" id="photoStatusShort">No</div>
-            <div class="stat-label">Photo</div>
+          <div class="stat">
+            <div class="stat-value" id="followingCount">0</div>
+            <div class="stat-label">Following</div>
           </div>
-        </div>
-
-        <div class="grid">
-          <div class="info-box">
-            <small>City</small>
-            <span id="city">Hidden</span>
-          </div>
-
-          <div class="info-box">
-            <small>Gender</small>
-            <span id="gender">Hidden</span>
-          </div>
-
-          <div class="info-box">
-            <small>Profile Type</small>
-            <span id="profileType">Public</span>
-          </div>
-
-          <div class="info-box">
-            <small>Verified</small>
-            <span id="verified">No</span>
-          </div>
-
-          <div class="info-box">
-            <small>User ID</small>
-            <span id="uid">-</span>
-          </div>
-
-          <div class="info-box">
-            <small>Photo Status</small>
-            <span id="photoStatus">No photo</span>
+          <div class="stat">
+            <div class="stat-value" id="friendsCount">0</div>
+            <div class="stat-label">Friends</div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="section-head">
-        <div class="section-title">My Created Events</div>
-        <div class="section-note">Events you made</div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="postsTab">Posts</button>
+        <button class="tab-btn" data-tab="eventsTab">Events</button>
+        <button class="tab-btn" data-tab="networkTab">Network</button>
       </div>
-
-      <div id="createdEventsGrid" class="events-grid hidden"></div>
-      <div id="createdEmpty" class="empty-box hidden">You have not created any events yet.</div>
     </div>
 
-    <div class="panel">
-      <div class="section-head">
-        <div class="section-title">My Joined Events</div>
-        <div class="section-note">Events you joined</div>
+    <div id="postsTab" class="panel">
+      <div id="postsGrid" class="posts-grid hidden"></div>
+      <div id="postsEmpty" class="empty-box hidden">No posts yet.</div>
+    </div>
+
+    <div id="eventsTab" class="panel hidden">
+      <div class="network-section">
+        <div class="network-title">Created Events</div>
+        <div id="createdEventsGrid" class="events-grid hidden"></div>
+        <div id="createdEmpty" class="empty-box hidden">No created events yet.</div>
       </div>
 
-      <div id="joinedEventsGrid" class="events-grid hidden"></div>
-      <div id="joinedEmpty" class="empty-box hidden">You have not joined any events yet.</div>
+      <div class="network-section">
+        <div class="network-title">Joined Events</div>
+        <div id="joinedEventsGrid" class="events-grid hidden"></div>
+        <div id="joinedEmpty" class="empty-box hidden">No joined events yet.</div>
+      </div>
+    </div>
+
+    <div id="networkTab" class="panel hidden">
+      <div class="network-section">
+        <div class="network-title">Followers</div>
+        <div id="followersList" class="network-list hidden"></div>
+        <div id="followersEmpty" class="empty-box hidden">No followers yet.</div>
+      </div>
+
+      <div class="network-section">
+        <div class="network-title">Following</div>
+        <div id="followingList" class="network-list hidden"></div>
+        <div id="followingEmpty" class="empty-box hidden">Not following anyone yet.</div>
+      </div>
+
+      <div class="network-section">
+        <div class="network-title">Friends</div>
+        <div id="friendsList" class="network-list hidden"></div>
+        <div id="friendsEmpty" class="empty-box hidden">No mutual friends yet.</div>
+      </div>
     </div>
   </div>
 
@@ -534,75 +351,84 @@
 
     const loading = document.getElementById("loading");
     const content = document.getElementById("content");
-
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
-
     const displayNameEl = document.getElementById("displayName");
-    const emailEl = document.getElementById("email");
     const bioEl = document.getElementById("bio");
-    const cityEl = document.getElementById("city");
-    const genderEl = document.getElementById("gender");
-    const profileTypeEl = document.getElementById("profileType");
-    const verifiedEl = document.getElementById("verified");
-    const uidEl = document.getElementById("uid");
-    const photoStatusEl = document.getElementById("photoStatus");
-    const photoStatusShortEl = document.getElementById("photoStatusShort");
+
+    const postsCountEl = document.getElementById("postsCount");
+    const followersCountEl = document.getElementById("followersCount");
+    const followingCountEl = document.getElementById("followingCount");
+    const friendsCountEl = document.getElementById("friendsCount");
+
+    const postsGrid = document.getElementById("postsGrid");
+    const postsEmpty = document.getElementById("postsEmpty");
 
     const createdEventsGrid = document.getElementById("createdEventsGrid");
     const createdEmpty = document.getElementById("createdEmpty");
     const joinedEventsGrid = document.getElementById("joinedEventsGrid");
     const joinedEmpty = document.getElementById("joinedEmpty");
 
-    const createdEventsCountEl = document.getElementById("createdEventsCount");
-    const joinedEventsCountEl = document.getElementById("joinedEventsCount");
-
-    function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
-
-      if (!cleanUrl) {
-        avatar.classList.add("hidden");
-        avatar.removeAttribute("src");
-        avatarPlaceholder.classList.remove("hidden");
-        photoStatusEl.textContent = "No photo";
-        photoStatusShortEl.textContent = "No";
-        return;
-      }
-
-      avatar.src = cleanUrl;
-      avatar.classList.remove("hidden");
-      avatarPlaceholder.classList.add("hidden");
-      photoStatusEl.textContent = "Photo added";
-      photoStatusShortEl.textContent = "Yes";
-    }
-
-    avatar.addEventListener("error", () => {
-      avatar.classList.add("hidden");
-      avatarPlaceholder.classList.remove("hidden");
-      photoStatusEl.textContent = "Photo could not load";
-      photoStatusShortEl.textContent = "No";
-    });
-
-    function genderLabel(gender, custom) {
-      const map = {
-        male: "Male",
-        female: "Female",
-        non_binary: "Non-binary",
-        trans_man: "Trans Man",
-        trans_woman: "Trans Woman",
-        genderqueer: "Genderqueer",
-        agender: "Agender",
-        prefer_not_to_say: "Prefer not to say",
-        self_describe: custom || "Self-described"
-      };
-
-      return map[gender] || "Not added";
-    }
+    const followersList = document.getElementById("followersList");
+    const followersEmpty = document.getElementById("followersEmpty");
+    const followingList = document.getElementById("followingList");
+    const followingEmpty = document.getElementById("followingEmpty");
+    const friendsList = document.getElementById("friendsList");
+    const friendsEmpty = document.getElementById("friendsEmpty");
 
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text || "";
       return div.innerHTML;
+    }
+
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatar.removeAttribute("src");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
+
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    function renderPosts(posts) {
+      postsGrid.innerHTML = "";
+      postsCountEl.textContent = String(posts.length);
+
+      if (!posts.length) {
+        postsGrid.classList.add("hidden");
+        postsEmpty.classList.remove("hidden");
+        return;
+      }
+
+      postsEmpty.classList.add("hidden");
+      postsGrid.classList.remove("hidden");
+
+      posts.forEach(post => {
+        const tile = document.createElement("div");
+        tile.className = "post-tile";
+
+        if (post.imageURL) {
+          tile.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Post image">`;
+          const img = tile.querySelector("img");
+          img.addEventListener("error", () => {
+            tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+          });
+        } else {
+          tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+        }
+
+        postsGrid.appendChild(tile);
+      });
     }
 
     function renderEvents(list, container, emptyEl, typeLabel) {
@@ -645,38 +471,124 @@
       });
     }
 
-    async function loadEventsForUser(uid) {
-      const eventsSnap = await getDocs(collection(db, "events"));
-      const allEvents = eventsSnap.docs.map(d => ({
-        id: d.id,
-        ...d.data()
-      }));
+    function renderPeople(ids, profilesMap, listEl, emptyEl, emptyText) {
+      listEl.innerHTML = "";
 
-      const createdEvents = allEvents.filter(event => event.creatorId === uid);
+      if (!ids.length) {
+        emptyEl.textContent = emptyText;
+        listEl.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      listEl.classList.remove("hidden");
+
+      ids.forEach(uid => {
+        const p = profilesMap.get(uid) || {};
+        const card = document.createElement("div");
+        card.className = "person-card";
+
+        const avatarHtml = p.photoURL
+          ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
+          : `<div class="person-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="person-body">
+            <div class="person-name">
+              <a href="member.html?uid=${encodeURIComponent(uid)}">
+                ${escapeHtml(p.displayName || "Member")}
+              </a>
+            </div>
+            <div class="person-sub">${escapeHtml(p.bio || "")}</div>
+          </div>
+        `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+        }
+
+        listEl.appendChild(card);
+      });
+    }
+
+    async function loadEverything(uid) {
+      const [userSnap, postsSnap, eventsSnap, followsSnap, publicProfilesSnap] = await Promise.all([
+        getDoc(doc(db, "users", uid)),
+        getDocs(collection(db, "posts")),
+        getDocs(collection(db, "events")),
+        getDocs(collection(db, "follows")),
+        getDocs(collection(db, "publicProfiles"))
+      ]);
+
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      displayNameEl.textContent = userData.displayName || "Member";
+      bioEl.textContent = userData.bio?.trim() ? userData.bio : "No bio added yet.";
+      showAvatar(userData.photoURL || "");
+
+      const allPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === uid);
+      renderPosts(allPosts);
+
+      const allEvents = eventsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const createdEvents = allEvents.filter(e => e.creatorId === uid);
 
       const joinedChecks = await Promise.all(
         allEvents.map(async (event) => {
           if (event.creatorId === uid) return null;
-
           try {
-            const joinRef = doc(db, "events", event.id, "members", uid);
-            const joinSnap = await getDoc(joinRef);
+            const joinSnap = await getDoc(doc(db, "events", event.id, "members", uid));
             return joinSnap.exists() ? event : null;
-          } catch (error) {
-            console.error("Join check error:", error);
+          } catch {
             return null;
           }
         })
       );
-
       const joinedEvents = joinedChecks.filter(Boolean);
-
-      createdEventsCountEl.textContent = String(createdEvents.length);
-      joinedEventsCountEl.textContent = String(joinedEvents.length);
 
       renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
       renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
+
+      const follows = followsSnap.docs.map(d => d.data());
+      const followers = follows.filter(f => f.followingId === uid).map(f => f.followerId);
+      const following = follows.filter(f => f.followerId === uid).map(f => f.followingId);
+
+      const followingSet = new Set(following);
+      const friends = followers.filter(id => followingSet.has(id));
+
+      followersCountEl.textContent = String(followers.length);
+      followingCountEl.textContent = String(following.length);
+      friendsCountEl.textContent = String(friends.length);
+
+      const profilesMap = new Map();
+      publicProfilesSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        profilesMap.set(data.uid, data);
+      });
+
+      renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
+      renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
+      renderPeople(friends, profilesMap, friendsList, friendsEmpty, "No mutual friends yet.");
+
+      loading.classList.add("hidden");
+      content.classList.remove("hidden");
     }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        document.getElementById("postsTab").classList.add("hidden");
+        document.getElementById("eventsTab").classList.add("hidden");
+        document.getElementById("networkTab").classList.add("hidden");
+
+        document.getElementById(btn.dataset.tab).classList.remove("hidden");
+      });
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -685,37 +597,7 @@
       }
 
       try {
-        emailEl.textContent = user.email || "-";
-        uidEl.textContent = user.uid || "-";
-
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-
-          displayNameEl.textContent = data.displayName || user.displayName || "Member";
-          bioEl.textContent = data.bio && data.bio.trim() ? data.bio : "No bio added yet.";
-          cityEl.textContent = data.cityVisible ? (data.city || "Not added") : "Hidden";
-          genderEl.textContent = data.genderVisible ? genderLabel(data.gender, data.genderCustom) : "Hidden";
-          profileTypeEl.textContent = data.isPrivate ? "Private" : "Public";
-          verifiedEl.textContent = data.isVerified ? "Yes" : "No";
-
-          showAvatar(data.photoURL || "");
-        } else {
-          displayNameEl.textContent = user.displayName || "Member";
-          bioEl.textContent = "No profile found yet.";
-          cityEl.textContent = "Hidden";
-          genderEl.textContent = "Hidden";
-          profileTypeEl.textContent = "Public";
-          verifiedEl.textContent = "No";
-          showAvatar("");
-        }
-
-        await loadEventsForUser(user.uid);
-
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
+        await loadEverything(user.uid);
       } catch (error) {
         console.error(error);
         loading.textContent = "Error loading profile.";
