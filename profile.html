@@ -139,19 +139,9 @@
     .nav-link{
       text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
-      border:none;background:transparent;cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
     .nav-link.active{background:rgba(76,201,255,.14);color:#d8f7ff}
-
-    @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
-      .profile-head{grid-template-columns:78px 1fr}
-      .avatar,.avatar-placeholder{width:78px;height:78px}
-    }
   </style>
 </head>
 <body>
@@ -163,6 +153,7 @@
       </div>
 
       <div class="top-actions">
+        <a href="follow-requests.html" class="chip-btn" id="followRequestsBtn">Requests</a>
         <a href="edit-profile.html" class="chip-btn">Edit</a>
         <a href="settings.html" class="chip-btn">Settings</a>
       </div>
@@ -279,7 +270,9 @@
       doc,
       getDoc,
       collection,
-      getDocs
+      getDocs,
+      query,
+      where
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
@@ -288,6 +281,7 @@
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const displayNameEl = document.getElementById("displayName");
     const bioEl = document.getElementById("bio");
+    const followRequestsBtn = document.getElementById("followRequestsBtn");
 
     const postsCountEl = document.getElementById("postsCount");
     const followersCountEl = document.getElementById("followersCount");
@@ -316,6 +310,10 @@
       return div.innerHTML;
     }
 
+    function formatCount(count) {
+      return count > 99 ? "99+" : String(count);
+    }
+
     function showAvatar(url) {
       const cleanUrl = (url || "").trim();
       if (!cleanUrl) {
@@ -337,7 +335,6 @@
     function openTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll("#postsTab, #eventsTab, #networkTab").forEach(el => el.classList.add("hidden"));
-
       const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
       if (btn) btn.classList.add("active");
       document.getElementById(tabId).classList.remove("hidden");
@@ -458,30 +455,36 @@
           </div>
         `;
 
-        const img = card.querySelector(".person-avatar");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.style.display = "none";
-          });
-        }
-
         listEl.appendChild(card);
       });
     }
 
     async function loadEverything(uid) {
-      const [userSnap, postsSnap, eventsSnap, followsSnap, publicProfilesSnap] = await Promise.all([
+      const [
+        userSnap,
+        postsSnap,
+        eventsSnap,
+        followsSnap,
+        publicProfilesSnap,
+        requestsSnap
+      ] = await Promise.all([
         getDoc(doc(db, "users", uid)),
         getDocs(collection(db, "posts")),
         getDocs(collection(db, "events")),
         getDocs(collection(db, "follows")),
-        getDocs(collection(db, "publicProfiles"))
+        getDocs(collection(db, "publicProfiles")),
+        getDocs(query(collection(db, "follow_requests"), where("targetId", "==", uid)))
       ]);
 
       const userData = userSnap.exists() ? userSnap.data() : {};
       displayNameEl.textContent = userData.displayName || "Member";
       bioEl.textContent = userData.bio?.trim() ? userData.bio : "No bio added yet.";
       showAvatar(userData.photoURL || "");
+
+      const requestCount = requestsSnap.size;
+      followRequestsBtn.textContent = requestCount > 0
+        ? `Requests (${formatCount(requestCount)})`
+        : "Requests";
 
       const allPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === uid);
       renderPosts(allPosts);
@@ -526,9 +529,7 @@
     }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        openTab(btn.dataset.tab);
-      });
+      btn.addEventListener("click", () => openTab(btn.dataset.tab));
     });
 
     onAuthStateChanged(auth, async (user) => {
@@ -539,8 +540,7 @@
 
       try {
         await loadEverything(user.uid);
-      } catch (error) {
-        console.error(error);
+      } catch {
         loading.textContent = "Error loading profile.";
       }
     });
