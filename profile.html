@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Feed</title>
+  <title>BareWorld - My Profile</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 
     body {
       background: linear-gradient(135deg, #020617, #0f172a);
@@ -19,10 +14,7 @@
       padding: 20px;
     }
 
-    .wrap {
-      max-width: 850px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 900px; margin: 0 auto; }
 
     .topbar {
       display: flex;
@@ -33,9 +25,7 @@
       margin-bottom: 20px;
     }
 
-    .topbar h1 {
-      font-size: 30px;
-    }
+    .topbar h1 { font-size: 30px; }
 
     .top-actions {
       display: flex;
@@ -53,15 +43,9 @@
       display: inline-block;
     }
 
-    .btn-profile {
-      background: #38bdf8;
-      color: #082f49;
-    }
-
-    .btn-logout {
-      background: #ef4444;
-      color: #fff;
-    }
+    .btn-feed { background: #38bdf8; color: #082f49; }
+    .btn-edit { background: #22c55e; color: #052e16; }
+    .btn-nearby { background: #64748b; color: #fff; }
 
     .card {
       background: rgba(255,255,255,0.08);
@@ -78,9 +62,7 @@
       padding: 30px 10px;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none !important; }
 
     .profile-header {
       display: flex;
@@ -129,6 +111,8 @@
       margin-top: 10px;
       color: #e2e8f0;
       line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .grid {
@@ -175,30 +159,26 @@
     }
 
     @media (max-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .profile-header {
-        align-items: flex-start;
-      }
+      .grid { grid-template-columns: 1fr; }
+      .profile-header { align-items: flex-start; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <h1>BareWorld</h1>
+      <h1>My Profile</h1>
       <div class="top-actions">
-        <a href="edit-profile.html" class="btn btn-profile">Edit Profile</a>
-        <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        <a href="feed.html" class="btn btn-feed">Feed</a>
+        <a href="edit-profile.html" class="btn btn-edit">Edit Profile</a>
+        <a href="nearby.html" class="btn btn-nearby">Nearby</a>
       </div>
     </div>
 
     <div class="card">
       <div id="loading" class="loading">Loading your profile...</div>
 
-      <div id="feedContent" class="hidden">
+      <div id="content" class="hidden">
         <div class="profile-header">
           <img id="avatar" class="avatar hidden" alt="Profile Photo" />
           <div id="avatarPlaceholder" class="avatar-placeholder">No profile photo</div>
@@ -217,6 +197,11 @@
           </div>
 
           <div class="info-box">
+            <small>Gender</small>
+            <span id="gender">Hidden</span>
+          </div>
+
+          <div class="info-box">
             <small>Profile Type</small>
             <span id="profileType">Public</span>
           </div>
@@ -230,13 +215,18 @@
             <small>User ID</small>
             <span id="uid">-</span>
           </div>
+
+          <div class="info-box">
+            <small>Photo Status</small>
+            <span id="photoStatus">No photo</span>
+          </div>
         </div>
 
         <div class="welcome-box">
-          <h3>Welcome back</h3>
+          <h3>Your public profile preview</h3>
           <p>
-            Tera account sahi chal reha aa. Hun agge asi posts, nearby members,
-            te events wala system bana sakde haan.
+            Eh page show karda aa ke tera profile data kidda lag reha aa.
+            Gender te city sirf odon public mann laye jande ne jadon tu unhan nu visible rakheya hove.
           </p>
         </div>
       </div>
@@ -246,8 +236,7 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import {
-      onAuthStateChanged,
-      signOut
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       doc,
@@ -255,8 +244,7 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
-    const feedContent = document.getElementById("feedContent");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const content = document.getElementById("content");
 
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
@@ -265,9 +253,11 @@
     const emailEl = document.getElementById("email");
     const bioEl = document.getElementById("bio");
     const cityEl = document.getElementById("city");
+    const genderEl = document.getElementById("gender");
     const profileTypeEl = document.getElementById("profileType");
     const verifiedEl = document.getElementById("verified");
     const uidEl = document.getElementById("uid");
+    const photoStatusEl = document.getElementById("photoStatus");
 
     function showAvatar(url) {
       const cleanUrl = (url || "").trim();
@@ -276,20 +266,37 @@
         avatar.classList.add("hidden");
         avatar.removeAttribute("src");
         avatarPlaceholder.classList.remove("hidden");
-        avatarPlaceholder.textContent = "No profile photo";
+        photoStatusEl.textContent = "No photo";
         return;
       }
 
       avatar.src = cleanUrl;
       avatar.classList.remove("hidden");
       avatarPlaceholder.classList.add("hidden");
+      photoStatusEl.textContent = "Photo added";
     }
 
     avatar.addEventListener("error", () => {
       avatar.classList.add("hidden");
       avatarPlaceholder.classList.remove("hidden");
-      avatarPlaceholder.textContent = "Photo could not be loaded";
+      photoStatusEl.textContent = "Photo could not load";
     });
+
+    function genderLabel(gender, custom) {
+      const map = {
+        male: "Male",
+        female: "Female",
+        non_binary: "Non-binary",
+        trans_man: "Trans Man",
+        trans_woman: "Trans Woman",
+        genderqueer: "Genderqueer",
+        agender: "Agender",
+        prefer_not_to_say: "Prefer not to say",
+        self_describe: custom || "Self-described"
+      };
+
+      return map[gender] || "Not added";
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -308,8 +315,9 @@
           const data = userSnap.data();
 
           displayNameEl.textContent = data.displayName || user.displayName || "Member";
-          bioEl.textContent = data.bio?.trim() ? data.bio : "No bio added yet.";
+          bioEl.textContent = data.bio && data.bio.trim() ? data.bio : "No bio added yet.";
           cityEl.textContent = data.cityVisible ? (data.city || "Not added") : "Hidden";
+          genderEl.textContent = data.genderVisible ? genderLabel(data.gender, data.genderCustom) : "Hidden";
           profileTypeEl.textContent = data.isPrivate ? "Private" : "Public";
           verifiedEl.textContent = data.isVerified ? "Yes" : "No";
 
@@ -318,25 +326,17 @@
           displayNameEl.textContent = user.displayName || "Member";
           bioEl.textContent = "No profile found yet.";
           cityEl.textContent = "Hidden";
+          genderEl.textContent = "Hidden";
           profileTypeEl.textContent = "Public";
           verifiedEl.textContent = "No";
           showAvatar("");
         }
 
         loading.classList.add("hidden");
-        feedContent.classList.remove("hidden");
+        content.classList.remove("hidden");
       } catch (error) {
         console.error(error);
         loading.textContent = "Error loading profile.";
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "login.html";
-      } catch (error) {
-        console.error(error);
       }
     });
   </script>
