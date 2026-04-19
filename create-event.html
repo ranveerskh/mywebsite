@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Create Event</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:linear-gradient(135deg,#020617,#0f172a);
+      color:#fff;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .wrap{
+      max-width:820px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+
+    .brand{
+      font-size:30px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      display:inline-block;
+    }
+
+    .btn-feed{
+      background:#38bdf8;
+      color:#082f49;
+    }
+
+    .btn-events{
+      background:#f59e0b;
+      color:#3b2200;
+    }
+
+    .btn-profile{
+      background:#64748b;
+      color:#fff;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:22px;
+      padding:22px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .section-title{
+      font-size:24px;
+      margin-bottom:10px;
+    }
+
+    .muted{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:18px;
+    }
+
+    .field{
+      margin-bottom:16px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-size:14px;
+      color:#cbd5e1;
+    }
+
+    input, textarea, select{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(255,255,255,0.08);
+      color:#fff;
+      outline:none;
+      font-size:15px;
+    }
+
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder{
+      color:#94a3b8;
+    }
+
+    select option{
+      color:#000;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .save-btn{
+      background:#22c55e;
+      color:#052e16;
+      min-width:160px;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+    }
+
+    .success{ color:#86efac; }
+    .error{ color:#fda4af; }
+
+    .small-note{
+      color:#94a3b8;
+      font-size:12px;
+      line-height:1.5;
+      margin-top:6px;
+    }
+
+    @media (max-width:700px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .actions{
+        align-items:stretch;
+      }
+
+      .save-btn{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">BareWorld</div>
+      <div class="top-actions">
+        <a href="feed.html" class="btn btn-feed">Feed</a>
+        <a href="events.html" class="btn btn-events">Events</a>
+        <a href="profile.html" class="btn btn-profile">My Profile</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Create Event</div>
+      <div class="muted">
+        Create a member event. Later asi hor advanced fields add kar lawange.
+      </div>
+
+      <form id="eventForm">
+        <div class="field">
+          <label for="title">Event Title</label>
+          <input type="text" id="title" placeholder="Example: Summer Meetup" required />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Write event details..." required></textarea>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="city">City</label>
+            <input type="text" id="city" placeholder="Event city" required />
+          </div>
+
+          <div class="field">
+            <label for="visibility">Visibility</label>
+            <select id="visibility" required>
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="date">Date</label>
+            <input type="date" id="date" required />
+          </div>
+
+          <div class="field">
+            <label for="time">Time</label>
+            <input type="time" id="time" required />
+          </div>
+        </div>
+
+        <div class="small-note">
+          Host name automatically current logged-in profile ton aa ju.
+        </div>
+
+        <div class="actions">
+          <div id="message" class="message"></div>
+          <button type="submit" id="saveBtn" class="btn save-btn">Create Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      addDoc,
+      doc,
+      getDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const eventForm = document.getElementById("eventForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const message = document.getElementById("message");
+
+    let currentUser = null;
+    let creatorName = "Member";
+
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const publicRef = doc(db, "publicProfiles", user.uid);
+        const publicSnap = await getDoc(publicRef);
+
+        if (publicSnap.exists()) {
+          creatorName = publicSnap.data().displayName || user.displayName || "Member";
+        } else {
+          creatorName = user.displayName || "Member";
+        }
+      } catch (error) {
+        console.error(error);
+        creatorName = user.displayName || "Member";
+      }
+    });
+
+    eventForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser) return;
+
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const city = document.getElementById("city").value.trim();
+      const visibility = document.getElementById("visibility").value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      if (!title || !description || !city || !date || !time) {
+        setMessage("Please fill all fields.", "error");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Creating...";
+
+      try {
+        await addDoc(collection(db, "events"), {
+          creatorId: currentUser.uid,
+          creatorName,
+          title,
+          description,
+          city,
+          date,
+          time,
+          visibility,
+          createdAt: serverTimestamp()
+        });
+
+        setMessage("Event created successfully.", "success");
+
+        setTimeout(() => {
+          window.location.href = "events.html";
+        }, 800);
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not create event.", "error");
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Create Event";
+    });
+  </script>
+</body>
+</html>
