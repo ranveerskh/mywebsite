@@ -83,7 +83,6 @@
       padding:28px 10px;
     }
     .hidden{display:none!important}
-
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -108,7 +107,6 @@
       word-break:break-word;
       line-height:1.5;
     }
-
     .quick-links{
       display:grid;
       grid-template-columns:repeat(2,1fr);
@@ -133,7 +131,40 @@
       font-size:12px;
       line-height:1.5;
     }
-
+    .status-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:8px;
+    }
+    .status-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .status-not-requested{
+      background:#182248;
+      color:#c9d5ff;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .status-pending{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .status-approved{
+      background:rgba(61,220,132,.14);
+      color:#c9f7dd;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .status-rejected{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
     .danger-box{
       background:rgba(255,93,115,.10);
       border:1px solid rgba(255,93,115,.18);
@@ -166,7 +197,6 @@
       margin-top:10px;
     }
     .error{color:#ffb3bd}
-
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -202,11 +232,6 @@
       cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
-    .nav-link.active{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-    }
-
     @media (max-width:700px){
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
@@ -292,6 +317,19 @@
           <span id="photoStatus">No photo</span>
         </div>
       </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Verification</div>
+      <div class="section-note">Manage your verification request on a separate page.</div>
+
+      <a href="verification.html" class="quick-link">
+        <strong>Verification Page</strong>
+        <span>Open verification request form and track status.</span>
+        <div class="status-row">
+          <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
+        </div>
+      </a>
     </div>
 
     <div class="panel">
@@ -390,6 +428,7 @@
     const cityVisibleEl = document.getElementById("cityVisible");
     const genderVisibleEl = document.getElementById("genderVisible");
     const photoStatusEl = document.getElementById("photoStatus");
+    const verificationStatusBadge = document.getElementById("verificationStatusBadge");
 
     function setMessage(text, type = "") {
       message.textContent = text;
@@ -405,6 +444,30 @@
       }
     }
 
+    function setVerificationBadge(status, isVerified) {
+      verificationStatusBadge.className = "status-badge";
+
+      if (isVerified) {
+        verificationStatusBadge.classList.add("status-approved");
+        verificationStatusBadge.textContent = "Verified";
+        return;
+      }
+
+      if (status === "pending") {
+        verificationStatusBadge.classList.add("status-pending");
+        verificationStatusBadge.textContent = "Pending review";
+      } else if (status === "approved") {
+        verificationStatusBadge.classList.add("status-approved");
+        verificationStatusBadge.textContent = "Approved";
+      } else if (status === "rejected") {
+        verificationStatusBadge.classList.add("status-rejected");
+        verificationStatusBadge.textContent = "Rejected";
+      } else {
+        verificationStatusBadge.classList.add("status-not-requested");
+        verificationStatusBadge.textContent = "Not requested";
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -416,7 +479,12 @@
         uidEl.textContent = user.uid || "-";
 
         const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const verificationRef = doc(db, "verification_requests", user.uid);
+
+        const [userSnap, verificationSnap] = await Promise.all([
+          getDoc(userRef),
+          getDoc(verificationRef)
+        ]);
 
         if (userSnap.exists()) {
           const data = userSnap.data();
@@ -428,6 +496,12 @@
           cityVisibleEl.textContent = data.cityVisible ? "Visible" : "Hidden";
           genderVisibleEl.textContent = data.genderVisible ? "Visible" : "Hidden";
           photoStatusEl.textContent = data.photoURL ? "Photo added" : "No photo";
+
+          const requestStatus = verificationSnap.exists()
+            ? (verificationSnap.data().status || "pending")
+            : "not_requested";
+
+          setVerificationBadge(requestStatus, !!data.isVerified);
         } else {
           verifiedEl.textContent = "No";
           createdAtEl.textContent = "-";
@@ -435,6 +509,7 @@
           cityVisibleEl.textContent = "Hidden";
           genderVisibleEl.textContent = "Hidden";
           photoStatusEl.textContent = "No photo";
+          setVerificationBadge("not_requested", false);
         }
 
         loading.classList.add("hidden");
