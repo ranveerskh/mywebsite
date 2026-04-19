@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Settings</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:linear-gradient(135deg,#020617,#0f172a);
+      color:#fff;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .wrap{
+      max-width:900px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+
+    .brand{
+      font-size:30px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      display:inline-block;
+    }
+
+    .btn-feed{
+      background:#38bdf8;
+      color:#082f49;
+    }
+
+    .btn-profile{
+      background:#64748b;
+      color:#fff;
+    }
+
+    .btn-edit{
+      background:#22c55e;
+      color:#052e16;
+    }
+
+    .btn-events{
+      background:#f59e0b;
+      color:#3b2200;
+    }
+
+    .btn-logout{
+      background:#ef4444;
+      color:#fff;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:22px;
+      padding:22px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 40px rgba(0,0,0,0.2);
+      margin-bottom:18px;
+    }
+
+    .section-title{
+      font-size:22px;
+      margin-bottom:14px;
+    }
+
+    .muted{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .loading{
+      text-align:center;
+      color:#cbd5e1;
+      padding:30px 10px;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .info-box{
+      background:rgba(255,255,255,0.05);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .info-box small{
+      display:block;
+      color:#94a3b8;
+      margin-bottom:8px;
+    }
+
+    .info-box span{
+      font-weight:700;
+      color:#fff;
+      word-break:break-word;
+    }
+
+    .quick-links{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .quick-link{
+      display:block;
+      text-decoration:none;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      padding:16px;
+      color:#fff;
+      transition:0.2s ease;
+    }
+
+    .quick-link:hover{
+      transform:translateY(-1px);
+    }
+
+    .quick-link strong{
+      display:block;
+      margin-bottom:6px;
+      font-size:16px;
+    }
+
+    .quick-link span{
+      color:#94a3b8;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .danger-box{
+      margin-top:16px;
+      padding:16px;
+      border-radius:16px;
+      background:rgba(239,68,68,0.10);
+      border:1px solid rgba(239,68,68,0.18);
+    }
+
+    .danger-box h3{
+      margin-bottom:8px;
+      font-size:18px;
+    }
+
+    .danger-box p{
+      color:#fecaca;
+      line-height:1.6;
+      font-size:14px;
+      margin-bottom:12px;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
+
+    .error{ color:#fda4af; }
+
+    @media (max-width:700px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .quick-links{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">BareWorld</div>
+      <div class="top-actions">
+        <a href="feed.html" class="btn btn-feed">Feed</a>
+        <a href="profile.html" class="btn btn-profile">My Profile</a>
+        <a href="edit-profile.html" class="btn btn-edit">Edit Profile</a>
+        <a href="events.html" class="btn btn-events">Events</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Settings</div>
+      <div class="muted">
+        Basic account details and privacy summary.
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="loading" class="loading">Loading settings...</div>
+
+      <div id="content" class="hidden">
+        <div class="section-title">Account Info</div>
+
+        <div class="grid">
+          <div class="info-box">
+            <small>Email</small>
+            <span id="email">-</span>
+          </div>
+
+          <div class="info-box">
+            <small>User ID</small>
+            <span id="uid">-</span>
+          </div>
+
+          <div class="info-box">
+            <small>Verified Status</small>
+            <span id="verified">No</span>
+          </div>
+
+          <div class="info-box">
+            <small>Account Created</small>
+            <span id="createdAt">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Privacy Summary</div>
+
+      <div class="grid">
+        <div class="info-box">
+          <small>Profile Type</small>
+          <span id="profileType">Public</span>
+        </div>
+
+        <div class="info-box">
+          <small>City Visibility</small>
+          <span id="cityVisible">Hidden</span>
+        </div>
+
+        <div class="info-box">
+          <small>Gender Visibility</small>
+          <span id="genderVisible">Hidden</span>
+        </div>
+
+        <div class="info-box">
+          <small>Photo</small>
+          <span id="photoStatus">No photo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Quick Links</div>
+
+      <div class="quick-links">
+        <a href="feed.html" class="quick-link">
+          <strong>Feed</strong>
+          <span>See member updates and post something new.</span>
+        </a>
+
+        <a href="profile.html" class="quick-link">
+          <strong>My Profile</strong>
+          <span>View your public profile preview.</span>
+        </a>
+
+        <a href="edit-profile.html" class="quick-link">
+          <strong>Edit Profile</strong>
+          <span>Change photo link, city, gender, bio, and privacy options.</span>
+        </a>
+
+        <a href="nearby.html" class="quick-link">
+          <strong>Nearby Members</strong>
+          <span>Browse other member profiles.</span>
+        </a>
+
+        <a href="events.html" class="quick-link">
+          <strong>Events</strong>
+          <span>See event list and joined events.</span>
+        </a>
+
+        <a href="create-event.html" class="quick-link">
+          <strong>Create Event</strong>
+          <span>Add a new event for members.</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Account Actions</div>
+
+      <div class="danger-box">
+        <h3>Logout</h3>
+        <p>
+          Sign out from your current account on this device.
+        </p>
+        <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        <div id="message" class="message"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import {
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const message = document.getElementById("message");
+
+    const emailEl = document.getElementById("email");
+    const uidEl = document.getElementById("uid");
+    const verifiedEl = document.getElementById("verified");
+    const createdAtEl = document.getElementById("createdAt");
+
+    const profileTypeEl = document.getElementById("profileType");
+    const cityVisibleEl = document.getElementById("cityVisible");
+    const genderVisibleEl = document.getElementById("genderVisible");
+    const photoStatusEl = document.getElementById("photoStatus");
+
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "-";
+      try {
+        return ts.toDate().toLocaleString();
+      } catch {
+        return "-";
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        emailEl.textContent = user.email || "-";
+        uidEl.textContent = user.uid || "-";
+
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+
+          verifiedEl.textContent = data.isVerified ? "Yes" : "No";
+          createdAtEl.textContent = formatDate(data.createdAt);
+
+          profileTypeEl.textContent = data.isPrivate ? "Private" : "Public";
+          cityVisibleEl.textContent = data.cityVisible ? "Visible" : "Hidden";
+          genderVisibleEl.textContent = data.genderVisible ? "Visible" : "Hidden";
+          photoStatusEl.textContent = data.photoURL ? "Photo added" : "No photo";
+        } else {
+          verifiedEl.textContent = "No";
+          createdAtEl.textContent = "-";
+          profileTypeEl.textContent = "Public";
+          cityVisibleEl.textContent = "Hidden";
+          genderVisibleEl.textContent = "Hidden";
+          photoStatusEl.textContent = "No photo";
+        }
+
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load settings.";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not log out.", "error");
+      }
+    });
+  </script>
+</body>
+</html>
