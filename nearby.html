@@ -74,13 +74,15 @@
     .meta{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:8px}
     .bio{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
     .member-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .view-btn,.follow-btn,.unfollow-btn{
+    .view-btn,.follow-btn,.unfollow-btn,.request-btn,.cancel-btn{
       border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;
       text-decoration:none;display:inline-block;cursor:pointer;
     }
     .view-btn{background:rgba(76,201,255,0.14);color:#d8f7ff}
     .follow-btn{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
     .unfollow-btn{background:rgba(255,93,115,0.14);color:#ffd3d9;border:1px solid rgba(255,93,115,0.20)}
+    .request-btn{background:rgba(167,139,250,0.14);color:#e8defd;border:1px solid rgba(167,139,250,0.20)}
+    .cancel-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06)}
     .empty-box{
       text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;border-radius:16px;
       border:1px dashed rgba(255,255,255,0.08);
@@ -95,17 +97,9 @@
     .nav-link{
       text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
-      border:none;background:transparent;cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
     .nav-link.active{background:rgba(76,201,255,0.14);color:#d8f7ff}
-    @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
-      .filters{grid-template-columns:1fr}
-    }
   </style>
 </head>
 <body>
@@ -181,7 +175,10 @@
       doc,
       setDoc,
       deleteDoc,
-      serverTimestamp
+      addDoc,
+      serverTimestamp,
+      query,
+      where
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
@@ -194,6 +191,7 @@
     let currentUser = null;
     let allMembers = [];
     let follows = [];
+    let outgoingRequests = new Set();
 
     function setMessage(text, type = "") {
       pageMessage.textContent = text;
@@ -225,6 +223,10 @@
       return follows.some(f => f.followerId === currentUser.uid && f.followingId === uid);
     }
 
+    function hasRequested(uid) {
+      return outgoingRequests.has(uid);
+    }
+
     function getFilteredMembers() {
       const q = searchInput.value.trim().toLowerCase();
       const filter = typeFilter.value;
@@ -251,7 +253,13 @@
       });
     }
 
-    async function followMember(targetUid, btn) {
+    function getActorName() {
+      return allMembers.find(m => m.uid === currentUser.uid)?.displayName ||
+        auth.currentUser?.displayName ||
+        "Someone";
+    }
+
+    async function doPublicFollow(targetUid, btn) {
       const followId = `${currentUser.uid}__${targetUid}`;
       btn.disabled = true;
 
@@ -262,6 +270,15 @@
           createdAt: serverTimestamp()
         });
 
+        await addDoc(collection(db, "notifications", targetUid, "items"), {
+          type: "follow",
+          title: "New follower",
+          text: `${getActorName()} started following you.`,
+          fromUserId: currentUser.uid,
+          toUserId: targetUid,
+          createdAt: serverTimestamp()
+        });
+
         follows.push({
           followerId: currentUser.uid,
           followingId: targetUid
@@ -269,9 +286,54 @@
 
         renderMembers();
         setMessage("Followed successfully.", "success");
-      } catch (error) {
-        console.error(error);
+      } catch {
         setMessage("Could not follow member.", "error");
+      }
+
+      btn.disabled = false;
+    }
+
+    async function sendFollowRequest(targetUid, btn) {
+      const requestId = `${currentUser.uid}__${targetUid}`;
+      btn.disabled = true;
+
+      try {
+        await setDoc(doc(db, "follow_requests", requestId), {
+          requesterId: currentUser.uid,
+          targetId: targetUid,
+          createdAt: serverTimestamp()
+        });
+
+        await addDoc(collection(db, "notifications", targetUid, "items"), {
+          type: "follow_request",
+          title: "Follow request",
+          text: `${getActorName()} sent you a follow request.`,
+          fromUserId: currentUser.uid,
+          toUserId: targetUid,
+          createdAt: serverTimestamp()
+        });
+
+        outgoingRequests.add(targetUid);
+        renderMembers();
+        setMessage("Follow request sent.", "success");
+      } catch {
+        setMessage("Could not send follow request.", "error");
+      }
+
+      btn.disabled = false;
+    }
+
+    async function cancelFollowRequest(targetUid, btn) {
+      const requestId = `${currentUser.uid}__${targetUid}`;
+      btn.disabled = true;
+
+      try {
+        await deleteDoc(doc(db, "follow_requests", requestId));
+        outgoingRequests.delete(targetUid);
+        renderMembers();
+        setMessage("Follow request cancelled.", "success");
+      } catch {
+        setMessage("Could not cancel request.", "error");
       }
 
       btn.disabled = false;
@@ -283,13 +345,10 @@
 
       try {
         await deleteDoc(doc(db, "follows", followId));
-
         follows = follows.filter(f => !(f.followerId === currentUser.uid && f.followingId === targetUid));
-
         renderMembers();
         setMessage("Unfollowed successfully.", "success");
-      } catch (error) {
-        console.error(error);
+      } catch {
         setMessage("Could not unfollow member.", "error");
       }
 
@@ -311,6 +370,8 @@
 
       members.forEach(member => {
         const following = isFollowing(member.uid);
+        const requested = hasRequested(member.uid);
+        const isPrivate = !!member.isPrivate;
 
         const card = document.createElement("div");
         card.className = "member-card";
@@ -327,10 +388,20 @@
         const bioText = member.bio && member.bio.trim() ? member.bio : "No bio added yet.";
         const genderText = member.genderVisible ? genderLabel(member.gender, member.genderCustom) : "";
 
+        let actionHtml = "";
+        if (following) {
+          actionHtml = `<button class="unfollow-btn action-btn-dyn" data-action="unfollow" data-uid="${member.uid}">Unfollow</button>`;
+        } else if (isPrivate && requested) {
+          actionHtml = `<button class="cancel-btn action-btn-dyn" data-action="cancel-request" data-uid="${member.uid}">Requested</button>`;
+        } else if (isPrivate) {
+          actionHtml = `<button class="request-btn action-btn-dyn" data-action="request" data-uid="${member.uid}">Request Follow</button>`;
+        } else {
+          actionHtml = `<button class="follow-btn action-btn-dyn" data-action="follow" data-uid="${member.uid}">Follow</button>`;
+        }
+
         card.innerHTML = `
           <div class="member-top">
             ${avatarHtml}
-
             <div class="member-body">
               <div class="member-name">
                 <a href="member.html?uid=${encodeURIComponent(member.uid)}">
@@ -354,36 +425,24 @@
 
               <div class="member-actions">
                 <a href="member.html?uid=${encodeURIComponent(member.uid)}" class="view-btn">View Profile</a>
-                ${
-                  following
-                    ? `<button class="unfollow-btn follow-action-btn" data-action="unfollow" data-uid="${member.uid}">Unfollow</button>`
-                    : `<button class="follow-btn follow-action-btn" data-action="follow" data-uid="${member.uid}">Follow</button>`
-                }
+                ${actionHtml}
               </div>
             </div>
           </div>
         `;
 
-        const img = card.querySelector(".avatar");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.style.display = "none";
-          });
-        }
-
         membersGrid.appendChild(card);
       });
 
-      document.querySelectorAll(".follow-action-btn").forEach(btn => {
+      document.querySelectorAll(".action-btn-dyn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const uid = btn.getAttribute("data-uid");
           const action = btn.getAttribute("data-action");
 
-          if (action === "follow") {
-            await followMember(uid, btn);
-          } else {
-            await unfollowMember(uid, btn);
-          }
+          if (action === "follow") await doPublicFollow(uid, btn);
+          if (action === "request") await sendFollowRequest(uid, btn);
+          if (action === "cancel-request") await cancelFollowRequest(uid, btn);
+          if (action === "unfollow") await unfollowMember(uid, btn);
         });
       });
     }
@@ -400,18 +459,19 @@
       currentUser = user;
 
       try {
-        const [profilesSnap, followsSnap] = await Promise.all([
+        const [profilesSnap, followsSnap, requestsSnap] = await Promise.all([
           getDocs(collection(db, "publicProfiles")),
-          getDocs(collection(db, "follows"))
+          getDocs(collection(db, "follows")),
+          getDocs(query(collection(db, "follow_requests"), where("requesterId", "==", user.uid)))
         ]);
 
         allMembers = profilesSnap.docs.map(docSnap => docSnap.data());
         follows = followsSnap.docs.map(docSnap => docSnap.data());
+        outgoingRequests = new Set(requestsSnap.docs.map(d => d.data().targetId));
 
         loading.classList.add("hidden");
         renderMembers();
-      } catch (error) {
-        console.error(error);
+      } catch {
         loading.textContent = "Could not load members.";
       }
     });
