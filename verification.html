@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Verification</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+    }
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .left-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .back-btn,.chip-btn{
+      border:none;
+      background:var(--soft);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-block;
+    }
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .panel{
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+    .section-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:16px;
+    }
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+    }
+    .hidden{display:none!important}
+    .status-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .status-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .status-not-requested{
+      background:#182248;
+      color:#c9d5ff;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .status-pending{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .status-approved{
+      background:rgba(61,220,132,.14);
+      color:#c9f7dd;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .status-rejected{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .note-box{
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;
+      padding:14px;
+      margin-top:12px;
+    }
+    .note-box small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-size:12px;
+    }
+    .note-box div{
+      color:#fff;
+      font-size:14px;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .field{margin-bottom:14px}
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+      color:#d7def5;
+      font-weight:700;
+    }
+    input,textarea,select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:14px 15px;
+      border-radius:16px;
+      background:#0f1630;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.07);
+      font-size:15px;
+    }
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+    input::placeholder,textarea::placeholder{color:#7f8cad}
+    select option{color:#000}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .small-note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      margin-top:6px;
+    }
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .save-btn{
+      border:none;
+      background:var(--blue);
+      color:#031723;
+      padding:12px 18px;
+      border-radius:14px;
+      font-weight:800;
+      cursor:pointer;
+      min-width:170px;
+    }
+    .message{
+      min-height:20px;
+      font-size:14px;
+    }
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:#b9c4e3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{font-size:18px;line-height:1}
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
+      .grid{grid-template-columns:1fr}
+      .actions{align-items:stretch}
+      .save-btn{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Verification</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a href="settings.html" class="chip-btn">Settings</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Verification Request</div>
+      <div class="section-note">
+        Submit your details and track approval status here.
+      </div>
+
+      <div class="status-row">
+        <span id="statusBadge" class="status-badge status-not-requested">Not requested</span>
+      </div>
+
+      <div id="adminNoteBox" class="note-box hidden">
+        <small>Admin Note</small>
+        <div id="adminNoteText">-</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading verification page...</div>
+
+      <form id="verificationForm" class="hidden">
+        <div class="grid">
+          <div class="field">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" placeholder="Your full legal/public name" required />
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="your@email.com" required />
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="accountType">Account Type</label>
+            <select id="accountType" required>
+              <option value="personal">Personal</option>
+              <option value="creator">Creator</option>
+              <option value="business">Business</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="socialLink">Social / Website Link</label>
+            <input type="url" id="socialLink" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="reason">Why do you want verification?</label>
+          <textarea id="reason" placeholder="Explain why this account should be verified..." required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="idPhotoURL">Government ID Photo Link</label>
+          <input type="url" id="idPhotoURL" placeholder="https://..." required />
+        </div>
+
+        <div class="field">
+          <label for="selfieWithIdURL">Selfie with ID Link</label>
+          <input type="url" id="selfieWithIdURL" placeholder="https://..." required />
+          <div class="small-note">Upload image somewhere safe and paste direct link.</div>
+        </div>
+
+        <div class="actions">
+          <div id="formMessage" class="message"></div>
+          <button type="submit" id="saveBtn" class="save-btn">Send Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const verificationForm = document.getElementById("verificationForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const formMessage = document.getElementById("formMessage");
+
+    const statusBadge = document.getElementById("statusBadge");
+    const adminNoteBox = document.getElementById("adminNoteBox");
+    const adminNoteText = document.getElementById("adminNoteText");
+
+    const fullName = document.getElementById("fullName");
+    const email = document.getElementById("email");
+    const accountType = document.getElementById("accountType");
+    const socialLink = document.getElementById("socialLink");
+    const reason = document.getElementById("reason");
+    const idPhotoURL = document.getElementById("idPhotoURL");
+    const selfieWithIdURL = document.getElementById("selfieWithIdURL");
+
+    let currentUser = null;
+    let currentRequestStatus = "not_requested";
+    let isAlreadyVerified = false;
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) {
+        history.back();
+      } else {
+        window.location.href = "settings.html";
+      }
+    });
+
+    function setFormMessage(text, type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    function setStatus(status, alreadyVerified = false) {
+      statusBadge.className = "status-badge";
+
+      if (alreadyVerified || status === "approved") {
+        statusBadge.classList.add("status-approved");
+        statusBadge.textContent = "Verified";
+        return;
+      }
+
+      if (status === "pending") {
+        statusBadge.classList.add("status-pending");
+        statusBadge.textContent = "Pending review";
+      } else if (status === "rejected") {
+        statusBadge.classList.add("status-rejected");
+        statusBadge.textContent = "Rejected";
+      } else {
+        statusBadge.classList.add("status-not-requested");
+        statusBadge.textContent = "Not requested";
+      }
+    }
+
+    function fillForm(data, userEmail = "") {
+      fullName.value = data.fullName || "";
+      email.value = data.email || userEmail || "";
+      accountType.value = data.accountType || "personal";
+      socialLink.value = data.socialLink || "";
+      reason.value = data.reason || "";
+      idPhotoURL.value = data.idPhotoURL || "";
+      selfieWithIdURL.value = data.selfieWithIdURL || "";
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const requestRef = doc(db, "verification_requests", user.uid);
+
+        const [userSnap, requestSnap] = await Promise.all([
+          getDoc(userRef),
+          getDoc(requestRef)
+        ]);
+
+        isAlreadyVerified = userSnap.exists() && !!userSnap.data().isVerified;
+
+        if (requestSnap.exists()) {
+          const data = requestSnap.data();
+          currentRequestStatus = data.status || "pending";
+          fillForm(data, user.email || "");
+
+          if (data.adminNote && data.adminNote.trim()) {
+            adminNoteBox.classList.remove("hidden");
+            adminNoteText.textContent = data.adminNote;
+          } else {
+            adminNoteBox.classList.add("hidden");
+          }
+        } else {
+          currentRequestStatus = "not_requested";
+          fillForm({}, user.email || "");
+          adminNoteBox.classList.add("hidden");
+        }
+
+        setStatus(currentRequestStatus, isAlreadyVerified);
+
+        if (isAlreadyVerified) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = "Already Verified";
+        } else if (currentRequestStatus === "pending") {
+          saveBtn.textContent = "Update Request";
+        } else if (currentRequestStatus === "rejected") {
+          saveBtn.textContent = "Resubmit Request";
+        } else {
+          saveBtn.textContent = "Send Request";
+        }
+
+        loading.classList.add("hidden");
+        verificationForm.classList.remove("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load verification page.";
+      }
+    });
+
+    verificationForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || isAlreadyVerified) return;
+
+      const payload = {
+        uid: currentUser.uid,
+        fullName: fullName.value.trim(),
+        email: email.value.trim(),
+        accountType: accountType.value,
+        socialLink: socialLink.value.trim(),
+        reason: reason.value.trim(),
+        idPhotoURL: idPhotoURL.value.trim(),
+        selfieWithIdURL: selfieWithIdURL.value.trim(),
+        status: "pending",
+        adminNote: "",
+        updatedAt: serverTimestamp()
+      };
+
+      if (!payload.fullName || !payload.email || !payload.reason || !payload.idPhotoURL || !payload.selfieWithIdURL) {
+        setFormMessage("Please fill all required fields.", "error");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Sending...";
+
+      try {
+        const existingRef = doc(db, "verification_requests", currentUser.uid);
+        const existingSnap = await getDoc(existingRef);
+
+        await setDoc(existingRef, {
+          ...payload,
+          createdAt: existingSnap.exists() ? (existingSnap.data().createdAt || serverTimestamp()) : serverTimestamp()
+        }, { merge: true });
+
+        currentRequestStatus = "pending";
+        setStatus("pending", false);
+        adminNoteBox.classList.add("hidden");
+        setFormMessage("Verification request saved.", "success");
+        saveBtn.textContent = "Update Request";
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not save verification request.", "error");
+        saveBtn.textContent = "Send Request";
+      }
+
+      saveBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
