@@ -54,11 +54,18 @@
     .notify-item strong{display:block;margin-bottom:4px;font-size:13px}
     .notify-item p{color:#d7def5;font-size:13px;line-height:1.5}
     .notify-item small{display:block;color:var(--muted);margin-top:6px;font-size:11px}
+
     .panel{
       background:rgba(18,25,49,0.88);border:1px solid var(--line);border-radius:22px;padding:16px;
       margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,0.18);
     }
-    .composer-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+
+    .composer-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;
+    }
+    .composer-head-left{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    }
     .avatar,.post-avatar{
       width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.10);
       background:#1b2445;flex-shrink:0;
@@ -84,8 +91,13 @@
       border:none;background:var(--green);color:#062513;padding:12px 18px;border-radius:14px;
       font-weight:800;cursor:pointer;min-width:130px;
     }
+    .close-compose-btn{
+      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;
+    }
     .message{min-height:20px;font-size:14px}
     .success{color:#9cf0bf}.error{color:#ffb3bd}
+
     .section-head{
       display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;
     }
@@ -98,6 +110,7 @@
     .filter-tab.active{
       background:rgba(76,201,255,0.14);color:#d8f7ff;border-color:rgba(76,201,255,0.20);
     }
+
     .posts-list{display:grid;gap:14px}
     .post-card{
       background:rgba(18,25,49,0.95);border:1px solid var(--line);border-radius:24px;overflow:hidden;
@@ -129,6 +142,7 @@
     }
     .like-btn{background:rgba(76,201,255,0.14);color:#c9f3ff}
     .comment-toggle-btn{background:rgba(167,139,250,0.14);color:#e5ddff}
+
     .comments-wrap{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)}
     .comment-form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
     .comment-input{flex:1;min-width:200px}
@@ -147,12 +161,14 @@
       border:none;background:rgba(255,93,115,0.14);color:#ffd3d9;border-radius:10px;padding:7px 9px;
       font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
     }
+
     .empty-box{
       text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
       border:1px dashed rgba(255,255,255,0.08);
     }
     .tiny-note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:6px}
     .hidden{display:none!important}
+
     .bottom-nav{
       position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(720px, calc(100% - 20px));
       background:rgba(12,18,35,0.92);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(18px);
@@ -160,12 +176,13 @@
       box-shadow:0 20px 40px rgba(0,0,0,0.25);
     }
     .nav-link{
-      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;
-      justify-content:center;gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;
-      min-height:58px;border:none;background:transparent;cursor:pointer;
+      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      border:none;background:transparent;cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
     .nav-link.active{background:rgba(76,201,255,0.14);color:#d8f7ff}
+
     @media (max-width:700px){
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
@@ -175,6 +192,7 @@
       .post-btn{width:100%}
       .comment-form{flex-direction:column}
       .notify-panel{right:-6px}
+      .close-compose-btn{width:100%}
     }
   </style>
 </head>
@@ -205,15 +223,19 @@
       </div>
     </div>
 
-    <div class="panel" id="composerPanel">
+    <div id="composerPanel" class="panel hidden">
       <div class="composer-head">
-        <img id="myAvatar" class="avatar hidden" alt="My Photo" />
-        <div id="myAvatarPlaceholder" class="avatar-placeholder">No photo</div>
+        <div class="composer-head-left">
+          <img id="myAvatar" class="avatar hidden" alt="My Photo" />
+          <div id="myAvatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-        <div>
-          <h3 id="myName">Loading...</h3>
-          <div class="muted">Post a new update or photo</div>
+          <div>
+            <h3 id="myName">Loading...</h3>
+            <div class="muted">Post a new update or photo</div>
+          </div>
         </div>
+
+        <button id="closeComposerBtn" class="close-compose-btn" type="button">Close</button>
       </div>
 
       <form id="postForm">
@@ -310,14 +332,16 @@
     const emptyBox = document.getElementById("emptyBox");
     const allTab = document.getElementById("allTab");
     const followingTab = document.getElementById("followingTab");
-    const navCreateBtn = document.getElementById("navCreateBtn");
-    const composerPanel = document.getElementById("composerPanel");
 
     const notifyBtn = document.getElementById("notifyBtn");
     const notifyPanel = document.getElementById("notifyPanel");
     const closeNotifyBtn = document.getElementById("closeNotifyBtn");
     const notifyList = document.getElementById("notifyList");
     const notifyCount = document.getElementById("notifyCount");
+
+    const composerPanel = document.getElementById("composerPanel");
+    const navCreateBtn = document.getElementById("navCreateBtn");
+    const closeComposerBtn = document.getElementById("closeComposerBtn");
 
     let currentUser = null;
     let currentUserProfile = null;
@@ -329,6 +353,19 @@
       formMessage.textContent = text;
       formMessage.className = `message ${type}`;
     }
+
+    function showComposer() {
+      composerPanel.classList.remove("hidden");
+      composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => captionInput.focus(), 250);
+    }
+
+    function hideComposer() {
+      composerPanel.classList.add("hidden");
+    }
+
+    navCreateBtn.addEventListener("click", showComposer);
+    closeComposerBtn.addEventListener("click", hideComposer);
 
     function showMyAvatar(url) {
       const cleanUrl = (url || "").trim();
@@ -688,11 +725,6 @@
       notifyPanel.classList.add("hidden");
     });
 
-    navCreateBtn.addEventListener("click", () => {
-      composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(() => captionInput.focus(), 250);
-    });
-
     allTab.addEventListener("click", async () => {
       currentFeedFilter = "all";
       applyFeedTabUI();
@@ -724,6 +756,10 @@
         } else {
           myName.textContent = user.displayName || "Member";
           showMyAvatar("");
+        }
+
+        if (window.location.hash === "#composerPanel") {
+          showComposer();
         }
 
         onSnapshot(collection(db, "follows"), async (snapshot) => {
@@ -796,6 +832,7 @@
         captionInput.value = "";
         imageURLInput.value = "";
         setFormMessage("Update posted.", "success");
+        hideComposer();
       } catch (error) {
         console.error(error);
         setFormMessage("Could not post update.", "error");
