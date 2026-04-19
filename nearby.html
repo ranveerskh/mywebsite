@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Nearby Members</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:linear-gradient(135deg,#020617,#0f172a);
+      color:#fff;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+
+    .brand{
+      font-size:30px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      display:inline-block;
+    }
+
+    .btn-feed{
+      background:#38bdf8;
+      color:#082f49;
+    }
+
+    .btn-profile{
+      background:#64748b;
+      color:#fff;
+    }
+
+    .btn-edit{
+      background:#22c55e;
+      color:#052e16;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:22px;
+      padding:22px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 40px rgba(0,0,0,0.2);
+      margin-bottom:18px;
+    }
+
+    .section-title{
+      font-size:22px;
+      margin-bottom:14px;
+    }
+
+    .muted{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .search-row{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:12px;
+      margin-top:16px;
+    }
+
+    input, select{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(255,255,255,0.08);
+      color:#fff;
+      outline:none;
+      font-size:15px;
+    }
+
+    input::placeholder{
+      color:#94a3b8;
+    }
+
+    select option{
+      color:#000;
+    }
+
+    .members-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+
+    .member-card{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:20px;
+      padding:18px;
+    }
+
+    .member-top{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      margin-bottom:14px;
+    }
+
+    .avatar{
+      width:76px;
+      height:76px;
+      border-radius:20px;
+      object-fit:cover;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(255,255,255,0.08);
+      flex-shrink:0;
+    }
+
+    .avatar-placeholder{
+      width:76px;
+      height:76px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:#94a3b8;
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.15);
+      font-size:12px;
+      line-height:1.4;
+      flex-shrink:0;
+    }
+
+    .member-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .member-name{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:6px;
+      line-height:1.3;
+    }
+
+    .member-name a{
+      color:#fff;
+      text-decoration:none;
+    }
+
+    .member-name a:hover{
+      text-decoration:underline;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .badge-public{
+      background:rgba(56,189,248,0.14);
+      color:#bae6fd;
+      border:1px solid rgba(56,189,248,0.25);
+    }
+
+    .badge-private{
+      background:rgba(251,191,36,0.14);
+      color:#fde68a;
+      border:1px solid rgba(251,191,36,0.25);
+    }
+
+    .badge-verified{
+      background:rgba(34,197,94,0.14);
+      color:#bbf7d0;
+      border:1px solid rgba(34,197,94,0.25);
+    }
+
+    .member-meta{
+      color:#94a3b8;
+      font-size:13px;
+      line-height:1.5;
+      margin-bottom:10px;
+    }
+
+    .member-bio{
+      color:#e2e8f0;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:14px;
+      min-height:66px;
+      margin-bottom:14px;
+    }
+
+    .card-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .view-btn{
+      background:#38bdf8;
+      color:#082f49;
+    }
+
+    .loading{
+      text-align:center;
+      color:#cbd5e1;
+      padding:30px 10px;
+    }
+
+    .empty-box{
+      text-align:center;
+      padding:30px 10px;
+      color:#94a3b8;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @media (max-width:950px){
+      .members-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media (max-width:700px){
+      .search-row{
+        grid-template-columns:1fr;
+      }
+
+      .members-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">BareWorld</div>
+      <div class="top-actions">
+        <a href="feed.html" class="btn btn-feed">Feed</a>
+        <a href="profile.html" class="btn btn-profile">My Profile</a>
+        <a href="edit-profile.html" class="btn btn-edit">Edit Profile</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Nearby Members</div>
+      <div class="muted">
+        Members are shown from public profiles. City shows only if the member has allowed it.
+      </div>
+
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search by name, city, or bio..." />
+        <select id="typeFilter">
+          <option value="all">All Profiles</option>
+          <option value="public">Public Only</option>
+          <option value="private">Private Only</option>
+          <option value="verified">Verified Only</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="loading" class="loading">Loading members...</div>
+      <div id="membersGrid" class="members-grid hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No members found.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const loading = document.getElementById("loading");
+    const membersGrid = document.getElementById("membersGrid");
+    const emptyBox = document.getElementById("emptyBox");
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+
+    let currentUser = null;
+    let allMembers = [];
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function getFilteredMembers() {
+      const q = searchInput.value.trim().toLowerCase();
+      const filter = typeFilter.value;
+
+      return allMembers.filter(member => {
+        if (!member || !member.uid) return false;
+        if (currentUser && member.uid === currentUser.uid) return false;
+
+        if (filter === "public" && member.isPrivate) return false;
+        if (filter === "private" && !member.isPrivate) return false;
+        if (filter === "verified" && !member.isVerified) return false;
+
+        if (!q) return true;
+
+        const haystack = [
+          member.displayName || "",
+          member.cityVisible ? (member.city || "") : "",
+          member.bio || ""
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    function renderMembers() {
+      const members = getFilteredMembers();
+      membersGrid.innerHTML = "";
+
+      if (!members.length) {
+        membersGrid.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      membersGrid.classList.remove("hidden");
+
+      members.forEach(member => {
+        const card = document.createElement("div");
+        card.className = "member-card";
+
+        const avatarHtml = member.photoURL
+          ? `<a href="member.html?uid=${encodeURIComponent(member.uid)}">
+               <img class="avatar" src="${escapeHtml(member.photoURL)}" alt="Profile Photo">
+             </a>`
+          : `<a href="member.html?uid=${encodeURIComponent(member.uid)}" style="text-decoration:none;">
+               <div class="avatar-placeholder">No photo</div>
+             </a>`;
+
+        const cityText = member.cityVisible ? (member.city || "Not added") : "Hidden";
+        const bioText = member.bio?.trim() ? member.bio : "No bio added yet.";
+
+        card.innerHTML = `
+          <div class="member-top">
+            ${avatarHtml}
+
+            <div class="member-info">
+              <div class="member-name">
+                <a href="member.html?uid=${encodeURIComponent(member.uid)}">
+                  ${escapeHtml(member.displayName || "Member")}
+                </a>
+              </div>
+
+              <div class="badges">
+                <span class="badge ${member.isPrivate ? "badge-private" : "badge-public"}">
+                  ${member.isPrivate ? "Private" : "Public"}
+                </span>
+                ${member.isVerified ? `<span class="badge badge-verified">Verified</span>` : ""}
+              </div>
+
+              <div class="member-meta">City: ${escapeHtml(cityText)}</div>
+            </div>
+          </div>
+
+          <div class="member-bio">${escapeHtml(bioText)}</div>
+
+          <div class="card-actions">
+            <a href="member.html?uid=${encodeURIComponent(member.uid)}" class="btn view-btn">View Profile</a>
+          </div>
+        `;
+
+        const img = card.querySelector(".avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+        }
+
+        membersGrid.appendChild(card);
+      });
+    }
+
+    searchInput.addEventListener("input", renderMembers);
+    typeFilter.addEventListener("change", renderMembers);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const snap = await getDocs(collection(db, "publicProfiles"));
+        allMembers = snap.docs.map(doc => doc.data());
+
+        loading.classList.add("hidden");
+        renderMembers();
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load members.";
+      }
+    });
+  </script>
+</body>
+</html>
