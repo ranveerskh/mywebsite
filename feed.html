@@ -110,9 +110,29 @@
     .post-name a{color:#fff;text-decoration:none}
     .post-name a:hover{text-decoration:underline}
     .post-date{color:var(--muted);font-size:12px;margin-top:3px}
+    .post-top-actions{
+      display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;
+      flex-shrink:0;
+    }
     .delete-post-btn{
       border:none;background:rgba(255,93,115,0.14);color:#ffd3d9;border-radius:10px;padding:8px 10px;
       font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
+    }
+    .report-link{
+      text-decoration:none;
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:800;
+      display:inline-block;
+    }
+    .post-click{
+      display:block;
+      text-decoration:none;
+      color:inherit;
     }
     .post-caption{
       color:#e8eeff;line-height:1.7;font-size:15px;white-space:pre-wrap;word-break:break-word;
@@ -325,6 +345,7 @@
     let currentFeedFilter = "all";
     let follows = [];
     let allPostDocs = [];
+    let publicProfilesMap = new Map();
 
     function setFormMessage(text, type = "") {
       formMessage.textContent = text;
@@ -332,6 +353,7 @@
     }
 
     function showComposer() {
+      if (navCreateBtn.disabled) return;
       composerPanel.classList.remove("hidden");
       composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       setTimeout(() => captionInput.focus(), 250);
@@ -383,14 +405,6 @@
       followingTab.classList.toggle("active", currentFeedFilter === "following");
     }
 
-    function getFilteredPostDocs() {
-      if (currentFeedFilter === "all") return allPostDocs;
-      return allPostDocs.filter(postDoc => {
-        const post = postDoc.data();
-        return isFollowing(post.userId);
-      });
-    }
-
     function formatBadgeCount(count) {
       return count > 99 ? "99+" : String(count);
     }
@@ -403,6 +417,25 @@
 
       notifyCount.textContent = formatBadgeCount(items.length);
       notifyCount.classList.remove("hidden");
+    }
+
+    function authorHidden(author) {
+      return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
+    }
+
+    function getFilteredPostDocs() {
+      return allPostDocs.filter(postDoc => {
+        const post = postDoc.data();
+        const author = publicProfilesMap.get(post.userId);
+
+        if (authorHidden(author)) return false;
+
+        if (currentFeedFilter === "following") {
+          return isFollowing(post.userId);
+        }
+
+        return true;
+      });
     }
 
     async function refreshLikeUI(postId) {
@@ -634,6 +667,10 @@
           ? `<button data-id="${postId}" class="delete-post-btn">Delete</button>`
           : "";
 
+        const reportButton = currentUser && post.userId !== currentUser.uid
+          ? `<a class="report-link" href="report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(post.userId)}">Report</a>`
+          : "";
+
         const card = document.createElement("div");
         card.className = "post-card";
         card.innerHTML = `
@@ -650,12 +687,16 @@
                   <div class="post-date">${formatDate(post.createdAt)}</div>
                 </div>
               </div>
-              ${deleteButton}
+              <div class="post-top-actions">
+                ${deleteButton}
+                ${reportButton}
+              </div>
             </div>
 
-            <div class="post-caption">${escapeHtml(post.caption || "")}</div>
-
-            ${post.imageURL ? `<img class="post-image" src="${escapeHtml(post.imageURL)}" alt="Post Image">` : ""}
+            <a class="post-click" href="post.html?postId=${encodeURIComponent(postId)}">
+              <div class="post-caption">${escapeHtml(post.caption || "")}</div>
+              ${post.imageURL ? `<img class="post-image" src="${escapeHtml(post.imageURL)}" alt="Post Image">` : ""}
+            </a>
 
             <div class="post-actions">
               <button class="action-btn like-btn" data-post-id="${postId}" data-liked="no">Like (0)</button>
@@ -747,6 +788,32 @@
         if (window.location.hash === "#composerPanel") {
           showComposer();
         }
+
+        const status = currentUserProfile?.moderationStatus || "";
+        const suspensionUntil = currentUserProfile?.suspensionUntil?.toDate
+          ? currentUserProfile.suspensionUntil.toDate().getTime()
+          : currentUserProfile?.suspensionUntil
+          ? new Date(currentUserProfile.suspensionUntil).getTime()
+          : 0;
+
+        if (status === "banned") {
+          hideComposer();
+          navCreateBtn.disabled = true;
+          setFormMessage("Your account is banned. Posting is disabled.", "error");
+        } else if (status === "suspended" && suspensionUntil && Date.now() < suspensionUntil) {
+          hideComposer();
+          navCreateBtn.disabled = true;
+          setFormMessage("Your account is suspended. Posting is disabled for now.", "error");
+        }
+
+        onSnapshot(collection(db, "publicProfiles"), async (snapshot) => {
+          publicProfilesMap = new Map();
+          snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            publicProfilesMap.set(data.uid, data);
+          });
+          await renderPosts();
+        });
 
         onSnapshot(collection(db, "follows"), async (snapshot) => {
           follows = snapshot.docs.map(d => d.data());
