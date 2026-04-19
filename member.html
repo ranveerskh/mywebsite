@@ -35,7 +35,6 @@
     }
     .loading{text-align:center;color:var(--muted);padding:28px 10px}
     .hidden{display:none!important}
-
     .profile-head{
       display:grid;grid-template-columns:92px 1fr;gap:16px;align-items:start;
     }
@@ -48,7 +47,33 @@
       text-align:center;padding:8px;background:#1b2445;border:1px solid rgba(255,255,255,.1);
       color:var(--muted);font-size:12px;line-height:1.3;
     }
+    .name-inline{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
     .display-name{font-size:24px;font-weight:800;line-height:1.2}
+    .moderation-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+    }
+    .moderation-warn{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .moderation-ban{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
     .bio{
       color:#e8eeff;line-height:1.7;font-size:14px;
       white-space:pre-wrap;word-break:break-word;margin-top:8px;
@@ -95,7 +120,7 @@
     .posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .post-tile{
       aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#0f1630;
-      border:1px solid rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.06);display:block;
     }
     .post-tile img{width:100%;height:100%;object-fit:cover;display:block}
     .post-fallback{
@@ -180,7 +205,10 @@
           <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
           <div>
-            <div class="display-name" id="displayName">Member</div>
+            <div class="name-inline">
+              <div class="display-name" id="displayName">Member</div>
+              <span id="moderationBadge" class="moderation-badge hidden">!</span>
+            </div>
             <div class="bio" id="bio">No bio added yet.</div>
 
             <div class="meta-row" id="metaRow"></div>
@@ -207,7 +235,7 @@
 
     <div id="lockedPanel" class="panel hidden">
       <div class="lock-box">
-        <div class="lock-title">Private Profile</div>
+        <div class="lock-title" id="lockedTitle">Private Profile</div>
         <div class="lock-text" id="lockedText">
           Follow this member to see their posts and connections.
         </div>
@@ -290,10 +318,12 @@
     const bioEl = document.getElementById("bio");
     const followArea = document.getElementById("followArea");
     const metaRow = document.getElementById("metaRow");
+    const moderationBadge = document.getElementById("moderationBadge");
 
     const statsBlock = document.getElementById("statsBlock");
     const tabsPanel = document.getElementById("tabsPanel");
     const lockedPanel = document.getElementById("lockedPanel");
+    const lockedTitle = document.getElementById("lockedTitle");
     const lockedText = document.getElementById("lockedText");
 
     const postsCountEl = document.getElementById("postsCount");
@@ -315,6 +345,24 @@
       const div = document.createElement("div");
       div.textContent = text || "";
       return div.innerHTML;
+    }
+
+    function applyModerationBadge(status, warningUntil) {
+      moderationBadge.className = "moderation-badge hidden";
+
+      if (status === "banned") {
+        moderationBadge.className = "moderation-badge moderation-ban";
+        moderationBadge.textContent = "!";
+        return;
+      }
+
+      if (status === "warned" && warningUntil) {
+        const untilMs = warningUntil.toDate ? warningUntil.toDate().getTime() : new Date(warningUntil).getTime();
+        if (Date.now() < untilMs) {
+          moderationBadge.className = "moderation-badge moderation-warn";
+          moderationBadge.textContent = "!";
+        }
+      }
     }
 
     function showAvatar(url) {
@@ -347,8 +395,8 @@
     followersStat.addEventListener("click", () => openTab("followersTab"));
     followingStat.addEventListener("click", () => openTab("followingTab"));
 
-    function setVisibilityMode(canViewFull, isPrivate) {
-      if (canViewFull) {
+    function setVisibilityMode(showContent, isPrivate) {
+      if (showContent) {
         statsBlock.classList.remove("hidden");
         tabsPanel.classList.remove("hidden");
         document.getElementById("postsTab").classList.remove("hidden");
@@ -359,11 +407,7 @@
         document.getElementById("postsTab").classList.add("hidden");
         document.getElementById("followersTab").classList.add("hidden");
         document.getElementById("followingTab").classList.add("hidden");
-        if (isPrivate) {
-          lockedPanel.classList.remove("hidden");
-        } else {
-          lockedPanel.classList.add("hidden");
-        }
+        if (isPrivate) lockedPanel.classList.remove("hidden");
       }
     }
 
@@ -390,8 +434,9 @@
       postsGrid.classList.remove("hidden");
 
       posts.forEach(post => {
-        const tile = document.createElement("div");
+        const tile = document.createElement("a");
         tile.className = "post-tile";
+        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
 
         if (post.imageURL) {
           tile.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Post image">`;
@@ -457,6 +502,14 @@
       feedBtn.className = "view-feed-btn";
       feedBtn.textContent = "View Feed";
       followArea.appendChild(feedBtn);
+
+      if (viewerUid !== memberUid) {
+        const reportBtn = document.createElement("a");
+        reportBtn.href = `report.html?type=profile&targetId=${encodeURIComponent(memberUid)}&targetUserId=${encodeURIComponent(memberUid)}`;
+        reportBtn.className = "view-feed-btn";
+        reportBtn.textContent = "Report Profile";
+        followArea.appendChild(reportBtn);
+      }
 
       if (viewerUid === memberUid) {
         const selfBtn = document.createElement("button");
@@ -594,12 +647,18 @@
         const relationship = alreadyFollowing ? "following" : (requestSnap.exists() ? "requested" : "none");
         const isSelf = user.uid === memberUid;
         const isPrivate = !!profile.isPrivate;
-        const canViewFull = isSelf || !isPrivate || alreadyFollowing;
+        const isBanned = profile.moderationStatus === "banned" || profile.isHiddenByAdmin || profile.softDeleted;
+        const canViewFull = !isBanned && (isSelf || !isPrivate || alreadyFollowing);
 
         displayNameEl.textContent = profile.displayName || "Member";
         showAvatar(profile.photoURL || "");
+        applyModerationBadge(profile.moderationStatus, profile.warningUntil);
 
-        if (canViewFull) {
+        if (isBanned) {
+          bioEl.textContent = "This account was removed for policy violation.";
+          lockedTitle.textContent = "Account Removed";
+          lockedText.textContent = "This account was removed for policy violation.";
+        } else if (canViewFull) {
           bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
         } else {
           bioEl.textContent = "This profile is private.";
@@ -623,7 +682,9 @@
         if (canViewFull) {
           setVisibilityMode(true, isPrivate);
 
-          const memberPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === memberUid);
+          const memberPosts = postsSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => p.userId === memberUid);
           renderPosts(memberPosts);
 
           const followers = follows.filter(f => f.followingId === memberUid).map(f => f.followerId);
@@ -641,7 +702,7 @@
           renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
           renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
         } else {
-          setVisibilityMode(false, isPrivate);
+          setVisibilityMode(false, true);
         }
 
         loading.classList.add("hidden");
