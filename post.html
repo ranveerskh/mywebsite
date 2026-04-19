@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Post</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+      --yellow:#f5b942;
+    }
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .left-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .back-btn,.chip-btn{
+      border:none;
+      background:var(--soft);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-block;
+    }
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .panel{
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+    }
+    .hidden{display:none!important}
+
+    .post-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .post-left{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+    .avatar{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      object-fit:cover;
+      border:1px solid rgba(255,255,255,.10);
+      background:#1b2445;
+      flex-shrink:0;
+    }
+    .avatar-placeholder{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:6px;
+      background:#1b2445;
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      font-size:10px;
+      flex-shrink:0;
+    }
+    .post-name{
+      font-size:18px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .post-name a{
+      color:#fff;
+      text-decoration:none;
+    }
+    .post-name a:hover{
+      text-decoration:underline;
+    }
+    .post-date{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:3px;
+    }
+    .delete-btn{
+      border:none;
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      flex-shrink:0;
+    }
+
+    .meta-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .badge-public{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .badge-private{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+
+    .post-caption{
+      color:#e8eeff;
+      line-height:1.8;
+      font-size:15px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-bottom:12px;
+    }
+    .post-image{
+      width:100%;
+      max-height:620px;
+      object-fit:cover;
+      border-radius:18px;
+      display:block;
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      margin-bottom:12px;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:4px;
+    }
+    .action-btn{
+      border:none;
+      cursor:pointer;
+      font-weight:800;
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:14px;
+    }
+    .like-btn{
+      background:rgba(76,201,255,.14);
+      color:#c9f3ff;
+    }
+    .comment-anchor-btn{
+      background:rgba(167,139,250,.14);
+      color:#e5ddff;
+    }
+
+    .comments-panel-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .comment-form{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .comment-input{
+      flex:1;
+      min-width:220px;
+      border:none;
+      outline:none;
+      padding:14px 15px;
+      border-radius:16px;
+      background:#0f1630;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.07);
+      font-size:15px;
+    }
+    .comment-submit{
+      background:var(--green);
+      color:#062513;
+    }
+    .comments-list{
+      display:grid;
+      gap:10px;
+    }
+    .comment-item{
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px;
+      padding:12px;
+    }
+    .comment-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .comment-author{
+      font-weight:800;
+      font-size:14px;
+      color:#fff;
+    }
+    .comment-date{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:2px;
+    }
+    .comment-text{
+      color:#e8eeff;
+      line-height:1.6;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .comment-delete-btn{
+      border:none;
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border-radius:10px;
+      padding:7px 9px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      flex-shrink:0;
+    }
+
+    .lock-box{
+      text-align:center;
+      padding:26px 14px;
+      background:#0f1630;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
+    }
+    .lock-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .lock-text{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .empty-box{
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:#0f1630;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:#b9c4e3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+    }
+    .nav-link .icon{font-size:18px;line-height:1}
+
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
+      .comment-form{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Post detail</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a href="feed.html" class="chip-btn">Feed</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading post...</div>
+
+      <div id="postContent" class="hidden">
+        <div class="post-top">
+          <div class="post-left">
+            <img id="avatar" class="avatar hidden" alt="User Photo" />
+            <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
+
+            <div>
+              <div class="post-name">
+                <a id="ownerLink" href="#">Member</a>
+              </div>
+              <div id="postDate" class="post-date">Just now</div>
+            </div>
+          </div>
+
+          <button id="deleteBtn" class="delete-btn hidden">Delete</button>
+        </div>
+
+        <div id="metaRow" class="meta-row"></div>
+        <div id="postCaption" class="post-caption"></div>
+        <img id="postImage" class="post-image hidden" alt="Post image" />
+
+        <div class="actions">
+          <button id="likeBtn" class="action-btn like-btn">Like (0)</button>
+          <button id="commentAnchorBtn" class="action-btn comment-anchor-btn">Comments</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="lockedPanel" class="panel hidden">
+      <div class="lock-box">
+        <div class="lock-title">Private Post</div>
+        <div class="lock-text">
+          You need to follow this member to view this post.
+        </div>
+      </div>
+    </div>
+
+    <div id="commentsPanel" class="panel hidden">
+      <div class="comments-panel-title">Comments</div>
+
+      <form id="commentForm" class="comment-form">
+        <input id="commentInput" class="comment-input" type="text" placeholder="Write a comment..." />
+        <button type="submit" class="action-btn comment-submit">Add</button>
+      </form>
+
+      <div id="formMessage" class="message"></div>
+      <div id="commentsList" class="comments-list"></div>
+      <div id="commentsEmpty" class="empty-box hidden">No comments yet.</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      getDocs,
+      collection,
+      query,
+      orderBy,
+      addDoc,
+      setDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const postContent = document.getElementById("postContent");
+    const lockedPanel = document.getElementById("lockedPanel");
+    const commentsPanel = document.getElementById("commentsPanel");
+
+    const avatar = document.getElementById("avatar");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+    const ownerLink = document.getElementById("ownerLink");
+    const postDate = document.getElementById("postDate");
+    const metaRow = document.getElementById("metaRow");
+    const postCaption = document.getElementById("postCaption");
+    const postImage = document.getElementById("postImage");
+    const likeBtn = document.getElementById("likeBtn");
+    const commentAnchorBtn = document.getElementById("commentAnchorBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
+
+    const commentForm = document.getElementById("commentForm");
+    const commentInput = document.getElementById("commentInput");
+    const formMessage = document.getElementById("formMessage");
+    const commentsList = document.getElementById("commentsList");
+    const commentsEmpty = document.getElementById("commentsEmpty");
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentPostId = null;
+    let currentPostData = null;
+    let canViewFull = false;
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
+
+    commentAnchorBtn.addEventListener("click", () => {
+      commentsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => commentInput.focus(), 250);
+    });
+
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    postImage.addEventListener("error", () => {
+      postImage.classList.add("hidden");
+    });
+
+    function setFormMessage(text, type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch { return "Just now"; }
+    }
+
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
+
+    async function refreshLikeUI() {
+      if (!currentPostId || !currentUser) return;
+
+      const likesCol = collection(db, "posts", currentPostId, "likes");
+      const likesSnap = await getDocs(likesCol);
+      const likeRef = doc(db, "posts", currentPostId, "likes", currentUser.uid);
+      const myLike = await getDoc(likeRef);
+
+      const liked = myLike.exists();
+      likeBtn.textContent = liked
+        ? `Unlike (${likesSnap.size})`
+        : `Like (${likesSnap.size})`;
+
+      likeBtn.dataset.liked = liked ? "yes" : "no";
+    }
+
+    async function refreshCommentsUI() {
+      if (!currentPostId || !currentUser) return;
+
+      commentsList.innerHTML = "";
+
+      const commentsQuery = query(
+        collection(db, "posts", currentPostId, "comments"),
+        orderBy("createdAt", "asc")
+      );
+
+      const commentsSnap = await getDocs(commentsQuery);
+
+      commentAnchorBtn.textContent = `Comments (${commentsSnap.size})`;
+
+      if (commentsSnap.empty) {
+        commentsEmpty.classList.remove("hidden");
+        return;
+      }
+
+      commentsEmpty.classList.add("hidden");
+
+      commentsSnap.forEach((commentDoc) => {
+        const comment = commentDoc.data();
+        const commentId = commentDoc.id;
+        const canDelete = comment.userId === currentUser.uid;
+
+        const commentEl = document.createElement("div");
+        commentEl.className = "comment-item";
+        commentEl.innerHTML = `
+          <div class="comment-top">
+            <div>
+              <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+              <div class="comment-date">${formatDate(comment.createdAt)}</div>
+            </div>
+            ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${commentId}">Delete</button>` : ""}
+          </div>
+          <div class="comment-text">${escapeHtml(comment.text || "")}</div>
+        `;
+
+        commentsList.appendChild(commentEl);
+      });
+
+      commentsList.querySelectorAll(".comment-delete-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const commentId = btn.getAttribute("data-comment-id");
+          const ok = confirm("Delete this comment?");
+          if (!ok) return;
+
+          try {
+            await deleteDoc(doc(db, "posts", currentPostId, "comments", commentId));
+            await refreshCommentsUI();
+          } catch (error) {
+            console.error(error);
+            setFormMessage("Could not delete comment.", "error");
+          }
+        });
+      });
+    }
+
+    function renderMeta(isPrivate) {
+      metaRow.innerHTML = `
+        <span class="badge ${isPrivate ? "badge-private" : "badge-public"}">
+          ${isPrivate ? "Private" : "Public"}
+        </span>
+      `;
+    }
+
+    function setVisibilityMode(showPost) {
+      if (showPost) {
+        postContent.classList.remove("hidden");
+        commentsPanel.classList.remove("hidden");
+        lockedPanel.classList.add("hidden");
+      } else {
+        postContent.classList.add("hidden");
+        commentsPanel.classList.add("hidden");
+        lockedPanel.classList.remove("hidden");
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      currentPostId = new URLSearchParams(window.location.search).get("postId");
+
+      if (!currentPostId) {
+        loading.textContent = "No post selected.";
+        return;
+      }
+
+      try {
+        const [myPublicSnap, postSnap, followsSnap] = await Promise.all([
+          getDoc(doc(db, "publicProfiles", user.uid)),
+          getDoc(doc(db, "posts", currentPostId)),
+          getDocs(collection(db, "follows"))
+        ]);
+
+        currentUserProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
+
+        if (!postSnap.exists()) {
+          loading.textContent = "Post not found.";
+          return;
+        }
+
+        currentPostData = postSnap.data();
+
+        const ownerUid = currentPostData.userId;
+        const ownerPublicSnap = await getDoc(doc(db, "publicProfiles", ownerUid));
+        const ownerProfile = ownerPublicSnap.exists() ? ownerPublicSnap.data() : {};
+        const isPrivate = !!ownerProfile.isPrivate;
+        const alreadyFollowing = followsSnap.docs
+          .map(d => d.data())
+          .some(f => f.followerId === user.uid && f.followingId === ownerUid);
+
+        canViewFull = user.uid === ownerUid || !isPrivate || alreadyFollowing;
+
+        if (!canViewFull) {
+          loading.classList.add("hidden");
+          setVisibilityMode(false);
+          return;
+        }
+
+        setVisibilityMode(true);
+
+        showAvatar(currentPostData.userPhotoURL || ownerProfile.photoURL || "");
+        ownerLink.textContent = currentPostData.displayName || ownerProfile.displayName || "Member";
+        ownerLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
+        postDate.textContent = formatDate(currentPostData.createdAt);
+
+        renderMeta(isPrivate);
+
+        postCaption.textContent = currentPostData.caption || "";
+        if (currentPostData.imageURL) {
+          postImage.src = currentPostData.imageURL;
+          postImage.classList.remove("hidden");
+        } else {
+          postImage.classList.add("hidden");
+        }
+
+        if (currentUser.uid === ownerUid) {
+          deleteBtn.classList.remove("hidden");
+        }
+
+        await refreshLikeUI();
+        await refreshCommentsUI();
+
+        loading.classList.add("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load post.";
+      }
+    });
+
+    likeBtn.addEventListener("click", async () => {
+      if (!currentUser || !currentPostId || !currentPostData) return;
+
+      const likeRef = doc(db, "posts", currentPostId, "likes", currentUser.uid);
+      const existing = await getDoc(likeRef);
+      likeBtn.disabled = true;
+
+      try {
+        if (existing.exists()) {
+          await deleteDoc(likeRef);
+        } else {
+          await setDoc(likeRef, {
+            userId: currentUser.uid,
+            createdAt: serverTimestamp()
+          });
+
+          if (currentPostData.userId !== currentUser.uid) {
+            const actorName =
+              currentUserProfile?.displayName ||
+              currentUser.displayName ||
+              "Someone";
+
+            await addDoc(collection(db, "notifications", currentPostData.userId, "items"), {
+              type: "like",
+              title: "New like",
+              text: `${actorName} liked your post.`,
+              fromUserId: currentUser.uid,
+              toUserId: currentPostData.userId,
+              postId: currentPostId,
+              createdAt: serverTimestamp()
+            });
+          }
+        }
+
+        await refreshLikeUI();
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not update like.", "error");
+      }
+
+      likeBtn.disabled = false;
+    });
+
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || !currentPostId || !currentPostData) return;
+
+      const text = commentInput.value.trim();
+      if (!text) return;
+
+      const displayName =
+        currentUserProfile?.displayName ||
+        currentUser.displayName ||
+        "Member";
+
+      const userPhotoURL = currentUserProfile?.photoURL || "";
+      const submitBtn = commentForm.querySelector("button");
+      submitBtn.disabled = true;
+
+      try {
+        await addDoc(collection(db, "posts", currentPostId, "comments"), {
+          userId: currentUser.uid,
+          displayName,
+          userPhotoURL,
+          text,
+          createdAt: serverTimestamp()
+        });
+
+        if (currentPostData.userId !== currentUser.uid) {
+          await addDoc(collection(db, "notifications", currentPostData.userId, "items"), {
+            type: "comment",
+            title: "New comment",
+            text: `${displayName} commented on your post.`,
+            fromUserId: currentUser.uid,
+            toUserId: currentPostData.userId,
+            postId: currentPostId,
+            createdAt: serverTimestamp()
+          });
+        }
+
+        commentInput.value = "";
+        setFormMessage("Comment added.", "success");
+        await refreshCommentsUI();
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not add comment.", "error");
+      }
+
+      submitBtn.disabled = false;
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+      if (!currentPostId) return;
+
+      const ok = confirm("Delete this post?");
+      if (!ok) return;
+
+      try {
+        await deleteDoc(doc(db, "posts", currentPostId));
+        window.location.href = "profile.html";
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not delete post.", "error");
+      }
+    });
+  </script>
+</body>
+</html>
