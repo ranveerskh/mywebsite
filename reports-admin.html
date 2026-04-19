@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Reports Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --text:#fff;--muted:#9aa7c7;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;--blue:#4cc9ff;--purple:#a78bfa;
+    }
+    body{background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);color:var(--text);min-height:100vh;padding:14px 14px 92px}
+    .app{max-width:980px;margin:0 auto}
+    .topbar,.panel{
+      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px
+    }
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);flex-wrap:wrap}
+    .left-wrap{display:flex;align-items:center;gap:10px}
+    .back-btn,.action-btn{
+      border:none;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer
+    }
+    .back-btn{background:var(--soft);color:#fff;border:1px solid var(--line)}
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
+    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
+    .filters{display:grid;grid-template-columns:1fr 180px;gap:10px}
+    input,select,textarea{
+      width:100%;border:none;outline:none;padding:13px 14px;border-radius:14px;background:#0f1630;color:#fff;
+      border:1px solid rgba(255,255,255,.07);font-size:14px
+    }
+    select option{color:#000}
+    textarea{min-height:90px;resize:vertical}
+    .loading{text-align:center;color:var(--muted);padding:28px 10px}
+    .list{display:grid;gap:14px}
+    .card{background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:14px}
+    .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .card-title{font-size:17px;font-weight:800;line-height:1.4}
+    .card-sub{color:var(--muted);font-size:13px;line-height:1.6;margin-top:4px;word-break:break-word}
+    .status-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .status-open{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .status-actioned{background:rgba(61,220,132,.14);color:#c9f7dd;border:1px solid rgba(61,220,132,.20)}
+    .status-dismissed{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
+    .reason-box,.info-box{
+      background:#111936;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:12px;margin-bottom:12px
+    }
+    .reason-box small,.info-box small{display:block;color:var(--muted);margin-bottom:6px;font-size:12px}
+    .reason-box div,.info-box div,.info-box a{color:#fff;font-size:14px;line-height:1.7;word-break:break-word}
+    .info-box a{text-decoration:none}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    .warn-btn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .suspend-btn{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+    .ban-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
+    .dismiss-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
+    .open-btn{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .message{min-height:20px;font-size:14px;margin-top:10px}
+    .success{color:#9cf0bf}.error{color:#ffb3bd}
+    .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Reports admin</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Reports</div>
+      <div class="section-note">Warn, suspend, ban, or dismiss reports here.</div>
+
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search by reason, details, user id..." />
+        <select id="statusFilter">
+          <option value="all">All reports</option>
+          <option value="open">Open only</option>
+          <option value="actioned">Actioned only</option>
+          <option value="dismissed">Dismissed only</option>
+        </select>
+      </div>
+
+      <div id="pageMessage" class="message"></div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading reports...</div>
+      <div id="list" class="list hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No reports found.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      getDocs,
+      doc,
+      getDoc,
+      updateDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const list = document.getElementById("list");
+    const emptyBox = document.getElementById("emptyBox");
+    const pageMessage = document.getElementById("pageMessage");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+
+    let allReports = [];
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "settings.html";
+    });
+
+    function setMessage(text, type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch { return "Just now"; }
+    }
+
+    function getFilteredReports() {
+      const q = searchInput.value.trim().toLowerCase();
+      const status = statusFilter.value;
+
+      return allReports.filter(item => {
+        if (status !== "all" && (item.status || "open") !== status) return false;
+        if (!q) return true;
+
+        const haystack = [
+          item.targetType || "",
+          item.targetId || "",
+          item.targetUserId || "",
+          item.reporterId || "",
+          item.category || "",
+          item.details || "",
+          item.adminNote || ""
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    async function applyModeration(targetUserId, moderationStatus, adminNote, reportId, actionType, reportStatus) {
+      await setDoc(doc(db, "users", targetUserId), {
+        moderationStatus,
+        moderationNote: adminNote || "",
+        moderationUpdatedAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, "publicProfiles", targetUserId), {
+        accountState: moderationStatus
+      }, { merge: true });
+
+      await updateDoc(doc(db, "reports", reportId), {
+        status: reportStatus,
+        actionType,
+        adminNote: adminNote || "",
+        reviewedAt: serverTimestamp()
+      });
+    }
+
+    function renderReports() {
+      const items = getFilteredReports();
+      list.innerHTML = "";
+
+      if (!items.length) {
+        list.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      list.classList.remove("hidden");
+
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const statusClass = item.status === "actioned"
+          ? "status-actioned"
+          : item.status === "dismissed"
+          ? "status-dismissed"
+          : "status-open";
+
+        card.innerHTML = `
+          <div class="card-head">
+            <div>
+              <div class="card-title">${escapeHtml((item.targetType || "item").toUpperCase())} Report</div>
+              <div class="card-sub">
+                Reporter: ${escapeHtml(item.reporterId || "-")}<br>
+                Target user: ${escapeHtml(item.targetUserId || "-")}<br>
+                Target ID: ${escapeHtml(item.targetId || "-")}<br>
+                Created: ${escapeHtml(formatDate(item.createdAt))}
+              </div>
+            </div>
+            <span class="status-badge ${statusClass}">${escapeHtml((item.status || "open").toUpperCase())}</span>
+          </div>
+
+          <div class="info-box">
+            <small>Reason</small>
+            <div>${escapeHtml(item.category || "other")}</div>
+          </div>
+
+          <div class="reason-box">
+            <small>Details</small>
+            <div>${escapeHtml(item.details || "No details")}</div>
+          </div>
+
+          <div class="field">
+            <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
+            <textarea class="admin-note-input" data-id="${item.id}" placeholder="Write admin note...">${escapeHtml(item.adminNote || "")}</textarea>
+          </div>
+
+          <div class="actions">
+            ${
+              item.targetType === "post"
+                ? `<a class="action-btn open-btn" href="post.html?postId=${encodeURIComponent(item.targetId)}" target="_blank">Open Post</a>`
+                : `<a class="action-btn open-btn" href="member.html?uid=${encodeURIComponent(item.targetUserId)}" target="_blank">Open Profile</a>`
+            }
+            <button class="action-btn warn-btn" data-action="warn" data-id="${item.id}" data-user="${item.targetUserId}">Warn</button>
+            <button class="action-btn suspend-btn" data-action="suspend" data-id="${item.id}" data-user="${item.targetUserId}">Suspend</button>
+            <button class="action-btn ban-btn" data-action="ban" data-id="${item.id}" data-user="${item.targetUserId}">Ban</button>
+            <button class="action-btn dismiss-btn" data-action="dismiss" data-id="${item.id}" data-user="${item.targetUserId}">Dismiss</button>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll("button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const reportId = btn.getAttribute("data-id");
+          const targetUserId = btn.getAttribute("data-user");
+          const action = btn.getAttribute("data-action");
+          const noteEl = list.querySelector(`.admin-note-input[data-id="${reportId}"]`);
+          const adminNote = noteEl ? noteEl.value.trim() : "";
+
+          btn.disabled = true;
+
+          try {
+            if (action === "warn") {
+              await applyModeration(targetUserId, "warned", adminNote, reportId, "warn", "actioned");
+              setMessage("User warned.", "success");
+            } else if (action === "suspend") {
+              await applyModeration(targetUserId, "suspended", adminNote, reportId, "suspend", "actioned");
+              setMessage("User suspended.", "success");
+            } else if (action === "ban") {
+              await applyModeration(targetUserId, "banned", adminNote, reportId, "ban", "actioned");
+              setMessage("User banned.", "success");
+            } else if (action === "dismiss") {
+              await updateDoc(doc(db, "reports", reportId), {
+                status: "dismissed",
+                actionType: "dismiss",
+                adminNote,
+                reviewedAt: serverTimestamp()
+              });
+              setMessage("Report dismissed.", "success");
+            }
+
+            const idx = allReports.findIndex(x => x.id === reportId);
+            if (idx > -1) {
+              allReports[idx].status = action === "dismiss" ? "dismissed" : "actioned";
+              allReports[idx].actionType = action;
+              allReports[idx].adminNote = adminNote;
+            }
+            renderReports();
+          } catch (error) {
+            console.error(error);
+            setMessage("Action failed.", "error");
+          }
+
+          btn.disabled = false;
+        });
+      });
+    }
+
+    searchInput.addEventListener("input", renderReports);
+    statusFilter.addEventListener("change", renderReports);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const adminSnap = await getDoc(doc(db, "admins", user.uid));
+        if (!adminSnap.exists()) {
+          loading.textContent = "Access denied. Admin only.";
+          return;
+        }
+
+        const reportsSnap = await getDocs(collection(db, "reports"));
+        allReports = reportsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        loading.classList.add("hidden");
+        renderReports();
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load reports.";
+      }
+    });
+  </script>
+</body>
+</html>
