@@ -8,7 +8,7 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
       --bg:#0b1020;--card:#121931;--card-soft:#161f3d;--line:rgba(255,255,255,0.08);
-      --text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;--red:#ff5d73;
+      --text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--red:#ff5d73;
     }
     body{
       background:linear-gradient(180deg,#070b16 0%, #0d1326 100%);
@@ -71,18 +71,16 @@
     .badge-public{background:rgba(76,201,255,0.14);color:#d8f7ff;border:1px solid rgba(76,201,255,0.20)}
     .badge-private{background:rgba(245,185,66,0.14);color:#ffe7b0;border:1px solid rgba(245,185,66,0.20)}
     .badge-verified{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
-    .badge-friend{background:rgba(167,139,250,0.14);color:#e8defd;border:1px solid rgba(167,139,250,0.20)}
     .meta{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:8px}
     .bio{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
     .member-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .view-btn,.follow-btn,.unfollow-btn,.self-btn{
+    .view-btn,.follow-btn,.unfollow-btn{
       border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;
       text-decoration:none;display:inline-block;cursor:pointer;
     }
     .view-btn{background:rgba(76,201,255,0.14);color:#d8f7ff}
     .follow-btn{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
     .unfollow-btn{background:rgba(255,93,115,0.14);color:#ffd3d9;border:1px solid rgba(255,93,115,0.20)}
-    .self-btn{background:#182248;color:#c9d5ff;cursor:not-allowed;border:1px solid rgba(255,255,255,0.06)}
     .empty-box{
       text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;border-radius:16px;
       border:1px dashed rgba(255,255,255,0.08);
@@ -137,7 +135,6 @@
           <option value="public">Public Only</option>
           <option value="private">Private Only</option>
           <option value="verified">Verified Only</option>
-          <option value="friends">Friends Only</option>
           <option value="following">Following Only</option>
         </select>
       </div>
@@ -228,14 +225,6 @@
       return follows.some(f => f.followerId === currentUser.uid && f.followingId === uid);
     }
 
-    function isFollower(uid) {
-      return follows.some(f => f.followerId === uid && f.followingId === currentUser.uid);
-    }
-
-    function isFriend(uid) {
-      return isFollowing(uid) && isFollower(uid);
-    }
-
     function getFilteredMembers() {
       const q = searchInput.value.trim().toLowerCase();
       const filter = typeFilter.value;
@@ -247,7 +236,6 @@
         if (filter === "public" && member.isPrivate) return false;
         if (filter === "private" && !member.isPrivate) return false;
         if (filter === "verified" && !member.isVerified) return false;
-        if (filter === "friends" && !isFriend(member.uid)) return false;
         if (filter === "following" && !isFollowing(member.uid)) return false;
 
         if (!q) return true;
@@ -323,7 +311,6 @@
 
       members.forEach(member => {
         const following = isFollowing(member.uid);
-        const friend = isFriend(member.uid);
 
         const card = document.createElement("div");
         card.className = "member-card";
@@ -356,7 +343,6 @@
                   ${member.isPrivate ? "Private" : "Public"}
                 </span>
                 ${member.isVerified ? `<span class="badge badge-verified">Verified</span>` : ""}
-                ${friend ? `<span class="badge badge-friend">Friend</span>` : ""}
               </div>
 
               <div class="meta">
