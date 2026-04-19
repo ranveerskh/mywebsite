@@ -3,37 +3,247 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>BareWorld - Login</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      background:linear-gradient(135deg,#020617,#0f172a,#1e293b);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:480px;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:26px;
+      padding:30px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 40px rgba(0,0,0,0.25);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(56,189,248,0.14);
+      border:1px solid rgba(56,189,248,0.25);
+      color:#bae6fd;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:14px;
+    }
+
+    h1{
+      font-size:34px;
+      margin-bottom:10px;
+    }
+
+    .sub{
+      color:#cbd5e1;
+      line-height:1.7;
+      font-size:14px;
+      margin-bottom:22px;
+    }
+
+    .field{
+      margin-bottom:15px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-size:14px;
+      color:#cbd5e1;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(255,255,255,0.08);
+      color:#fff;
+      outline:none;
+      font-size:15px;
+    }
+
+    input::placeholder{
+      color:#94a3b8;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+    }
+
+    .success{ color:#86efac; }
+    .error{ color:#fda4af; }
+
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:14px 18px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:15px;
+    }
+
+    .btn-primary{
+      background:#38bdf8;
+      color:#082f49;
+      min-width:140px;
+    }
+
+    .bottom{
+      text-align:center;
+      margin-top:20px;
+      color:#cbd5e1;
+      font-size:14px;
+    }
+
+    .bottom a{
+      color:#86efac;
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    @media (max-width:700px){
+      .actions{
+        align-items:stretch;
+      }
+
+      .btn-primary{
+        width:100%;
+      }
+
+      .card{
+        padding:22px;
+      }
+
+      h1{
+        font-size:30px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Login</h1>
+  <div class="wrap">
+    <div class="card">
+      <div class="badge">Welcome back</div>
+      <h1>Login</h1>
+      <div class="sub">
+        Access your BareWorld account and go straight to the member feed.
+      </div>
 
-  <form id="loginForm">
-    <input type="email" id="email" placeholder="Email" required /><br><br>
-    <input type="password" id="password" placeholder="Password" required /><br><br>
-    <button type="submit">Login</button>
-  </form>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" required />
+        </div>
 
-  <p id="msg"></p>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+        </div>
+
+        <div class="actions">
+          <div id="message" class="message"></div>
+          <button type="submit" id="loginBtn" class="btn btn-primary">Login</button>
+        </div>
+      </form>
+
+      <div class="bottom">
+        Don’t have an account? <a href="signup.html">Create one</a>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { auth } from "./firebase.js";
-    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const form = document.getElementById("loginForm");
-    const msg = document.getElementById("msg");
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const message = document.getElementById("message");
 
-    form.addEventListener("submit", async (e) => {
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "feed.html";
+      }
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
+      if (!email || !password) {
+        setMessage("Please fill all fields.", "error");
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in...";
+
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        msg.textContent = "Login successful";
-      } catch (err) {
-        msg.textContent = err.message;
+        setMessage("Login successful. Redirecting...", "success");
+
+        setTimeout(() => {
+          window.location.href = "feed.html";
+        }, 700);
+
+      } catch (error) {
+        console.error(error);
+
+        let msg = "Login failed.";
+
+        if (
+          error.code === "auth/invalid-credential" ||
+          error.code === "auth/wrong-password" ||
+          error.code === "auth/user-not-found"
+        ) {
+          msg = "Invalid email or password.";
+        } else if (error.code === "auth/invalid-email") {
+          msg = "Invalid email address.";
+        }
+
+        setMessage(msg, "error");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
       }
     });
   </script>
