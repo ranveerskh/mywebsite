@@ -60,8 +60,9 @@
     }
     .btn-edit{background:rgba(76,201,255,.14);color:#d8f7ff}
     .btn-settings{background:rgba(167,139,250,.14);color:#e8defd}
+
     .stats{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;
+      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;
     }
     .stat{
       background:#0f1630;border:1px solid rgba(255,255,255,.06);
@@ -69,12 +70,14 @@
     }
     .stat-value{font-size:18px;font-weight:800;margin-bottom:4px}
     .stat-label{font-size:12px;color:var(--muted);line-height:1.4}
+
     .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
     .tab-btn{
       border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,.06);
       border-radius:14px;padding:12px 10px;font-weight:800;font-size:13px;cursor:pointer;
     }
     .tab-btn.active{background:rgba(76,201,255,.14);color:#d8f7ff}
+
     .posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .post-tile{
       aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#0f1630;
@@ -85,6 +88,7 @@
       width:100%;height:100%;padding:10px;display:flex;align-items:flex-end;
       color:#e8eeff;font-size:12px;line-height:1.5;background:linear-gradient(180deg,#19244a,#0f1630);
     }
+
     .events-grid{display:grid;gap:12px}
     .event-card{
       background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;
@@ -100,6 +104,7 @@
     .badge-joined{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
     .event-meta{display:grid;gap:6px;color:#d7def5;font-size:13px;line-height:1.6;margin-bottom:10px}
     .event-desc{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word}
+
     .network-section{margin-bottom:18px}
     .network-title{font-size:16px;font-weight:800;margin-bottom:10px}
     .network-list{display:grid;gap:10px}
@@ -119,10 +124,12 @@
     .person-name a{color:#fff;text-decoration:none}
     .person-name a:hover{text-decoration:underline}
     .person-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-top:3px}
+
     .empty-box{
       text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;
       border-radius:16px;border:1px dashed rgba(255,255,255,.08);
     }
+
     .bottom-nav{
       position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
       background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
@@ -136,12 +143,12 @@
     }
     .nav-link .icon{font-size:18px;line-height:1}
     .nav-link.active{background:rgba(76,201,255,.14);color:#d8f7ff}
+
     @media (max-width:700px){
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
       .brand{font-size:20px}
       .chip-btn{padding:9px 10px;font-size:12px}
-      .stats{grid-template-columns:repeat(4,1fr)}
       .profile-head{grid-template-columns:78px 1fr}
       .avatar,.avatar-placeholder{width:78px;height:78px}
     }
@@ -184,21 +191,17 @@
         </div>
 
         <div class="stats">
-          <div class="stat">
+          <div class="stat" id="postsStat">
             <div class="stat-value" id="postsCount">0</div>
             <div class="stat-label">Posts</div>
           </div>
-          <div class="stat">
+          <div class="stat" id="followersStat">
             <div class="stat-value" id="followersCount">0</div>
             <div class="stat-label">Followers</div>
           </div>
-          <div class="stat">
+          <div class="stat" id="followingStat">
             <div class="stat-value" id="followingCount">0</div>
             <div class="stat-label">Following</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value" id="friendsCount">0</div>
-            <div class="stat-label">Friends</div>
           </div>
         </div>
       </div>
@@ -232,22 +235,16 @@
     </div>
 
     <div id="networkTab" class="panel hidden">
-      <div class="network-section">
+      <div class="network-section" id="followersSection">
         <div class="network-title">Followers</div>
         <div id="followersList" class="network-list hidden"></div>
         <div id="followersEmpty" class="empty-box hidden">No followers yet.</div>
       </div>
 
-      <div class="network-section">
+      <div class="network-section" id="followingSection">
         <div class="network-title">Following</div>
         <div id="followingList" class="network-list hidden"></div>
         <div id="followingEmpty" class="empty-box hidden">Not following anyone yet.</div>
-      </div>
-
-      <div class="network-section">
-        <div class="network-title">Friends</div>
-        <div id="friendsList" class="network-list hidden"></div>
-        <div id="friendsEmpty" class="empty-box hidden">No mutual friends yet.</div>
       </div>
     </div>
   </div>
@@ -295,7 +292,6 @@
     const postsCountEl = document.getElementById("postsCount");
     const followersCountEl = document.getElementById("followersCount");
     const followingCountEl = document.getElementById("followingCount");
-    const friendsCountEl = document.getElementById("friendsCount");
 
     const postsGrid = document.getElementById("postsGrid");
     const postsEmpty = document.getElementById("postsEmpty");
@@ -309,8 +305,10 @@
     const followersEmpty = document.getElementById("followersEmpty");
     const followingList = document.getElementById("followingList");
     const followingEmpty = document.getElementById("followingEmpty");
-    const friendsList = document.getElementById("friendsList");
-    const friendsEmpty = document.getElementById("friendsEmpty");
+
+    const postsStat = document.getElementById("postsStat");
+    const followersStat = document.getElementById("followersStat");
+    const followingStat = document.getElementById("followingStat");
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -334,6 +332,25 @@
     avatar.addEventListener("error", () => {
       avatar.classList.add("hidden");
       avatarPlaceholder.classList.remove("hidden");
+    });
+
+    function openTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll("#postsTab, #eventsTab, #networkTab").forEach(el => el.classList.add("hidden"));
+
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      if (btn) btn.classList.add("active");
+      document.getElementById(tabId).classList.remove("hidden");
+    }
+
+    postsStat.addEventListener("click", () => openTab("postsTab"));
+    followersStat.addEventListener("click", () => {
+      openTab("networkTab");
+      document.getElementById("followersSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    followingStat.addEventListener("click", () => {
+      openTab("networkTab");
+      document.getElementById("followingSection").scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     function renderPosts(posts) {
@@ -492,12 +509,8 @@
       const followers = follows.filter(f => f.followingId === uid).map(f => f.followerId);
       const following = follows.filter(f => f.followerId === uid).map(f => f.followingId);
 
-      const followingSet = new Set(following);
-      const friends = followers.filter(id => followingSet.has(id));
-
       followersCountEl.textContent = String(followers.length);
       followingCountEl.textContent = String(following.length);
-      friendsCountEl.textContent = String(friends.length);
 
       const profilesMap = new Map();
       publicProfilesSnap.forEach(docSnap => {
@@ -507,7 +520,6 @@
 
       renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
       renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
-      renderPeople(friends, profilesMap, friendsList, friendsEmpty, "No mutual friends yet.");
 
       loading.classList.add("hidden");
       content.classList.remove("hidden");
@@ -515,14 +527,7 @@
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        document.getElementById("postsTab").classList.add("hidden");
-        document.getElementById("eventsTab").classList.add("hidden");
-        document.getElementById("networkTab").classList.add("hidden");
-
-        document.getElementById(btn.dataset.tab).classList.remove("hidden");
+        openTab(btn.dataset.tab);
       });
     });
 
