@@ -8,7 +8,7 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
       --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--purple:#a78bfa;
+      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--purple:#a78bfa;--yellow:#f5b942;
     }
     body{
       background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
@@ -35,6 +35,7 @@
     }
     .loading{text-align:center;color:var(--muted);padding:28px 10px}
     .hidden{display:none!important}
+
     .profile-head{
       display:grid;grid-template-columns:92px 1fr;gap:16px;align-items:start;
     }
@@ -52,6 +53,16 @@
       color:#e8eeff;line-height:1.7;font-size:14px;
       white-space:pre-wrap;word-break:break-word;margin-top:8px;
     }
+    .meta-row{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
+    }
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+    }
+    .badge-public{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .badge-locked{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+
     .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .follow-btn,.unfollow-btn,.self-btn,.view-feed-btn,.request-btn,.cancel-btn{
       border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;
@@ -112,6 +123,13 @@
     .person-name a:hover{text-decoration:underline}
     .person-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-top:3px}
 
+    .lock-box{
+      text-align:center;padding:26px 14px;background:#0f1630;border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
+    }
+    .lock-title{font-size:18px;font-weight:800;margin-bottom:8px}
+    .lock-text{color:var(--muted);font-size:14px;line-height:1.7}
+
     .empty-box{
       text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;border-radius:16px;
       border:1px dashed rgba(255,255,255,.08);
@@ -128,6 +146,15 @@
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .chip-btn{padding:9px 10px;font-size:12px}
+      .profile-head{grid-template-columns:78px 1fr}
+      .avatar,.avatar-placeholder{width:78px;height:78px}
+    }
   </style>
 </head>
 <body>
@@ -156,11 +183,12 @@
             <div class="display-name" id="displayName">Member</div>
             <div class="bio" id="bio">No bio added yet.</div>
 
+            <div class="meta-row" id="metaRow"></div>
             <div class="action-row" id="followArea"></div>
           </div>
         </div>
 
-        <div class="stats">
+        <div class="stats" id="statsBlock">
           <div class="stat" id="postsStat">
             <div class="stat-value" id="postsCount">0</div>
             <div class="stat-label">Posts</div>
@@ -177,7 +205,16 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div id="lockedPanel" class="panel hidden">
+      <div class="lock-box">
+        <div class="lock-title">Private Profile</div>
+        <div class="lock-text" id="lockedText">
+          Follow this member to see their posts and connections.
+        </div>
+      </div>
+    </div>
+
+    <div id="tabsPanel" class="panel">
       <div class="tabs">
         <button class="tab-btn active" data-tab="postsTab">Posts</button>
         <button class="tab-btn" data-tab="followersTab">Followers</button>
@@ -252,6 +289,12 @@
     const displayNameEl = document.getElementById("displayName");
     const bioEl = document.getElementById("bio");
     const followArea = document.getElementById("followArea");
+    const metaRow = document.getElementById("metaRow");
+
+    const statsBlock = document.getElementById("statsBlock");
+    const tabsPanel = document.getElementById("tabsPanel");
+    const lockedPanel = document.getElementById("lockedPanel");
+    const lockedText = document.getElementById("lockedText");
 
     const postsCountEl = document.getElementById("postsCount");
     const followersCountEl = document.getElementById("followersCount");
@@ -303,6 +346,35 @@
     postsStat.addEventListener("click", () => openTab("postsTab"));
     followersStat.addEventListener("click", () => openTab("followersTab"));
     followingStat.addEventListener("click", () => openTab("followingTab"));
+
+    function setVisibilityMode(canViewFull, isPrivate) {
+      if (canViewFull) {
+        statsBlock.classList.remove("hidden");
+        tabsPanel.classList.remove("hidden");
+        document.getElementById("postsTab").classList.remove("hidden");
+        lockedPanel.classList.add("hidden");
+      } else {
+        statsBlock.classList.add("hidden");
+        tabsPanel.classList.add("hidden");
+        document.getElementById("postsTab").classList.add("hidden");
+        document.getElementById("followersTab").classList.add("hidden");
+        document.getElementById("followingTab").classList.add("hidden");
+        if (isPrivate) {
+          lockedPanel.classList.remove("hidden");
+        } else {
+          lockedPanel.classList.add("hidden");
+        }
+      }
+    }
+
+    function renderMeta(isPrivate, canViewFull, relationship) {
+      metaRow.innerHTML = `
+        <span class="badge ${isPrivate ? "badge-private" : "badge-public"}">
+          ${isPrivate ? "Private" : "Public"}
+        </span>
+        ${isPrivate && !canViewFull ? `<span class="badge badge-locked">${relationship === "requested" ? "Request sent" : "Locked"}</span>` : ""}
+      `;
+    }
 
     function renderPosts(posts) {
       postsGrid.innerHTML = "";
@@ -488,12 +560,13 @@
       }
 
       try {
-        const [profileSnap, postsSnap, followsSnap, publicProfilesSnap, requestSnap] = await Promise.all([
+        const [profileSnap, postsSnap, followsSnap, publicProfilesSnap, requestSnap, myPublicSnap] = await Promise.all([
           getDoc(doc(db, "publicProfiles", memberUid)),
           getDocs(collection(db, "posts")),
           getDocs(collection(db, "follows")),
           getDocs(collection(db, "publicProfiles")),
-          getDoc(doc(db, "follow_requests", `${user.uid}__${memberUid}`))
+          getDoc(doc(db, "follow_requests", `${user.uid}__${memberUid}`)),
+          getDoc(doc(db, "publicProfiles", user.uid))
         ]);
 
         let profile = null;
@@ -516,42 +589,60 @@
           return;
         }
 
-        displayNameEl.textContent = profile.displayName || "Member";
-        bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
-        showAvatar(profile.photoURL || "");
-
-        const memberPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === memberUid);
-        renderPosts(memberPosts);
-
         const follows = followsSnap.docs.map(d => d.data());
-        const followers = follows.filter(f => f.followingId === memberUid).map(f => f.followerId);
-        const following = follows.filter(f => f.followerId === memberUid).map(f => f.followingId);
-
-        followersCountEl.textContent = String(followers.length);
-        followingCountEl.textContent = String(following.length);
-
-        const profilesMap = new Map();
-        publicProfilesSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          profilesMap.set(data.uid, data);
-        });
-
-        renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
-        renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
-
         const alreadyFollowing = follows.some(f => f.followerId === user.uid && f.followingId === memberUid);
         const relationship = alreadyFollowing ? "following" : (requestSnap.exists() ? "requested" : "none");
+        const isSelf = user.uid === memberUid;
+        const isPrivate = !!profile.isPrivate;
+        const canViewFull = isSelf || !isPrivate || alreadyFollowing;
 
-        const myPublicSnap = await getDoc(doc(db, "publicProfiles", user.uid));
+        displayNameEl.textContent = profile.displayName || "Member";
+        showAvatar(profile.photoURL || "");
+
+        if (canViewFull) {
+          bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
+        } else {
+          bioEl.textContent = "This profile is private.";
+          lockedText.textContent = relationship === "requested"
+            ? "Your follow request is pending approval."
+            : "Follow this member to see their posts and connections.";
+        }
+
+        renderMeta(isPrivate, canViewFull, relationship);
+
         const myProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
 
         await renderFollowButton(
           user.uid,
           memberUid,
           getActorName(myProfile, user),
-          !!profile.isPrivate,
+          isPrivate,
           relationship
         );
+
+        if (canViewFull) {
+          setVisibilityMode(true, isPrivate);
+
+          const memberPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === memberUid);
+          renderPosts(memberPosts);
+
+          const followers = follows.filter(f => f.followingId === memberUid).map(f => f.followerId);
+          const following = follows.filter(f => f.followerId === memberUid).map(f => f.followingId);
+
+          followersCountEl.textContent = String(followers.length);
+          followingCountEl.textContent = String(following.length);
+
+          const profilesMap = new Map();
+          publicProfilesSnap.forEach(docSnap => {
+            const data = docSnap.data();
+            profilesMap.set(data.uid, data);
+          });
+
+          renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
+          renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
+        } else {
+          setVisibilityMode(false, isPrivate);
+        }
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
