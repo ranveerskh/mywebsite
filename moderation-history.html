@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Moderation History</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --text:#fff;--muted:#9aa7c7;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;--purple:#a78bfa;
+    }
+    body{background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);color:var(--text);min-height:100vh;padding:14px}
+    .app{max-width:980px;margin:0 auto}
+    .topbar,.panel{background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .left-wrap{display:flex;align-items:center;gap:10px}
+    .back-btn{border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line)}
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
+    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
+    .filters{display:grid;grid-template-columns:1fr 180px;gap:10px}
+    input,select{
+      width:100%;border:none;outline:none;padding:13px 14px;border-radius:14px;background:#0f1630;color:#fff;
+      border:1px solid rgba(255,255,255,.07);font-size:14px
+    }
+    select option{color:#000}
+    .loading{text-align:center;color:var(--muted);padding:28px 10px}
+    .list{display:grid;gap:12px}
+    .card{background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px}
+    .card-title{font-size:16px;font-weight:800;margin-bottom:6px}
+    .card-sub{font-size:13px;color:var(--muted);line-height:1.7}
+    .note{margin-top:10px;color:#fff;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:8px}
+    .warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .suspend{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+    .ban{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
+    .dismiss{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
+    .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Moderation history</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">History</div>
+      <div class="section-note">Every moderation action is saved here.</div>
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search by user id, note, category..." />
+        <select id="actionFilter">
+          <option value="all">All actions</option>
+          <option value="warn">Warn</option>
+          <option value="suspend">Suspend</option>
+          <option value="ban">Ban</option>
+          <option value="dismiss">Dismiss</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading history...</div>
+      <div id="list" class="list" style="display:none;"></div>
+      <div id="emptyBox" class="empty-box" style="display:none;">No moderation history found.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const list = document.getElementById("list");
+    const emptyBox = document.getElementById("emptyBox");
+    const searchInput = document.getElementById("searchInput");
+    const actionFilter = document.getElementById("actionFilter");
+
+    let allLogs = [];
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "reports-admin.html";
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch { return "Just now"; }
+    }
+
+    function getFilteredLogs() {
+      const q = searchInput.value.trim().toLowerCase();
+      const action = actionFilter.value;
+
+      return allLogs.filter(log => {
+        if (action !== "all" && (log.actionType || "") !== action) return false;
+        if (!q) return true;
+
+        const haystack = [
+          log.targetUserId || "",
+          log.actionType || "",
+          log.category || "",
+          log.adminNote || "",
+          log.targetType || "",
+          log.targetId || ""
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    function renderLogs() {
+      const items = getFilteredLogs();
+      list.innerHTML = "";
+
+      if (!items.length) {
+        list.style.display = "none";
+        emptyBox.style.display = "block";
+        return;
+      }
+
+      emptyBox.style.display = "none";
+      list.style.display = "grid";
+
+      items.forEach(log => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const badgeClass =
+          log.actionType === "warn" ? "warn" :
+          log.actionType === "suspend" ? "suspend" :
+          log.actionType === "ban" ? "ban" : "dismiss";
+
+        card.innerHTML = `
+          <span class="badge ${badgeClass}">${escapeHtml((log.actionType || "action").toUpperCase())}</span>
+          <div class="card-title">User: ${escapeHtml(log.targetUserId || "-")}</div>
+          <div class="card-sub">
+            Report: ${escapeHtml(log.sourceReportId || "-")}<br>
+            Target: ${escapeHtml(log.targetType || "-")} • ${escapeHtml(log.targetId || "-")}<br>
+            Category: ${escapeHtml(log.category || "-")}<br>
+            Duration: ${escapeHtml(String(log.durationDays || 0))} days<br>
+            Active until: ${escapeHtml(formatDate(log.activeUntil))}<br>
+            Created: ${escapeHtml(formatDate(log.createdAt))}
+          </div>
+          <div class="note">${escapeHtml(log.adminNote || "No admin note")}</div>
+        `;
+
+        list.appendChild(card);
+      });
+    }
+
+    searchInput.addEventListener("input", renderLogs);
+    actionFilter.addEventListener("change", renderLogs);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const adminSnap = await getDoc(doc(db, "admins", user.uid));
+        if (!adminSnap.exists()) {
+          loading.textContent = "Access denied. Admin only.";
+          return;
+        }
+
+        const snap = await getDocs(collection(db, "moderation_history"));
+        allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        loading.style.display = "none";
+        renderLogs();
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load moderation history.";
+      }
+    });
+  </script>
+</body>
+</html>
