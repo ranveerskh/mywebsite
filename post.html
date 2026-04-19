@@ -169,6 +169,11 @@
       color:#ffe7b0;
       border:1px solid rgba(245,185,66,.20);
     }
+    .badge-banned{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
 
     .post-caption{
       color:#e8eeff;
@@ -376,6 +381,7 @@
 
       <div class="top-actions">
         <a href="feed.html" class="chip-btn">Feed</a>
+        <a id="reportPostBtn" class="chip-btn hidden" href="#">Report</a>
       </div>
     </div>
 
@@ -412,8 +418,8 @@
 
     <div id="lockedPanel" class="panel hidden">
       <div class="lock-box">
-        <div class="lock-title">Private Post</div>
-        <div class="lock-text">
+        <div id="lockedTitle" class="lock-title">Private Post</div>
+        <div id="lockedText" class="lock-text">
           You need to follow this member to view this post.
         </div>
       </div>
@@ -488,6 +494,9 @@
     const likeBtn = document.getElementById("likeBtn");
     const commentAnchorBtn = document.getElementById("commentAnchorBtn");
     const deleteBtn = document.getElementById("deleteBtn");
+    const reportPostBtn = document.getElementById("reportPostBtn");
+    const lockedTitle = document.getElementById("lockedTitle");
+    const lockedText = document.getElementById("lockedText");
 
     const commentForm = document.getElementById("commentForm");
     const commentInput = document.getElementById("commentInput");
@@ -624,11 +633,12 @@
       });
     }
 
-    function renderMeta(isPrivate) {
+    function renderMeta(isPrivate, isBanned) {
       metaRow.innerHTML = `
         <span class="badge ${isPrivate ? "badge-private" : "badge-public"}">
           ${isPrivate ? "Private" : "Public"}
         </span>
+        ${isBanned ? `<span class="badge badge-banned">Removed</span>` : ""}
       `;
     }
 
@@ -678,14 +688,22 @@
         const ownerPublicSnap = await getDoc(doc(db, "publicProfiles", ownerUid));
         const ownerProfile = ownerPublicSnap.exists() ? ownerPublicSnap.data() : {};
         const isPrivate = !!ownerProfile.isPrivate;
+        const isBanned = ownerProfile.moderationStatus === "banned" || ownerProfile.isHiddenByAdmin || ownerProfile.softDeleted;
         const alreadyFollowing = followsSnap.docs
           .map(d => d.data())
           .some(f => f.followerId === user.uid && f.followingId === ownerUid);
 
-        canViewFull = user.uid === ownerUid || !isPrivate || alreadyFollowing;
+        canViewFull = !isBanned && (user.uid === ownerUid || !isPrivate || alreadyFollowing);
 
         if (!canViewFull) {
           loading.classList.add("hidden");
+          if (isBanned) {
+            lockedTitle.textContent = "Removed Post";
+            lockedText.textContent = "This content was removed for policy violation.";
+          } else {
+            lockedTitle.textContent = "Private Post";
+            lockedText.textContent = "You need to follow this member to view this post.";
+          }
           setVisibilityMode(false);
           return;
         }
@@ -697,7 +715,7 @@
         ownerLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
         postDate.textContent = formatDate(currentPostData.createdAt);
 
-        renderMeta(isPrivate);
+        renderMeta(isPrivate, isBanned);
 
         postCaption.textContent = currentPostData.caption || "";
         if (currentPostData.imageURL) {
@@ -709,6 +727,9 @@
 
         if (currentUser.uid === ownerUid) {
           deleteBtn.classList.remove("hidden");
+        } else {
+          reportPostBtn.classList.remove("hidden");
+          reportPostBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
         }
 
         await refreshLikeUI();
