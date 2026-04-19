@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Search</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--purple:#a78bfa;--yellow:#f5b942;
+    }
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);min-height:100vh;padding:14px 14px 92px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .topbar{
+      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;padding:12px 14px;margin-bottom:14px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+    }
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .chip-btn{
+      border:none;background:var(--soft);color:#fff;border-radius:12px;
+      padding:10px 12px;text-decoration:none;font-size:13px;font-weight:700;
+      cursor:pointer;border:1px solid var(--line);display:inline-block;
+    }
+    .panel{
+      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;
+      padding:16px;margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+    .search-row{
+      display:grid;grid-template-columns:1fr auto;gap:10px;
+    }
+    .search-input{
+      width:100%;background:#0f1630;border:1px solid rgba(255,255,255,.08);
+      color:#fff;border-radius:14px;padding:14px 14px;font-size:14px;outline:none;
+    }
+    .search-btn{
+      border:none;background:rgba(76,201,255,.14);color:#d8f7ff;border-radius:14px;
+      padding:14px 18px;font-weight:800;cursor:pointer;border:1px solid rgba(76,201,255,.2);
+    }
+    .helper{
+      color:var(--muted);font-size:13px;line-height:1.6;margin-top:10px;
+    }
+    .loading,.empty{
+      text-align:center;color:var(--muted);padding:22px 10px;
+    }
+    .results{display:grid;gap:10px}
+    .person-card{
+      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:16px;
+      padding:12px;display:flex;gap:12px;align-items:center;
+    }
+    .person-avatar,.person-avatar-placeholder{
+      width:58px;height:58px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.08);background:#1b2445;
+    }
+    .person-avatar{object-fit:cover}
+    .person-avatar-placeholder{
+      display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;text-align:center;padding:6px;
+    }
+    .person-body{min-width:0;flex:1}
+    .person-name{
+      font-size:16px;font-weight:800;line-height:1.3;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    }
+    .person-name a{color:#fff;text-decoration:none}
+    .person-name a:hover{text-decoration:underline}
+    .person-username{
+      color:#8fdfff;font-size:13px;font-weight:700;margin-top:4px;
+    }
+    .person-sub{
+      font-size:12px;color:var(--muted);line-height:1.5;margin-top:5px;
+      word-break:break-word;
+    }
+    .badge{
+      display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;
+    }
+    .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .badge-verified{background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20)}
+    .badge-warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .badge-ban{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
+
+    .bottom-nav{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
+      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
+    }
+    .nav-link{
+      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+    }
+    .nav-link .icon{font-size:18px;line-height:1}
+
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .chip-btn{padding:9px 10px;font-size:12px}
+      .search-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Search members</div>
+      </div>
+
+      <div class="top-actions">
+        <a href="feed.html" class="chip-btn">Feed</a>
+        <a href="profile.html" class="chip-btn">My Profile</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="search-row">
+        <input id="searchInput" class="search-input" type="text" placeholder="Search by username or name" />
+        <button id="searchBtn" class="search-btn" type="button">Search</button>
+      </div>
+      <div class="helper">
+        Search with <b>username</b> like <b>ranveer</b> or by <b>display name</b> like <b>Ranveer Singh</b>.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading members...</div>
+      <div id="empty" class="empty" style="display:none;">No members found.</div>
+      <div id="results" class="results" style="display:none;"></div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const loading = document.getElementById("loading");
+    const empty = document.getElementById("empty");
+    const results = document.getElementById("results");
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+
+    let allMembers = [];
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        bio: d.bio || d.about || d.description || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
+        verified: !!d.verified,
+        moderationStatus: d.moderationStatus || d.status || "",
+        warningUntil: d.warningUntil || null,
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted
+      };
+    }
+
+    function mergeProfiles(a, b) {
+      const x = a || {};
+      const y = b || {};
+      return normalizeProfile({
+        ...x,
+        ...y,
+        uid: y.uid || x.uid || ""
+      }, y.uid || x.uid || "");
+    }
+
+    async function loadMembers() {
+      const publicMap = new Map();
+      const userMap = new Map();
+
+      const [publicSnap, usersSnap] = await Promise.all([
+        getDocs(collection(db, "publicProfiles")),
+        getDocs(collection(db, "users"))
+      ]);
+
+      publicSnap.forEach(docSnap => {
+        publicMap.set(docSnap.id, normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id));
+      });
+
+      usersSnap.forEach(docSnap => {
+        userMap.set(docSnap.id, normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id));
+      });
+
+      const allIds = new Set([...publicMap.keys(), ...userMap.keys()]);
+      const list = [];
+
+      allIds.forEach(uid => {
+        const merged = mergeProfiles(publicMap.get(uid), userMap.get(uid));
+        if (!merged.uid) return;
+        if (merged.moderationStatus === "banned" || merged.isHiddenByAdmin || merged.softDeleted) return;
+        list.push(merged);
+      });
+
+      allMembers = list.sort((a, b) => {
+        const an = (a.displayName || "").toLowerCase();
+        const bn = (b.displayName || "").toLowerCase();
+        return an.localeCompare(bn);
+      });
+    }
+
+    function isWarningActive(warningUntil) {
+      if (!warningUntil) return false;
+      const untilMs = warningUntil?.toDate
+        ? warningUntil.toDate().getTime()
+        : new Date(warningUntil).getTime();
+
+      return !Number.isNaN(untilMs) && Date.now() < untilMs;
+    }
+
+    function renderMembers(list) {
+      results.innerHTML = "";
+
+      if (!list.length) {
+        results.style.display = "none";
+        empty.style.display = "block";
+        return;
+      }
+
+      empty.style.display = "none";
+      results.style.display = "grid";
+
+      list.forEach(member => {
+        const card = document.createElement("div");
+        card.className = "person-card";
+
+        const avatarHtml = member.photoURL
+          ? `<img class="person-avatar" src="${escapeHtml(member.photoURL)}" alt="Profile Photo">`
+          : `<div class="person-avatar-placeholder">No photo</div>`;
+
+        const badges = [];
+        if (member.isPrivate) badges.push(`<span class="badge badge-private">Private</span>`);
+        if (member.verified) badges.push(`<span class="badge badge-verified">Verified</span>`);
+        if (member.moderationStatus === "banned") badges.push(`<span class="badge badge-ban">Banned</span>`);
+        if (member.moderationStatus === "warned" && isWarningActive(member.warningUntil)) {
+          badges.push(`<span class="badge badge-warn">Warned</span>`);
+        }
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="person-body">
+            <div class="person-name">
+              <a href="member.html?uid=${encodeURIComponent(member.uid)}">
+                ${escapeHtml(member.displayName)}
+              </a>
+              ${badges.join(" ")}
+            </div>
+            <div class="person-username">@${escapeHtml(member.username || "nousername")}</div>
+            <div class="person-sub">${escapeHtml(member.bio || "")}</div>
+          </div>
+        `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        results.appendChild(card);
+      });
+    }
+
+    function runSearch() {
+      const term = searchInput.value.trim().toLowerCase();
+
+      if (!term) {
+        renderMembers(allMembers);
+        return;
+      }
+
+      const filtered = allMembers.filter(member => {
+        const username = (member.username || "").toLowerCase();
+        const name = (member.displayName || "").toLowerCase();
+        return username.includes(term) || name.includes(term);
+      });
+
+      renderMembers(filtered);
+    }
+
+    searchBtn.addEventListener("click", runSearch);
+    searchInput.addEventListener("input", runSearch);
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runSearch();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        await loadMembers();
+        loading.style.display = "none";
+        renderMembers(allMembers);
+      } catch (err) {
+        console.error("Search page load failed:", err);
+        loading.textContent = "Could not load members.";
+      }
+    });
+  </script>
+</body>
+</html>
