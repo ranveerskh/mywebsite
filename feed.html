@@ -75,9 +75,10 @@
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      align-items:center;
+      position:relative;
     }
 
-    .icon-btn,
     .chip-btn{
       border:none;
       background:var(--card-soft);
@@ -89,12 +90,95 @@
       font-weight:700;
       cursor:pointer;
       border:1px solid var(--line);
+      display:inline-block;
     }
 
     .chip-btn.logout{
       background:rgba(255,93,115,0.14);
       color:#ffd3d9;
       border-color:rgba(255,93,115,0.22);
+    }
+
+    .notify-btn{
+      position:relative;
+      min-width:44px;
+      padding:10px 12px;
+    }
+
+    .notify-count{
+      position:absolute;
+      top:-4px;
+      right:-2px;
+      min-width:18px;
+      height:18px;
+      padding:0 5px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .notify-panel{
+      position:absolute;
+      top:52px;
+      right:0;
+      width:min(340px, calc(100vw - 40px));
+      background:rgba(18,25,49,0.98);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      box-shadow:0 20px 40px rgba(0,0,0,0.28);
+      z-index:60;
+    }
+
+    .notify-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .notify-title{
+      font-size:15px;
+      font-weight:800;
+    }
+
+    .notify-list{
+      display:grid;
+      gap:8px;
+      max-height:320px;
+      overflow:auto;
+    }
+
+    .notify-item{
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:14px;
+      padding:10px;
+    }
+
+    .notify-item strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:13px;
+    }
+
+    .notify-item p{
+      color:#d7def5;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .notify-item small{
+      display:block;
+      color:var(--muted);
+      margin-top:6px;
+      font-size:11px;
     }
 
     .panel{
@@ -111,6 +195,7 @@
       align-items:center;
       gap:12px;
       margin-bottom:14px;
+      flex-wrap:wrap;
     }
 
     .avatar,
@@ -212,11 +297,36 @@
       align-items:center;
       gap:12px;
       margin-bottom:12px;
+      flex-wrap:wrap;
     }
 
     .section-title{
       font-size:20px;
       font-weight:800;
+    }
+
+    .filter-tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .filter-tab{
+      border:none;
+      background:#0f1630;
+      color:#c9d5ff;
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .filter-tab.active{
+      background:rgba(76,201,255,0.14);
+      color:#d8f7ff;
+      border-color:rgba(76,201,255,0.20);
     }
 
     .posts-list{
@@ -420,6 +530,10 @@
       margin-top:6px;
     }
 
+    .hidden{
+      display:none !important;
+    }
+
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -451,6 +565,9 @@
       font-size:11px;
       font-weight:700;
       min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
     }
 
     .nav-link .icon{
@@ -463,17 +580,15 @@
       color:#d8f7ff;
     }
 
-    .hidden{display:none !important;}
-
     @media (max-width:700px){
       body{padding:12px 12px 92px;}
       .topbar{padding:10px 12px;}
       .brand{font-size:20px;}
-      .top-actions{gap:6px;}
-      .chip-btn,.icon-btn{padding:9px 10px;font-size:12px;}
+      .chip-btn{padding:9px 10px;font-size:12px;}
       .composer-actions{align-items:stretch;}
       .post-btn{width:100%;}
       .comment-form{flex-direction:column;}
+      .notify-panel{right:-6px;}
     }
   </style>
 </head>
@@ -486,20 +601,32 @@
       </div>
 
       <div class="top-actions">
-        <a href="edit-profile.html" class="chip-btn">Edit</a>
+        <button id="notifyBtn" class="chip-btn notify-btn" type="button">
+          🔔
+          <span id="notifyCount" class="notify-count hidden">0</span>
+        </button>
+
+        <div id="notifyPanel" class="notify-panel hidden">
+          <div class="notify-head">
+            <div class="notify-title">Notifications</div>
+            <button id="closeNotifyBtn" class="chip-btn" type="button">Close</button>
+          </div>
+          <div id="notifyList" class="notify-list"></div>
+        </div>
+
         <a href="settings.html" class="chip-btn">Settings</a>
         <button id="logoutBtn" class="chip-btn logout">Logout</button>
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="composerPanel">
       <div class="composer-head">
         <img id="myAvatar" class="avatar hidden" alt="My Photo" />
         <div id="myAvatarPlaceholder" class="avatar-placeholder">No photo</div>
 
         <div>
           <h3 id="myName">Loading...</h3>
-          <div class="muted">Share a post with members</div>
+          <div class="muted">Post a new update or photo</div>
         </div>
       </div>
 
@@ -515,7 +642,7 @@
 
         <div class="composer-actions">
           <div id="formMessage" class="message"></div>
-          <button type="submit" id="postBtn" class="post-btn">Post</button>
+          <button type="submit" id="postBtn" class="post-btn">Post Update</button>
         </div>
       </form>
     </div>
@@ -523,7 +650,11 @@
     <div class="panel">
       <div class="section-head">
         <div class="section-title">Feed</div>
-        <div class="muted">Latest member updates</div>
+
+        <div class="filter-tabs">
+          <button id="allTab" class="filter-tab active" type="button">All</button>
+          <button id="followingTab" class="filter-tab" type="button">Following</button>
+        </div>
       </div>
 
       <div id="postsList" class="posts-list"></div>
@@ -536,18 +667,22 @@
       <span class="icon">⌂</span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
       <span class="icon">◎</span>
       <span>Nearby</span>
     </a>
-    <a href="create-event.html" class="nav-link">
+
+    <button id="navCreateBtn" type="button" class="nav-link">
       <span class="icon">＋</span>
       <span>Create</span>
-    </a>
+    </button>
+
     <a href="events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
+
     <a href="profile.html" class="nav-link">
       <span class="icon">◉</span>
       <span>Profile</span>
@@ -587,9 +722,22 @@
 
     const postsList = document.getElementById("postsList");
     const emptyBox = document.getElementById("emptyBox");
+    const allTab = document.getElementById("allTab");
+    const followingTab = document.getElementById("followingTab");
+    const navCreateBtn = document.getElementById("navCreateBtn");
+    const composerPanel = document.getElementById("composerPanel");
+
+    const notifyBtn = document.getElementById("notifyBtn");
+    const notifyPanel = document.getElementById("notifyPanel");
+    const closeNotifyBtn = document.getElementById("closeNotifyBtn");
+    const notifyList = document.getElementById("notifyList");
+    const notifyCount = document.getElementById("notifyCount");
 
     let currentUser = null;
     let currentUserProfile = null;
+    let currentFeedFilter = "all";
+    let follows = [];
+    let allPostDocs = [];
 
     function setFormMessage(text, type = "") {
       formMessage.textContent = text;
@@ -624,6 +772,24 @@
       const div = document.createElement("div");
       div.textContent = text || "";
       return div.innerHTML;
+    }
+
+    function isFollowing(userId) {
+      return follows.some(f => f.followerId === currentUser.uid && f.followingId === userId);
+    }
+
+    function applyFeedTabUI() {
+      allTab.classList.toggle("active", currentFeedFilter === "all");
+      followingTab.classList.toggle("active", currentFeedFilter === "following");
+    }
+
+    function getFilteredPostDocs() {
+      if (currentFeedFilter === "all") return allPostDocs;
+
+      return allPostDocs.filter(postDoc => {
+        const post = postDoc.data();
+        return isFollowing(post.userId);
+      });
     }
 
     async function refreshLikeUI(postId) {
@@ -796,11 +962,15 @@
       }
     }
 
-    async function renderPosts(docs) {
+    async function renderPosts() {
+      const docs = getFilteredPostDocs();
       postsList.innerHTML = "";
 
       if (!docs.length) {
         emptyBox.classList.remove("hidden");
+        emptyBox.textContent = currentFeedFilter === "following"
+          ? "No updates from people you follow yet."
+          : "No updates yet.";
         return;
       }
 
@@ -895,6 +1065,61 @@
       });
     }
 
+    function renderNotifications(items) {
+      notifyList.innerHTML = "";
+
+      if (!items.length) {
+        notifyList.innerHTML = `<div class="notify-item"><p>No notifications yet.</p></div>`;
+        notifyCount.classList.add("hidden");
+        return;
+      }
+
+      const sorted = [...items].sort((a, b) => {
+        const aSec = a.createdAt?.seconds || 0;
+        const bSec = b.createdAt?.seconds || 0;
+        return bSec - aSec;
+      });
+
+      notifyCount.textContent = String(items.length);
+      notifyCount.classList.remove("hidden");
+
+      sorted.slice(0, 10).forEach((item) => {
+        const box = document.createElement("div");
+        box.className = "notify-item";
+        box.innerHTML = `
+          <strong>${escapeHtml(item.title || "Notification")}</strong>
+          <p>${escapeHtml(item.text || "No details")}</p>
+          <small>${item.createdAt ? escapeHtml(formatDate(item.createdAt)) : "Just now"}</small>
+        `;
+        notifyList.appendChild(box);
+      });
+    }
+
+    notifyBtn.addEventListener("click", () => {
+      notifyPanel.classList.toggle("hidden");
+    });
+
+    closeNotifyBtn.addEventListener("click", () => {
+      notifyPanel.classList.add("hidden");
+    });
+
+    navCreateBtn.addEventListener("click", () => {
+      composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => captionInput.focus(), 250);
+    });
+
+    allTab.addEventListener("click", async () => {
+      currentFeedFilter = "all";
+      applyFeedTabUI();
+      await renderPosts();
+    });
+
+    followingTab.addEventListener("click", async () => {
+      currentFeedFilter = "following";
+      applyFeedTabUI();
+      await renderPosts();
+    });
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -916,18 +1141,32 @@
           showMyAvatar("");
         }
 
+        onSnapshot(collection(db, "follows"), async (snapshot) => {
+          follows = snapshot.docs.map(d => d.data());
+          await renderPosts();
+        });
+
         const postsQuery = query(
           collection(db, "posts"),
           orderBy("createdAt", "desc")
         );
 
         onSnapshot(postsQuery, async (snapshot) => {
-          await renderPosts(snapshot.docs);
+          allPostDocs = snapshot.docs;
+          await renderPosts();
         }, (error) => {
           console.error(error);
           postsList.innerHTML = "";
           emptyBox.classList.remove("hidden");
           emptyBox.textContent = "Could not load feed.";
+        });
+
+        onSnapshot(collection(db, "notifications", user.uid, "items"), (snapshot) => {
+          const items = snapshot.docs.map(d => d.data());
+          renderNotifications(items);
+        }, (error) => {
+          console.error("Notification load error:", error);
+          renderNotifications([]);
         });
 
       } catch (error) {
@@ -978,7 +1217,7 @@
       }
 
       postBtn.disabled = false;
-      postBtn.textContent = "Post";
+      postBtn.textContent = "Post Update";
     });
 
     logoutBtn.addEventListener("click", async () => {
