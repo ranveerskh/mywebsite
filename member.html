@@ -87,6 +87,7 @@
     .badge-public{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
     .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .badge-locked{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+    .badge-verified{background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20)}
 
     .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .follow-btn,.unfollow-btn,.self-btn,.view-feed-btn,.request-btn,.cancel-btn{
@@ -307,7 +308,10 @@
       setDoc,
       deleteDoc,
       addDoc,
-      serverTimestamp
+      serverTimestamp,
+      query,
+      where,
+      limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
@@ -341,26 +345,226 @@
     const followersStat = document.getElementById("followersStat");
     const followingStat = document.getElementById("followingStat");
 
+    const POST_OWNER_FIELDS = ["userId", "authorId", "uid", "ownerId"];
+    let relationshipInfo = {
+      relationship: "none",
+      followDocId: null,
+      requestDocId: null
+    };
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text || "";
       return div.innerHTML;
     }
 
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        uid: (params.get("uid") || "").trim(),
+        memberId: (params.get("memberId") || "").trim(),
+        id: (params.get("id") || "").trim(),
+        userId: (params.get("userId") || "").trim(),
+        username: (params.get("username") || "").trim()
+      };
+    }
+
+    function getMemberKey() {
+      const p = getParams();
+      return p.uid || p.memberId || p.id || p.userId || p.username || "";
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const data = raw || {};
+      return {
+        uid: data.uid || data.id || fallbackUid || "",
+        displayName: data.displayName || data.name || data.fullName || data.username || "Member",
+        bio: data.bio || data.about || data.description || "",
+        photoURL: data.photoURL || data.avatar || data.avatarUrl || data.userPhotoURL || "",
+        isPrivate: !!(data.isPrivate || data.privateProfile || data.private || data.accountPrivate),
+        moderationStatus: data.moderationStatus || data.status || "",
+        warningUntil: data.warningUntil || null,
+        isHiddenByAdmin: !!data.isHiddenByAdmin,
+        softDeleted: !!data.softDeleted,
+        verified: !!data.verified,
+        username: data.username || data.handle || ""
+      };
+    }
+
+    function mergeProfiles(a, b) {
+      const x = a || {};
+      const y = b || {};
+      return normalizeProfile({
+        ...x,
+        ...y,
+        uid: y.uid || x.uid || ""
+      }, y.uid || x.uid || "");
+    }
+
+    async function getProfileDocFromCollection(collectionName, key) {
+      if (!key) return null;
+
+      try {
+        const directSnap = await getDoc(doc(db, collectionName, key));
+        if (directSnap.exists()) {
+          return normalizeProfile({ id: directSnap.id, ...directSnap.data() }, directSnap.id);
+        }
+      } catch (err) {
+        console.warn(`Direct doc lookup failed in ${collectionName}:`, err);
+      }
+
+      const fieldsToTry = ["uid", "username", "handle", "userName"];
+      for (const field of fieldsToTry) {
+        try {
+          const snap = await getDocs(query(collection(db, collectionName), where(field, "==", key), limit(1)));
+          if (!snap.empty) {
+            const d = snap.docs[0];
+            return normalizeProfile({ id: d.id, ...d.data() }, d.id);
+          }
+        } catch (err) {
+          console.warn(`Query failed in ${collectionName} for ${field}:`, err);
+        }
+      }
+
+      return null;
+    }
+
+    async function getMergedProfileByKey(key) {
+      const publicProfile = await getProfileDocFromCollection("publicProfiles", key);
+      const userProfile = await getProfileDocFromCollection("users", key);
+
+      if (publicProfile && userProfile) return mergeProfiles(publicProfile, userProfile);
+      return publicProfile || userProfile || null;
+    }
+
+    async function getProfileLite(uid) {
+      if (!uid) return null;
+
+      let publicData = null;
+      let userData = null;
+
+      try {
+        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
+        if (publicSnap.exists()) {
+          publicData = normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, publicSnap.id);
+        }
+      } catch {}
+
+      try {
+        const userSnap = await getDoc(doc(db, "users", uid));
+        if (userSnap.exists()) {
+          userData = normalizeProfile({ id: userSnap.id, ...userSnap.data() }, userSnap.id);
+        }
+      } catch {}
+
+      if (publicData && userData) return mergeProfiles(publicData, userData);
+      return publicData || userData || normalizeProfile({ uid, displayName: "Member" }, uid);
+    }
+
+    async function getPostsForMember(memberUid) {
+      const map = new Map();
+
+      for (const field of POST_OWNER_FIELDS) {
+        try {
+          const snap = await getDocs(query(collection(db, "posts"), where(field, "==", memberUid)));
+          snap.forEach(d => {
+            const data = { id: d.id, ...d.data() };
+            if (!data.hidden && !data.hiddenByAdmin && !data.softDeleted) {
+              map.set(d.id, data);
+            }
+          });
+        } catch (err) {
+          console.warn(`Posts query failed for ${field}:`, err);
+        }
+      }
+
+      return Array.from(map.values()).sort((a, b) => {
+        const aMs = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bMs = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return bMs - aMs;
+      });
+    }
+
+    async function getRelationship(viewerUid, memberUid) {
+      let followDocId = null;
+      let requestDocId = null;
+
+      try {
+        const directFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+        if (directFollow.exists()) followDocId = directFollow.id;
+      } catch {}
+
+      if (!followDocId) {
+        try {
+          const followSnap = await getDocs(
+            query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(50))
+          );
+          const found = followSnap.docs.find(d => d.data().followingId === memberUid);
+          if (found) followDocId = found.id;
+        } catch (err) {
+          console.warn("Follow lookup failed:", err);
+        }
+      }
+
+      try {
+        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+        if (directReq.exists()) requestDocId = directReq.id;
+      } catch {}
+
+      if (!requestDocId) {
+        try {
+          const reqSnap = await getDocs(
+            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(50))
+          );
+          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+          if (found) requestDocId = found.id;
+        } catch (err) {
+          console.warn("Follow request lookup failed:", err);
+        }
+      }
+
+      let relationship = "none";
+      if (followDocId) relationship = "following";
+      else if (requestDocId) relationship = "requested";
+
+      return { relationship, followDocId, requestDocId };
+    }
+
+    async function getFollowersAndFollowing(memberUid) {
+      let followers = [];
+      let following = [];
+
+      try {
+        const [followersSnap, followingSnap] = await Promise.all([
+          getDocs(query(collection(db, "follows"), where("followingId", "==", memberUid))),
+          getDocs(query(collection(db, "follows"), where("followerId", "==", memberUid)))
+        ]);
+
+        followers = followersSnap.docs.map(d => d.data().followerId).filter(Boolean);
+        following = followingSnap.docs.map(d => d.data().followingId).filter(Boolean);
+      } catch (err) {
+        console.warn("Followers/following query failed:", err);
+      }
+
+      return { followers, following };
+    }
+
     function applyModerationBadge(status, warningUntil) {
       moderationBadge.className = "moderation-badge hidden";
+      moderationBadge.textContent = "!";
 
       if (status === "banned") {
         moderationBadge.className = "moderation-badge moderation-ban";
-        moderationBadge.textContent = "!";
         return;
       }
 
       if (status === "warned" && warningUntil) {
-        const untilMs = warningUntil.toDate ? warningUntil.toDate().getTime() : new Date(warningUntil).getTime();
-        if (Date.now() < untilMs) {
+        const untilMs = warningUntil?.toDate
+          ? warningUntil.toDate().getTime()
+          : new Date(warningUntil).getTime();
+
+        if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
           moderationBadge.className = "moderation-badge moderation-warn";
-          moderationBadge.textContent = "!";
         }
       }
     }
@@ -388,7 +592,8 @@
       document.querySelectorAll("#postsTab, #followersTab, #followingTab").forEach(el => el.classList.add("hidden"));
       const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
       if (btn) btn.classList.add("active");
-      document.getElementById(tabId).classList.remove("hidden");
+      const panel = document.getElementById(tabId);
+      if (panel) panel.classList.remove("hidden");
     }
 
     postsStat.addEventListener("click", () => openTab("postsTab"));
@@ -411,13 +616,28 @@
       }
     }
 
-    function renderMeta(isPrivate, canViewFull, relationship) {
-      metaRow.innerHTML = `
-        <span class="badge ${isPrivate ? "badge-private" : "badge-public"}">
-          ${isPrivate ? "Private" : "Public"}
+    function renderMeta(profile, canViewFull, relationship) {
+      const parts = [];
+
+      parts.push(`
+        <span class="badge ${profile.isPrivate ? "badge-private" : "badge-public"}">
+          ${profile.isPrivate ? "Private" : "Public"}
         </span>
-        ${isPrivate && !canViewFull ? `<span class="badge badge-locked">${relationship === "requested" ? "Request sent" : "Locked"}</span>` : ""}
-      `;
+      `);
+
+      if (profile.verified) {
+        parts.push(`<span class="badge badge-verified">Verified</span>`);
+      }
+
+      if (profile.isPrivate && !canViewFull) {
+        parts.push(`
+          <span class="badge badge-locked">
+            ${relationship === "requested" ? "Request sent" : "Locked"}
+          </span>
+        `);
+      }
+
+      metaRow.innerHTML = parts.join("");
     }
 
     function renderPosts(posts) {
@@ -438,39 +658,46 @@
         tile.className = "post-tile";
         tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
 
-        if (post.imageURL) {
-          tile.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Post image">`;
+        const imageUrl = post.imageURL || post.imageUrl || post.photoURL || post.mediaUrl || "";
+        const caption = post.caption || post.text || post.content || "Post";
+
+        if (imageUrl) {
+          tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Post image">`;
           const img = tile.querySelector("img");
           img.addEventListener("error", () => {
-            tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+            tile.innerHTML = `<div class="post-fallback">${escapeHtml(String(caption).slice(0, 80))}</div>`;
           });
         } else {
-          tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+          tile.innerHTML = `<div class="post-fallback">${escapeHtml(String(caption).slice(0, 80))}</div>`;
         }
 
         postsGrid.appendChild(tile);
       });
     }
 
-    function renderPeople(ids, profilesMap, listEl, emptyEl, emptyText) {
+    async function renderPeople(ids, listEl, emptyEl, emptyText) {
       listEl.innerHTML = "";
 
-      if (!ids.length) {
+      const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+      if (!uniqueIds.length) {
         emptyEl.textContent = emptyText;
         listEl.classList.add("hidden");
         emptyEl.classList.remove("hidden");
         return;
       }
 
+      const profiles = await Promise.all(uniqueIds.map(uid => getProfileLite(uid)));
+
       emptyEl.classList.add("hidden");
       listEl.classList.remove("hidden");
 
-      ids.forEach(uid => {
-        const p = profilesMap.get(uid) || {};
+      profiles.forEach((p, index) => {
+        const uid = uniqueIds[index];
         const card = document.createElement("div");
         card.className = "person-card";
 
-        const avatarHtml = p.photoURL
+        const avatarHtml = p?.photoURL
           ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
           : `<div class="person-avatar-placeholder">No photo</div>`;
 
@@ -479,19 +706,26 @@
           <div class="person-body">
             <div class="person-name">
               <a href="member.html?uid=${encodeURIComponent(uid)}">
-                ${escapeHtml(p.displayName || "Member")}
+                ${escapeHtml(p?.displayName || "Member")}
               </a>
             </div>
-            <div class="person-sub">${escapeHtml(p.bio || "")}</div>
+            <div class="person-sub">${escapeHtml(p?.bio || "")}</div>
           </div>
         `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
 
         listEl.appendChild(card);
       });
     }
 
     function getActorName(profileData, authUser) {
-      return profileData?.displayName || authUser?.displayName || "Someone";
+      return profileData?.displayName || authUser?.displayName || authUser?.email || "Someone";
     }
 
     async function renderFollowButton(viewerUid, memberUid, actorName, isPrivate, relationship) {
@@ -526,8 +760,17 @@
         btn.textContent = "Unfollow";
         btn.addEventListener("click", async () => {
           btn.disabled = true;
-          await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
-          location.reload();
+          try {
+            if (relationshipInfo.followDocId) {
+              await deleteDoc(doc(db, "follows", relationshipInfo.followDocId));
+            } else {
+              await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+            }
+            window.location.reload();
+          } catch (err) {
+            console.error("Unfollow failed:", err);
+            btn.disabled = false;
+          }
         });
         followArea.appendChild(btn);
         return;
@@ -539,8 +782,17 @@
         btn.textContent = "Requested";
         btn.addEventListener("click", async () => {
           btn.disabled = true;
-          await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-          location.reload();
+          try {
+            if (relationshipInfo.requestDocId) {
+              await deleteDoc(doc(db, "follow_requests", relationshipInfo.requestDocId));
+            } else {
+              await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+            }
+            window.location.reload();
+          } catch (err) {
+            console.error("Cancel request failed:", err);
+            btn.disabled = false;
+          }
         });
         followArea.appendChild(btn);
         return;
@@ -552,22 +804,27 @@
         btn.textContent = "Request Follow";
         btn.addEventListener("click", async () => {
           btn.disabled = true;
-          await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
-            requesterId: viewerUid,
-            targetId: memberUid,
-            createdAt: serverTimestamp()
-          });
+          try {
+            await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
+              requesterId: viewerUid,
+              targetId: memberUid,
+              createdAt: serverTimestamp()
+            });
 
-          await addDoc(collection(db, "notifications", memberUid, "items"), {
-            type: "follow_request",
-            title: "Follow request",
-            text: `${actorName} sent you a follow request.`,
-            fromUserId: viewerUid,
-            toUserId: memberUid,
-            createdAt: serverTimestamp()
-          });
+            await addDoc(collection(db, "notifications", memberUid, "items"), {
+              type: "follow_request",
+              title: "Follow request",
+              text: `${actorName} sent you a follow request.`,
+              fromUserId: viewerUid,
+              toUserId: memberUid,
+              createdAt: serverTimestamp()
+            });
 
-          location.reload();
+            window.location.reload();
+          } catch (err) {
+            console.error("Request follow failed:", err);
+            btn.disabled = false;
+          }
         });
         followArea.appendChild(btn);
         return;
@@ -578,25 +835,34 @@
       btn.textContent = "Follow";
       btn.addEventListener("click", async () => {
         btn.disabled = true;
-        await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
-          followerId: viewerUid,
-          followingId: memberUid,
-          createdAt: serverTimestamp()
-        });
+        try {
+          await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
+            followerId: viewerUid,
+            followingId: memberUid,
+            createdAt: serverTimestamp()
+          });
 
-        await addDoc(collection(db, "notifications", memberUid, "items"), {
-          type: "follow",
-          title: "New follower",
-          text: `${actorName} started following you.`,
-          fromUserId: viewerUid,
-          toUserId: memberUid,
-          createdAt: serverTimestamp()
-        });
+          await addDoc(collection(db, "notifications", memberUid, "items"), {
+            type: "follow",
+            title: "New follower",
+            text: `${actorName} started following you.`,
+            fromUserId: viewerUid,
+            toUserId: memberUid,
+            createdAt: serverTimestamp()
+          });
 
-        location.reload();
+          window.location.reload();
+        } catch (err) {
+          console.error("Follow failed:", err);
+          btn.disabled = false;
+        }
       });
       followArea.appendChild(btn);
     }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => openTab(btn.dataset.tab));
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -604,50 +870,41 @@
         return;
       }
 
-      const params = new URLSearchParams(window.location.search);
-      const memberUid = params.get("uid");
+      const memberKey = getMemberKey();
 
-      if (!memberUid) {
+      if (!memberKey) {
         loading.textContent = "No member selected.";
         return;
       }
 
       try {
-        const [profileSnap, postsSnap, followsSnap, publicProfilesSnap, requestSnap, myPublicSnap] = await Promise.all([
-          getDoc(doc(db, "publicProfiles", memberUid)),
-          getDocs(collection(db, "posts")),
-          getDocs(collection(db, "follows")),
-          getDocs(collection(db, "publicProfiles")),
-          getDoc(doc(db, "follow_requests", `${user.uid}__${memberUid}`)),
+        console.log("Loading member by key:", memberKey);
+
+        const [profile, myPublicSnap] = await Promise.all([
+          getMergedProfileByKey(memberKey),
           getDoc(doc(db, "publicProfiles", user.uid))
         ]);
 
-        let profile = null;
-
-        if (profileSnap.exists()) {
-          profile = profileSnap.data();
-        } else {
-          const fallbackPost = postsSnap.docs.map(d => d.data()).find(p => p.userId === memberUid);
-          profile = fallbackPost ? {
-            uid: memberUid,
-            displayName: fallbackPost.displayName || "Member",
-            bio: "",
-            photoURL: fallbackPost.userPhotoURL || "",
-            isPrivate: false
-          } : null;
-        }
-
-        if (!profile) {
+        if (!profile || !profile.uid) {
           loading.textContent = "Member profile not found.";
           return;
         }
 
-        const follows = followsSnap.docs.map(d => d.data());
-        const alreadyFollowing = follows.some(f => f.followerId === user.uid && f.followingId === memberUid);
-        const relationship = alreadyFollowing ? "following" : (requestSnap.exists() ? "requested" : "none");
+        const memberUid = profile.uid;
+        console.log("Resolved member uid:", memberUid, profile);
+
+        const [relationship, network, memberPosts] = await Promise.all([
+          getRelationship(user.uid, memberUid),
+          getFollowersAndFollowing(memberUid),
+          getPostsForMember(memberUid)
+        ]);
+
+        relationshipInfo = relationship;
+
         const isSelf = user.uid === memberUid;
         const isPrivate = !!profile.isPrivate;
         const isBanned = profile.moderationStatus === "banned" || profile.isHiddenByAdmin || profile.softDeleted;
+        const alreadyFollowing = relationship.relationship === "following";
         const canViewFull = !isBanned && (isSelf || !isPrivate || alreadyFollowing);
 
         displayNameEl.textContent = profile.displayName || "Member";
@@ -662,12 +919,13 @@
           bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
         } else {
           bioEl.textContent = "This profile is private.";
-          lockedText.textContent = relationship === "requested"
+          lockedTitle.textContent = "Private Profile";
+          lockedText.textContent = relationship.relationship === "requested"
             ? "Your follow request is pending approval."
             : "Follow this member to see their posts and connections.";
         }
 
-        renderMeta(isPrivate, canViewFull, relationship);
+        renderMeta(profile, canViewFull, relationship.relationship);
 
         const myProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
 
@@ -676,44 +934,40 @@
           memberUid,
           getActorName(myProfile, user),
           isPrivate,
-          relationship
+          relationship.relationship
         );
+
+        followersCountEl.textContent = String(network.followers.length);
+        followingCountEl.textContent = String(network.following.length);
 
         if (canViewFull) {
           setVisibilityMode(true, isPrivate);
-
-          const memberPosts = postsSnap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(p => p.userId === memberUid);
           renderPosts(memberPosts);
-
-          const followers = follows.filter(f => f.followingId === memberUid).map(f => f.followerId);
-          const following = follows.filter(f => f.followerId === memberUid).map(f => f.followingId);
-
-          followersCountEl.textContent = String(followers.length);
-          followingCountEl.textContent = String(following.length);
-
-          const profilesMap = new Map();
-          publicProfilesSnap.forEach(docSnap => {
-            const data = docSnap.data();
-            profilesMap.set(data.uid, data);
-          });
-
-          renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
-          renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
+          await Promise.all([
+            renderPeople(network.followers, followersList, followersEmpty, "No followers yet."),
+            renderPeople(network.following, followingList, followingEmpty, "Not following anyone yet.")
+          ]);
         } else {
+          postsGrid.innerHTML = "";
+          followersList.innerHTML = "";
+          followingList.innerHTML = "";
+          postsCountEl.textContent = String(memberPosts.length || 0);
+          followersList.classList.add("hidden");
+          followingList.classList.add("hidden");
+          postsGrid.classList.add("hidden");
+          postsEmpty.classList.add("hidden");
+          followersEmpty.classList.add("hidden");
+          followingEmpty.classList.add("hidden");
           setVisibilityMode(false, true);
         }
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
-      } catch {
+        openTab("postsTab");
+      } catch (err) {
+        console.error("Member page load failed:", err);
         loading.textContent = "Could not load member profile.";
       }
-    });
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => openTab(btn.dataset.tab));
     });
   </script>
 </body>
