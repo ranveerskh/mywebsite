@@ -191,7 +191,7 @@
     <div class="card">
       <div class="section-title">Create Event</div>
       <div class="muted">
-        Create a member event. Later asi hor advanced fields add kar lawange.
+        Create a member event. City suggestions come from already created events so names stay consistent.
       </div>
 
       <form id="eventForm">
@@ -208,7 +208,17 @@
         <div class="grid">
           <div class="field">
             <label for="city">City</label>
-            <input type="text" id="city" placeholder="Event city" required />
+            <input
+              type="text"
+              id="city"
+              list="citySuggestions"
+              placeholder="Start typing city name"
+              required
+            />
+            <datalist id="citySuggestions"></datalist>
+            <div class="small-note">
+              Existing event cities will appear as suggestions.
+            </div>
           </div>
 
           <div class="field">
@@ -252,20 +262,73 @@
       addDoc,
       doc,
       getDoc,
+      getDocs,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const eventForm = document.getElementById("eventForm");
     const saveBtn = document.getElementById("saveBtn");
     const message = document.getElementById("message");
+    const cityInput = document.getElementById("city");
+    const citySuggestions = document.getElementById("citySuggestions");
 
     let currentUser = null;
     let creatorName = "Member";
+
+    // lowercase city -> exact stored city
+    const existingCitiesMap = new Map();
 
     function setMessage(text, type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
     }
+
+    function normalizeCity(inputCity) {
+      const clean = (inputCity || "").trim();
+      if (!clean) return "";
+
+      const existing = existingCitiesMap.get(clean.toLowerCase());
+      return existing || clean;
+    }
+
+    async function loadCitySuggestions() {
+      try {
+        const snap = await getDocs(collection(db, "events"));
+        existingCitiesMap.clear();
+        citySuggestions.innerHTML = "";
+
+        const uniqueCities = new Set();
+
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+          const city = (data.city || "").trim();
+
+          if (!city) return;
+
+          const key = city.toLowerCase();
+          if (!existingCitiesMap.has(key)) {
+            existingCitiesMap.set(key, city);
+          }
+
+          uniqueCities.add(existingCitiesMap.get(key));
+        });
+
+        [...uniqueCities]
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((city) => {
+            const option = document.createElement("option");
+            option.value = city;
+            citySuggestions.appendChild(option);
+          });
+
+      } catch (error) {
+        console.error("Could not load city suggestions:", error);
+      }
+    }
+
+    cityInput.addEventListener("blur", () => {
+      cityInput.value = normalizeCity(cityInput.value);
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -288,6 +351,8 @@
         console.error(error);
         creatorName = user.displayName || "Member";
       }
+
+      await loadCitySuggestions();
     });
 
     eventForm.addEventListener("submit", async (e) => {
@@ -297,10 +362,12 @@
 
       const title = document.getElementById("title").value.trim();
       const description = document.getElementById("description").value.trim();
-      const city = document.getElementById("city").value.trim();
+      const city = normalizeCity(cityInput.value);
       const visibility = document.getElementById("visibility").value;
       const date = document.getElementById("date").value;
       const time = document.getElementById("time").value;
+
+      cityInput.value = city;
 
       if (!title || !description || !city || !date || !time) {
         setMessage("Please fill all fields.", "error");
