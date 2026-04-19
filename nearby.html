@@ -71,6 +71,7 @@
     .badge-public{background:rgba(76,201,255,0.14);color:#d8f7ff;border:1px solid rgba(76,201,255,0.20)}
     .badge-private{background:rgba(245,185,66,0.14);color:#ffe7b0;border:1px solid rgba(245,185,66,0.20)}
     .badge-verified{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
+    .badge-warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .meta{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:8px}
     .bio{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
     .member-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -227,6 +228,12 @@
       return outgoingRequests.has(uid);
     }
 
+    function warningActive(member) {
+      if (member.moderationStatus !== "warned" || !member.warningUntil) return false;
+      const untilMs = member.warningUntil.toDate ? member.warningUntil.toDate().getTime() : new Date(member.warningUntil).getTime();
+      return Date.now() < untilMs;
+    }
+
     function getFilteredMembers() {
       const q = searchInput.value.trim().toLowerCase();
       const filter = typeFilter.value;
@@ -234,6 +241,7 @@
       return allMembers.filter(member => {
         if (!member || !member.uid) return false;
         if (currentUser && member.uid === currentUser.uid) return false;
+        if (member.isHiddenByAdmin || member.moderationStatus === "banned" || member.softDeleted) return false;
 
         if (filter === "public" && member.isPrivate) return false;
         if (filter === "private" && !member.isPrivate) return false;
@@ -414,6 +422,7 @@
                   ${member.isPrivate ? "Private" : "Public"}
                 </span>
                 ${member.isVerified ? `<span class="badge badge-verified">Verified</span>` : ""}
+                ${warningActive(member) ? `<span class="badge badge-warn">Warning</span>` : ""}
               </div>
 
               <div class="meta">
@@ -426,6 +435,7 @@
               <div class="member-actions">
                 <a href="member.html?uid=${encodeURIComponent(member.uid)}" class="view-btn">View Profile</a>
                 ${actionHtml}
+                <a href="report.html?type=profile&targetId=${encodeURIComponent(member.uid)}&targetUserId=${encodeURIComponent(member.uid)}" class="view-btn">Report</a>
               </div>
             </div>
           </div>
