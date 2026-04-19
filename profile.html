@@ -8,7 +8,7 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
       --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;
+      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;--red:#ff5d73;
     }
     body{
       background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
@@ -48,7 +48,33 @@
       color:var(--muted);font-size:12px;line-height:1.3;
     }
     .name-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .name-inline{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
     .display-name{font-size:24px;font-weight:800;line-height:1.2}
+    .moderation-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+    }
+    .moderation-warn{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .moderation-ban{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
     .bio{
       color:#e8eeff;line-height:1.7;font-size:14px;
       white-space:pre-wrap;word-break:break-word;margin-top:8px;
@@ -81,7 +107,7 @@
     .posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .post-tile{
       aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#0f1630;
-      border:1px solid rgba(255,255,255,.06);position:relative;
+      border:1px solid rgba(255,255,255,.06);position:relative;display:block;
     }
     .post-tile img{width:100%;height:100%;object-fit:cover;display:block}
     .post-fallback{
@@ -169,7 +195,10 @@
 
           <div>
             <div class="name-row">
-              <div class="display-name" id="displayName">Member</div>
+              <div class="name-inline">
+                <div class="display-name" id="displayName">Member</div>
+                <span id="moderationBadge" class="moderation-badge hidden">!</span>
+              </div>
             </div>
 
             <div class="bio" id="bio">No bio added yet.</div>
@@ -282,6 +311,7 @@
     const displayNameEl = document.getElementById("displayName");
     const bioEl = document.getElementById("bio");
     const followRequestsBtn = document.getElementById("followRequestsBtn");
+    const moderationBadge = document.getElementById("moderationBadge");
 
     const postsCountEl = document.getElementById("postsCount");
     const followersCountEl = document.getElementById("followersCount");
@@ -332,6 +362,24 @@
       avatarPlaceholder.classList.remove("hidden");
     });
 
+    function applyModerationBadge(status, warningUntil) {
+      moderationBadge.className = "moderation-badge hidden";
+
+      if (status === "banned") {
+        moderationBadge.className = "moderation-badge moderation-ban";
+        moderationBadge.textContent = "!";
+        return;
+      }
+
+      if (status === "warned" && warningUntil) {
+        const untilMs = warningUntil.toDate ? warningUntil.toDate().getTime() : new Date(warningUntil).getTime();
+        if (Date.now() < untilMs) {
+          moderationBadge.className = "moderation-badge moderation-warn";
+          moderationBadge.textContent = "!";
+        }
+      }
+    }
+
     function openTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll("#postsTab, #eventsTab, #networkTab").forEach(el => el.classList.add("hidden"));
@@ -364,8 +412,9 @@
       postsGrid.classList.remove("hidden");
 
       posts.forEach(post => {
-        const tile = document.createElement("div");
+        const tile = document.createElement("a");
         tile.className = "post-tile";
+        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
 
         if (post.imageURL) {
           tile.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Post image">`;
@@ -480,13 +529,16 @@
       displayNameEl.textContent = userData.displayName || "Member";
       bioEl.textContent = userData.bio?.trim() ? userData.bio : "No bio added yet.";
       showAvatar(userData.photoURL || "");
+      applyModerationBadge(userData.moderationStatus, userData.warningUntil);
 
       const requestCount = requestsSnap.size;
       followRequestsBtn.textContent = requestCount > 0
         ? `Requests (${formatCount(requestCount)})`
         : "Requests";
 
-      const allPosts = postsSnap.docs.map(d => d.data()).filter(p => p.userId === uid);
+      const allPosts = postsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(p => p.userId === uid);
       renderPosts(allPosts);
 
       const allEvents = eventsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
