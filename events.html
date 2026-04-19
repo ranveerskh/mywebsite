@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Events</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:linear-gradient(135deg,#020617,#0f172a);
+      color:#fff;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+
+    .brand{
+      font-size:30px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      display:inline-block;
+    }
+
+    .btn-feed{
+      background:#38bdf8;
+      color:#082f49;
+    }
+
+    .btn-profile{
+      background:#64748b;
+      color:#fff;
+    }
+
+    .btn-create{
+      background:#22c55e;
+      color:#052e16;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:22px;
+      padding:22px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 20px 40px rgba(0,0,0,0.2);
+      margin-bottom:18px;
+    }
+
+    .section-title{
+      font-size:22px;
+      margin-bottom:14px;
+    }
+
+    .muted{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .search-row{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:12px;
+      margin-top:16px;
+    }
+
+    input, select{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(255,255,255,0.08);
+      color:#fff;
+      outline:none;
+      font-size:15px;
+    }
+
+    input::placeholder{
+      color:#94a3b8;
+    }
+
+    select option{
+      color:#000;
+    }
+
+    .events-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+
+    .event-card{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:20px;
+      padding:18px;
+    }
+
+    .event-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:10px;
+      line-height:1.3;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .badge-public{
+      background:rgba(56,189,248,0.14);
+      color:#bae6fd;
+      border:1px solid rgba(56,189,248,0.25);
+    }
+
+    .badge-private{
+      background:rgba(251,191,36,0.14);
+      color:#fde68a;
+      border:1px solid rgba(251,191,36,0.25);
+    }
+
+    .badge-joined{
+      background:rgba(34,197,94,0.14);
+      color:#bbf7d0;
+      border:1px solid rgba(34,197,94,0.25);
+    }
+
+    .event-meta{
+      display:grid;
+      gap:8px;
+      margin-bottom:14px;
+      color:#cbd5e1;
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .event-description{
+      color:#e2e8f0;
+      line-height:1.7;
+      white-space:pre-wrap;
+      word-break:break-word;
+      min-height:84px;
+      margin-bottom:14px;
+    }
+
+    .event-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .join-btn{
+      background:#22c55e;
+      color:#052e16;
+    }
+
+    .leave-btn{
+      background:#ef4444;
+      color:#fff;
+    }
+
+    .loading{
+      text-align:center;
+      color:#cbd5e1;
+      padding:30px 10px;
+    }
+
+    .empty-box{
+      text-align:center;
+      padding:30px 10px;
+      color:#94a3b8;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
+
+    .success{ color:#86efac; }
+    .error{ color:#fda4af; }
+    .hidden{ display:none !important; }
+
+    @media (max-width:900px){
+      .events-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:700px){
+      .search-row{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">BareWorld</div>
+      <div class="top-actions">
+        <a href="feed.html" class="btn btn-feed">Feed</a>
+        <a href="profile.html" class="btn btn-profile">My Profile</a>
+        <a href="create-event.html" class="btn btn-create">Create Event</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Events</div>
+      <div class="muted">
+        Browse events, join events, and keep track of the ones you already joined.
+      </div>
+
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search by title, city, host, or description..." />
+        <select id="typeFilter">
+          <option value="all">All Events</option>
+          <option value="public">Public Only</option>
+          <option value="private">Private Only</option>
+          <option value="joined">Joined By Me</option>
+          <option value="mine">Created By Me</option>
+        </select>
+      </div>
+
+      <div id="pageMessage" class="message"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Event List</div>
+      <div id="loading" class="loading">Loading events...</div>
+      <div id="eventsGrid" class="events-grid hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No events found.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      getDocs,
+      doc,
+      getDoc,
+      setDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const loading = document.getElementById("loading");
+    const eventsGrid = document.getElementById("eventsGrid");
+    const emptyBox = document.getElementById("emptyBox");
+    const pageMessage = document.getElementById("pageMessage");
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+
+    let currentUser = null;
+    let allEvents = [];
+    let joinedEventIds = new Set();
+
+    function setMessage(text, type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatCreatedAt(ts) {
+      if (!ts) return "Recently added";
+      try {
+        return ts.toDate().toLocaleString();
+      } catch {
+        return "Recently added";
+      }
+    }
+
+    function sortEvents(events) {
+      return [...events].sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return bTime - aTime;
+      });
+    }
+
+    function getFilteredEvents() {
+      const q = searchInput.value.trim().toLowerCase();
+      const filter = typeFilter.value;
+
+      let filtered = allEvents.filter(event => {
+        if (!event || !event.id) return false;
+
+        if (filter === "public" && event.visibility !== "public") return false;
+        if (filter === "private" && event.visibility !== "private") return false;
+        if (filter === "joined" && !joinedEventIds.has(event.id)) return false;
+        if (filter === "mine" && event.creatorId !== currentUser.uid) return false;
+
+        if (!q) return true;
+
+        const haystack = [
+          event.title || "",
+          event.city || "",
+          event.description || "",
+          event.creatorName || ""
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+      return sortEvents(filtered);
+    }
+
+    async function loadJoinedState(events) {
+      const joined = new Set();
+
+      for (const event of events) {
+        try {
+          const joinRef = doc(db, "events", event.id, "members", currentUser.uid);
+          const joinSnap = await getDoc(joinRef);
+          if (joinSnap.exists()) {
+            joined.add(event.id);
+          }
+        } catch (error) {
+          console.error("Join state error:", error);
+        }
+      }
+
+      joinedEventIds = joined;
+    }
+
+    async function joinEvent(eventId) {
+      try {
+        const joinRef = doc(db, "events", eventId, "members", currentUser.uid);
+        await setDoc(joinRef, {
+          uid: currentUser.uid,
+          joinedAt: serverTimestamp()
+        });
+
+        joinedEventIds.add(eventId);
+        renderEvents();
+        setMessage("Event joined.", "success");
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not join event.", "error");
+      }
+    }
+
+    async function leaveEvent(eventId) {
+      try {
+        const joinRef = doc(db, "events", eventId, "members", currentUser.uid);
+        await deleteDoc(joinRef);
+
+        joinedEventIds.delete(eventId);
+        renderEvents();
+        setMessage("Event left.", "success");
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not leave event.", "error");
+      }
+    }
+
+    function renderEvents() {
+      const events = getFilteredEvents();
+      eventsGrid.innerHTML = "";
+
+      if (!events.length) {
+        eventsGrid.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      eventsGrid.classList.remove("hidden");
+
+      events.forEach(event => {
+        const joined = joinedEventIds.has(event.id);
+        const isMine = event.creatorId === currentUser.uid;
+
+        const card = document.createElement("div");
+        card.className = "event-card";
+
+        card.innerHTML = `
+          <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
+
+          <div class="badges">
+            <span class="badge ${event.visibility === "private" ? "badge-private" : "badge-public"}">
+              ${event.visibility === "private" ? "Private" : "Public"}
+            </span>
+            ${joined ? `<span class="badge badge-joined">Joined</span>` : ""}
+            ${isMine ? `<span class="badge badge-joined">My Event</span>` : ""}
+          </div>
+
+          <div class="event-meta">
+            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
+            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
+            <div><strong>Added:</strong> ${escapeHtml(formatCreatedAt(event.createdAt))}</div>
+          </div>
+
+          <div class="event-description">${escapeHtml(event.description || "No description added.")}</div>
+
+          <div class="event-actions">
+            ${
+              isMine
+                ? `<button class="btn btn-profile" disabled style="opacity:.8;cursor:not-allowed;">You created this</button>`
+                : joined
+                  ? `<button class="btn leave-btn action-btn" data-action="leave" data-id="${event.id}">Leave</button>`
+                  : `<button class="btn join-btn action-btn" data-action="join" data-id="${event.id}">Join</button>`
+            }
+          </div>
+        `;
+
+        eventsGrid.appendChild(card);
+      });
+
+      document.querySelectorAll(".action-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const eventId = btn.getAttribute("data-id");
+          const action = btn.getAttribute("data-action");
+
+          btn.disabled = true;
+
+          if (action === "join") {
+            await joinEvent(eventId);
+          } else {
+            await leaveEvent(eventId);
+          }
+
+          btn.disabled = false;
+        });
+      });
+    }
+
+    searchInput.addEventListener("input", renderEvents);
+    typeFilter.addEventListener("change", renderEvents);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const snap = await getDocs(collection(db, "events"));
+        allEvents = snap.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        }));
+
+        await loadJoinedState(allEvents);
+
+        loading.classList.add("hidden");
+        renderEvents();
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load events.";
+      }
+    });
+  </script>
+</body>
+</html>
