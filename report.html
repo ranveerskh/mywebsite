@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Report</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --text:#fff;--muted:#9aa7c7;--yellow:#f5b942;--red:#ff5d73;
+    }
+    body{background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);color:var(--text);min-height:100vh;padding:14px 14px 92px}
+    .app{max-width:760px;margin:0 auto}
+    .topbar,.panel{
+      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;
+      padding:16px;margin-bottom:14px
+    }
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:20;backdrop-filter:blur(14px)}
+    .left-wrap{display:flex;align-items:center;gap:10px}
+    .back-btn,.submit-btn{
+      border:none;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer
+    }
+    .back-btn{background:var(--soft);color:#fff;border:1px solid var(--line)}
+    .submit-btn{background:rgba(245,185,66,.18);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
+    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
+    .field{margin-bottom:14px}
+    label{display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700}
+    input,select,textarea{
+      width:100%;border:none;outline:none;padding:14px 15px;border-radius:16px;
+      background:#0f1630;color:#fff;border:1px solid rgba(255,255,255,.07);font-size:15px
+    }
+    textarea{min-height:120px;resize:vertical}
+    select option{color:#000}
+    .meta-box{
+      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:14px;margin-bottom:14px
+    }
+    .meta-box small{display:block;color:var(--muted);margin-bottom:6px;font-size:12px}
+    .meta-box div{font-size:14px;line-height:1.6}
+    .message{min-height:20px;font-size:14px;margin-top:10px}
+    .success{color:#9cf0bf}.error{color:#ffb3bd}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Report content or profile</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Submit Report</div>
+      <div class="section-note">Choose a reason and explain what happened.</div>
+
+      <div class="meta-box">
+        <small>Target</small>
+        <div id="targetSummary">Loading...</div>
+      </div>
+
+      <form id="reportForm">
+        <div class="field">
+          <label for="category">Reason</label>
+          <select id="category" required>
+            <option value="nudity">Nudity / sexual content</option>
+            <option value="harassment">Harassment / bullying</option>
+            <option value="hate">Hate / abusive language</option>
+            <option value="violence">Violence / dangerous content</option>
+            <option value="spam">Spam / scam / fake account</option>
+            <option value="impersonation">Impersonation</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="details">Details</label>
+          <textarea id="details" placeholder="Tell what happened..." required></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">Send Report</button>
+        <div id="formMessage" class="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const reportForm = document.getElementById("reportForm");
+    const category = document.getElementById("category");
+    const details = document.getElementById("details");
+    const formMessage = document.getElementById("formMessage");
+    const submitBtn = document.getElementById("submitBtn");
+    const targetSummary = document.getElementById("targetSummary");
+
+    const params = new URLSearchParams(window.location.search);
+    const targetType = params.get("type") || "";
+    const targetId = params.get("targetId") || "";
+    const targetUserId = params.get("targetUserId") || "";
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
+
+    function setFormMessage(text, type="") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    targetSummary.textContent =
+      targetType === "post"
+        ? `Post ID: ${targetId}`
+        : targetType === "profile"
+        ? `Profile ID: ${targetUserId || targetId}`
+        : "Unknown target";
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) window.location.href = "login.html";
+    });
+
+    reportForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return;
+
+      if (!targetType || !targetId) {
+        setFormMessage("Invalid report target.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending...";
+
+      try {
+        await addDoc(collection(db, "reports"), {
+          reporterId: user.uid,
+          targetType,
+          targetId,
+          targetUserId: targetUserId || targetId,
+          category: category.value,
+          details: details.value.trim(),
+          status: "open",
+          actionType: "",
+          adminNote: "",
+          createdAt: serverTimestamp(),
+          reviewedAt: null
+        });
+
+        setFormMessage("Report sent.", "success");
+        reportForm.reset();
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not send report.", "error");
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Send Report";
+    });
+  </script>
+</body>
+</html>
