@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Profile</title>
+  <title>BareWorld - Edit Profile</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 
     body {
       background: linear-gradient(135deg, #0f172a, #1e293b);
@@ -19,10 +14,7 @@
       padding: 20px;
     }
 
-    .wrap {
-      max-width: 760px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 760px; margin: 0 auto; }
 
     .topbar {
       display: flex;
@@ -33,15 +25,9 @@
       flex-wrap: wrap;
     }
 
-    .topbar h1 {
-      font-size: 28px;
-    }
+    .topbar h1 { font-size: 28px; }
 
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .btn, button {
       border: none;
@@ -53,15 +39,9 @@
       display: inline-block;
     }
 
-    .btn-back {
-      background: #334155;
-      color: #fff;
-    }
-
-    .btn-logout {
-      background: #ef4444;
-      color: #fff;
-    }
+    .btn-back { background: #334155; color: #fff; }
+    .btn-feed { background: #38bdf8; color: #082f49; }
+    .btn-logout { background: #ef4444; color: #fff; }
 
     .card {
       background: rgba(255,255,255,0.08);
@@ -72,13 +52,14 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
-    .section-title {
-      font-size: 20px;
-      margin-bottom: 18px;
-    }
+    .section-title { font-size: 20px; margin-bottom: 18px; }
 
-    .field {
-      margin-bottom: 16px;
+    .field { margin-bottom: 16px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
 
     label {
@@ -88,8 +69,7 @@
       color: #cbd5e1;
     }
 
-    input[type="text"],
-    textarea {
+    input[type="text"], textarea, select {
       width: 100%;
       padding: 14px;
       border-radius: 12px;
@@ -105,10 +85,8 @@
       resize: vertical;
     }
 
-    input::placeholder,
-    textarea::placeholder {
-      color: #94a3b8;
-    }
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
+    select option { color: #000; }
 
     .check-row {
       display: flex;
@@ -144,9 +122,7 @@
       margin-bottom: 6px;
     }
 
-    .meta-item span {
-      font-weight: 700;
-    }
+    .meta-item span { font-weight: 700; }
 
     .photo-card {
       background: rgba(255,255,255,0.05);
@@ -203,14 +179,10 @@
 
     .save-btn {
       width: 100%;
-      background: #38bdf8;
-      color: #082f49;
+      background: #22c55e;
+      color: #052e16;
       font-size: 16px;
       margin-top: 8px;
-    }
-
-    .save-btn:hover {
-      opacity: 0.95;
     }
 
     .message {
@@ -220,13 +192,8 @@
       text-align: center;
     }
 
-    .success {
-      color: #86efac;
-    }
-
-    .error {
-      color: #fda4af;
-    }
+    .success { color: #86efac; }
+    .error { color: #fda4af; }
 
     .loading {
       text-align: center;
@@ -234,32 +201,19 @@
       color: #cbd5e1;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none !important; }
 
-    .note {
-      margin-top: 10px;
-      font-size: 12px;
+    .note, .small-note {
       color: #94a3b8;
       line-height: 1.5;
     }
 
-    .small-note {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
+    .note { margin-top: 12px; font-size: 12px; }
+    .small-note { margin-top: 8px; font-size: 12px; }
 
     @media (max-width: 640px) {
-      .meta-box {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar {
-        align-items: flex-start;
-      }
+      .meta-box, .grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; }
     }
   </style>
 </head>
@@ -269,6 +223,7 @@
       <h1>Edit Profile</h1>
       <div class="top-actions">
         <a href="profile.html" class="btn btn-back">Back to Profile</a>
+        <a href="feed.html" class="btn btn-feed">Feed</a>
         <button id="logoutBtn" class="btn btn-logout">Logout</button>
       </div>
     </div>
@@ -293,17 +248,13 @@
         <div class="photo-card">
           <div class="photo-preview-wrap">
             <img id="photoPreview" class="photo-preview hidden" alt="Profile Preview" />
-            <div id="photoPlaceholder" class="photo-placeholder">
-              No profile photo yet
-            </div>
+            <div id="photoPlaceholder" class="photo-placeholder">No profile photo yet</div>
           </div>
 
           <div class="field">
             <label for="photoURL">Profile Photo Link</label>
             <input type="text" id="photoURL" placeholder="Paste direct image link (jpg, png, webp)" />
-            <div class="small-note">
-              Example: https://example.com/photo.jpg
-            </div>
+            <div class="small-note">Example: https://example.com/photo.jpg</div>
           </div>
 
           <div class="photo-actions">
@@ -318,9 +269,32 @@
             <input type="text" id="displayName" placeholder="Your public profile name" required />
           </div>
 
-          <div class="field">
-            <label for="city">City</label>
-            <input type="text" id="city" placeholder="Your city" />
+          <div class="grid">
+            <div class="field">
+              <label for="city">City</label>
+              <input type="text" id="city" placeholder="Your city" />
+            </div>
+
+            <div class="field">
+              <label for="gender">Gender</label>
+              <select id="gender">
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non_binary">Non-binary</option>
+                <option value="trans_man">Trans Man</option>
+                <option value="trans_woman">Trans Woman</option>
+                <option value="genderqueer">Genderqueer</option>
+                <option value="agender">Agender</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="self_describe">Self-describe</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field hidden" id="genderCustomWrap">
+            <label for="genderCustom">Describe Your Gender</label>
+            <input type="text" id="genderCustom" placeholder="Write your gender" />
           </div>
 
           <div class="field">
@@ -331,6 +305,11 @@
           <div class="check-row">
             <input type="checkbox" id="cityVisible" />
             <label for="cityVisible" style="margin:0;">Show my city on profile</label>
+          </div>
+
+          <div class="check-row">
+            <input type="checkbox" id="genderVisible" />
+            <label for="genderVisible" style="margin:0;">Show my gender on profile</label>
           </div>
 
           <div class="check-row">
@@ -360,7 +339,6 @@
       doc,
       getDoc,
       setDoc,
-      updateDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -381,11 +359,16 @@
     const cityVisibleInput = document.getElementById("cityVisible");
     const isPrivateInput = document.getElementById("isPrivate");
     const photoURLInput = document.getElementById("photoURL");
+    const genderInput = document.getElementById("gender");
+    const genderCustomInput = document.getElementById("genderCustom");
+    const genderCustomWrap = document.getElementById("genderCustomWrap");
+    const genderVisibleInput = document.getElementById("genderVisible");
 
     const photoPreview = document.getElementById("photoPreview");
     const photoPlaceholder = document.getElementById("photoPlaceholder");
 
     let currentUser = null;
+    let verifiedStatus = false;
 
     function showMessage(text, type = "") {
       message.textContent = text;
@@ -407,6 +390,17 @@
       photoPreview.classList.remove("hidden");
       photoPlaceholder.classList.add("hidden");
     }
+
+    function toggleGenderCustom() {
+      if (genderInput.value === "self_describe") {
+        genderCustomWrap.classList.remove("hidden");
+      } else {
+        genderCustomWrap.classList.add("hidden");
+        genderCustomInput.value = "";
+      }
+    }
+
+    genderInput.addEventListener("change", toggleGenderCustom);
 
     photoPreview.addEventListener("error", () => {
       photoPreview.classList.add("hidden");
@@ -451,11 +445,16 @@
           displayNameInput.value = data.displayName || user.displayName || "";
           cityInput.value = data.city || "";
           bioInput.value = data.bio || "";
-          cityVisibleInput.checked = data.cityVisible || false;
-          isPrivateInput.checked = data.isPrivate || false;
+          cityVisibleInput.checked = !!data.cityVisible;
+          isPrivateInput.checked = !!data.isPrivate;
           photoURLInput.value = data.photoURL || "";
-          verifiedText.textContent = data.isVerified ? "Yes" : "No";
+          genderInput.value = data.gender || "";
+          genderCustomInput.value = data.genderCustom || "";
+          genderVisibleInput.checked = !!data.genderVisible;
+          verifiedStatus = !!data.isVerified;
+          verifiedText.textContent = verifiedStatus ? "Yes" : "No";
 
+          toggleGenderCustom();
           showPreview(data.photoURL || "");
         } else {
           displayNameInput.value = user.displayName || "";
@@ -464,11 +463,16 @@
           cityVisibleInput.checked = false;
           isPrivateInput.checked = false;
           photoURLInput.value = "";
+          genderInput.value = "";
+          genderCustomInput.value = "";
+          genderVisibleInput.checked = false;
+          verifiedStatus = false;
           verifiedText.textContent = "No";
 
           await setDoc(userRef, {
             uid: user.uid,
             email: user.email || "",
+            realName: "",
             displayName: user.displayName || "",
             city: "",
             bio: "",
@@ -477,9 +481,30 @@
             isVerified: false,
             isAdult: true,
             photoURL: "",
-            createdAt: serverTimestamp()
+            gender: "",
+            genderCustom: "",
+            genderVisible: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
           }, { merge: true });
 
+          await setDoc(doc(db, "publicProfiles", user.uid), {
+            uid: user.uid,
+            displayName: user.displayName || "",
+            city: "",
+            bio: "",
+            cityVisible: false,
+            isPrivate: false,
+            isVerified: false,
+            photoURL: "",
+            gender: "",
+            genderCustom: "",
+            genderVisible: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+
+          toggleGenderCustom();
           showPreview("");
         }
 
@@ -502,9 +527,17 @@
       const cityVisible = cityVisibleInput.checked;
       const isPrivate = isPrivateInput.checked;
       const photoURL = photoURLInput.value.trim();
+      const gender = genderInput.value;
+      const genderCustom = gender === "self_describe" ? genderCustomInput.value.trim() : "";
+      const genderVisible = genderVisibleInput.checked;
 
       if (!displayName) {
         showMessage("Display name is required.", "error");
+        return;
+      }
+
+      if (gender === "self_describe" && !genderCustom) {
+        showMessage("Please describe your gender.", "error");
         return;
       }
 
@@ -513,20 +546,40 @@
 
       try {
         const userRef = doc(db, "users", currentUser.uid);
+        const publicProfileRef = doc(db, "publicProfiles", currentUser.uid);
 
-        await updateDoc(userRef, {
+        await setDoc(userRef, {
+          uid: currentUser.uid,
+          email: currentUser.email || "",
           displayName,
           city,
           bio,
           cityVisible,
           isPrivate,
+          isVerified: verifiedStatus,
           photoURL,
+          gender,
+          genderCustom,
+          genderVisible,
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
 
-        await updateProfile(currentUser, {
-          displayName: displayName
-        });
+        await setDoc(publicProfileRef, {
+          uid: currentUser.uid,
+          displayName,
+          city,
+          bio,
+          cityVisible,
+          isPrivate,
+          isVerified: verifiedStatus,
+          photoURL,
+          gender,
+          genderCustom,
+          genderVisible,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        await updateProfile(currentUser, { displayName });
 
         showPreview(photoURL);
         showMessage("Profile updated successfully.", "success");
