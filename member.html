@@ -53,12 +53,14 @@
       white-space:pre-wrap;word-break:break-word;margin-top:8px;
     }
     .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .follow-btn,.unfollow-btn,.self-btn,.view-feed-btn{
+    .follow-btn,.unfollow-btn,.self-btn,.view-feed-btn,.request-btn,.cancel-btn{
       border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;
       text-decoration:none;display:inline-block;
     }
     .follow-btn{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.2)}
     .unfollow-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.2)}
+    .request-btn{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.2)}
+    .cancel-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
     .self-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06);cursor:not-allowed}
     .view-feed-btn{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.2)}
 
@@ -124,18 +126,8 @@
     .nav-link{
       text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
-      border:none;background:transparent;cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
-
-    @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
-      .profile-head{grid-template-columns:78px 1fr}
-      .avatar,.avatar-placeholder{width:78px;height:78px}
-    }
   </style>
 </head>
 <body>
@@ -194,7 +186,7 @@
     </div>
 
     <div id="postsTab" class="panel">
-      <div class="section-title" style="font-size:20px;font-weight:800;margin-bottom:12px;">Posts</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:12px;">Posts</div>
       <div id="postsGrid" class="posts-grid hidden"></div>
       <div id="postsEmpty" class="empty-box hidden">No posts yet.</div>
     </div>
@@ -249,6 +241,7 @@
       getDocs,
       setDoc,
       deleteDoc,
+      addDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -302,7 +295,6 @@
     function openTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll("#postsTab, #followersTab, #followingTab").forEach(el => el.classList.add("hidden"));
-
       const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
       if (btn) btn.classList.add("active");
       document.getElementById(tabId).classList.remove("hidden");
@@ -377,18 +369,15 @@
           </div>
         `;
 
-        const img = card.querySelector(".person-avatar");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.style.display = "none";
-          });
-        }
-
         listEl.appendChild(card);
       });
     }
 
-    async function renderFollowButton(viewerUid, memberUid) {
+    function getActorName(profileData, authUser) {
+      return profileData?.displayName || authUser?.displayName || "Someone";
+    }
+
+    async function renderFollowButton(viewerUid, memberUid, actorName, isPrivate, relationship) {
       followArea.innerHTML = "";
 
       const feedBtn = document.createElement("a");
@@ -406,35 +395,82 @@
         return;
       }
 
-      const followId = `${viewerUid}__${memberUid}`;
-      const followRef = doc(db, "follows", followId);
-      const existing = await getDoc(followRef);
-
-      if (existing.exists()) {
+      if (relationship === "following") {
         const btn = document.createElement("button");
         btn.className = "unfollow-btn";
         btn.textContent = "Unfollow";
         btn.addEventListener("click", async () => {
           btn.disabled = true;
-          await deleteDoc(followRef);
+          await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
           location.reload();
         });
         followArea.appendChild(btn);
-      } else {
+        return;
+      }
+
+      if (isPrivate && relationship === "requested") {
         const btn = document.createElement("button");
-        btn.className = "follow-btn";
-        btn.textContent = "Follow";
+        btn.className = "cancel-btn";
+        btn.textContent = "Requested";
         btn.addEventListener("click", async () => {
           btn.disabled = true;
-          await setDoc(followRef, {
-            followerId: viewerUid,
-            followingId: memberUid,
-            createdAt: serverTimestamp()
-          });
+          await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
           location.reload();
         });
         followArea.appendChild(btn);
+        return;
       }
+
+      if (isPrivate) {
+        const btn = document.createElement("button");
+        btn.className = "request-btn";
+        btn.textContent = "Request Follow";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
+            requesterId: viewerUid,
+            targetId: memberUid,
+            createdAt: serverTimestamp()
+          });
+
+          await addDoc(collection(db, "notifications", memberUid, "items"), {
+            type: "follow_request",
+            title: "Follow request",
+            text: `${actorName} sent you a follow request.`,
+            fromUserId: viewerUid,
+            toUserId: memberUid,
+            createdAt: serverTimestamp()
+          });
+
+          location.reload();
+        });
+        followArea.appendChild(btn);
+        return;
+      }
+
+      const btn = document.createElement("button");
+      btn.className = "follow-btn";
+      btn.textContent = "Follow";
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
+          followerId: viewerUid,
+          followingId: memberUid,
+          createdAt: serverTimestamp()
+        });
+
+        await addDoc(collection(db, "notifications", memberUid, "items"), {
+          type: "follow",
+          title: "New follower",
+          text: `${actorName} started following you.`,
+          fromUserId: viewerUid,
+          toUserId: memberUid,
+          createdAt: serverTimestamp()
+        });
+
+        location.reload();
+      });
+      followArea.appendChild(btn);
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -452,11 +488,12 @@
       }
 
       try {
-        const [profileSnap, postsSnap, followsSnap, publicProfilesSnap] = await Promise.all([
+        const [profileSnap, postsSnap, followsSnap, publicProfilesSnap, requestSnap] = await Promise.all([
           getDoc(doc(db, "publicProfiles", memberUid)),
           getDocs(collection(db, "posts")),
           getDocs(collection(db, "follows")),
-          getDocs(collection(db, "publicProfiles"))
+          getDocs(collection(db, "publicProfiles")),
+          getDoc(doc(db, "follow_requests", `${user.uid}__${memberUid}`))
         ]);
 
         let profile = null;
@@ -469,7 +506,8 @@
             uid: memberUid,
             displayName: fallbackPost.displayName || "Member",
             bio: "",
-            photoURL: fallbackPost.userPhotoURL || ""
+            photoURL: fallbackPost.userPhotoURL || "",
+            isPrivate: false
           } : null;
         }
 
@@ -501,12 +539,23 @@
         renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
         renderPeople(following, profilesMap, followingList, followingEmpty, "Not following anyone yet.");
 
-        await renderFollowButton(user.uid, memberUid);
+        const alreadyFollowing = follows.some(f => f.followerId === user.uid && f.followingId === memberUid);
+        const relationship = alreadyFollowing ? "following" : (requestSnap.exists() ? "requested" : "none");
+
+        const myPublicSnap = await getDoc(doc(db, "publicProfiles", user.uid));
+        const myProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
+
+        await renderFollowButton(
+          user.uid,
+          memberUid,
+          getActorName(myProfile, user),
+          !!profile.isPrivate,
+          relationship
+        );
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
-      } catch (error) {
-        console.error(error);
+      } catch {
         loading.textContent = "Could not load member profile.";
       }
     });
