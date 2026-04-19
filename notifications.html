@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Notifications</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --red:#ff5d73;
+      --green:#3ddc84;
+      --purple:#a78bfa;
+    }
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .left-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .back-btn{
+      border:none;
+      background:var(--soft);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+    }
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .chip-btn{
+      border:none;background:var(--soft);color:#fff;border-radius:12px;
+      padding:10px 12px;text-decoration:none;font-size:13px;font-weight:700;
+      cursor:pointer;border:1px solid var(--line);display:inline-block;
+    }
+    .panel{
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+    .section-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:6px;
+    }
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+    }
+    .list{
+      display:grid;
+      gap:12px;
+    }
+    .item{
+      display:block;
+      text-decoration:none;
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:14px;
+      color:#fff;
+    }
+    .item:hover{
+      border-color:rgba(76,201,255,.20);
+    }
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .item-title{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.4;
+    }
+    .item-time{
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+    }
+    .item-text{
+      color:#d7def5;
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:8px;
+    }
+    .item-type{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .empty-box{
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:#0f1630;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
+    }
+    .hidden{display:none!important}
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:#b9c4e3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{font-size:18px;line-height:1}
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .chip-btn,.back-btn{padding:9px 10px;font-size:12px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Notifications</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a href="feed.html" class="chip-btn">Feed</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Notifications</div>
+      <div class="section-note">Latest activity on your account.</div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading notifications...</div>
+      <div id="list" class="list hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No notifications yet.</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      query,
+      orderBy,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const list = document.getElementById("list");
+    const emptyBox = document.getElementById("emptyBox");
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) {
+        history.back();
+      } else {
+        window.location.href = "feed.html";
+      }
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch { return "Just now"; }
+    }
+
+    function getTargetUrl(item) {
+      if (item.type === "follow" && item.fromUserId) {
+        return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
+      }
+
+      if ((item.type === "like" || item.type === "comment") && item.postId) {
+        return "feed.html";
+      }
+
+      return "feed.html";
+    }
+
+    function renderItems(items) {
+      list.innerHTML = "";
+
+      if (!items.length) {
+        list.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      list.classList.remove("hidden");
+
+      items.forEach((item) => {
+        const a = document.createElement("a");
+        a.className = "item";
+        a.href = getTargetUrl(item);
+
+        a.innerHTML = `
+          <div class="item-top">
+            <div class="item-title">${escapeHtml(item.title || "Notification")}</div>
+            <div class="item-time">${escapeHtml(formatDate(item.createdAt))}</div>
+          </div>
+          <div class="item-text">${escapeHtml(item.text || "No details")}</div>
+          <span class="item-type">${escapeHtml(item.type || "activity")}</span>
+        `;
+
+        list.appendChild(a);
+      });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const q = query(
+        collection(db, "notifications", user.uid, "items"),
+        orderBy("createdAt", "desc")
+      );
+
+      onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(d => d.data());
+        loading.classList.add("hidden");
+        renderItems(items);
+      }, (error) => {
+        console.error(error);
+        loading.textContent = "Could not load notifications.";
+      });
+    });
+  </script>
+</body>
+</html>
