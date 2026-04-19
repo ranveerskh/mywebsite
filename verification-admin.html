@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Verification Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    :root{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+    }
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
+    }
+    .app{max-width:980px;margin:0 auto}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .left-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .back-btn,.chip-btn{
+      border:none;
+      background:var(--soft);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-block;
+    }
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .panel{
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+    .section-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:14px;
+    }
+    .filters{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:10px;
+      margin-top:10px;
+    }
+    input,select,textarea{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:14px;
+      background:#0f1630;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.07);
+      font-size:14px;
+    }
+    select option{color:#000}
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+    }
+    .list{
+      display:grid;
+      gap:14px;
+    }
+    .card{
+      background:#0f1630;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px;
+      padding:14px;
+    }
+    .card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{
+      font-size:18px;
+      font-weight:800;
+      line-height:1.4;
+    }
+    .card-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-top:4px;
+      word-break:break-word;
+    }
+    .status-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      flex-shrink:0;
+    }
+    .status-pending{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .status-approved{
+      background:rgba(61,220,132,.14);
+      color:#c9f7dd;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .status-rejected{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:8px;
+      margin-bottom:12px;
+    }
+    .info-box{
+      background:#111936;
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:14px;
+      padding:12px;
+    }
+    .info-box small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-size:12px;
+    }
+    .info-box div,.info-box a{
+      color:#fff;
+      font-size:14px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+    .info-box a{
+      text-decoration:none;
+    }
+    .info-box a:hover{
+      text-decoration:underline;
+    }
+    .reason-box{
+      background:#111936;
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .reason-box small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-size:12px;
+    }
+    .reason-box div{
+      color:#fff;
+      font-size:14px;
+      line-height:1.7;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+    .approve-btn,.reject-btn,.save-note-btn,.open-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+    }
+    .approve-btn{
+      background:rgba(61,220,132,.14);
+      color:#c9f7dd;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .reject-btn{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .save-note-btn{
+      background:rgba(167,139,250,.14);
+      color:#e8defd;
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .open-btn{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+    .empty-box{
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:#0f1630;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
+    }
+    .hidden{display:none!important}
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      width:min(980px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:#b9c4e3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+    }
+    .nav-link .icon{font-size:18px;line-height:1}
+
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
+      .filters{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
+        <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Verification admin</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a href="profile.html" class="chip-btn">Profile</a>
+        <a href="settings.html" class="chip-btn">Settings</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Verification Requests</div>
+      <div class="section-note">
+        Review verification requests and approve or reject them.
+      </div>
+
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search by name or email..." />
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="pending">Pending only</option>
+          <option value="approved">Approved only</option>
+          <option value="rejected">Rejected only</option>
+        </select>
+      </div>
+
+      <div id="pageMessage" class="message"></div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading verification requests...</div>
+      <div id="list" class="list hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No verification requests found.</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      getDocs,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const loading = document.getElementById("loading");
+    const list = document.getElementById("list");
+    const emptyBox = document.getElementById("emptyBox");
+    const pageMessage = document.getElementById("pageMessage");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+
+    let allRequests = [];
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "settings.html";
+    });
+
+    function setMessage(text, type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch { return "Just now"; }
+    }
+
+    function statusBadgeClass(status) {
+      if (status === "approved") return "status-approved";
+      if (status === "rejected") return "status-rejected";
+      return "status-pending";
+    }
+
+    function getFilteredRequests() {
+      const q = searchInput.value.trim().toLowerCase();
+      const status = statusFilter.value;
+
+      return allRequests.filter(item => {
+        const req = item.request;
+        const matchesStatus = status === "all" ? true : (req.status || "pending") === status;
+        if (!matchesStatus) return false;
+
+        if (!q) return true;
+
+        const haystack = [
+          req.fullName || "",
+          req.email || "",
+          req.accountType || "",
+          req.reason || ""
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    async function approveRequest(uid, note) {
+      await updateDoc(doc(db, "verification_requests", uid), {
+        status: "approved",
+        adminNote: note || "",
+        updatedAt: serverTimestamp()
+      });
+
+      await setDoc(doc(db, "users", uid), {
+        isVerified: true
+      }, { merge: true });
+
+      await setDoc(doc(db, "publicProfiles", uid), {
+        isVerified: true
+      }, { merge: true });
+    }
+
+    async function rejectRequest(uid, note) {
+      await updateDoc(doc(db, "verification_requests", uid), {
+        status: "rejected",
+        adminNote: note || "",
+        updatedAt: serverTimestamp()
+      });
+
+      await setDoc(doc(db, "users", uid), {
+        isVerified: false
+      }, { merge: true });
+
+      await setDoc(doc(db, "publicProfiles", uid), {
+        isVerified: false
+      }, { merge: true });
+    }
+
+    async function saveAdminNote(uid, note) {
+      await updateDoc(doc(db, "verification_requests", uid), {
+        adminNote: note || "",
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    function renderList() {
+      const items = getFilteredRequests();
+      list.innerHTML = "";
+
+      if (!items.length) {
+        list.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      list.classList.remove("hidden");
+
+      items.forEach((item) => {
+        const req = item.request;
+        const uid = item.uid;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <div class="card-head">
+            <div>
+              <div class="card-title">${escapeHtml(req.fullName || "No name")}</div>
+              <div class="card-sub">
+                ${escapeHtml(req.email || "-")} • ${escapeHtml(req.accountType || "personal")}<br>
+                UID: ${escapeHtml(uid)}<br>
+                Submitted: ${escapeHtml(formatDate(req.createdAt))}
+              </div>
+            </div>
+            <span class="status-badge ${statusBadgeClass(req.status || "pending")}">
+              ${escapeHtml((req.status || "pending").toUpperCase())}
+            </span>
+          </div>
+
+          <div class="grid">
+            <div class="info-box">
+              <small>Social / Website</small>
+              <div>
+                ${req.socialLink ? `<a href="${escapeHtml(req.socialLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.socialLink)}</a>` : "Not provided"}
+              </div>
+            </div>
+
+            <div class="info-box">
+              <small>Public Profile</small>
+              <div>
+                <a href="member.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open member profile</a>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <small>ID Photo Link</small>
+              <div>
+                ${req.idPhotoURL ? `<a href="${escapeHtml(req.idPhotoURL)}" target="_blank" rel="noopener noreferrer">Open ID photo</a>` : "Not provided"}
+              </div>
+            </div>
+
+            <div class="info-box">
+              <small>Selfie with ID Link</small>
+              <div>
+                ${req.selfieWithIdURL ? `<a href="${escapeHtml(req.selfieWithIdURL)}" target="_blank" rel="noopener noreferrer">Open selfie with ID</a>` : "Not provided"}
+              </div>
+            </div>
+          </div>
+
+          <div class="reason-box">
+            <small>Reason</small>
+            <div>${escapeHtml(req.reason || "No reason provided")}</div>
+          </div>
+
+          <div class="field">
+            <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
+            <textarea class="admin-note-input" data-uid="${uid}" placeholder="Write admin note...">${escapeHtml(req.adminNote || "")}</textarea>
+          </div>
+
+          <div class="actions">
+            <a class="open-btn" href="verification.html" target="_blank" rel="noopener noreferrer">Open user page</a>
+            <button class="save-note-btn" data-action="save-note" data-uid="${uid}">Save Note</button>
+            <button class="approve-btn" data-action="approve" data-uid="${uid}">Approve</button>
+            <button class="reject-btn" data-action="reject" data-uid="${uid}">Reject</button>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll("button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.getAttribute("data-uid");
+          const action = btn.getAttribute("data-action");
+          const noteInput = list.querySelector(`.admin-note-input[data-uid="${uid}"]`);
+          const note = noteInput ? noteInput.value.trim() : "";
+
+          btn.disabled = true;
+
+          try {
+            if (action === "save-note") {
+              await saveAdminNote(uid, note);
+              setMessage("Admin note saved.", "success");
+            } else if (action === "approve") {
+              await approveRequest(uid, note);
+              const item = allRequests.find(x => x.uid === uid);
+              if (item) {
+                item.request.status = "approved";
+                item.request.adminNote = note;
+              }
+              renderList();
+              setMessage("Verification approved.", "success");
+            } else if (action === "reject") {
+              await rejectRequest(uid, note);
+              const item = allRequests.find(x => x.uid === uid);
+              if (item) {
+                item.request.status = "rejected";
+                item.request.adminNote = note;
+              }
+              renderList();
+              setMessage("Verification rejected.", "success");
+            }
+          } catch (error) {
+            console.error(error);
+            setMessage("Action failed.", "error");
+          }
+
+          btn.disabled = false;
+        });
+      });
+    }
+
+    searchInput.addEventListener("input", renderList);
+    statusFilter.addEventListener("change", renderList);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const adminSnap = await getDoc(doc(db, "admins", user.uid));
+        if (!adminSnap.exists()) {
+          loading.textContent = "Access denied. Admin only.";
+          return;
+        }
+
+        const requestsSnap = await getDocs(collection(db, "verification_requests"));
+
+        allRequests = requestsSnap.docs.map(d => ({
+          uid: d.id,
+          request: d.data()
+        })).sort((a, b) => {
+          const aSec = a.request.createdAt?.seconds || 0;
+          const bSec = b.request.createdAt?.seconds || 0;
+          return bSec - aSec;
+        });
+
+        loading.classList.add("hidden");
+        renderList();
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load verification requests.";
+      }
+    });
+  </script>
+</body>
+</html>
