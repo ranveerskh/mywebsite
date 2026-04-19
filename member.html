@@ -6,23 +6,43 @@
   <title>BareWorld - Member</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
     body {
       background: linear-gradient(135deg, #020617, #0f172a);
       color: #fff;
       min-height: 100vh;
       padding: 20px;
     }
+
     .wrap { max-width: 850px; margin: 0 auto; }
+
     .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
     }
+
     .brand { font-size: 30px; font-weight: 800; }
-    .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn {
-      border: none; border-radius: 12px; padding: 12px 16px;
-      cursor: pointer; font-weight: 700; text-decoration: none; display: inline-block;
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+    }
+
     .btn-back { background: #64748b; color: #fff; }
     .btn-feed { background: #38bdf8; color: #082f49; }
 
@@ -35,50 +55,95 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
-    .loading { text-align: center; color: #cbd5e1; padding: 30px 10px; }
+    .loading {
+      text-align: center;
+      color: #cbd5e1;
+      padding: 30px 10px;
+    }
+
     .hidden { display: none !important; }
 
     .profile-header {
-      display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
     }
 
     .avatar {
-      width: 120px; height: 120px; border-radius: 24px; object-fit: cover;
-      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
     }
 
     .avatar-placeholder {
-      width: 120px; height: 120px; border-radius: 24px;
-      display: flex; align-items: center; justify-content: center; text-align: center;
-      padding: 12px; color: #94a3b8; background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15); font-size: 13px; line-height: 1.4;
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      color: #94a3b8;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 13px;
+      line-height: 1.4;
     }
 
-    .profile-main h2 { font-size: 28px; margin-bottom: 6px; }
-    .muted { color: #94a3b8; font-size: 14px; }
+    .profile-main h2 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
     .bio {
-      margin-top: 10px; color: #e2e8f0; line-height: 1.6;
-      white-space: pre-wrap; word-break: break-word;
+      margin-top: 10px;
+      color: #e2e8f0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
     }
 
     .info-box {
-      background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
     }
 
     .info-box small {
-      display: block; color: #94a3b8; margin-bottom: 8px;
+      display: block;
+      color: #94a3b8;
+      margin-bottom: 8px;
     }
 
     .info-box span {
-      font-weight: 700; color: #fff; word-break: break-word;
+      font-weight: 700;
+      color: #fff;
+      word-break: break-word;
     }
 
     .private-box, .note-box, .error-box {
-      margin-top: 20px; padding: 18px; border-radius: 18px; line-height: 1.6;
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
     }
 
     .private-box {
@@ -137,6 +202,11 @@
           </div>
 
           <div class="info-box">
+            <small>Gender</small>
+            <span id="gender">Hidden</span>
+          </div>
+
+          <div class="info-box">
             <small>Profile Type</small>
             <span id="profileType">Public</span>
           </div>
@@ -149,6 +219,11 @@
           <div class="info-box">
             <small>Member ID</small>
             <span id="uid">-</span>
+          </div>
+
+          <div class="info-box">
+            <small>Photo Status</small>
+            <span id="photoStatus">No photo</span>
           </div>
         </div>
 
@@ -183,9 +258,11 @@
     const subtitleEl = document.getElementById("subtitle");
     const bioEl = document.getElementById("bio");
     const cityEl = document.getElementById("city");
+    const genderEl = document.getElementById("gender");
     const profileTypeEl = document.getElementById("profileType");
     const verifiedEl = document.getElementById("verified");
     const uidEl = document.getElementById("uid");
+    const photoStatusEl = document.getElementById("photoStatus");
     const privateBox = document.getElementById("privateBox");
     const noteBox = document.getElementById("noteBox");
     const errorBox = document.getElementById("errorBox");
@@ -197,17 +274,20 @@
         avatar.classList.add("hidden");
         avatar.removeAttribute("src");
         avatarPlaceholder.classList.remove("hidden");
+        photoStatusEl.textContent = "No photo";
         return;
       }
 
       avatar.src = cleanUrl;
       avatar.classList.remove("hidden");
       avatarPlaceholder.classList.add("hidden");
+      photoStatusEl.textContent = "Photo added";
     }
 
     avatar.addEventListener("error", () => {
       avatar.classList.add("hidden");
       avatarPlaceholder.classList.remove("hidden");
+      photoStatusEl.textContent = "Photo could not load";
     });
 
     function showContent() {
@@ -225,6 +305,22 @@
       errorBox.classList.remove("hidden");
     }
 
+    function genderLabel(gender, custom) {
+      const map = {
+        male: "Male",
+        female: "Female",
+        non_binary: "Non-binary",
+        trans_man: "Trans Man",
+        trans_woman: "Trans Woman",
+        genderqueer: "Genderqueer",
+        agender: "Agender",
+        prefer_not_to_say: "Prefer not to say",
+        self_describe: custom || "Self-described"
+      };
+
+      return map[gender] || "Not added";
+    }
+
     function applyProfileData(data, fallbackUid) {
       const p = data || {};
 
@@ -232,6 +328,7 @@
       subtitleEl.textContent = p.isPrivate ? "Private member profile" : "Public member profile";
       bioEl.textContent = p.bio && p.bio.trim() ? p.bio : "No bio added yet.";
       cityEl.textContent = p.cityVisible ? (p.city || "Not added") : "Hidden";
+      genderEl.textContent = p.genderVisible ? genderLabel(p.gender, p.genderCustom) : "Hidden";
       profileTypeEl.textContent = p.isPrivate ? "Private" : "Public";
       verifiedEl.textContent = p.isVerified ? "Yes" : "No";
       uidEl.textContent = p.uid || fallbackUid || "-";
@@ -273,7 +370,10 @@
         city: "",
         cityVisible: false,
         isPrivate: false,
-        isVerified: false
+        isVerified: false,
+        gender: "",
+        genderCustom: "",
+        genderVisible: false
       };
     }
 
