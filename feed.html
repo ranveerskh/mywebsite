@@ -25,36 +25,22 @@
     .brand-wrap{display:flex;flex-direction:column;gap:2px}
     .brand{font-size:22px;font-weight:800;letter-spacing:.2px}
     .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .chip-btn{
       border:none;background:var(--card-soft);color:#fff;border-radius:12px;padding:10px 12px;
       text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);
-      display:inline-block;
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
     }
     .chip-btn.logout{
       background:rgba(255,93,115,0.14);color:#ffd3d9;border-color:rgba(255,93,115,0.22);
     }
     .notify-btn{position:relative;min-width:44px;padding:10px 12px}
+    .notify-icon{width:18px;height:18px;display:block}
     .notify-count{
       position:absolute;top:-4px;right:-2px;min-width:18px;height:18px;padding:0 5px;
       border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;
       display:flex;align-items:center;justify-content:center;
     }
-    .notify-panel{
-      position:absolute;top:52px;right:0;width:min(340px, calc(100vw - 40px));
-      background:rgba(18,25,49,0.98);border:1px solid var(--line);border-radius:18px;padding:12px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.28);z-index:60;
-    }
-    .notify-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
-    .notify-title{font-size:15px;font-weight:800}
-    .notify-list{display:grid;gap:8px;max-height:320px;overflow:auto}
-    .notify-item{
-      background:#0f1630;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:10px;
-    }
-    .notify-item strong{display:block;margin-bottom:4px;font-size:13px}
-    .notify-item p{color:#d7def5;font-size:13px;line-height:1.5}
-    .notify-item small{display:block;color:var(--muted);margin-top:6px;font-size:11px}
-
     .panel{
       background:rgba(18,25,49,0.88);border:1px solid var(--line);border-radius:22px;padding:16px;
       margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,0.18);
@@ -191,7 +177,6 @@
       .composer-actions{align-items:stretch}
       .post-btn{width:100%}
       .comment-form{flex-direction:column}
-      .notify-panel{right:-6px}
       .close-compose-btn{width:100%}
     }
   </style>
@@ -205,18 +190,13 @@
       </div>
 
       <div class="top-actions">
-        <button id="notifyBtn" class="chip-btn notify-btn" type="button">
-          🔔
+        <button id="notifyBtn" class="chip-btn notify-btn" type="button" aria-label="Notifications">
+          <svg class="notify-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
+            <path d="M10 20a2 2 0 0 0 4 0"></path>
+          </svg>
           <span id="notifyCount" class="notify-count hidden">0</span>
         </button>
-
-        <div id="notifyPanel" class="notify-panel hidden">
-          <div class="notify-head">
-            <div class="notify-title">Notifications</div>
-            <button id="closeNotifyBtn" class="chip-btn" type="button">Close</button>
-          </div>
-          <div id="notifyList" class="notify-list"></div>
-        </div>
 
         <a href="settings.html" class="chip-btn">Settings</a>
         <button id="logoutBtn" class="chip-btn logout">Logout</button>
@@ -334,9 +314,6 @@
     const followingTab = document.getElementById("followingTab");
 
     const notifyBtn = document.getElementById("notifyBtn");
-    const notifyPanel = document.getElementById("notifyPanel");
-    const closeNotifyBtn = document.getElementById("closeNotifyBtn");
-    const notifyList = document.getElementById("notifyList");
     const notifyCount = document.getElementById("notifyCount");
 
     const composerPanel = document.getElementById("composerPanel");
@@ -412,6 +389,20 @@
         const post = postDoc.data();
         return isFollowing(post.userId);
       });
+    }
+
+    function formatBadgeCount(count) {
+      return count > 99 ? "99+" : String(count);
+    }
+
+    function renderNotifications(items) {
+      if (!items.length) {
+        notifyCount.classList.add("hidden");
+        return;
+      }
+
+      notifyCount.textContent = formatBadgeCount(items.length);
+      notifyCount.classList.remove("hidden");
     }
 
     async function refreshLikeUI(postId) {
@@ -503,7 +494,7 @@
       await refreshCommentsUI(postId);
     }
 
-    function attachPostActions(postId) {
+    function attachPostActions(postId, postData) {
       const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
       const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
       const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
@@ -527,6 +518,23 @@
                 userId: currentUser.uid,
                 createdAt: serverTimestamp()
               });
+
+              if (postData.userId !== currentUser.uid) {
+                const actorName =
+                  currentUserProfile?.displayName ||
+                  currentUser.displayName ||
+                  "Someone";
+
+                await addDoc(collection(db, "notifications", postData.userId, "items"), {
+                  type: "like",
+                  title: "New like",
+                  text: `${actorName} liked your post.`,
+                  fromUserId: currentUser.uid,
+                  toUserId: postData.userId,
+                  postId,
+                  createdAt: serverTimestamp()
+                });
+              }
             }
             await refreshLikeUI(postId);
           } catch (error) {
@@ -571,6 +579,18 @@
               text,
               createdAt: serverTimestamp()
             });
+
+            if (postData.userId !== currentUser.uid) {
+              await addDoc(collection(db, "notifications", postData.userId, "items"), {
+                type: "comment",
+                title: "New comment",
+                text: `${displayName} commented on your post.`,
+                fromUserId: currentUser.uid,
+                toUserId: postData.userId,
+                postId,
+                createdAt: serverTimestamp()
+              });
+            }
 
             commentInput.value = "";
             await refreshCommentsUI(postId);
@@ -667,7 +687,7 @@
         }
 
         postsList.appendChild(card);
-        attachPostActions(postId);
+        attachPostActions(postId, post);
         await refreshPostMeta(postId);
       }
 
@@ -687,42 +707,8 @@
       });
     }
 
-    function renderNotifications(items) {
-      notifyList.innerHTML = "";
-
-      if (!items.length) {
-        notifyList.innerHTML = `<div class="notify-item"><p>No notifications yet.</p></div>`;
-        notifyCount.classList.add("hidden");
-        return;
-      }
-
-      const sorted = [...items].sort((a, b) => {
-        const aSec = a.createdAt?.seconds || 0;
-        const bSec = b.createdAt?.seconds || 0;
-        return bSec - aSec;
-      });
-
-      notifyCount.textContent = String(items.length);
-      notifyCount.classList.remove("hidden");
-
-      sorted.slice(0, 10).forEach((item) => {
-        const box = document.createElement("div");
-        box.className = "notify-item";
-        box.innerHTML = `
-          <strong>${escapeHtml(item.title || "Notification")}</strong>
-          <p>${escapeHtml(item.text || "No details")}</p>
-          <small>${item.createdAt ? escapeHtml(formatDate(item.createdAt)) : "Just now"}</small>
-        `;
-        notifyList.appendChild(box);
-      });
-    }
-
     notifyBtn.addEventListener("click", () => {
-      notifyPanel.classList.toggle("hidden");
-    });
-
-    closeNotifyBtn.addEventListener("click", () => {
-      notifyPanel.classList.add("hidden");
+      window.location.href = "notifications.html";
     });
 
     allTab.addEventListener("click", async () => {
