@@ -26,6 +26,7 @@
       padding:14px 14px 92px;
     }
     .app{max-width:760px;margin:0 auto}
+
     .topbar{
       position:sticky;
       top:0;
@@ -34,36 +35,51 @@
       background:rgba(11,16,32,.82);
       border:1px solid rgba(255,255,255,.04);
       border-radius:18px;
-      padding:12px 14px;
+      padding:10px 12px;
       margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .left-wrap{
-      display:flex;
+      display:grid;
+      grid-template-columns:48px 1fr 48px;
       align-items:center;
       gap:10px;
-      min-width:0;
     }
-    .back-btn,.chip-btn{
+    .top-icon-btn{
+      width:48px;
+      height:48px;
       border:none;
       background:var(--soft);
       color:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
+      border-radius:14px;
       cursor:pointer;
       border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-decoration:none;
-      display:inline-block;
+      position:relative;
+    }
+    .top-icon-btn svg{width:20px;height:20px;display:block}
+    .notify-count{
+      position:absolute;
+      top:-4px;
+      right:-2px;
+      min-width:18px;
+      height:18px;
+      padding:0 5px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .top-center{
+      text-align:center;
+      min-width:0;
     }
     .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
 
     .panel{
       background:rgba(18,25,49,.88);
@@ -117,6 +133,7 @@
       font-size:10px;
       flex-shrink:0;
     }
+    .post-top-text{min-width:0}
     .post-name{
       font-size:18px;
       font-weight:800;
@@ -129,21 +146,45 @@
     .post-name a:hover{
       text-decoration:underline;
     }
+    .post-username{
+      color:#8fdfff;
+      font-size:13px;
+      font-weight:700;
+      margin-top:2px;
+      word-break:break-word;
+    }
     .post-date{
       color:var(--muted);
       font-size:12px;
       margin-top:3px;
     }
-    .delete-btn{
+
+    .post-top-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+      flex-shrink:0;
+    }
+    .delete-btn,.report-btn{
       border:none;
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
       border-radius:10px;
       padding:8px 10px;
       font-size:12px;
       font-weight:800;
       cursor:pointer;
-      flex-shrink:0;
+      text-decoration:none;
+      display:inline-block;
+    }
+    .delete-btn{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+    }
+    .report-btn{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
     }
 
     .meta-row{
@@ -173,6 +214,11 @@
       background:rgba(255,93,115,.14);
       color:#ffd3d9;
       border:1px solid rgba(255,93,115,.20);
+    }
+    .badge-verified{
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
     }
 
     .post-caption{
@@ -266,6 +312,12 @@
       font-weight:800;
       font-size:14px;
       color:#fff;
+    }
+    .comment-username{
+      color:#8fdfff;
+      font-size:12px;
+      font-weight:700;
+      margin-top:2px;
     }
     .comment-date{
       color:var(--muted);
@@ -363,7 +415,6 @@
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
       .brand{font-size:20px}
-      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
       .comment-form{flex-direction:column}
     }
   </style>
@@ -371,18 +422,23 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Post detail</div>
-        </div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Post detail</div>
       </div>
 
-      <div class="top-actions">
-        <a href="feed.html" class="chip-btn">Feed</a>
-        <a id="reportPostBtn" class="chip-btn hidden" href="#">Report</a>
-      </div>
+      <a href="notifications.html" class="top-icon-btn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
+          <path d="M10 20a2 2 0 0 0 4 0"></path>
+        </svg>
+      </a>
     </div>
 
     <div class="panel">
@@ -394,15 +450,19 @@
             <img id="avatar" class="avatar hidden" alt="User Photo" />
             <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-            <div>
+            <div class="post-top-text">
               <div class="post-name">
                 <a id="ownerLink" href="#">Member</a>
               </div>
+              <div id="ownerUsername" class="post-username hidden">@username</div>
               <div id="postDate" class="post-date">Just now</div>
             </div>
           </div>
 
-          <button id="deleteBtn" class="delete-btn hidden">Delete</button>
+          <div class="post-top-actions">
+            <a id="reportPostBtn" class="report-btn hidden" href="#">Report</a>
+            <button id="deleteBtn" class="delete-btn hidden">Delete</button>
+          </div>
         </div>
 
         <div id="metaRow" class="meta-row"></div>
@@ -475,7 +535,9 @@
       addDoc,
       setDoc,
       deleteDoc,
-      serverTimestamp
+      serverTimestamp,
+      where,
+      limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const backBtn = document.getElementById("backBtn");
@@ -487,6 +549,7 @@
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const ownerLink = document.getElementById("ownerLink");
+    const ownerUsername = document.getElementById("ownerUsername");
     const postDate = document.getElementById("postDate");
     const metaRow = document.getElementById("metaRow");
     const postCaption = document.getElementById("postCaption");
@@ -546,16 +609,68 @@
       catch { return "Just now"; }
     }
 
-    function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
-      if (!cleanUrl) {
-        avatar.classList.add("hidden");
-        avatarPlaceholder.classList.remove("hidden");
-        return;
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted,
+        verified: !!d.verified
+      };
+    }
+
+    async function getMergedProfile(uid) {
+      if (!uid) return null;
+
+      let publicData = null;
+      let userData = null;
+
+      try {
+        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
+        if (publicSnap.exists()) {
+          publicData = normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, publicSnap.id);
+        }
+      } catch {}
+
+      try {
+        const userSnap = await getDoc(doc(db, "users", uid));
+        if (userSnap.exists()) {
+          userData = normalizeProfile({ id: userSnap.id, ...userSnap.data() }, userSnap.id);
+        }
+      } catch {}
+
+      if (publicData && userData) {
+        return normalizeProfile({ ...publicData, ...userData, uid }, uid);
       }
-      avatar.src = cleanUrl;
-      avatar.classList.remove("hidden");
-      avatarPlaceholder.classList.add("hidden");
+      return publicData || userData || normalizeProfile({ uid }, uid);
+    }
+
+    async function checkFollowing(viewerUid, ownerUid) {
+      if (!viewerUid || !ownerUid) return false;
+
+      try {
+        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${ownerUid}`));
+        if (direct.exists()) return true;
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "follows"),
+            where("followerId", "==", viewerUid),
+            where("followingId", "==", ownerUid),
+            limit(1)
+          )
+        );
+        return !snap.empty;
+      } catch {
+        return false;
+      }
     }
 
     async function refreshLikeUI() {
@@ -606,6 +721,7 @@
           <div class="comment-top">
             <div>
               <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+              ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
               <div class="comment-date">${formatDate(comment.createdAt)}</div>
             </div>
             ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${commentId}">Delete</button>` : ""}
@@ -633,13 +749,20 @@
       });
     }
 
-    function renderMeta(isPrivate, isBanned) {
-      metaRow.innerHTML = `
-        <span class="badge ${isPrivate ? "badge-private" : "badge-public"}">
-          ${isPrivate ? "Private" : "Public"}
-        </span>
-        ${isBanned ? `<span class="badge badge-banned">Removed</span>` : ""}
-      `;
+    function renderMeta(profile, isRemoved) {
+      const bits = [
+        `<span class="badge ${profile?.isPrivate ? "badge-private" : "badge-public"}">${profile?.isPrivate ? "Private" : "Public"}</span>`
+      ];
+
+      if (profile?.verified) {
+        bits.push(`<span class="badge badge-verified">Verified</span>`);
+      }
+
+      if (isRemoved) {
+        bits.push(`<span class="badge badge-banned">Removed</span>`);
+      }
+
+      metaRow.innerHTML = bits.join("");
     }
 
     function setVisibilityMode(showPost) {
@@ -669,53 +792,65 @@
       }
 
       try {
-        const [myPublicSnap, postSnap, followsSnap] = await Promise.all([
-          getDoc(doc(db, "publicProfiles", user.uid)),
-          getDoc(doc(db, "posts", currentPostId)),
-          getDocs(collection(db, "follows"))
+        const [myProfile, postSnap] = await Promise.all([
+          getMergedProfile(user.uid),
+          getDoc(doc(db, "posts", currentPostId))
         ]);
 
-        currentUserProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
+        currentUserProfile = myProfile;
 
         if (!postSnap.exists()) {
           loading.textContent = "Post not found.";
           return;
         }
 
-        currentPostData = postSnap.data();
+        currentPostData = { id: postSnap.id, ...postSnap.data() };
+
+        if (currentPostData.hidden || currentPostData.hiddenByAdmin || currentPostData.softDeleted) {
+          loading.classList.add("hidden");
+          lockedTitle.textContent = "Removed Post";
+          lockedText.textContent = "This content was removed for policy violation.";
+          setVisibilityMode(false);
+          return;
+        }
 
         const ownerUid = currentPostData.userId;
-        const ownerPublicSnap = await getDoc(doc(db, "publicProfiles", ownerUid));
-        const ownerProfile = ownerPublicSnap.exists() ? ownerPublicSnap.data() : {};
-        const isPrivate = !!ownerProfile.isPrivate;
-        const isBanned = ownerProfile.moderationStatus === "banned" || ownerProfile.isHiddenByAdmin || ownerProfile.softDeleted;
-        const alreadyFollowing = followsSnap.docs
-          .map(d => d.data())
-          .some(f => f.followerId === user.uid && f.followingId === ownerUid);
+        const ownerProfile = await getMergedProfile(ownerUid);
+        const isRemoved = ownerProfile?.moderationStatus === "banned" || ownerProfile?.isHiddenByAdmin || ownerProfile?.softDeleted;
+        const alreadyFollowing = await checkFollowing(user.uid, ownerUid);
 
-        canViewFull = !isBanned && (user.uid === ownerUid || !isPrivate || alreadyFollowing);
+        canViewFull = !isRemoved && (user.uid === ownerUid || !ownerProfile?.isPrivate || alreadyFollowing);
 
         if (!canViewFull) {
           loading.classList.add("hidden");
-          if (isBanned) {
+
+          if (isRemoved) {
             lockedTitle.textContent = "Removed Post";
             lockedText.textContent = "This content was removed for policy violation.";
           } else {
             lockedTitle.textContent = "Private Post";
             lockedText.textContent = "You need to follow this member to view this post.";
           }
+
           setVisibilityMode(false);
           return;
         }
 
         setVisibilityMode(true);
 
-        showAvatar(currentPostData.userPhotoURL || ownerProfile.photoURL || "");
-        ownerLink.textContent = currentPostData.displayName || ownerProfile.displayName || "Member";
+        showAvatar(ownerProfile?.photoURL || currentPostData.userPhotoURL || "");
+        ownerLink.textContent = ownerProfile?.displayName || currentPostData.displayName || "Member";
         ownerLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
-        postDate.textContent = formatDate(currentPostData.createdAt);
 
-        renderMeta(isPrivate, isBanned);
+        if (ownerProfile?.username || currentPostData.username) {
+          ownerUsername.textContent = "@" + (ownerProfile?.username || currentPostData.username);
+          ownerUsername.classList.remove("hidden");
+        } else {
+          ownerUsername.classList.add("hidden");
+        }
+
+        postDate.textContent = formatDate(currentPostData.createdAt);
+        renderMeta(ownerProfile, isRemoved);
 
         postCaption.textContent = currentPostData.caption || "";
         if (currentPostData.imageURL) {
@@ -741,6 +876,18 @@
         loading.textContent = "Could not load post.";
       }
     });
+
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
 
     likeBtn.addEventListener("click", async () => {
       if (!currentUser || !currentPostId || !currentPostData) return;
@@ -771,7 +918,8 @@
               fromUserId: currentUser.uid,
               toUserId: currentPostData.userId,
               postId: currentPostId,
-              createdAt: serverTimestamp()
+              createdAt: serverTimestamp(),
+              isRead: false
             });
           }
         }
@@ -797,6 +945,9 @@
         currentUser.displayName ||
         "Member";
 
+      const username =
+        currentUserProfile?.username || "";
+
       const userPhotoURL = currentUserProfile?.photoURL || "";
       const submitBtn = commentForm.querySelector("button");
       submitBtn.disabled = true;
@@ -805,6 +956,7 @@
         await addDoc(collection(db, "posts", currentPostId, "comments"), {
           userId: currentUser.uid,
           displayName,
+          username,
           userPhotoURL,
           text,
           createdAt: serverTimestamp()
@@ -818,7 +970,8 @@
             fromUserId: currentUser.uid,
             toUserId: currentPostData.userId,
             postId: currentPostId,
-            createdAt: serverTimestamp()
+            createdAt: serverTimestamp(),
+            isRead: false
           });
         }
 
