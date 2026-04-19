@@ -5,360 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Nearby</title>
   <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-      font-family:Arial,sans-serif;
-    }
-
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --card-soft:#161f3d;
-      --line:rgba(255,255,255,0.08);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
+      --bg:#0b1020;--card:#121931;--card-soft:#161f3d;--line:rgba(255,255,255,0.08);
+      --text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;--red:#ff5d73;
     }
-
     body{
       background:linear-gradient(180deg,#070b16 0%, #0d1326 100%);
-      color:var(--text);
-      min-height:100vh;
-      padding:14px 14px 92px;
+      color:var(--text);min-height:100vh;padding:14px 14px 92px;
     }
-
-    .app{
-      max-width:720px;
-      margin:0 auto;
-    }
-
+    .app{max-width:720px;margin:0 auto}
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:30;
-      backdrop-filter:blur(14px);
-      background:rgba(11,16,32,0.82);
-      border:1px solid rgba(255,255,255,0.04);
-      border-radius:18px;
-      padding:12px 14px;
-      margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+      background:rgba(11,16,32,0.82);border:1px solid rgba(255,255,255,0.04);
+      border-radius:18px;padding:12px 14px;margin-bottom:14px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
     }
-
-    .brand-wrap{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-
-    .brand{
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-
-    .brand-sub{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .top-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
+    .brand-wrap{display:flex;flex-direction:column;gap:2px}
+    .brand{font-size:22px;font-weight:800;letter-spacing:.2px}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
     .chip-btn{
-      border:none;
-      background:var(--card-soft);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:700;
-      cursor:pointer;
-      border:1px solid var(--line);
+      border:none;background:var(--card-soft);color:#fff;border-radius:12px;padding:10px 12px;
+      text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);
     }
-
     .panel{
-      background:rgba(18,25,49,0.88);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.18);
+      background:rgba(18,25,49,0.88);border:1px solid var(--line);border-radius:22px;padding:16px;
+      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,0.18);
     }
-
-    .section-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:12px;
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .section-title{font-size:20px;font-weight:800}
+    .section-note{color:var(--muted);font-size:12px;line-height:1.5}
+    .filters{display:grid;grid-template-columns:1fr 170px;gap:10px;margin-top:12px}
+    input,select{
+      width:100%;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.07);
+      background:#0f1630;color:#fff;outline:none;font-size:14px;
     }
-
-    .section-title{
-      font-size:20px;
-      font-weight:800;
-    }
-
-    .section-note{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    .filters{
-      display:grid;
-      grid-template-columns:1fr 170px;
-      gap:10px;
-      margin-top:12px;
-    }
-
-    input, select{
-      width:100%;
-      padding:13px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,0.07);
-      background:#0f1630;
-      color:#fff;
-      outline:none;
-      font-size:14px;
-    }
-
-    input::placeholder{
-      color:#7f8cad;
-    }
-
-    select option{
-      color:#000;
-    }
-
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:28px 10px;
-    }
-
-    .members-grid{
-      display:grid;
-      gap:12px;
-    }
-
+    input::placeholder{color:#7f8cad}
+    select option{color:#000}
+    .loading{text-align:center;color:var(--muted);padding:28px 10px}
+    .message{min-height:20px;font-size:14px;margin-top:10px}
+    .success{color:#9cf0bf}.error{color:#ffb3bd}
+    .members-grid{display:grid;gap:12px}
     .member-card{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:20px;
-      padding:14px;
+      background:#0f1630;border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:14px;
     }
-
-    .member-top{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-    }
-
+    .member-top{display:flex;gap:12px;align-items:flex-start}
     .avatar{
-      width:72px;
-      height:72px;
-      border-radius:20px;
-      object-fit:cover;
-      border:1px solid rgba(255,255,255,0.10);
-      background:#1b2445;
-      flex-shrink:0;
+      width:72px;height:72px;border-radius:20px;object-fit:cover;border:1px solid rgba(255,255,255,0.10);
+      background:#1b2445;flex-shrink:0;
     }
-
     .avatar-placeholder{
-      width:72px;
-      height:72px;
-      border-radius:20px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:8px;
-      background:#1b2445;
-      border:1px solid rgba(255,255,255,0.10);
-      color:var(--muted);
-      font-size:11px;
-      line-height:1.3;
-      flex-shrink:0;
+      width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:8px;background:#1b2445;border:1px solid rgba(255,255,255,0.10);
+      color:var(--muted);font-size:11px;line-height:1.3;flex-shrink:0;
     }
-
-    .member-body{
-      flex:1;
-      min-width:0;
-    }
-
-    .member-name{
-      font-size:17px;
-      font-weight:800;
-      line-height:1.3;
-      margin-bottom:6px;
-    }
-
-    .member-name a{
-      color:#fff;
-      text-decoration:none;
-    }
-
-    .member-name a:hover{
-      text-decoration:underline;
-    }
-
-    .badge-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:8px;
-    }
-
+    .member-body{flex:1;min-width:0}
+    .member-name{font-size:17px;font-weight:800;line-height:1.3;margin-bottom:6px}
+    .member-name a{color:#fff;text-decoration:none}
+    .member-name a:hover{text-decoration:underline}
+    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
     .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
+      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;
     }
-
-    .badge-public{
-      background:rgba(76,201,255,0.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,0.20);
+    .badge-public{background:rgba(76,201,255,0.14);color:#d8f7ff;border:1px solid rgba(76,201,255,0.20)}
+    .badge-private{background:rgba(245,185,66,0.14);color:#ffe7b0;border:1px solid rgba(245,185,66,0.20)}
+    .badge-verified{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
+    .badge-friend{background:rgba(167,139,250,0.14);color:#e8defd;border:1px solid rgba(167,139,250,0.20)}
+    .meta{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:8px}
+    .bio{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+    .member-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .view-btn,.follow-btn,.unfollow-btn,.self-btn{
+      border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;
+      text-decoration:none;display:inline-block;cursor:pointer;
     }
-
-    .badge-private{
-      background:rgba(245,185,66,0.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,0.20);
-    }
-
-    .badge-verified{
-      background:rgba(61,220,132,0.14);
-      color:#c9f7dd;
-      border:1px solid rgba(61,220,132,0.20);
-    }
-
-    .meta{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      margin-bottom:8px;
-    }
-
-    .bio{
-      color:#e8eeff;
-      line-height:1.6;
-      font-size:14px;
-      white-space:pre-wrap;
-      word-break:break-word;
-      margin-bottom:12px;
-    }
-
-    .member-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .view-btn{
-      border:none;
-      border-radius:12px;
-      padding:10px 14px;
-      font-size:13px;
-      font-weight:800;
-      text-decoration:none;
-      display:inline-block;
-      background:rgba(76,201,255,0.14);
-      color:#d8f7ff;
-    }
-
+    .view-btn{background:rgba(76,201,255,0.14);color:#d8f7ff}
+    .follow-btn{background:rgba(61,220,132,0.14);color:#c9f7dd;border:1px solid rgba(61,220,132,0.20)}
+    .unfollow-btn{background:rgba(255,93,115,0.14);color:#ffd3d9;border:1px solid rgba(255,93,115,0.20)}
+    .self-btn{background:#182248;color:#c9d5ff;cursor:not-allowed;border:1px solid rgba(255,255,255,0.06)}
     .empty-box{
-      text-align:center;
-      padding:24px 10px;
-      color:var(--muted);
-      background:#0f1630;
-      border-radius:16px;
+      text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;border-radius:16px;
       border:1px dashed rgba(255,255,255,0.08);
     }
-
-    .hidden{
-      display:none !important;
-    }
-
+    .hidden{display:none!important}
     .bottom-nav{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:12px;
-      width:min(720px, calc(100% - 20px));
-      background:rgba(12,18,35,0.92);
-      border:1px solid rgba(255,255,255,0.08);
-      backdrop-filter:blur(18px);
-      border-radius:20px;
-      padding:8px;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:8px;
-      z-index:50;
+      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(720px, calc(100% - 20px));
+      background:rgba(12,18,35,0.92);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(18px);
+      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
       box-shadow:0 20px 40px rgba(0,0,0,0.25);
     }
-
     .nav-link{
-      text-decoration:none;
-      color:#b9c4e3;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      padding:10px 6px;
-      border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      border:none;background:transparent;cursor:pointer;
     }
-
-    .nav-link .icon{
-      font-size:18px;
-      line-height:1;
-    }
-
-    .nav-link.active{
-      background:rgba(76,201,255,0.14);
-      color:#d8f7ff;
-    }
-
+    .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{background:rgba(76,201,255,0.14);color:#d8f7ff}
     @media (max-width:700px){
-      body{
-        padding:12px 12px 92px;
-      }
-
-      .topbar{
-        padding:10px 12px;
-      }
-
-      .brand{
-        font-size:20px;
-      }
-
-      .chip-btn{
-        padding:9px 10px;
-        font-size:12px;
-      }
-
-      .filters{
-        grid-template-columns:1fr;
-      }
+      body{padding:12px 12px 92px}
+      .topbar{padding:10px 12px}
+      .brand{font-size:20px}
+      .chip-btn{padding:9px 10px;font-size:12px}
+      .filters{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -379,7 +127,7 @@
     <div class="panel">
       <div class="section-head">
         <div class="section-title">Discover Members</div>
-        <div class="section-note">Search by name, city, or bio</div>
+        <div class="section-note">Search, view, follow</div>
       </div>
 
       <div class="filters">
@@ -389,8 +137,12 @@
           <option value="public">Public Only</option>
           <option value="private">Private Only</option>
           <option value="verified">Verified Only</option>
+          <option value="friends">Friends Only</option>
+          <option value="following">Following Only</option>
         </select>
       </div>
+
+      <div id="pageMessage" class="message"></div>
     </div>
 
     <div class="panel">
@@ -409,7 +161,7 @@
       <span class="icon">◎</span>
       <span>Nearby</span>
     </a>
-    <a href="create-event.html" class="nav-link">
+    <a href="feed.html#composerPanel" class="nav-link">
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
@@ -426,16 +178,30 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      collection,
+      getDocs,
+      doc,
+      setDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
     const membersGrid = document.getElementById("membersGrid");
     const emptyBox = document.getElementById("emptyBox");
     const searchInput = document.getElementById("searchInput");
     const typeFilter = document.getElementById("typeFilter");
+    const pageMessage = document.getElementById("pageMessage");
 
     let currentUser = null;
     let allMembers = [];
+    let follows = [];
+
+    function setMessage(text, type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -455,8 +221,19 @@
         prefer_not_to_say: "Prefer not to say",
         self_describe: custom || "Self-described"
       };
-
       return map[gender] || "";
+    }
+
+    function isFollowing(uid) {
+      return follows.some(f => f.followerId === currentUser.uid && f.followingId === uid);
+    }
+
+    function isFollower(uid) {
+      return follows.some(f => f.followerId === uid && f.followingId === currentUser.uid);
+    }
+
+    function isFriend(uid) {
+      return isFollowing(uid) && isFollower(uid);
     }
 
     function getFilteredMembers() {
@@ -470,6 +247,8 @@
         if (filter === "public" && member.isPrivate) return false;
         if (filter === "private" && !member.isPrivate) return false;
         if (filter === "verified" && !member.isVerified) return false;
+        if (filter === "friends" && !isFriend(member.uid)) return false;
+        if (filter === "following" && !isFollowing(member.uid)) return false;
 
         if (!q) return true;
 
@@ -482,6 +261,51 @@
 
         return haystack.includes(q);
       });
+    }
+
+    async function followMember(targetUid, btn) {
+      const followId = `${currentUser.uid}__${targetUid}`;
+      btn.disabled = true;
+
+      try {
+        await setDoc(doc(db, "follows", followId), {
+          followerId: currentUser.uid,
+          followingId: targetUid,
+          createdAt: serverTimestamp()
+        });
+
+        follows.push({
+          followerId: currentUser.uid,
+          followingId: targetUid
+        });
+
+        renderMembers();
+        setMessage("Followed successfully.", "success");
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not follow member.", "error");
+      }
+
+      btn.disabled = false;
+    }
+
+    async function unfollowMember(targetUid, btn) {
+      const followId = `${currentUser.uid}__${targetUid}`;
+      btn.disabled = true;
+
+      try {
+        await deleteDoc(doc(db, "follows", followId));
+
+        follows = follows.filter(f => !(f.followerId === currentUser.uid && f.followingId === targetUid));
+
+        renderMembers();
+        setMessage("Unfollowed successfully.", "success");
+      } catch (error) {
+        console.error(error);
+        setMessage("Could not unfollow member.", "error");
+      }
+
+      btn.disabled = false;
     }
 
     function renderMembers() {
@@ -498,6 +322,9 @@
       membersGrid.classList.remove("hidden");
 
       members.forEach(member => {
+        const following = isFollowing(member.uid);
+        const friend = isFriend(member.uid);
+
         const card = document.createElement("div");
         card.className = "member-card";
 
@@ -529,6 +356,7 @@
                   ${member.isPrivate ? "Private" : "Public"}
                 </span>
                 ${member.isVerified ? `<span class="badge badge-verified">Verified</span>` : ""}
+                ${friend ? `<span class="badge badge-friend">Friend</span>` : ""}
               </div>
 
               <div class="meta">
@@ -540,6 +368,11 @@
 
               <div class="member-actions">
                 <a href="member.html?uid=${encodeURIComponent(member.uid)}" class="view-btn">View Profile</a>
+                ${
+                  following
+                    ? `<button class="unfollow-btn follow-action-btn" data-action="unfollow" data-uid="${member.uid}">Unfollow</button>`
+                    : `<button class="follow-btn follow-action-btn" data-action="follow" data-uid="${member.uid}">Follow</button>`
+                }
               </div>
             </div>
           </div>
@@ -553,6 +386,19 @@
         }
 
         membersGrid.appendChild(card);
+      });
+
+      document.querySelectorAll(".follow-action-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.getAttribute("data-uid");
+          const action = btn.getAttribute("data-action");
+
+          if (action === "follow") {
+            await followMember(uid, btn);
+          } else {
+            await unfollowMember(uid, btn);
+          }
+        });
       });
     }
 
@@ -568,8 +414,13 @@
       currentUser = user;
 
       try {
-        const snap = await getDocs(collection(db, "publicProfiles"));
-        allMembers = snap.docs.map(doc => doc.data());
+        const [profilesSnap, followsSnap] = await Promise.all([
+          getDocs(collection(db, "publicProfiles")),
+          getDocs(collection(db, "follows"))
+        ]);
+
+        allMembers = profilesSnap.docs.map(docSnap => docSnap.data());
+        follows = followsSnap.docs.map(docSnap => docSnap.data());
 
         loading.classList.add("hidden");
         renderMembers();
