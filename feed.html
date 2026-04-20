@@ -7,498 +7,266 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
-      --soft2:#0f1630;
-      --line:rgba(255,255,255,.08);
-      --text:#fff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --red:#ff5d73;
-      --purple:#a78bfa;
-      --yellow:#f5b942;
+      --bg:#0b1020;--card:#121931;--card-soft:#161f3d;--line:rgba(255,255,255,0.08);
+      --text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;
+      --yellow:#f5b942;--red:#ff5d73;--purple:#a78bfa;
     }
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
-      color:var(--text);
-      min-height:100vh;
-      padding:14px 14px 92px;
+      background:linear-gradient(180deg,#070b16 0%, #0d1326 100%);
+      color:var(--text);min-height:100vh;padding:14px 14px 92px;
     }
-    .app{max-width:760px;margin:0 auto}
-
+    .app{max-width:720px;margin:0 auto}
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:40;
-      backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:10px 12px;
-      margin-bottom:14px;
-      display:grid;
-      grid-template-columns:48px 1fr 48px;
-      align-items:center;
-      gap:10px;
+      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+      background:rgba(11,16,32,0.82);border:1px solid rgba(255,255,255,0.04);
+      border-radius:18px;padding:12px 14px;margin-bottom:14px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
     }
-    .top-icon-btn{
-      width:48px;
-      height:48px;
-      border:none;
-      background:var(--soft);
-      color:#fff;
-      border-radius:14px;
-      cursor:pointer;
-      border:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-      position:relative;
+    .brand-wrap{display:flex;flex-direction:column;gap:2px}
+    .brand{font-size:22px;font-weight:800;letter-spacing:.2px}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .chip-btn{
+      border:none;background:var(--card-soft);color:#fff;border-radius:12px;padding:10px 12px;
+      text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
     }
-    .top-icon-btn svg{width:20px;height:20px;display:block}
-    .top-center{text-align:center;min-width:0}
-    .brand-link{
-      color:#fff;
-      text-decoration:none;
-      display:inline-block;
+    .chip-btn.logout{
+      background:rgba(255,93,115,0.14);color:#ffd3d9;border-color:rgba(255,93,115,0.22);
     }
-    .brand{
-      font-size:22px;
-      font-weight:800;
-      line-height:1.1;
+    .notify-btn{position:relative;min-width:44px;padding:10px 12px}
+    .notify-icon{width:18px;height:18px;display:block}
+    .notify-count{
+      position:absolute;top:-4px;right:-2px;min-width:18px;height:18px;padding:0 5px;
+      border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;
+      display:flex;align-items:center;justify-content:center;
     }
-    .brand-sub{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:2px;
-    }
-
     .panel{
-      background:rgba(18,25,49,.88);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-    .hidden{display:none!important}
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:28px 10px;
-    }
-    .message{
-      min-height:20px;
-      font-size:14px;
-      margin-top:10px;
-    }
-    .success{color:#9cf0bf}
-    .error{color:#ffb3bd}
-
-    .composer-title{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:12px;
-    }
-    .composer-grid{
-      display:grid;
-      gap:10px;
-    }
-    .input,.textarea{
-      width:100%;
-      border:none;
-      outline:none;
-      padding:14px 15px;
-      border-radius:16px;
-      background:var(--soft2);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.07);
-      font-size:15px;
-    }
-    .textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-    .action-row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:2px;
-    }
-    .main-btn,.soft-btn{
-      border:none;
-      cursor:pointer;
-      font-weight:800;
-      border-radius:14px;
-      padding:12px 14px;
-      font-size:14px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .main-btn{
-      background:var(--green);
-      color:#062513;
-    }
-    .soft-btn{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,.20);
+      background:rgba(18,25,49,0.88);border:1px solid var(--line);border-radius:22px;padding:16px;
+      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,0.18);
     }
 
-    .feed-list{
-      display:grid;
-      gap:14px;
+    .composer-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;
+    }
+    .composer-head-left{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    }
+    .avatar,.post-avatar{
+      width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.10);
+      background:#1b2445;flex-shrink:0;
+    }
+    .avatar-placeholder,.post-avatar-placeholder{
+      width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:6px;background:#1b2445;border:1px solid rgba(255,255,255,0.10);
+      color:var(--muted);font-size:10px;flex-shrink:0;
+    }
+    .composer-head h3{font-size:16px;margin-bottom:2px}
+    .muted{color:var(--muted);font-size:13px;line-height:1.5}
+    .field{margin-bottom:12px}
+    textarea,input[type="text"]{
+      width:100%;border:none;outline:none;resize:none;padding:14px 15px;border-radius:16px;
+      background:#0f1630;color:#fff;border:1px solid rgba(255,255,255,0.07);font-size:15px;
+    }
+    textarea{min-height:96px}
+    textarea::placeholder,input::placeholder{color:#7f8cad}
+    .composer-actions{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+    }
+    .post-btn{
+      border:none;background:var(--green);color:#062513;padding:12px 18px;border-radius:14px;
+      font-weight:800;cursor:pointer;min-width:130px;
+    }
+    .close-compose-btn{
+      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;
+    }
+    .message{min-height:20px;font-size:14px}
+    .success{color:#9cf0bf}.error{color:#ffb3bd}
+
+    .section-head{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;
+    }
+    .section-title{font-size:20px;font-weight:800}
+    .filter-tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .filter-tab{
+      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;
+    }
+    .filter-tab.active{
+      background:rgba(76,201,255,0.14);color:#d8f7ff;border-color:rgba(76,201,255,0.20);
     }
 
+    .posts-list{display:grid;gap:14px}
+    .post-card{
+      background:rgba(18,25,49,0.95);border:1px solid var(--line);border-radius:24px;overflow:hidden;
+    }
+    .post-inner{padding:15px}
     .post-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin-bottom:12px;
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;
     }
-    .post-left{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      min-width:0;
-    }
-    .avatar{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      object-fit:cover;
-      border:1px solid rgba(255,255,255,.10);
-      background:#1b2445;
-      flex-shrink:0;
-    }
-    .avatar-placeholder{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:6px;
-      background:#1b2445;
-      border:1px solid rgba(255,255,255,.10);
-      color:var(--muted);
-      font-size:10px;
-      flex-shrink:0;
-    }
-    .post-top-text{min-width:0}
-    .post-name{
-      font-size:18px;
-      font-weight:800;
-      line-height:1.3;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .post-name a{
-      color:#fff;
-      text-decoration:none;
-    }
+    .post-left{display:flex;gap:12px;align-items:center;min-width:0}
+    .post-name{font-size:16px;font-weight:800;line-height:1.3}
+    .post-name a{color:#fff;text-decoration:none}
     .post-name a:hover{text-decoration:underline}
-    .verified-dot{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:20px;
-      height:20px;
-      border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-      font-size:11px;
-      font-weight:900;
-    }
-    .post-username{
-      color:#8fdfff;
-      font-size:13px;
-      font-weight:700;
-      margin-top:2px;
-      word-break:break-word;
-    }
-    .post-date{
-      color:var(--muted);
-      font-size:12px;
-      margin-top:3px;
-    }
-
+    .post-date{color:var(--muted);font-size:12px;margin-top:3px}
     .post-top-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      align-items:center;
+      display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;
       flex-shrink:0;
     }
-
-    .top-follow-btn,.delete-btn{
-      border:none;
+    .delete-post-btn{
+      border:none;background:rgba(255,93,115,0.14);color:#ffd3d9;border-radius:10px;padding:8px 10px;
+      font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
+    }
+    .report-link{
+      text-decoration:none;
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
       border-radius:10px;
       padding:8px 10px;
       font-size:12px;
       font-weight:800;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-    }
-    .top-follow-btn.follow{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .top-follow-btn.unfollow{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .top-follow-btn.request{
-      background:rgba(167,139,250,.14);
-      color:#e8defd;
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .top-follow-btn.requested{
-      background:#182248;
-      color:#c9d5ff;
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .top-follow-btn:disabled,.delete-btn:disabled,.icon-action-btn:disabled,.main-btn:disabled{
-      opacity:.7;
-      cursor:not-allowed;
-    }
-    .delete-btn{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
-
-    .meta-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-    .badge{
       display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
     }
-    .badge-public{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .badge-private{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .badge-banned{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .badge-verified{
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-    }
-
-    .post-caption{
-      color:#e8eeff;
-      line-height:1.8;
-      font-size:15px;
-      white-space:pre-wrap;
-      word-break:break-word;
-      margin-bottom:12px;
-    }
-    .post-image-link{
+    .post-click{
       display:block;
       text-decoration:none;
+      color:inherit;
+    }
+    .post-caption{
+      color:#e8eeff;line-height:1.7;font-size:15px;white-space:pre-wrap;word-break:break-word;
       margin-bottom:12px;
     }
     .post-image{
-      width:100%;
-      max-height:620px;
-      object-fit:cover;
-      border-radius:18px;
-      display:block;
-      background:var(--soft2);
-      border:1px solid rgba(255,255,255,.06);
+      width:100%;max-height:520px;object-fit:cover;border-radius:18px;display:block;background:#0f1630;
+      border:1px solid rgba(255,255,255,0.06);margin-bottom:12px;
     }
+    .post-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .action-btn{
+      border:none;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;font-size:14px;
+    }
+    .like-btn{background:rgba(76,201,255,0.14);color:#c9f3ff}
+    .comment-toggle-btn{background:rgba(167,139,250,0.14);color:#e5ddff}
 
-    .actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:4px;
+    .comments-wrap{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)}
+    .comment-form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .comment-input{flex:1;min-width:200px}
+    .comment-submit{background:var(--green);color:#062513}
+    .comments-list{display:grid;gap:10px}
+    .comment-item{
+      background:#0f1630;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:12px;
     }
-    .icon-action-btn,.icon-report-link,.open-link{
-      border:none;
-      cursor:pointer;
-      font-weight:800;
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:14px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      text-decoration:none;
+    .comment-top{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;
     }
-    .icon-action-btn svg,.icon-report-link svg{width:18px;height:18px;display:block;flex-shrink:0}
-    .like-btn{
-      background:rgba(76,201,255,.14);
-      color:#c9f3ff;
-    }
-    .comment-anchor-btn{
-      background:rgba(167,139,250,.14);
-      color:#e5ddff;
-    }
-    .open-link{
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .icon-report-link{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-
-    .lock-box{
-      text-align:center;
-      padding:26px 14px;
-      background:var(--soft2);
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
-    }
-    .lock-title{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:8px;
-    }
-    .lock-text{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.7;
-    }
-    .lock-action-wrap{
-      margin-top:14px;
-      display:flex;
-      justify-content:center;
+    .comment-author{font-weight:800;font-size:14px;color:#fff}
+    .comment-date{color:var(--muted);font-size:12px;margin-top:2px}
+    .comment-text{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word}
+    .comment-delete-btn{
+      border:none;background:rgba(255,93,115,0.14);color:#ffd3d9;border-radius:10px;padding:7px 9px;
+      font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
     }
 
     .empty-box{
-      text-align:center;
-      padding:28px 10px;
-      color:var(--muted);
-      background:var(--soft2);
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
+      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
+      border:1px dashed rgba(255,255,255,0.08);
     }
+    .tiny-note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:6px}
+    .hidden{display:none!important}
 
     .bottom-nav{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:12px;
-      width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(18px);
-      border-radius:20px;
-      padding:8px;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:8px;
-      z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(720px, calc(100% - 20px));
+      background:rgba(12,18,35,0.92);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(18px);
+      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,0.25);
     }
     .nav-link{
-      text-decoration:none;
-      color:#b9c4e3;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      padding:10px 6px;
-      border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
-    }
-    .nav-link.active{
-      background:rgba(76,201,255,.12);
-      color:#fff;
+      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      border:none;background:transparent;cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{background:rgba(76,201,255,0.14);color:#d8f7ff}
 
     @media (max-width:700px){
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
       .brand{font-size:20px}
+      .chip-btn{padding:9px 10px;font-size:12px}
+      .composer-actions{align-items:stretch}
+      .post-btn{width:100%}
+      .comment-form{flex-direction:column}
+      .close-compose-btn{width:100%}
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="school.html" class="top-icon-btn" aria-label="School">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 9l9-5 9 5-9 5-9-5z"></path>
-          <path d="M7 12v5c0 .6 2.2 3 5 3s5-2.4 5-3v-5"></path>
-        </svg>
-      </a>
-
-      <div class="top-center">
-        <a href="school.html" class="brand-link">
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Tap logo to open School</div>
-        </a>
+      <div class="brand-wrap">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Member feed</div>
       </div>
 
-      <a href="notifications.html" class="top-icon-btn" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
-          <path d="M10 20a2 2 0 0 0 4 0"></path>
-        </svg>
-      </a>
+      <div class="top-actions">
+        <button id="notifyBtn" class="chip-btn notify-btn" type="button" aria-label="Notifications">
+          <svg class="notify-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
+            <path d="M10 20a2 2 0 0 0 4 0"></path>
+          </svg>
+          <span id="notifyCount" class="notify-count hidden">0</span>
+        </button>
+
+        <a href="settings.html" class="chip-btn">Settings</a>
+        <button id="logoutBtn" class="chip-btn logout">Logout</button>
+      </div>
     </div>
 
-    <div class="panel" id="composerPanel">
-      <div class="composer-title">Create Post</div>
-      <div class="composer-grid">
-        <textarea id="captionInput" class="textarea" placeholder="Write something..."></textarea>
-        <input id="imageInput" class="input" type="url" placeholder="Image URL (optional)" />
-        <div class="action-row">
-          <button id="postBtn" class="main-btn" type="button">Post</button>
-          <button id="refreshBtn" class="soft-btn" type="button">Refresh Feed</button>
+    <div id="composerPanel" class="panel hidden">
+      <div class="composer-head">
+        <div class="composer-head-left">
+          <img id="myAvatar" class="avatar hidden" alt="My Photo" />
+          <div id="myAvatarPlaceholder" class="avatar-placeholder">No photo</div>
+
+          <div>
+            <h3 id="myName">Loading...</h3>
+            <div class="muted">Post a new update or photo</div>
+          </div>
         </div>
-        <div id="composerMessage" class="message"></div>
+
+        <button id="closeComposerBtn" class="close-compose-btn" type="button">Close</button>
       </div>
+
+      <form id="postForm">
+        <div class="field">
+          <textarea id="caption" placeholder="What’s happening?"></textarea>
+        </div>
+
+        <div class="field">
+          <input type="text" id="imageURL" placeholder="Optional image link (https://example.com/photo.jpg)" />
+          <div class="tiny-note">Direct image link only. Optional.</div>
+        </div>
+
+        <div class="composer-actions">
+          <div id="formMessage" class="message"></div>
+          <button type="submit" id="postBtn" class="post-btn">Post Update</button>
+        </div>
+      </form>
     </div>
 
     <div class="panel">
-      <div id="feedMessage" class="message"></div>
-      <div id="feedLoading" class="loading">Loading feed...</div>
-      <div id="feedList" class="feed-list hidden"></div>
-      <div id="feedEmpty" class="empty-box hidden">No posts yet.</div>
+      <div class="section-head">
+        <div class="section-title">Feed</div>
+
+        <div class="filter-tabs">
+          <button id="allTab" class="filter-tab active" type="button">All</button>
+          <button id="followingTab" class="filter-tab" type="button">Following</button>
+        </div>
+      </div>
+
+      <div id="postsList" class="posts-list"></div>
+      <div id="emptyBox" class="empty-box hidden">No updates yet.</div>
     </div>
   </div>
 
@@ -507,18 +275,22 @@
       <span class="icon">⌂</span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
       <span class="icon">◎</span>
       <span>Nearby</span>
     </a>
-    <a href="#composerPanel" class="nav-link">
+
+    <button id="navCreateBtn" type="button" class="nav-link">
       <span class="icon">＋</span>
       <span>Create</span>
-    </a>
+    </button>
+
     <a href="events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
+
     <a href="profile.html" class="nav-link">
       <span class="icon">◉</span>
       <span>Profile</span>
@@ -527,45 +299,90 @@
 
   <script type="module">
     import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      collection,
+      addDoc,
       doc,
       getDoc,
       getDocs,
-      collection,
       query,
       orderBy,
-      addDoc,
-      setDoc,
-      deleteDoc,
+      onSnapshot,
       serverTimestamp,
-      where,
-      limit
+      deleteDoc,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const captionInput = document.getElementById("captionInput");
-    const imageInput = document.getElementById("imageInput");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const postForm = document.getElementById("postForm");
     const postBtn = document.getElementById("postBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const composerMessage = document.getElementById("composerMessage");
+    const captionInput = document.getElementById("caption");
+    const imageURLInput = document.getElementById("imageURL");
+    const formMessage = document.getElementById("formMessage");
 
-    const feedMessage = document.getElementById("feedMessage");
-    const feedLoading = document.getElementById("feedLoading");
-    const feedList = document.getElementById("feedList");
-    const feedEmpty = document.getElementById("feedEmpty");
+    const myName = document.getElementById("myName");
+    const myAvatar = document.getElementById("myAvatar");
+    const myAvatarPlaceholder = document.getElementById("myAvatarPlaceholder");
+
+    const postsList = document.getElementById("postsList");
+    const emptyBox = document.getElementById("emptyBox");
+    const allTab = document.getElementById("allTab");
+    const followingTab = document.getElementById("followingTab");
+
+    const notifyBtn = document.getElementById("notifyBtn");
+    const notifyCount = document.getElementById("notifyCount");
+
+    const composerPanel = document.getElementById("composerPanel");
+    const navCreateBtn = document.getElementById("navCreateBtn");
+    const closeComposerBtn = document.getElementById("closeComposerBtn");
 
     let currentUser = null;
     let currentUserProfile = null;
+    let currentFeedFilter = "all";
+    let follows = [];
+    let allPostDocs = [];
+    let publicProfilesMap = new Map();
 
-    function setComposerMessage(text, type = "") {
-      composerMessage.textContent = text;
-      composerMessage.className = `message ${type}`;
+    function setFormMessage(text, type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
     }
 
-    function setFeedMessage(text, type = "") {
-      feedMessage.textContent = text;
-      feedMessage.className = `message ${type}`;
+    function showComposer() {
+      if (navCreateBtn.disabled) return;
+      composerPanel.classList.remove("hidden");
+      composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => captionInput.focus(), 250);
     }
+
+    function hideComposer() {
+      composerPanel.classList.add("hidden");
+    }
+
+    navCreateBtn.addEventListener("click", showComposer);
+    closeComposerBtn.addEventListener("click", hideComposer);
+
+    function showMyAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        myAvatar.classList.add("hidden");
+        myAvatar.removeAttribute("src");
+        myAvatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      myAvatar.src = cleanUrl;
+      myAvatar.classList.remove("hidden");
+      myAvatarPlaceholder.classList.add("hidden");
+    }
+
+    myAvatar.addEventListener("error", () => {
+      myAvatar.classList.add("hidden");
+      myAvatarPlaceholder.classList.remove("hidden");
+    });
 
     function formatDate(ts) {
       if (!ts) return "Just now";
@@ -573,735 +390,379 @@
       catch { return "Just now"; }
     }
 
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-      return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        verified: !!(d.verified || d.isVerified)
-      };
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
     }
 
-    async function getViewerProfile(uid) {
-      let publicData = null;
-      let userData = null;
-
-      try {
-        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
-        if (publicSnap.exists()) publicData = publicSnap.data();
-      } catch {}
-
-      try {
-        const userSnap = await getDoc(doc(db, "users", uid));
-        if (userSnap.exists()) userData = userSnap.data();
-      } catch {}
-
-      return normalizeProfile({ ...(publicData || {}), ...(userData || {}), uid }, uid);
+    function isFollowing(userId) {
+      return follows.some(f => f.followerId === currentUser.uid && f.followingId === userId);
     }
 
-    async function getPublicProfile(uid) {
-      try {
-        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
-        if (publicSnap.exists()) {
-          return normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, uid);
-        }
-      } catch {}
-      return normalizeProfile({ uid }, uid);
+    function applyFeedTabUI() {
+      allTab.classList.toggle("active", currentFeedFilter === "all");
+      followingTab.classList.toggle("active", currentFeedFilter === "following");
     }
 
-    function getPostOwnerId(post) {
-      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
+    function formatBadgeCount(count) {
+      return count > 99 ? "99+" : String(count);
     }
 
-    function getPostImage(post) {
-      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
-    }
-
-    function getPostCaption(post) {
-      return post?.caption || post?.text || post?.content || "";
-    }
-
-    async function checkFollowing(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return false;
-
-      try {
-        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${targetUid}`));
-        if (direct.exists()) return true;
-      } catch {}
-
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follows"),
-            where("followerId", "==", viewerUid),
-            where("followingId", "==", targetUid),
-            limit(1)
-          )
-        );
-        return !snap.empty;
-      } catch {
-        return false;
-      }
-    }
-
-    async function checkRequested(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return false;
-
-      try {
-        const direct = await getDoc(doc(db, "follow_requests", `${viewerUid}__${targetUid}`));
-        if (direct.exists()) return true;
-      } catch {}
-
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follow_requests"),
-            where("requesterId", "==", viewerUid),
-            where("targetId", "==", targetUid),
-            limit(1)
-          )
-        );
-        return !snap.empty;
-      } catch {
-        return false;
-      }
-    }
-
-    async function findFollowDocId(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return null;
-
-      try {
-        const directId = `${viewerUid}__${targetUid}`;
-        const direct = await getDoc(doc(db, "follows", directId));
-        if (direct.exists()) return directId;
-      } catch {}
-
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follows"),
-            where("followerId", "==", viewerUid),
-            where("followingId", "==", targetUid),
-            limit(1)
-          )
-        );
-        if (!snap.empty) return snap.docs[0].id;
-      } catch {}
-
-      return null;
-    }
-
-    async function findRequestDocId(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return null;
-
-      try {
-        const directId = `${viewerUid}__${targetUid}`;
-        const direct = await getDoc(doc(db, "follow_requests", directId));
-        if (direct.exists()) return directId;
-      } catch {}
-
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follow_requests"),
-            where("requesterId", "==", viewerUid),
-            where("targetId", "==", targetUid),
-            limit(1)
-          )
-        );
-        if (!snap.empty) return snap.docs[0].id;
-      } catch {}
-
-      return null;
-    }
-
-    async function getLikeCount(postId) {
-      try {
-        const snap = await getDocs(collection(db, "posts", postId, "likes"));
-        return snap.size;
-      } catch {
-        return 0;
-      }
-    }
-
-    async function getCommentCount(postId) {
-      try {
-        const snap = await getDocs(collection(db, "posts", postId, "comments"));
-        return snap.size;
-      } catch {
-        return 0;
-      }
-    }
-
-    async function hasLiked(postId, uid) {
-      try {
-        const snap = await getDoc(doc(db, "posts", postId, "likes", uid));
-        return snap.exists();
-      } catch {
-        return false;
-      }
-    }
-
-    function buildAvatar(profile, fallbackPhoto = "") {
-      const wrap = document.createElement("div");
-
-      const img = document.createElement("img");
-      img.className = "avatar hidden";
-      img.alt = "User Photo";
-
-      const ph = document.createElement("div");
-      ph.className = "avatar-placeholder";
-      ph.textContent = "No photo";
-
-      const photo = (profile?.photoURL || fallbackPhoto || "").trim();
-      if (photo) {
-        img.src = photo;
-        img.classList.remove("hidden");
-        ph.classList.add("hidden");
-        img.addEventListener("error", () => {
-          img.classList.add("hidden");
-          ph.classList.remove("hidden");
-        });
-      }
-
-      wrap.appendChild(img);
-      wrap.appendChild(ph);
-      return wrap;
-    }
-
-    function buildMeta(profile, isRemoved) {
-      const row = document.createElement("div");
-      row.className = "meta-row";
-
-      const privacy = document.createElement("span");
-      privacy.className = `badge ${profile?.isPrivate ? "badge-private" : "badge-public"}`;
-      privacy.textContent = profile?.isPrivate ? "Private" : "Public";
-      row.appendChild(privacy);
-
-      if (profile?.verified) {
-        const verified = document.createElement("span");
-        verified.className = "badge badge-verified";
-        verified.textContent = "Verified";
-        row.appendChild(verified);
-      }
-
-      if (isRemoved) {
-        const removed = document.createElement("span");
-        removed.className = "badge badge-banned";
-        removed.textContent = "Removed";
-        row.appendChild(removed);
-      }
-
-      return row;
-    }
-
-    async function styleRelationButton(btn, ownerUid, ownerProfile) {
-      if (!btn) return;
-
-      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) {
-        btn.classList.add("hidden");
+    function renderNotifications(items) {
+      if (!items.length) {
+        notifyCount.classList.add("hidden");
         return;
       }
 
-      const following = await checkFollowing(currentUser.uid, ownerUid);
-      const requested = !following ? await checkRequested(currentUser.uid, ownerUid) : false;
-
-      btn.classList.remove("hidden");
-
-      if (following) {
-        btn.dataset.state = "following";
-        btn.className = "top-follow-btn unfollow";
-        btn.textContent = "Unfollow";
-      } else if (ownerProfile?.isPrivate && requested) {
-        btn.dataset.state = "requested";
-        btn.className = "top-follow-btn requested";
-        btn.textContent = "Requested";
-      } else if (ownerProfile?.isPrivate) {
-        btn.dataset.state = "request";
-        btn.className = "top-follow-btn request";
-        btn.textContent = "Request";
-      } else {
-        btn.dataset.state = "follow";
-        btn.className = "top-follow-btn follow";
-        btn.textContent = "Follow";
-      }
+      notifyCount.textContent = formatBadgeCount(items.length);
+      notifyCount.classList.remove("hidden");
     }
 
-    async function bindRelationAction(btn, ownerUid, ownerProfile, onDone) {
-      await styleRelationButton(btn, ownerUid, ownerProfile);
+    function authorHidden(author) {
+      return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
+    }
 
-      btn.addEventListener("click", async () => {
-        if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
+    function getFilteredPostDocs() {
+      return allPostDocs.filter(postDoc => {
+        const post = postDoc.data();
+        const author = publicProfilesMap.get(post.userId);
 
-        const state = btn.dataset.state || "follow";
-        btn.disabled = true;
-        setFeedMessage("", "");
+        if (authorHidden(author)) return false;
 
-        try {
-          if (state === "following") {
-            const followDocId = await findFollowDocId(currentUser.uid, ownerUid);
-            if (followDocId) {
-              await deleteDoc(doc(db, "follows", followDocId));
-            }
-          } else if (state === "requested") {
-            const requestDocId = await findRequestDocId(currentUser.uid, ownerUid);
-            if (requestDocId) {
-              await deleteDoc(doc(db, "follow_requests", requestDocId));
-            }
-          } else if (state === "request") {
-            await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`), {
-              requesterId: currentUser.uid,
-              targetId: ownerUid,
-              createdAt: serverTimestamp()
-            });
-          } else {
-            await setDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`), {
-              followerId: currentUser.uid,
-              followingId: ownerUid,
-              createdAt: serverTimestamp()
-            });
-          }
-
-          await styleRelationButton(btn, ownerUid, ownerProfile);
-          if (typeof onDone === "function") await onDone();
-        } catch (error) {
-          console.error("Relation update failed:", error);
-          setFeedMessage("Could not update follow state.", "error");
+        if (currentFeedFilter === "following") {
+          return isFollowing(post.userId);
         }
 
-        btn.disabled = false;
+        return true;
       });
     }
 
-    async function createLockedCard(post, ownerProfile) {
-      const ownerUid = getPostOwnerId(post);
+    async function refreshLikeUI(postId) {
+      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+      if (!likeBtn || !currentUser) return;
 
-      const panel = document.createElement("div");
-      panel.className = "panel";
+      try {
+        const likesCol = collection(db, "posts", postId, "likes");
+        const likesSnap = await getDocs(likesCol);
+        const likeRef = doc(db, "posts", postId, "likes", currentUser.uid);
+        const myLike = await getDoc(likeRef);
 
-      const top = document.createElement("div");
-      top.className = "post-top";
+        const liked = myLike.exists();
+        const count = likesSnap.size;
 
-      const left = document.createElement("div");
-      left.className = "post-left";
-      left.appendChild(buildAvatar(ownerProfile, post.userPhotoURL || ""));
-
-      const topText = document.createElement("div");
-      topText.className = "post-top-text";
-
-      const name = document.createElement("div");
-      name.className = "post-name";
-
-      const nameLink = document.createElement("a");
-      nameLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
-      nameLink.textContent = ownerProfile?.displayName || post.displayName || "Member";
-      name.appendChild(nameLink);
-
-      if (ownerProfile?.verified) {
-        const dot = document.createElement("span");
-        dot.className = "verified-dot";
-        dot.textContent = "✓";
-        name.appendChild(dot);
+        likeBtn.textContent = liked ? `Unlike (${count})` : `Like (${count})`;
+        likeBtn.dataset.liked = liked ? "yes" : "no";
+      } catch (error) {
+        console.error("Like UI error:", error);
       }
-
-      topText.appendChild(name);
-
-      const handle = ownerProfile?.username || post.username || "";
-      if (handle) {
-        const username = document.createElement("div");
-        username.className = "post-username";
-        username.textContent = "@" + handle;
-        topText.appendChild(username);
-      }
-
-      const date = document.createElement("div");
-      date.className = "post-date";
-      date.textContent = formatDate(post.createdAt);
-      topText.appendChild(date);
-
-      left.appendChild(topText);
-      top.appendChild(left);
-
-      const actions = document.createElement("div");
-      actions.className = "post-top-actions";
-
-      const relationBtn = document.createElement("button");
-      relationBtn.type = "button";
-      relationBtn.className = "top-follow-btn follow hidden";
-      relationBtn.textContent = "Follow";
-      actions.appendChild(relationBtn);
-
-      top.appendChild(actions);
-      panel.appendChild(top);
-      panel.appendChild(buildMeta(ownerProfile, false));
-
-      const lock = document.createElement("div");
-      lock.className = "lock-box";
-
-      const title = document.createElement("div");
-      title.className = "lock-title";
-      title.textContent = "Private Post";
-      lock.appendChild(title);
-
-      const text = document.createElement("div");
-      text.className = "lock-text";
-      text.textContent = "You need to follow this member to view this post.";
-      lock.appendChild(text);
-
-      const wrap = document.createElement("div");
-      wrap.className = "lock-action-wrap";
-
-      const relationBtn2 = document.createElement("button");
-      relationBtn2.type = "button";
-      relationBtn2.className = "top-follow-btn follow hidden";
-      relationBtn2.textContent = "Follow";
-      wrap.appendChild(relationBtn2);
-
-      lock.appendChild(wrap);
-      panel.appendChild(lock);
-
-      await bindRelationAction(relationBtn, ownerUid, ownerProfile, loadFeed);
-      await bindRelationAction(relationBtn2, ownerUid, ownerProfile, loadFeed);
-
-      return panel;
     }
 
-    async function createPostCard(post, ownerProfile) {
-      const ownerUid = getPostOwnerId(post);
-      const postId = post.id;
+    async function refreshCommentsUI(postId) {
+      const commentsList = document.querySelector(`.comments-list[data-post-id="${postId}"]`);
+      const commentsToggle = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      if (!commentsList || !commentsToggle || !currentUser) return;
 
-      const panel = document.createElement("div");
-      panel.className = "panel";
+      commentsList.innerHTML = "";
 
-      const top = document.createElement("div");
-      top.className = "post-top";
+      try {
+        const commentsQuery = query(
+          collection(db, "posts", postId, "comments"),
+          orderBy("createdAt", "asc")
+        );
+        const commentsSnap = await getDocs(commentsQuery);
 
-      const left = document.createElement("div");
-      left.className = "post-left";
-      left.appendChild(buildAvatar(ownerProfile, post.userPhotoURL || ""));
+        commentsToggle.textContent = `Comments (${commentsSnap.size})`;
 
-      const topText = document.createElement("div");
-      topText.className = "post-top-text";
+        if (commentsSnap.empty) {
+          commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
+          return;
+        }
 
-      const name = document.createElement("div");
-      name.className = "post-name";
+        commentsSnap.forEach((commentDoc) => {
+          const comment = commentDoc.data();
+          const commentId = commentDoc.id;
+          const canDelete = comment.userId === currentUser.uid;
 
-      const nameLink = document.createElement("a");
-      nameLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
-      nameLink.textContent = ownerProfile?.displayName || post.displayName || "Member";
-      name.appendChild(nameLink);
+          const commentEl = document.createElement("div");
+          commentEl.className = "comment-item";
+          commentEl.innerHTML = `
+            <div class="comment-top">
+              <div>
+                <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+                <div class="comment-date">${formatDate(comment.createdAt)}</div>
+              </div>
+              ${canDelete ? `<button class="comment-delete-btn" data-post-id="${postId}" data-comment-id="${commentId}">Delete</button>` : ""}
+            </div>
+            <div class="comment-text">${escapeHtml(comment.text || "")}</div>
+          `;
 
-      if (ownerProfile?.verified) {
-        const dot = document.createElement("span");
-        dot.className = "verified-dot";
-        dot.textContent = "✓";
-        name.appendChild(dot);
+          commentsList.appendChild(commentEl);
+        });
+
+        commentsList.querySelectorAll(".comment-delete-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const pId = btn.getAttribute("data-post-id");
+            const cId = btn.getAttribute("data-comment-id");
+            const ok = confirm("Delete this comment?");
+            if (!ok) return;
+
+            try {
+              await deleteDoc(doc(db, "posts", pId, "comments", cId));
+              await refreshCommentsUI(pId);
+            } catch (error) {
+              console.error(error);
+              alert("Could not delete comment.");
+            }
+          });
+        });
+      } catch (error) {
+        console.error("Comments UI error:", error);
+        commentsList.innerHTML = `<div class="error">Could not load comments.</div>`;
       }
+    }
 
-      topText.appendChild(name);
+    async function refreshPostMeta(postId) {
+      await refreshLikeUI(postId);
+      await refreshCommentsUI(postId);
+    }
 
-      const handle = ownerProfile?.username || post.username || "";
-      if (handle) {
-        const username = document.createElement("div");
-        username.className = "post-username";
-        username.textContent = "@" + handle;
-        topText.appendChild(username);
-      }
+    function attachPostActions(postId, postData) {
+      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+      const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
+      const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
+      const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
 
-      const date = document.createElement("div");
-      date.className = "post-date";
-      date.textContent = formatDate(post.createdAt);
-      topText.appendChild(date);
+      if (likeBtn) {
+        likeBtn.addEventListener("click", async () => {
+          if (!currentUser) return;
 
-      left.appendChild(topText);
-      top.appendChild(left);
-
-      const actionsTop = document.createElement("div");
-      actionsTop.className = "post-top-actions";
-
-      const relationBtn = document.createElement("button");
-      relationBtn.type = "button";
-      relationBtn.className = "top-follow-btn follow hidden";
-      relationBtn.textContent = "Follow";
-      actionsTop.appendChild(relationBtn);
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "delete-btn hidden";
-      deleteBtn.textContent = "Delete";
-      actionsTop.appendChild(deleteBtn);
-
-      top.appendChild(actionsTop);
-      panel.appendChild(top);
-
-      const isRemoved =
-        post.hidden ||
-        post.hiddenByAdmin ||
-        post.softDeleted ||
-        ownerProfile?.moderationStatus === "banned" ||
-        ownerProfile?.isHiddenByAdmin ||
-        ownerProfile?.softDeleted;
-
-      panel.appendChild(buildMeta(ownerProfile, isRemoved));
-
-      const caption = getPostCaption(post);
-      if (caption) {
-        const captionEl = document.createElement("div");
-        captionEl.className = "post-caption";
-        captionEl.textContent = caption;
-        panel.appendChild(captionEl);
-      }
-
-      const imageUrl = getPostImage(post);
-      if (imageUrl) {
-        const imgLink = document.createElement("a");
-        imgLink.className = "post-image-link";
-        imgLink.href = `post.html?postId=${encodeURIComponent(postId)}`;
-
-        const img = document.createElement("img");
-        img.className = "post-image";
-        img.alt = "Post image";
-        img.src = imageUrl;
-        img.addEventListener("error", () => imgLink.remove());
-
-        imgLink.appendChild(img);
-        panel.appendChild(imgLink);
-      }
-
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const likeBtn = document.createElement("button");
-      likeBtn.type = "button";
-      likeBtn.className = "icon-action-btn like-btn";
-      likeBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
-        </svg>
-        <span>0</span>
-      `;
-      actions.appendChild(likeBtn);
-
-      const commentBtn = document.createElement("a");
-      commentBtn.className = "icon-action-btn comment-anchor-btn";
-      commentBtn.href = `post.html?postId=${encodeURIComponent(postId)}`;
-      commentBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-        </svg>
-        <span>0</span>
-      `;
-      actions.appendChild(commentBtn);
-
-      const openBtn = document.createElement("a");
-      openBtn.className = "open-link";
-      openBtn.href = `post.html?postId=${encodeURIComponent(postId)}`;
-      openBtn.textContent = "Open";
-      actions.appendChild(openBtn);
-
-      const reportBtn = document.createElement("a");
-      reportBtn.className = "icon-report-link hidden";
-      reportBtn.href = `report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
-      reportBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 3v18"></path>
-          <path d="M5 4h10l-2.5 4L15 12H5"></path>
-        </svg>
-        <span>Report</span>
-      `;
-      actions.appendChild(reportBtn);
-
-      panel.appendChild(actions);
-
-      const [likes, comments, liked] = await Promise.all([
-        getLikeCount(postId),
-        getCommentCount(postId),
-        hasLiked(postId, currentUser.uid)
-      ]);
-
-      likeBtn.querySelector("span").textContent = String(likes);
-      commentBtn.querySelector("span").textContent = String(comments);
-      likeBtn.dataset.liked = liked ? "yes" : "no";
-
-      if (currentUser.uid === ownerUid) {
-        deleteBtn.classList.remove("hidden");
-      } else {
-        reportBtn.classList.remove("hidden");
-        await bindRelationAction(relationBtn, ownerUid, ownerProfile, loadFeed);
-      }
-
-      likeBtn.addEventListener("click", async () => {
-        likeBtn.disabled = true;
-        try {
           const likeRef = doc(db, "posts", postId, "likes", currentUser.uid);
           const existing = await getDoc(likeRef);
-          let createdNewLike = false;
 
-          if (existing.exists()) {
-            await deleteDoc(likeRef);
-          } else {
-            await setDoc(likeRef, {
+          likeBtn.disabled = true;
+
+          try {
+            if (existing.exists()) {
+              await deleteDoc(likeRef);
+            } else {
+              await setDoc(likeRef, {
+                userId: currentUser.uid,
+                createdAt: serverTimestamp()
+              });
+
+              if (postData.userId !== currentUser.uid) {
+                const actorName =
+                  currentUserProfile?.displayName ||
+                  currentUser.displayName ||
+                  "Someone";
+
+                await addDoc(collection(db, "notifications", postData.userId, "items"), {
+                  type: "like",
+                  title: "New like",
+                  text: `${actorName} liked your post.`,
+                  fromUserId: currentUser.uid,
+                  toUserId: postData.userId,
+                  postId,
+                  createdAt: serverTimestamp()
+                });
+              }
+            }
+            await refreshLikeUI(postId);
+          } catch (error) {
+            console.error(error);
+            alert("Could not update like.");
+          }
+
+          likeBtn.disabled = false;
+        });
+      }
+
+      if (commentToggleBtn && commentWrap) {
+        commentToggleBtn.addEventListener("click", async () => {
+          commentWrap.classList.toggle("hidden");
+          if (!commentWrap.classList.contains("hidden")) {
+            await refreshCommentsUI(postId);
+          }
+        });
+      }
+
+      if (commentForm && commentInput) {
+        commentForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const text = commentInput.value.trim();
+          if (!text) return;
+
+          const displayName =
+            currentUserProfile?.displayName ||
+            currentUser.displayName ||
+            "Member";
+
+          const userPhotoURL = currentUserProfile?.photoURL || "";
+          const submitBtn = commentForm.querySelector("button");
+          submitBtn.disabled = true;
+
+          try {
+            await addDoc(collection(db, "posts", postId, "comments"), {
               userId: currentUser.uid,
+              displayName,
+              userPhotoURL,
+              text,
               createdAt: serverTimestamp()
             });
-            createdNewLike = true;
-          }
 
-          const newCount = await getLikeCount(postId);
-          likeBtn.querySelector("span").textContent = String(newCount);
-
-          if (createdNewLike && ownerUid !== currentUser.uid) {
-            try {
-              const actorName =
-                currentUserProfile?.displayName ||
-                currentUser.displayName ||
-                "Someone";
-
-              await addDoc(collection(db, "notifications", ownerUid, "items"), {
-                type: "like",
-                title: "New like",
-                text: `${actorName} liked your post.`,
+            if (postData.userId !== currentUser.uid) {
+              await addDoc(collection(db, "notifications", postData.userId, "items"), {
+                type: "comment",
+                title: "New comment",
+                text: `${displayName} commented on your post.`,
                 fromUserId: currentUser.uid,
-                toUserId: ownerUid,
+                toUserId: postData.userId,
                 postId,
-                createdAt: serverTimestamp(),
-                isRead: false
+                createdAt: serverTimestamp()
               });
-            } catch (notifyErr) {
-              console.error("LIKE NOTIFICATION FAILED:", notifyErr);
             }
+
+            commentInput.value = "";
+            await refreshCommentsUI(postId);
+          } catch (error) {
+            console.error(error);
+            alert("Could not add comment.");
           }
-        } catch (error) {
-          console.error("LIKE WRITE FAILED:", error);
-          setFeedMessage("Like save failed: " + (error?.message || "Unknown error"), "error");
-        }
-        likeBtn.disabled = false;
-      });
 
-      deleteBtn.addEventListener("click", async () => {
-        const ok = confirm("Delete this post?");
-        if (!ok) return;
-
-        deleteBtn.disabled = true;
-        try {
-          await deleteDoc(doc(db, "posts", postId));
-          await loadFeed();
-        } catch (error) {
-          console.error(error);
-          setFeedMessage("Could not delete post.", "error");
-        }
-        deleteBtn.disabled = false;
-      });
-
-      return panel;
-    }
-
-    async function loadFeed() {
-      feedLoading.classList.remove("hidden");
-      feedList.classList.add("hidden");
-      feedEmpty.classList.add("hidden");
-      feedList.innerHTML = "";
-      setFeedMessage("", "");
-
-      try {
-        const postsSnap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
-
-        if (postsSnap.empty) {
-          feedLoading.classList.add("hidden");
-          feedEmpty.classList.remove("hidden");
-          return;
-        }
-
-        for (const postDoc of postsSnap.docs) {
-          const post = { id: postDoc.id, ...postDoc.data() };
-          const ownerUid = getPostOwnerId(post);
-          if (!ownerUid) continue;
-
-          const ownerProfile = await getPublicProfile(ownerUid);
-
-          const isRemoved =
-            post.hidden ||
-            post.hiddenByAdmin ||
-            post.softDeleted ||
-            ownerProfile?.moderationStatus === "banned" ||
-            ownerProfile?.isHiddenByAdmin ||
-            ownerProfile?.softDeleted;
-
-          if (isRemoved) continue;
-
-          const canView =
-            currentUser.uid === ownerUid ||
-            !ownerProfile?.isPrivate ||
-            await checkFollowing(currentUser.uid, ownerUid);
-
-          if (canView) {
-            feedList.appendChild(await createPostCard(post, ownerProfile));
-          } else {
-            feedList.appendChild(await createLockedCard(post, ownerProfile));
-          }
-        }
-
-        feedLoading.classList.add("hidden");
-
-        if (!feedList.children.length) {
-          feedEmpty.classList.remove("hidden");
-          return;
-        }
-
-        feedList.classList.remove("hidden");
-      } catch (error) {
-        console.error(error);
-        feedLoading.textContent = "Could not load feed.";
+          submitBtn.disabled = false;
+        });
       }
     }
 
-    postBtn.addEventListener("click", async () => {
-      if (!currentUser) return;
+    async function renderPosts() {
+      const docs = getFilteredPostDocs();
+      postsList.innerHTML = "";
 
-      const caption = captionInput.value.trim();
-      const imageURL = imageInput.value.trim();
-
-      if (!caption && !imageURL) {
-        setComposerMessage("Write something or add an image URL.", "error");
+      if (!docs.length) {
+        emptyBox.classList.remove("hidden");
+        emptyBox.textContent = currentFeedFilter === "following"
+          ? "No updates from people you follow yet."
+          : "No updates yet.";
         return;
       }
 
-      postBtn.disabled = true;
-      setComposerMessage("", "");
+      emptyBox.classList.add("hidden");
 
-      try {
-        await addDoc(collection(db, "posts"), {
-          userId: currentUser.uid,
-          displayName:
-            currentUserProfile?.displayName ||
-            currentUser.displayName ||
-            "Member",
-          username: currentUserProfile?.username || "",
-          userPhotoURL: currentUserProfile?.photoURL || "",
-          caption,
-          imageURL,
-          createdAt: serverTimestamp()
-        });
+      for (const postDoc of docs) {
+        const post = postDoc.data();
+        const postId = postDoc.id;
 
-        captionInput.value = "";
-        imageInput.value = "";
-        setComposerMessage("Post created.", "success");
-        await loadFeed();
-      } catch (error) {
-        console.error(error);
-        setComposerMessage("Could not create post.", "error");
+        const avatarHtml = post.userPhotoURL
+          ? `<a href="member.html?uid=${encodeURIComponent(post.userId)}">
+               <img class="post-avatar" src="${escapeHtml(post.userPhotoURL)}" alt="User Photo">
+             </a>`
+          : `<a href="member.html?uid=${encodeURIComponent(post.userId)}" style="text-decoration:none;">
+               <div class="post-avatar-placeholder">No photo</div>
+             </a>`;
+
+        const deleteButton = currentUser && post.userId === currentUser.uid
+          ? `<button data-id="${postId}" class="delete-post-btn">Delete</button>`
+          : "";
+
+        const reportButton = currentUser && post.userId !== currentUser.uid
+          ? `<a class="report-link" href="report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(post.userId)}">Report</a>`
+          : "";
+
+        const card = document.createElement("div");
+        card.className = "post-card";
+        card.innerHTML = `
+          <div class="post-inner">
+            <div class="post-top">
+              <div class="post-left">
+                ${avatarHtml}
+                <div class="post-top-text">
+                  <div class="post-name">
+                    <a href="member.html?uid=${encodeURIComponent(post.userId)}">
+                      ${escapeHtml(post.displayName || "Member")}
+                    </a>
+                  </div>
+                  <div class="post-date">${formatDate(post.createdAt)}</div>
+                </div>
+              </div>
+              <div class="post-top-actions">
+                ${deleteButton}
+                ${reportButton}
+              </div>
+            </div>
+
+            <a class="post-click" href="post.html?postId=${encodeURIComponent(postId)}">
+              <div class="post-caption">${escapeHtml(post.caption || "")}</div>
+              ${post.imageURL ? `<img class="post-image" src="${escapeHtml(post.imageURL)}" alt="Post Image">` : ""}
+            </a>
+
+            <div class="post-actions">
+              <button class="action-btn like-btn" data-post-id="${postId}" data-liked="no">Like (0)</button>
+              <button class="action-btn comment-toggle-btn" data-post-id="${postId}">Comments (0)</button>
+            </div>
+
+            <div class="comments-wrap hidden" data-post-id="${postId}">
+              <form class="comment-form" data-post-id="${postId}">
+                <input class="comment-input" data-post-id="${postId}" type="text" placeholder="Write a comment..." />
+                <button type="submit" class="action-btn comment-submit">Add</button>
+              </form>
+              <div class="comments-list" data-post-id="${postId}"></div>
+            </div>
+          </div>
+        `;
+
+        const img = card.querySelector(".post-image");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+        }
+
+        const avatar = card.querySelector(".post-avatar");
+        if (avatar) {
+          avatar.addEventListener("error", () => {
+            avatar.style.display = "none";
+          });
+        }
+
+        postsList.appendChild(card);
+        attachPostActions(postId, post);
+        await refreshPostMeta(postId);
       }
 
-      postBtn.disabled = false;
+      document.querySelectorAll(".delete-post-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const postId = btn.getAttribute("data-id");
+          const ok = confirm("Delete this post?");
+          if (!ok) return;
+
+          try {
+            await deleteDoc(doc(db, "posts", postId));
+          } catch (error) {
+            console.error(error);
+            alert("Could not delete post.");
+          }
+        });
+      });
+    }
+
+    notifyBtn.addEventListener("click", () => {
+      window.location.href = "notifications.html";
     });
 
-    refreshBtn.addEventListener("click", loadFeed);
+    allTab.addEventListener("click", async () => {
+      currentFeedFilter = "all";
+      applyFeedTabUI();
+      await renderPosts();
+    });
+
+    followingTab.addEventListener("click", async () => {
+      currentFeedFilter = "following";
+      applyFeedTabUI();
+      await renderPosts();
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -1310,8 +771,137 @@
       }
 
       currentUser = user;
-      currentUserProfile = await getViewerProfile(user.uid);
-      await loadFeed();
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          currentUserProfile = userSnap.data();
+          myName.textContent = currentUserProfile.displayName || user.displayName || "Member";
+          showMyAvatar(currentUserProfile.photoURL || "");
+        } else {
+          myName.textContent = user.displayName || "Member";
+          showMyAvatar("");
+        }
+
+        if (window.location.hash === "#composerPanel") {
+          showComposer();
+        }
+
+        const status = currentUserProfile?.moderationStatus || "";
+        const suspensionUntil = currentUserProfile?.suspensionUntil?.toDate
+          ? currentUserProfile.suspensionUntil.toDate().getTime()
+          : currentUserProfile?.suspensionUntil
+          ? new Date(currentUserProfile.suspensionUntil).getTime()
+          : 0;
+
+        if (status === "banned") {
+          hideComposer();
+          navCreateBtn.disabled = true;
+          setFormMessage("Your account is banned. Posting is disabled.", "error");
+        } else if (status === "suspended" && suspensionUntil && Date.now() < suspensionUntil) {
+          hideComposer();
+          navCreateBtn.disabled = true;
+          setFormMessage("Your account is suspended. Posting is disabled for now.", "error");
+        }
+
+        onSnapshot(collection(db, "publicProfiles"), async (snapshot) => {
+          publicProfilesMap = new Map();
+          snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            publicProfilesMap.set(data.uid, data);
+          });
+          await renderPosts();
+        });
+
+        onSnapshot(collection(db, "follows"), async (snapshot) => {
+          follows = snapshot.docs.map(d => d.data());
+          await renderPosts();
+        });
+
+        const postsQuery = query(
+          collection(db, "posts"),
+          orderBy("createdAt", "desc")
+        );
+
+        onSnapshot(postsQuery, async (snapshot) => {
+          allPostDocs = snapshot.docs;
+          await renderPosts();
+        }, (error) => {
+          console.error(error);
+          postsList.innerHTML = "";
+          emptyBox.classList.remove("hidden");
+          emptyBox.textContent = "Could not load feed.";
+        });
+
+        onSnapshot(collection(db, "notifications", user.uid, "items"), (snapshot) => {
+          const items = snapshot.docs.map(d => d.data());
+          renderNotifications(items);
+        }, (error) => {
+          console.error("Notification load error:", error);
+          renderNotifications([]);
+        });
+
+      } catch (error) {
+        console.error(error);
+        myName.textContent = "Member";
+      }
+    });
+
+    postForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser) return;
+
+      const caption = captionInput.value.trim();
+      const imageURL = imageURLInput.value.trim();
+
+      if (!caption && !imageURL) {
+        setFormMessage("Write something or add an image link.", "error");
+        return;
+      }
+
+      postBtn.disabled = true;
+      postBtn.textContent = "Posting...";
+
+      try {
+        const displayName =
+          currentUserProfile?.displayName ||
+          currentUser.displayName ||
+          "Member";
+
+        const userPhotoURL = currentUserProfile?.photoURL || "";
+
+        await addDoc(collection(db, "posts"), {
+          userId: currentUser.uid,
+          displayName,
+          userPhotoURL,
+          caption,
+          imageURL,
+          createdAt: serverTimestamp()
+        });
+
+        captionInput.value = "";
+        imageURLInput.value = "";
+        setFormMessage("Update posted.", "success");
+        hideComposer();
+      } catch (error) {
+        console.error(error);
+        setFormMessage("Could not post update.", "error");
+      }
+
+      postBtn.disabled = false;
+      postBtn.textContent = "Post Update";
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error(error);
+      }
     });
   </script>
 </body>
