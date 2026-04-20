@@ -391,7 +391,10 @@
     }
 
     function mergeProfiles(a, b, uid = "") {
-      return normalizeProfile({ ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" }, uid || b?.uid || a?.uid || "");
+      return normalizeProfile(
+        { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
+        uid || b?.uid || a?.uid || ""
+      );
     }
 
     function showAvatar(url) {
@@ -598,7 +601,6 @@
         eventsSnap,
         followsSnap,
         publicProfilesSnap,
-        usersSnap,
         requestsSnap
       ] = await Promise.all([
         getDoc(doc(db, "users", uid)),
@@ -607,7 +609,6 @@
         getDocs(collection(db, "events")),
         getDocs(collection(db, "follows")),
         getDocs(collection(db, "publicProfiles")),
-        getDocs(collection(db, "users")),
         getDocs(query(collection(db, "follow_requests"), where("targetId", "==", uid)))
       ]);
 
@@ -678,22 +679,11 @@
       followersCountEl.textContent = String(followers.length);
       followingCountEl.textContent = String(following.length);
 
-      const publicMap = new Map();
+      const profilesMap = new Map();
       publicProfilesSnap.forEach(docSnap => {
         const data = normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id);
-        publicMap.set(data.uid || docSnap.id, data);
-      });
-
-      const usersMap = new Map();
-      usersSnap.forEach(docSnap => {
-        const data = normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id);
-        usersMap.set(data.uid || docSnap.id, data);
-      });
-
-      const profilesMap = new Map();
-      const allIds = new Set([...publicMap.keys(), ...usersMap.keys()]);
-      allIds.forEach(id => {
-        profilesMap.set(id, mergeProfiles(publicMap.get(id), usersMap.get(id), id));
+        const key = data.uid || docSnap.id;
+        profilesMap.set(key, data);
       });
 
       renderPeople(followers, profilesMap, followersList, followersEmpty, "No followers yet.");
@@ -717,7 +707,7 @@
       try {
         await loadEverything(user.uid);
       } catch (err) {
-        console.error(err);
+        console.error("Profile load error:", err);
         loading.textContent = "Error loading profile.";
       }
     });
