@@ -53,7 +53,7 @@
       color:var(--muted);font-size:13px;line-height:1.6;margin-top:10px;
     }
 
-    .loading,.empty{
+    .loading,.empty,.idle{
       text-align:center;color:var(--muted);padding:22px 10px;
     }
 
@@ -147,6 +147,7 @@
 
     <div class="panel">
       <div id="loading" class="loading">Loading members...</div>
+      <div id="idle" class="idle hidden">Start typing to search members.</div>
       <div id="empty" class="empty hidden">No members found.</div>
       <div id="results" class="results hidden"></div>
     </div>
@@ -184,6 +185,7 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
+    const idle = document.getElementById("idle");
     const empty = document.getElementById("empty");
     const results = document.getElementById("results");
     const searchInput = document.getElementById("searchInput");
@@ -193,18 +195,28 @@
 
     function showLoading() {
       loading.classList.remove("hidden");
+      idle.classList.add("hidden");
+      empty.classList.add("hidden");
+      results.classList.add("hidden");
+    }
+
+    function showIdle() {
+      loading.classList.add("hidden");
+      idle.classList.remove("hidden");
       empty.classList.add("hidden");
       results.classList.add("hidden");
     }
 
     function showEmpty() {
       loading.classList.add("hidden");
+      idle.classList.add("hidden");
       empty.classList.remove("hidden");
       results.classList.add("hidden");
     }
 
     function showResults() {
       loading.classList.add("hidden");
+      idle.classList.add("hidden");
       empty.classList.add("hidden");
       results.classList.remove("hidden");
     }
@@ -318,7 +330,8 @@
       const term = searchInput.value.trim().toLowerCase();
 
       if (!term) {
-        renderMembers(allMembers);
+        results.innerHTML = "";
+        showIdle();
         return;
       }
 
@@ -346,11 +359,12 @@
       try {
         showLoading();
         await loadMembers();
-        renderMembers(allMembers);
+        showIdle();
       } catch (err) {
         console.error("Search page load failed:", err);
         loading.classList.remove("hidden");
         loading.textContent = "Could not load members.";
+        idle.classList.add("hidden");
         empty.classList.add("hidden");
         results.classList.add("hidden");
       }
