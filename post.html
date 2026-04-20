@@ -166,7 +166,8 @@
       align-items:center;
       flex-shrink:0;
     }
-    .delete-btn,.report-btn{
+
+    .top-follow-btn,.delete-btn{
       border:none;
       border-radius:10px;
       padding:8px 10px;
@@ -178,17 +179,32 @@
       align-items:center;
       gap:6px;
     }
+    .top-follow-btn.follow{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .top-follow-btn.unfollow{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .top-follow-btn.request{
+      background:rgba(167,139,250,.14);
+      color:#e8defd;
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .top-follow-btn.requested{
+      background:#182248;
+      color:#c9d5ff;
+      border:1px solid rgba(255,255,255,.06);
+    }
     .delete-btn{
       background:rgba(255,93,115,.14);
       color:#ffd3d9;
       border:1px solid rgba(255,93,115,.20);
     }
-    .report-btn{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .report-btn svg,.delete-btn svg{width:14px;height:14px;display:block}
+    .delete-btn svg{width:14px;height:14px;display:block}
 
     .meta-row{
       display:flex;
@@ -474,13 +490,16 @@
           </div>
 
           <div class="post-top-actions">
-            <a id="reportPostBtn" class="report-btn hidden" href="#">
+            <button id="topRelationBtn" class="top-follow-btn follow hidden" type="button">Follow</button>
+
+            <a id="reportPostBtn" class="icon-report-link hidden" href="#">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M5 3v18"></path>
                 <path d="M5 4h10l-2.5 4L15 12H5"></path>
               </svg>
               <span>Report</span>
             </a>
+
             <button id="deleteBtn" class="delete-btn hidden">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 6h18"></path>
@@ -511,7 +530,7 @@
             <span id="commentCount">0</span>
           </button>
 
-          <a id="reportBottomBtn" class="icon-report-link hidden" href="#" aria-label="Report">
+          <a id="reportBottomBtn" class="icon-report-link hidden" href="#">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 3v18"></path>
               <path d="M5 4h10l-2.5 4L15 12H5"></path>
@@ -614,6 +633,7 @@
     const deleteBtn = document.getElementById("deleteBtn");
     const reportPostBtn = document.getElementById("reportPostBtn");
     const reportBottomBtn = document.getElementById("reportBottomBtn");
+    const topRelationBtn = document.getElementById("topRelationBtn");
     const lockedTitle = document.getElementById("lockedTitle");
     const lockedText = document.getElementById("lockedText");
 
@@ -627,6 +647,9 @@
     let currentUserProfile = null;
     let currentPostId = null;
     let currentPostData = null;
+    let ownerProfile = null;
+    let ownerUid = "";
+    let relationState = "none";
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -724,11 +747,11 @@
       return post?.caption || post?.text || post?.content || "";
     }
 
-    async function checkFollowing(viewerUid, ownerUid) {
-      if (!viewerUid || !ownerUid) return false;
+    async function checkFollowing(viewerUid, targetUid) {
+      if (!viewerUid || !targetUid) return false;
 
       try {
-        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${ownerUid}`));
+        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${targetUid}`));
         if (direct.exists()) return true;
       } catch {}
 
@@ -737,7 +760,7 @@
           query(
             collection(db, "follows"),
             where("followerId", "==", viewerUid),
-            where("followingId", "==", ownerUid),
+            where("followingId", "==", targetUid),
             limit(1)
           )
         );
@@ -745,6 +768,59 @@
       } catch {
         return false;
       }
+    }
+
+    async function checkRequested(viewerUid, targetUid) {
+      if (!viewerUid || !targetUid) return false;
+
+      try {
+        const direct = await getDoc(doc(db, "follow_requests", `${viewerUid}__${targetUid}`));
+        if (direct.exists()) return true;
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "follow_requests"),
+            where("requesterId", "==", viewerUid),
+            where("targetId", "==", targetUid),
+            limit(1)
+          )
+        );
+        return !snap.empty;
+      } catch {
+        return false;
+      }
+    }
+
+    async function refreshRelationButton() {
+      topRelationBtn.classList.add("hidden");
+      topRelationBtn.disabled = false;
+
+      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
+
+      const following = await checkFollowing(currentUser.uid, ownerUid);
+      const requested = !following ? await checkRequested(currentUser.uid, ownerUid) : false;
+
+      if (following) {
+        relationState = "following";
+        topRelationBtn.className = "top-follow-btn unfollow";
+        topRelationBtn.textContent = "Unfollow";
+      } else if (ownerProfile?.isPrivate && requested) {
+        relationState = "requested";
+        topRelationBtn.className = "top-follow-btn requested";
+        topRelationBtn.textContent = "Requested";
+      } else if (ownerProfile?.isPrivate) {
+        relationState = "request";
+        topRelationBtn.className = "top-follow-btn request";
+        topRelationBtn.textContent = "Request";
+      } else {
+        relationState = "follow";
+        topRelationBtn.className = "top-follow-btn follow";
+        topRelationBtn.textContent = "Follow";
+      }
+
+      topRelationBtn.classList.remove("hidden");
     }
 
     async function refreshLikeUI() {
@@ -880,13 +956,13 @@
           return;
         }
 
-        const ownerUid = getPostOwnerId(currentPostData);
+        ownerUid = getPostOwnerId(currentPostData);
         if (!ownerUid) {
           loading.textContent = "Post owner not found.";
           return;
         }
 
-        const ownerProfile = await getPublicProfile(ownerUid);
+        ownerProfile = await getPublicProfile(ownerUid);
         const isRemoved =
           ownerProfile?.moderationStatus === "banned" ||
           ownerProfile?.isHiddenByAdmin ||
@@ -963,6 +1039,7 @@
           reportBottomBtn.href = reportHref;
         }
 
+        await refreshRelationButton();
         await refreshLikeUI();
         await refreshCommentsUI();
 
@@ -973,12 +1050,43 @@
       }
     });
 
+    topRelationBtn.addEventListener("click", async () => {
+      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
+
+      topRelationBtn.disabled = true;
+
+      try {
+        if (relationState === "following") {
+          await deleteDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`));
+        } else if (relationState === "requested") {
+          await deleteDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`));
+        } else if (relationState === "request") {
+          await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`), {
+            requesterId: currentUser.uid,
+            targetId: ownerUid,
+            createdAt: serverTimestamp()
+          });
+        } else if (relationState === "follow") {
+          await setDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`), {
+            followerId: currentUser.uid,
+            followingId: ownerUid,
+            createdAt: serverTimestamp()
+          });
+        }
+
+        await refreshRelationButton();
+      } catch (error) {
+        console.error("Relation update failed:", error);
+        setFormMessage("Could not update follow state.", "error");
+      }
+
+      topRelationBtn.disabled = false;
+    });
+
     likeBtn.addEventListener("click", async () => {
       if (!currentUser || !currentPostId || !currentPostData) return;
 
-      const ownerId = getPostOwnerId(currentPostData);
       const likeRef = doc(db, "posts", currentPostId, "likes", currentUser.uid);
-
       likeBtn.disabled = true;
       let createdNewLike = false;
 
@@ -1004,19 +1112,19 @@
         return;
       }
 
-      if (createdNewLike && ownerId && ownerId !== currentUser.uid) {
+      if (createdNewLike && ownerUid && ownerUid !== currentUser.uid) {
         try {
           const actorName =
             currentUserProfile?.displayName ||
             currentUser.displayName ||
             "Someone";
 
-          await addDoc(collection(db, "notifications", ownerId, "items"), {
+          await addDoc(collection(db, "notifications", ownerUid, "items"), {
             type: "like",
             title: "New like",
             text: `${actorName} liked your post.`,
             fromUserId: currentUser.uid,
-            toUserId: ownerId,
+            toUserId: ownerUid,
             postId: currentPostId,
             createdAt: serverTimestamp(),
             isRead: false
@@ -1036,7 +1144,6 @@
       const text = commentInput.value.trim();
       if (!text) return;
 
-      const ownerId = getPostOwnerId(currentPostData);
       const displayName =
         currentUserProfile?.displayName ||
         currentUser.displayName ||
@@ -1070,14 +1177,14 @@
         return;
       }
 
-      if (commentSaved && ownerId && ownerId !== currentUser.uid) {
+      if (commentSaved && ownerUid && ownerUid !== currentUser.uid) {
         try {
-          await addDoc(collection(db, "notifications", ownerId, "items"), {
+          await addDoc(collection(db, "notifications", ownerUid, "items"), {
             type: "comment",
             title: "New comment",
             text: `${displayName} commented on your post.`,
             fromUserId: currentUser.uid,
-            toUserId: ownerId,
+            toUserId: ownerUid,
             postId: currentPostId,
             createdAt: serverTimestamp(),
             isRead: false
