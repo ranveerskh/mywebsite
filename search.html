@@ -7,7 +7,7 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--soft2:#0f1630;--line:rgba(255,255,255,.08);
       --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--purple:#a78bfa;--yellow:#f5b942;
     }
     body{
@@ -41,9 +41,10 @@
       display:grid;grid-template-columns:1fr auto;gap:10px;
     }
     .search-input{
-      width:100%;background:#0f1630;border:1px solid rgba(255,255,255,.08);
+      width:100%;background:var(--soft2);border:1px solid rgba(255,255,255,.08);
       color:#fff;border-radius:14px;padding:14px 14px;font-size:14px;outline:none;
     }
+    .search-input::placeholder{color:#8492b8}
     .search-btn{
       border:none;background:rgba(76,201,255,.14);color:#d8f7ff;border-radius:14px;
       padding:14px 18px;font-weight:800;cursor:pointer;border:1px solid rgba(76,201,255,.2);
@@ -59,7 +60,7 @@
 
     .results{display:grid;gap:10px}
     .person-card{
-      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:16px;
+      background:var(--soft2);border:1px solid rgba(255,255,255,.06);border-radius:16px;
       padding:12px;display:flex;gap:12px;align-items:center;
     }
     .person-avatar,.person-avatar-placeholder{
@@ -76,7 +77,7 @@
     .person-name a{color:#fff;text-decoration:none}
     .person-name a:hover{text-decoration:underline}
     .person-username{
-      color:#8fdfff;font-size:13px;font-weight:700;margin-top:4px;
+      color:#8fdfff;font-size:13px;font-weight:700;margin-top:4px;word-break:break-word;
     }
     .person-sub{
       font-size:12px;color:var(--muted);line-height:1.5;margin-top:5px;
@@ -103,7 +104,6 @@
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
     }
     .nav-link .icon{font-size:18px;line-height:1}
-    .nav-link.active{background:rgba(76,201,255,.14);color:#d8f7ff}
 
     @media (max-width:700px){
       body{padding:12px 12px 92px}
@@ -141,7 +141,7 @@
         <button id="searchBtn" class="search-btn" type="button">Search</button>
       </div>
       <div class="helper">
-        Search with <b>username</b> like <b>ranveer</b> or by <b>display name</b> like <b>Ranveer Singh</b>.
+        Type a <b>username</b> like <b>ranveer</b> or a <b>display name</b> like <b>Ranveer Singh</b>.
       </div>
     </div>
 
@@ -170,7 +170,7 @@
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
-    <a href="profile.html" class="nav-link active">
+    <a href="profile.html" class="nav-link">
       <span class="icon">◉</span>
       <span>Profile</span>
     </a>
@@ -229,12 +229,15 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const displayName = d.displayName || d.name || d.fullName || d.username || "Member";
+      const username = d.username || d.handle || d.userName || "";
+
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        displayNameLower: d.displayNameLower || (d.displayName || d.name || d.fullName || d.username || "").toLowerCase(),
-        username: d.username || d.handle || d.userName || "",
-        usernameLower: d.usernameLower || (d.username || d.handle || d.userName || "").toLowerCase(),
+        displayName,
+        displayNameLower: (d.displayNameLower || displayName).toLowerCase(),
+        username,
+        usernameLower: (d.usernameLower || username).toLowerCase(),
         bio: d.bio || d.about || d.description || "",
         photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
         isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
