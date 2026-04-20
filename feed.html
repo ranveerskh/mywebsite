@@ -7,7 +7,7 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;--card:#121931;--card-soft:#161f3d;--line:rgba(255,255,255,0.08);
+      --bg:#0b1020;--card:#121931;--card-soft:#161f3d;--card-soft-2:#0f1630;--line:rgba(255,255,255,0.08);
       --text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;
       --yellow:#f5b942;--red:#ff5d73;--purple:#a78bfa;
     }
@@ -16,31 +16,32 @@
       color:var(--text);min-height:100vh;padding:14px 14px 92px;
     }
     .app{max-width:720px;margin:0 auto}
+
     .topbar{
       position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
       background:rgba(11,16,32,0.82);border:1px solid rgba(255,255,255,0.04);
-      border-radius:18px;padding:12px 14px;margin-bottom:14px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      border-radius:18px;padding:10px 12px;margin-bottom:14px;
+      display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:10px;
     }
-    .brand-wrap{display:flex;flex-direction:column;gap:2px}
-    .brand{font-size:22px;font-weight:800;letter-spacing:.2px}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .chip-btn{
-      border:none;background:var(--card-soft);color:#fff;border-radius:12px;padding:10px 12px;
-      text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    .top-center{text-align:center;min-width:0;}
+    .brand{
+      font-size:22px;font-weight:800;letter-spacing:.2px;line-height:1.1;
     }
-    .chip-btn.logout{
-      background:rgba(255,93,115,0.14);color:#ffd3d9;border-color:rgba(255,93,115,0.22);
+    .brand-sub{
+      font-size:12px;color:var(--muted);margin-top:2px;
     }
-    .notify-btn{position:relative;min-width:44px;padding:10px 12px}
-    .notify-icon{width:18px;height:18px;display:block}
+    .top-icon-btn{
+      width:48px;height:48px;border:none;background:var(--card-soft);color:#fff;border-radius:14px;
+      cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+      text-decoration:none;position:relative;
+    }
+    .top-icon-btn svg{width:20px;height:20px;display:block}
     .notify-count{
       position:absolute;top:-4px;right:-2px;min-width:18px;height:18px;padding:0 5px;
       border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;
       display:flex;align-items:center;justify-content:center;
     }
+
     .panel{
       background:rgba(18,25,49,0.88);border:1px solid var(--line);border-radius:22px;padding:16px;
       margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,0.18);
@@ -62,11 +63,14 @@
       color:var(--muted);font-size:10px;flex-shrink:0;
     }
     .composer-head h3{font-size:16px;margin-bottom:2px}
+    .composer-username{
+      color:#8fdfff;font-size:13px;font-weight:700;margin-top:2px;
+    }
     .muted{color:var(--muted);font-size:13px;line-height:1.5}
     .field{margin-bottom:12px}
     textarea,input[type="text"]{
       width:100%;border:none;outline:none;resize:none;padding:14px 15px;border-radius:16px;
-      background:#0f1630;color:#fff;border:1px solid rgba(255,255,255,0.07);font-size:15px;
+      background:var(--card-soft-2);color:#fff;border:1px solid rgba(255,255,255,0.07);font-size:15px;
     }
     textarea{min-height:96px}
     textarea::placeholder,input::placeholder{color:#7f8cad}
@@ -78,7 +82,7 @@
       font-weight:800;cursor:pointer;min-width:130px;
     }
     .close-compose-btn{
-      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+      border:none;background:var(--card-soft-2);color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
       border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;
     }
     .message{min-height:20px;font-size:14px}
@@ -90,7 +94,7 @@
     .section-title{font-size:20px;font-weight:800}
     .filter-tabs{display:flex;gap:8px;flex-wrap:wrap}
     .filter-tab{
-      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+      border:none;background:var(--card-soft-2);color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
       border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;
     }
     .filter-tab.active{
@@ -106,29 +110,42 @@
       display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;
     }
     .post-left{display:flex;gap:12px;align-items:center;min-width:0}
+    .post-top-text{min-width:0}
     .post-name{font-size:16px;font-weight:800;line-height:1.3}
     .post-name a{color:#fff;text-decoration:none}
     .post-name a:hover{text-decoration:underline}
+    .post-username{
+      color:#8fdfff;
+      font-size:12px;
+      font-weight:700;
+      margin-top:2px;
+      word-break:break-word;
+    }
     .post-date{color:var(--muted);font-size:12px;margin-top:3px}
     .post-top-actions{
       display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;
       flex-shrink:0;
     }
+
+    .follow-top-btn,.delete-post-btn{
+      border:none;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
+    }
+    .follow-top-btn.follow{
+      background:rgba(76,201,255,0.14);color:#d8f7ff;border:1px solid rgba(76,201,255,0.20);
+    }
+    .follow-top-btn.unfollow{
+      background:rgba(255,93,115,0.14);color:#ffd3d9;border:1px solid rgba(255,93,115,0.20);
+    }
+    .follow-top-btn.request{
+      background:rgba(167,139,250,0.14);color:#e8defd;border:1px solid rgba(167,139,250,0.20);
+    }
+    .follow-top-btn.requested{
+      background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,0.06);
+    }
     .delete-post-btn{
-      border:none;background:rgba(255,93,115,0.14);color:#ffd3d9;border-radius:10px;padding:8px 10px;
-      font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;
+      background:rgba(255,93,115,0.14);color:#ffd3d9;border:1px solid rgba(255,93,115,0.20);
     }
-    .report-link{
-      text-decoration:none;
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-      border-radius:10px;
-      padding:8px 10px;
-      font-size:12px;
-      font-weight:800;
-      display:inline-block;
-    }
+
     .post-click{
       display:block;
       text-decoration:none;
@@ -139,15 +156,19 @@
       margin-bottom:12px;
     }
     .post-image{
-      width:100%;max-height:520px;object-fit:cover;border-radius:18px;display:block;background:#0f1630;
+      width:100%;max-height:520px;object-fit:cover;border-radius:18px;display:block;background:var(--card-soft-2);
       border:1px solid rgba(255,255,255,0.06);margin-bottom:12px;
     }
+
     .post-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .action-btn{
-      border:none;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;font-size:14px;
+    .icon-action-btn,.icon-report-link{
+      border:none;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 12px;font-size:14px;
+      display:inline-flex;align-items:center;gap:8px;text-decoration:none;
     }
+    .icon-action-btn svg,.icon-report-link svg{width:18px;height:18px;display:block;flex-shrink:0}
     .like-btn{background:rgba(76,201,255,0.14);color:#c9f3ff}
     .comment-toggle-btn{background:rgba(167,139,250,0.14);color:#e5ddff}
+    .icon-report-link{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
 
     .comments-wrap{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)}
     .comment-form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -155,12 +176,15 @@
     .comment-submit{background:var(--green);color:#062513}
     .comments-list{display:grid;gap:10px}
     .comment-item{
-      background:#0f1630;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:12px;
+      background:var(--card-soft-2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:12px;
     }
     .comment-top{
       display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;
     }
     .comment-author{font-weight:800;font-size:14px;color:#fff}
+    .comment-username{
+      color:#8fdfff;font-size:12px;font-weight:700;margin-top:2px;
+    }
     .comment-date{color:var(--muted);font-size:12px;margin-top:2px}
     .comment-text{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word}
     .comment-delete-btn{
@@ -169,7 +193,7 @@
     }
 
     .empty-box{
-      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
+      text-align:center;padding:28px 10px;color:var(--muted);background:var(--card-soft-2);border-radius:18px;
       border:1px dashed rgba(255,255,255,0.08);
     }
     .tiny-note{color:var(--muted);font-size:12px;line-height:1.5;margin-top:6px}
@@ -193,7 +217,6 @@
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
       .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
       .composer-actions{align-items:stretch}
       .post-btn{width:100%}
       .comment-form{flex-direction:column}
@@ -204,23 +227,25 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="brand-wrap">
+      <a href="search.html" class="top-icon-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
         <div class="brand">BareWorld</div>
         <div class="brand-sub">Member feed</div>
       </div>
 
-      <div class="top-actions">
-        <button id="notifyBtn" class="chip-btn notify-btn" type="button" aria-label="Notifications">
-          <svg class="notify-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
-            <path d="M10 20a2 2 0 0 0 4 0"></path>
-          </svg>
-          <span id="notifyCount" class="notify-count hidden">0</span>
-        </button>
-
-        <a href="settings.html" class="chip-btn">Settings</a>
-        <button id="logoutBtn" class="chip-btn logout">Logout</button>
-      </div>
+      <button id="notifyBtn" class="top-icon-btn" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
+          <path d="M10 20a2 2 0 0 0 4 0"></path>
+        </svg>
+        <span id="notifyCount" class="notify-count hidden">0</span>
+      </button>
     </div>
 
     <div id="composerPanel" class="panel hidden">
@@ -231,6 +256,7 @@
 
           <div>
             <h3 id="myName">Loading...</h3>
+            <div id="myUsername" class="composer-username hidden">@username</div>
             <div class="muted">Post a new update or photo</div>
           </div>
         </div>
@@ -300,8 +326,7 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import {
-      onAuthStateChanged,
-      signOut
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       collection,
@@ -314,10 +339,11 @@
       onSnapshot,
       serverTimestamp,
       deleteDoc,
-      setDoc
+      setDoc,
+      where,
+      writeBatch
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const logoutBtn = document.getElementById("logoutBtn");
     const postForm = document.getElementById("postForm");
     const postBtn = document.getElementById("postBtn");
     const captionInput = document.getElementById("caption");
@@ -325,6 +351,7 @@
     const formMessage = document.getElementById("formMessage");
 
     const myName = document.getElementById("myName");
+    const myUsername = document.getElementById("myUsername");
     const myAvatar = document.getElementById("myAvatar");
     const myAvatarPlaceholder = document.getElementById("myAvatarPlaceholder");
 
@@ -344,6 +371,7 @@
     let currentUserProfile = null;
     let currentFeedFilter = "all";
     let follows = [];
+    let outgoingRequests = [];
     let allPostDocs = [];
     let publicProfilesMap = new Map();
 
@@ -396,8 +424,46 @@
       return div.innerHTML;
     }
 
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
+        verified: !!(d.verified || d.isVerified),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted,
+        bio: d.bio || "",
+        suspensionUntil: d.suspensionUntil || d.suspendUntil || null
+      };
+    }
+
+    function getAuthorProfile(uid) {
+      if (uid === currentUser?.uid && currentUserProfile) return currentUserProfile;
+      return publicProfilesMap.get(uid) || null;
+    }
+
+    function getPostOwnerId(post) {
+      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
+    }
+
+    function getPostImage(post) {
+      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
+    }
+
+    function getPostCaption(post) {
+      return post?.caption || post?.text || post?.content || "";
+    }
+
     function isFollowing(userId) {
       return follows.some(f => f.followerId === currentUser.uid && f.followingId === userId);
+    }
+
+    function isOutgoingRequested(userId) {
+      return outgoingRequests.some(r => r.requesterId === currentUser.uid && r.targetId === userId);
     }
 
     function applyFeedTabUI() {
@@ -410,12 +476,15 @@
     }
 
     function renderNotifications(items) {
-      if (!items.length) {
+      const unread = items.filter(item => item.isRead !== true && item.read !== true);
+      const count = unread.length;
+
+      if (!count) {
         notifyCount.classList.add("hidden");
         return;
       }
 
-      notifyCount.textContent = formatBadgeCount(items.length);
+      notifyCount.textContent = formatBadgeCount(count);
       notifyCount.classList.remove("hidden");
     }
 
@@ -423,19 +492,51 @@
       return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
     }
 
+    function canViewerSeePost(post) {
+      const ownerId = getPostOwnerId(post);
+      if (!ownerId || !currentUser) return false;
+      if (ownerId === currentUser.uid) return true;
+
+      const author = getAuthorProfile(ownerId);
+      if (!author) return false;
+      if (authorHidden(author)) return false;
+
+      if (author.isPrivate && !isFollowing(ownerId)) {
+        return false;
+      }
+
+      return true;
+    }
+
     function getFilteredPostDocs() {
       return allPostDocs.filter(postDoc => {
         const post = postDoc.data();
-        const author = publicProfilesMap.get(post.userId);
+        const ownerId = getPostOwnerId(post);
+        const author = getAuthorProfile(ownerId);
 
+        if (!ownerId) return false;
+        if (post.hidden || post.hiddenByAdmin || post.softDeleted) return false;
         if (authorHidden(author)) return false;
 
         if (currentFeedFilter === "following") {
-          return isFollowing(post.userId);
+          return ownerId === currentUser.uid || isFollowing(ownerId);
         }
 
-        return true;
+        return canViewerSeePost(post);
       });
+    }
+
+    function getRelationState(authorId) {
+      if (!currentUser || !authorId) return "none";
+      if (authorId === currentUser.uid) return "self";
+      if (isFollowing(authorId)) return "following";
+
+      const author = getAuthorProfile(authorId);
+      if (author?.isPrivate) {
+        return isOutgoingRequested(authorId) ? "requested" : "request";
+      }
+
+      return "follow";
     }
 
     async function refreshLikeUI(postId) {
@@ -451,8 +552,9 @@
         const liked = myLike.exists();
         const count = likesSnap.size;
 
-        likeBtn.textContent = liked ? `Unlike (${count})` : `Like (${count})`;
         likeBtn.dataset.liked = liked ? "yes" : "no";
+        const countEl = likeBtn.querySelector(".like-count");
+        if (countEl) countEl.textContent = String(count);
       } catch (error) {
         console.error("Like UI error:", error);
       }
@@ -472,7 +574,8 @@
         );
         const commentsSnap = await getDocs(commentsQuery);
 
-        commentsToggle.textContent = `Comments (${commentsSnap.size})`;
+        const countEl = commentsToggle.querySelector(".comment-count");
+        if (countEl) countEl.textContent = String(commentsSnap.size);
 
         if (commentsSnap.empty) {
           commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
@@ -490,6 +593,7 @@
             <div class="comment-top">
               <div>
                 <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+                ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
                 <div class="comment-date">${formatDate(comment.createdAt)}</div>
               </div>
               ${canDelete ? `<button class="comment-delete-btn" data-post-id="${postId}" data-comment-id="${commentId}">Delete</button>` : ""}
@@ -523,16 +627,87 @@
     }
 
     async function refreshPostMeta(postId) {
-      await refreshLikeUI(postId);
-      await refreshCommentsUI(postId);
+      await Promise.all([
+        refreshLikeUI(postId),
+        refreshCommentsUI(postId)
+      ]);
+    }
+
+    async function handleTopRelationAction(authorId, relationBtn) {
+      if (!currentUser || !authorId || authorId === currentUser.uid) return;
+
+      const author = getAuthorProfile(authorId);
+      const relation = getRelationState(authorId);
+      relationBtn.disabled = true;
+
+      try {
+        if (relation === "following") {
+          await deleteDoc(doc(db, "follows", `${currentUser.uid}__${authorId}`));
+        } else if (relation === "requested") {
+          await deleteDoc(doc(db, "follow_requests", `${currentUser.uid}__${authorId}`));
+        } else if (author?.isPrivate) {
+          await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${authorId}`), {
+            requesterId: currentUser.uid,
+            targetId: authorId,
+            createdAt: serverTimestamp()
+          });
+
+          try {
+            await addDoc(collection(db, "notifications", authorId, "items"), {
+              type: "follow_request",
+              title: "Follow request",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
+              fromUserId: currentUser.uid,
+              toUserId: authorId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+          } catch (notifyErr) {
+            console.error("Follow request notification failed:", notifyErr);
+          }
+        } else {
+          await setDoc(doc(db, "follows", `${currentUser.uid}__${authorId}`), {
+            followerId: currentUser.uid,
+            followingId: authorId,
+            createdAt: serverTimestamp()
+          });
+
+          try {
+            await addDoc(collection(db, "notifications", authorId, "items"), {
+              type: "follow",
+              title: "New follower",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
+              fromUserId: currentUser.uid,
+              toUserId: authorId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+          } catch (notifyErr) {
+            console.error("Follow notification failed:", notifyErr);
+          }
+        }
+      } catch (error) {
+        console.error("Relation action failed:", error);
+        alert("Could not update follow state.");
+      }
+
+      relationBtn.disabled = false;
     }
 
     function attachPostActions(postId, postData) {
+      const ownerId = getPostOwnerId(postData);
       const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
       const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
       const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
       const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
       const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
+      const relationBtn = document.querySelector(`.follow-top-btn[data-author-id="${ownerId}"][data-post-id="${postId}"]`);
+
+      if (relationBtn) {
+        relationBtn.addEventListener("click", async () => {
+          await handleTopRelationAction(ownerId, relationBtn);
+        });
+      }
 
       if (likeBtn) {
         likeBtn.addEventListener("click", async () => {
@@ -552,21 +727,26 @@
                 createdAt: serverTimestamp()
               });
 
-              if (postData.userId !== currentUser.uid) {
+              if (ownerId && ownerId !== currentUser.uid) {
                 const actorName =
                   currentUserProfile?.displayName ||
                   currentUser.displayName ||
                   "Someone";
 
-                await addDoc(collection(db, "notifications", postData.userId, "items"), {
-                  type: "like",
-                  title: "New like",
-                  text: `${actorName} liked your post.`,
-                  fromUserId: currentUser.uid,
-                  toUserId: postData.userId,
-                  postId,
-                  createdAt: serverTimestamp()
-                });
+                try {
+                  await addDoc(collection(db, "notifications", ownerId, "items"), {
+                    type: "like",
+                    title: "New like",
+                    text: `${actorName} liked your post.`,
+                    fromUserId: currentUser.uid,
+                    toUserId: ownerId,
+                    postId,
+                    createdAt: serverTimestamp(),
+                    isRead: false
+                  });
+                } catch (notifyErr) {
+                  console.error("Like notification failed:", notifyErr);
+                }
               }
             }
             await refreshLikeUI(postId);
@@ -600,6 +780,7 @@
             currentUser.displayName ||
             "Member";
 
+          const username = currentUserProfile?.username || "";
           const userPhotoURL = currentUserProfile?.photoURL || "";
           const submitBtn = commentForm.querySelector("button");
           submitBtn.disabled = true;
@@ -608,33 +789,60 @@
             await addDoc(collection(db, "posts", postId, "comments"), {
               userId: currentUser.uid,
               displayName,
+              username,
               userPhotoURL,
               text,
               createdAt: serverTimestamp()
             });
 
-            if (postData.userId !== currentUser.uid) {
-              await addDoc(collection(db, "notifications", postData.userId, "items"), {
-                type: "comment",
-                title: "New comment",
-                text: `${displayName} commented on your post.`,
-                fromUserId: currentUser.uid,
-                toUserId: postData.userId,
-                postId,
-                createdAt: serverTimestamp()
-              });
+            commentInput.value = "";
+
+            if (ownerId && ownerId !== currentUser.uid) {
+              try {
+                await addDoc(collection(db, "notifications", ownerId, "items"), {
+                  type: "comment",
+                  title: "New comment",
+                  text: `${displayName} commented on your post.`,
+                  fromUserId: currentUser.uid,
+                  toUserId: ownerId,
+                  postId,
+                  createdAt: serverTimestamp(),
+                  isRead: false
+                });
+              } catch (notifyErr) {
+                console.error("Comment notification failed:", notifyErr);
+              }
             }
 
-            commentInput.value = "";
             await refreshCommentsUI(postId);
           } catch (error) {
             console.error(error);
-            alert("Could not add comment.");
+            alert(error?.message || "Could not add comment.");
           }
 
           submitBtn.disabled = false;
         });
       }
+    }
+
+    function buildRelationButton(authorId, postId) {
+      const relation = getRelationState(authorId);
+      if (relation === "self") return "";
+
+      if (relation === "following") {
+        return `<button class="follow-top-btn unfollow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Unfollow</button>`;
+      }
+
+      if (relation === "requested") {
+        return `<button class="follow-top-btn requested" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Requested</button>`;
+      }
+
+      const author = getAuthorProfile(authorId);
+      if (author?.isPrivate) {
+        return `<button class="follow-top-btn request" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Request</button>`;
+      }
+
+      return `<button class="follow-top-btn follow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Follow</button>`;
     }
 
     async function renderPosts() {
@@ -651,24 +859,49 @@
 
       emptyBox.classList.add("hidden");
 
+      const postIds = [];
+
       for (const postDoc of docs) {
         const post = postDoc.data();
         const postId = postDoc.id;
+        const ownerId = getPostOwnerId(post);
+        const author = getAuthorProfile(ownerId);
 
-        const avatarHtml = post.userPhotoURL
-          ? `<a href="member.html?uid=${encodeURIComponent(post.userId)}">
-               <img class="post-avatar" src="${escapeHtml(post.userPhotoURL)}" alt="User Photo">
+        if (!ownerId) continue;
+        if (!canViewerSeePost(post) && currentFeedFilter === "all") continue;
+
+        postIds.push(postId);
+
+        const displayName = author?.displayName || post.displayName || "Member";
+        const username = author?.username || post.username || "";
+        const avatarUrl = author?.photoURL || post.userPhotoURL || "";
+        const caption = getPostCaption(post);
+        const imageUrl = getPostImage(post);
+
+        const avatarHtml = avatarUrl
+          ? `<a href="member.html?uid=${encodeURIComponent(ownerId)}">
+               <img class="post-avatar" src="${escapeHtml(avatarUrl)}" alt="User Photo">
              </a>`
-          : `<a href="member.html?uid=${encodeURIComponent(post.userId)}" style="text-decoration:none;">
+          : `<a href="member.html?uid=${encodeURIComponent(ownerId)}" style="text-decoration:none;">
                <div class="post-avatar-placeholder">No photo</div>
              </a>`;
 
-        const deleteButton = currentUser && post.userId === currentUser.uid
+        const deleteButton = currentUser && ownerId === currentUser.uid
           ? `<button data-id="${postId}" class="delete-post-btn">Delete</button>`
           : "";
 
-        const reportButton = currentUser && post.userId !== currentUser.uid
-          ? `<a class="report-link" href="report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(post.userId)}">Report</a>`
+        const relationButton = buildRelationButton(ownerId, postId);
+
+        const reportButton = currentUser && ownerId !== currentUser.uid
+          ? `
+            <a class="icon-report-link" href="report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(ownerId)}" aria-label="Report">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 3v18"></path>
+                <path d="M5 4h10l-2.5 4L15 12H5"></path>
+              </svg>
+              <span>Report</span>
+            </a>
+          `
           : "";
 
         const card = document.createElement("div");
@@ -680,33 +913,53 @@
                 ${avatarHtml}
                 <div class="post-top-text">
                   <div class="post-name">
-                    <a href="member.html?uid=${encodeURIComponent(post.userId)}">
-                      ${escapeHtml(post.displayName || "Member")}
+                    <a href="member.html?uid=${encodeURIComponent(ownerId)}">
+                      ${escapeHtml(displayName)}
                     </a>
                   </div>
+                  ${username ? `<div class="post-username">@${escapeHtml(username)}</div>` : ""}
                   <div class="post-date">${formatDate(post.createdAt)}</div>
                 </div>
               </div>
               <div class="post-top-actions">
+                ${relationButton}
                 ${deleteButton}
-                ${reportButton}
               </div>
             </div>
 
             <a class="post-click" href="post.html?postId=${encodeURIComponent(postId)}">
-              <div class="post-caption">${escapeHtml(post.caption || "")}</div>
-              ${post.imageURL ? `<img class="post-image" src="${escapeHtml(post.imageURL)}" alt="Post Image">` : ""}
+              ${caption ? `<div class="post-caption">${escapeHtml(caption)}</div>` : ""}
+              ${imageUrl ? `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="Post Image">` : ""}
             </a>
 
             <div class="post-actions">
-              <button class="action-btn like-btn" data-post-id="${postId}" data-liked="no">Like (0)</button>
-              <button class="action-btn comment-toggle-btn" data-post-id="${postId}">Comments (0)</button>
+              <button class="icon-action-btn like-btn" data-post-id="${postId}" data-liked="no" aria-label="Like">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
+                </svg>
+                <span class="like-count">0</span>
+              </button>
+
+              <button class="icon-action-btn comment-toggle-btn" data-post-id="${postId}" aria-label="Comments">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+                </svg>
+                <span class="comment-count">0</span>
+              </button>
+
+              ${reportButton}
             </div>
 
             <div class="comments-wrap hidden" data-post-id="${postId}">
               <form class="comment-form" data-post-id="${postId}">
                 <input class="comment-input" data-post-id="${postId}" type="text" placeholder="Write a comment..." />
-                <button type="submit" class="action-btn comment-submit">Add</button>
+                <button type="submit" class="icon-action-btn comment-submit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 2L11 13"></path>
+                    <path d="M22 2L15 22l-4-9-9-4 20-7z"></path>
+                  </svg>
+                  <span>Add</span>
+                </button>
               </form>
               <div class="comments-list" data-post-id="${postId}"></div>
             </div>
@@ -720,16 +973,15 @@
           });
         }
 
-        const avatar = card.querySelector(".post-avatar");
-        if (avatar) {
-          avatar.addEventListener("error", () => {
-            avatar.style.display = "none";
+        const avatarImg = card.querySelector(".post-avatar");
+        if (avatarImg) {
+          avatarImg.addEventListener("error", () => {
+            avatarImg.style.display = "none";
           });
         }
 
         postsList.appendChild(card);
         attachPostActions(postId, post);
-        await refreshPostMeta(postId);
       }
 
       document.querySelectorAll(".delete-post-btn").forEach((btn) => {
@@ -746,9 +998,40 @@
           }
         });
       });
+
+      Promise.all(postIds.map(id => refreshPostMeta(id))).catch(err => {
+        console.error("Post meta refresh error:", err);
+      });
     }
 
-    notifyBtn.addEventListener("click", () => {
+    notifyBtn.addEventListener("click", async () => {
+      if (!currentUser) {
+        window.location.href = "notifications.html";
+        return;
+      }
+
+      try {
+        const snap = await getDocs(collection(db, "notifications", currentUser.uid, "items"));
+        const unreadDocs = snap.docs.filter(d => {
+          const data = d.data();
+          return data.isRead !== true && data.read !== true;
+        });
+
+        if (unreadDocs.length) {
+          const batch = writeBatch(db);
+          unreadDocs.forEach(d => {
+            batch.update(d.ref, {
+              isRead: true,
+              read: true,
+              readAt: serverTimestamp()
+            });
+          });
+          await batch.commit();
+        }
+      } catch (error) {
+        console.error("Could not mark notifications read:", error);
+      }
+
       window.location.href = "notifications.html";
     });
 
@@ -773,27 +1056,37 @@
       currentUser = user;
 
       try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDoc(doc(db, "publicProfiles", user.uid))
+        ]);
 
-        if (userSnap.exists()) {
-          currentUserProfile = userSnap.data();
-          myName.textContent = currentUserProfile.displayName || user.displayName || "Member";
-          showMyAvatar(currentUserProfile.photoURL || "");
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const publicData = publicSnap.exists() ? publicSnap.data() : {};
+        currentUserProfile = normalizeProfile({ ...publicData, ...userData, uid: user.uid }, user.uid);
+
+        myName.textContent = currentUserProfile.displayName || user.displayName || "Member";
+
+        if (currentUserProfile.username) {
+          myUsername.textContent = "@" + currentUserProfile.username;
+          myUsername.classList.remove("hidden");
         } else {
-          myName.textContent = user.displayName || "Member";
-          showMyAvatar("");
+          myUsername.classList.add("hidden");
         }
+
+        showMyAvatar(currentUserProfile.photoURL || "");
 
         if (window.location.hash === "#composerPanel") {
           showComposer();
         }
 
         const status = currentUserProfile?.moderationStatus || "";
-        const suspensionUntil = currentUserProfile?.suspensionUntil?.toDate
-          ? currentUserProfile.suspensionUntil.toDate().getTime()
-          : currentUserProfile?.suspensionUntil
-          ? new Date(currentUserProfile.suspensionUntil).getTime()
+        const suspendUntilValue = currentUserProfile?.suspensionUntil || null;
+
+        const suspensionUntil = suspendUntilValue?.toDate
+          ? suspendUntilValue.toDate().getTime()
+          : suspendUntilValue
+          ? new Date(suspendUntilValue).getTime()
           : 0;
 
         if (status === "banned") {
@@ -810,15 +1103,24 @@
           publicProfilesMap = new Map();
           snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            publicProfilesMap.set(data.uid, data);
+            const uid = data.uid || docSnap.id;
+            publicProfilesMap.set(uid, normalizeProfile({ id: docSnap.id, ...data }, uid));
           });
           await renderPosts();
         });
 
         onSnapshot(collection(db, "follows"), async (snapshot) => {
-          follows = snapshot.docs.map(d => d.data());
+          follows = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           await renderPosts();
         });
+
+        onSnapshot(
+          query(collection(db, "follow_requests"), where("requesterId", "==", user.uid)),
+          async (snapshot) => {
+            outgoingRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            await renderPosts();
+          }
+        );
 
         const postsQuery = query(
           collection(db, "posts"),
@@ -846,6 +1148,7 @@
       } catch (error) {
         console.error(error);
         myName.textContent = "Member";
+        myUsername.classList.add("hidden");
       }
     });
 
@@ -872,10 +1175,12 @@
           "Member";
 
         const userPhotoURL = currentUserProfile?.photoURL || "";
+        const username = currentUserProfile?.username || "";
 
         await addDoc(collection(db, "posts"), {
           userId: currentUser.uid,
           displayName,
+          username,
           userPhotoURL,
           caption,
           imageURL,
@@ -895,12 +1200,9 @@
       postBtn.textContent = "Post Update";
     });
 
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "login.html";
-      } catch (error) {
-        console.error(error);
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash === "#composerPanel") {
+        showComposer();
       }
     });
   </script>
