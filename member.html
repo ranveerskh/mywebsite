@@ -328,6 +328,7 @@
       getDoc,
       collection,
       getDocs,
+      setDoc,
       deleteDoc,
       addDoc,
       serverTimestamp,
@@ -587,11 +588,16 @@
       }
 
       try {
-        const reqSnap = await getDocs(
-          query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
-        );
-        const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
-        if (found) requestDocId = found.id;
+        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+        if (directReq.exists()) {
+          requestDocId = directReq.id;
+        } else {
+          const reqSnap = await getDocs(
+            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
+          );
+          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+          if (found) requestDocId = found.id;
+        }
       } catch (err) {
         console.warn("Follow request lookup failed:", err);
       }
@@ -802,21 +808,13 @@
           setActionMessage("");
 
           try {
-            const existingReqSnap = await getDocs(
-              query(
-                collection(db, "follow_requests"),
-                where("requesterId", "==", viewerUid),
-                where("targetId", "==", memberUid),
-                limit(1)
-              )
-            );
-
-            if (!existingReqSnap.empty) {
+            const existingDirect = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+            if (existingDirect.exists()) {
               window.location.reload();
               return;
             }
 
-            await addDoc(collection(db, "follow_requests"), {
+            await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
               requesterId: viewerUid,
               targetId: memberUid,
               createdAt: serverTimestamp()
