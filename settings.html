@@ -1,84 +1,242 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Settings</title>
+
   <style>
+    /* =========================================================
+       SETTINGS_BASE_CSS_START
+       ========================================================= */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
-      --soft2:#0f1630;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
       --line:rgba(255,255,255,.08);
-      --text:#fff;
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
       --red:#ff5d73;
       --purple:#a78bfa;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --red:#e74c66;
+      --purple:#7f63ff;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
+      padding:12px 12px 110px;
     }
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+    .muted{color:var(--muted)}
+    .status-message{min-height:20px;font-size:14px;margin-top:10px}
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+    /* =========================================================
+       SETTINGS_BASE_CSS_END
+       ========================================================= */
 
+
+    /* =========================================================
+       SETTINGS_TOPBAR_CSS_START
+       ========================================================= */
     .topbar{
       position:sticky;
       top:0;
       z-index:30;
       backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:10px 12px;
-      margin-bottom:14px;
+      padding:8px 10px;
+      margin-bottom:12px;
       display:grid;
-      grid-template-columns:48px 1fr 48px;
+      grid-template-columns:44px 1fr 44px;
       align-items:center;
       gap:10px;
+      box-shadow:var(--shadow);
     }
     .top-icon-btn{
-      width:48px;height:48px;border:none;background:var(--soft);color:#fff;border-radius:14px;
-      cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-decoration:none;
     }
-    .top-icon-btn svg{width:20px;height:20px;display:block}
+    .top-icon-btn svg{width:19px;height:19px;display:block}
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    /* =========================================================
+       SETTINGS_TOPBAR_CSS_END
+       ========================================================= */
 
+
+    /* =========================================================
+       SETTINGS_MENU_CSS_START
+       ========================================================= */
+    .menu-shell{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:12px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+    .menu-title{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .menu-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    .menu-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 12px;
+      text-align:left;
+      cursor:pointer;
+      font-weight:800;
+      font-size:14px;
+    }
+    .menu-btn span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      margin-top:4px;
+      line-height:1.45;
+    }
+    .menu-btn.active{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    /* =========================================================
+       SETTINGS_MENU_CSS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_CARD_CSS_START
+       ========================================================= */
     .panel{
-      background:rgba(18,25,49,.88);
+      background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
       padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
     }
-    .section-title{
-      font-size:20px;
+    .section-heading{
+      font-size:19px;
       font-weight:800;
-      margin-bottom:8px;
+      margin-bottom:6px;
     }
-    .section-note{
+    .section-sub{
       color:var(--muted);
       font-size:13px;
-      line-height:1.6;
-      margin-bottom:16px;
+      line-height:1.55;
+      margin-bottom:14px;
     }
-    .loading{
-      text-align:center;
+    .setting-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:12px;
+    }
+    .setting-card:last-child{margin-bottom:0}
+    .setting-title{
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:4px;
+    }
+    .setting-desc{
       color:var(--muted);
-      padding:28px 10px;
+      font-size:13px;
+      line-height:1.5;
+      margin-bottom:12px;
     }
-    .hidden{display:none!important}
+    .divider{
+      height:1px;
+      background:var(--line-soft);
+      margin:12px 0;
+    }
+    .info-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .info-box{
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+    .info-box small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-size:12px;
+    }
+    .info-box span{
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      word-break:break-word;
+      line-height:1.6;
+    }
+    /* =========================================================
+       SETTINGS_CARD_CSS_END
+       ========================================================= */
 
+
+    /* =========================================================
+       SETTINGS_PROFILE_CSS_START
+       ========================================================= */
     .profile-mini{
       display:grid;
       grid-template-columns:76px 1fr;
@@ -86,13 +244,27 @@
       align-items:center;
     }
     .avatar{
-      width:76px;height:76px;border-radius:50%;object-fit:cover;
-      background:#1b2445;border:1px solid rgba(255,255,255,.1);
+      width:76px;
+      height:76px;
+      border-radius:50%;
+      object-fit:cover;
+      background:var(--surface-3);
+      border:1px solid var(--line);
     }
     .avatar-placeholder{
-      width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-      text-align:center;padding:8px;background:#1b2445;border:1px solid rgba(255,255,255,.1);
-      color:var(--muted);font-size:12px;line-height:1.3;
+      width:76px;
+      height:76px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.3;
     }
     .mini-name{
       font-size:22px;
@@ -104,27 +276,33 @@
       flex-wrap:wrap;
     }
     .verified-dot{
-      display:inline-flex;align-items:center;justify-content:center;
-      width:20px;height:20px;border-radius:999px;
-      background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20);
-      font-size:11px;font-weight:900;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:20px;
+      height:20px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:11px;
+      font-weight:900;
     }
     .mini-username{
-      color:#8fdfff;
+      color:var(--blue);
       font-size:14px;
       font-weight:700;
       margin-top:4px;
       word-break:break-word;
     }
     .mini-bio{
-      color:#dbe5ff;
+      color:var(--text);
       font-size:13px;
       line-height:1.6;
       margin-top:8px;
       white-space:pre-wrap;
       word-break:break-word;
     }
-
     .badge-row{
       display:flex;
       gap:8px;
@@ -139,71 +317,252 @@
       font-weight:800;
     }
     .status-not-requested{
-      background:#182248;
-      color:#c9d5ff;
-      border:1px solid rgba(255,255,255,.06);
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
     }
     .status-pending{
       background:rgba(245,185,66,.14);
-      color:#ffe7b0;
+      color:var(--text);
       border:1px solid rgba(245,185,66,.20);
     }
     .status-approved{
       background:rgba(61,220,132,.14);
-      color:#c9f7dd;
+      color:var(--text);
       border:1px solid rgba(61,220,132,.20);
     }
     .status-rejected{
       background:rgba(255,93,115,.14);
-      color:#ffd3d9;
+      color:var(--text);
       border:1px solid rgba(255,93,115,.20);
     }
     .status-private{
       background:rgba(245,185,66,.14);
-      color:#ffe7b0;
+      color:var(--text);
       border:1px solid rgba(245,185,66,.20);
     }
     .status-public{
       background:rgba(76,201,255,.14);
-      color:#d8f7ff;
+      color:var(--text);
       border:1px solid rgba(76,201,255,.20);
     }
     .status-admin{
       background:rgba(167,139,250,.14);
-      color:#e8defd;
+      color:var(--text);
       border:1px solid rgba(167,139,250,.20);
     }
     .status-danger{
       background:rgba(255,93,115,.14);
-      color:#ffd3d9;
+      color:var(--text);
       border:1px solid rgba(255,93,115,.20);
     }
+    /* =========================================================
+       SETTINGS_PROFILE_CSS_END
+       ========================================================= */
 
-    .grid{
+
+    /* =========================================================
+       SETTINGS_CONTROL_CSS_START
+       ========================================================= */
+    .option-list{
       display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
+      gap:10px;
     }
-    .info-box{
-      background:var(--soft2);
-      border:1px solid rgba(255,255,255,.06);
+    .option{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:12px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
       border-radius:16px;
-      padding:14px;
+      cursor:pointer;
     }
-    .info-box small{
+    .option input{
+      margin-top:2px;
+      accent-color:var(--blue);
+    }
+    .option-text strong{
       display:block;
-      color:var(--muted);
-      margin-bottom:8px;
-      font-size:12px;
-    }
-    .info-box span{
-      color:#fff;
       font-size:14px;
-      font-weight:700;
-      word-break:break-word;
-      line-height:1.6;
+      margin-bottom:4px;
+    }
+    .option-text span{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
     }
 
+    .toggle-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px 14px;
+    }
+    .toggle-copy strong{
+      display:block;
+      font-size:14px;
+      margin-bottom:4px;
+    }
+    .toggle-copy span{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .switch{
+      position:relative;
+      width:54px;
+      height:30px;
+      flex-shrink:0;
+    }
+    .switch input{
+      opacity:0;
+      width:0;
+      height:0;
+    }
+    .slider{
+      position:absolute;
+      inset:0;
+      background:rgba(255,255,255,.12);
+      border:1px solid var(--line);
+      border-radius:999px;
+      transition:.2s ease;
+      cursor:pointer;
+    }
+    .slider:before{
+      content:"";
+      position:absolute;
+      width:22px;
+      height:22px;
+      left:3px;
+      top:3px;
+      border-radius:50%;
+      background:#fff;
+      transition:.2s ease;
+    }
+    .switch input:checked + .slider{
+      background:rgba(76,201,255,.25);
+      border-color:rgba(76,201,255,.30);
+    }
+    .switch input:checked + .slider:before{
+      transform:translateX(24px);
+    }
+
+    .save-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:10px;
+    }
+
+    .ghost-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .logout-btn{
+      border:none;
+      background:rgba(255,93,115,.18);
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    /* =========================================================
+       SETTINGS_CONTROL_CSS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_BLOCKED_CSS_START
+       ========================================================= */
+    .blocked-list{
+      display:grid;
+      gap:10px;
+    }
+    .blocked-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+    .blocked-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .blocked-avatar{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      object-fit:cover;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      flex-shrink:0;
+    }
+    .blocked-avatar-placeholder{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:4px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:10px;
+      flex-shrink:0;
+    }
+    .blocked-name{
+      font-size:14px;
+      font-weight:800;
+      line-height:1.3;
+      color:var(--text);
+      word-break:break-word;
+    }
+    .blocked-username{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+    .empty-box{
+      text-align:center;
+      padding:24px 12px;
+      color:var(--muted);
+      background:var(--surface-3);
+      border-radius:18px;
+      border:1px dashed var(--line);
+    }
+    /* =========================================================
+       SETTINGS_BLOCKED_CSS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_LINKS_CSS_START
+       ========================================================= */
     .quick-links{
       display:grid;
       grid-template-columns:repeat(2,1fr);
@@ -211,11 +570,11 @@
     }
     .quick-link{
       text-decoration:none;
-      background:var(--soft2);
-      border:1px solid rgba(255,255,255,.06);
+      background:var(--surface-3);
+      border:1px solid var(--line);
       border-radius:16px;
       padding:14px;
-      color:#fff;
+      color:var(--text);
       display:block;
     }
     .quick-link strong{
@@ -228,7 +587,6 @@
       font-size:12px;
       line-height:1.5;
     }
-
     .danger-box{
       background:rgba(255,93,115,.10);
       border:1px solid rgba(255,93,115,.18);
@@ -240,48 +598,38 @@
       margin-bottom:8px;
     }
     .danger-box p{
-      color:#ffd3d9;
+      color:var(--text);
       font-size:14px;
       line-height:1.6;
       margin-bottom:12px;
     }
-    .logout-btn{
-      border:none;
-      background:rgba(255,93,115,.18);
-      color:#fff;
-      border-radius:12px;
-      padding:12px 16px;
-      font-size:14px;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .message{
-      min-height:20px;
-      font-size:14px;
-      margin-top:10px;
-    }
-    .error{color:#ffb3bd}
+    /* =========================================================
+       SETTINGS_LINKS_CSS_END
+       ========================================================= */
 
+
+    /* =========================================================
+       SETTINGS_BOTTOM_NAV_CSS_START
+       ========================================================= */
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:12px;
-      width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(18px);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
       gap:8px;
       z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
     }
     .nav-link{
       text-decoration:none;
-      color:#b9c4e3;
+      color:var(--muted);
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -297,12 +645,16 @@
       cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+    /* =========================================================
+       SETTINGS_BOTTOM_NAV_CSS_END
+       ========================================================= */
+
 
     @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .grid{grid-template-columns:1fr}
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .menu-grid{grid-template-columns:1fr}
+      .info-grid{grid-template-columns:1fr}
       .quick-links{grid-template-columns:1fr}
       .profile-mini{grid-template-columns:64px 1fr}
       .avatar,.avatar-placeholder{width:64px;height:64px}
@@ -311,12 +663,16 @@
 </head>
 <body>
   <div class="app">
+
+    <!-- =========================================================
+         SETTINGS_TOPBAR_HTML_START
+         ========================================================= -->
     <div class="topbar">
-      <a href="profile.html" class="top-icon-btn" aria-label="Back to Profile">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back to Profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
-      </a>
+      </button>
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
@@ -330,16 +686,62 @@
         </svg>
       </a>
     </div>
+    <!-- =========================================================
+         SETTINGS_TOPBAR_HTML_END
+         ========================================================= -->
 
-    <div class="panel">
-      <div class="section-title">Settings</div>
-      <div class="section-note">Account details, privacy summary, verification, and useful shortcuts.</div>
+
+    <!-- =========================================================
+         SETTINGS_MENU_HTML_START
+         ========================================================= -->
+    <div class="menu-shell">
+      <div class="menu-title">Quick sections</div>
+      <div class="menu-grid">
+        <button class="menu-btn active" type="button" data-section="overviewSection">
+          Overview
+          <span>Account summary, badges and account info</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-section="appearanceSection">
+          Appearance
+          <span>Dark, light or system theme</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-section="privacySection">
+          Privacy
+          <span>Private account, city and gender visibility</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-section="locationSection">
+          Nearby & Location
+          <span>Nearby visibility and location detail level</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-section="blockedSection">
+          Blocked Accounts
+          <span>Review and unblock accounts</span>
+        </button>
+
+        <button class="menu-btn" type="button" data-section="moreSection">
+          More
+          <span>Verification, quick links and logout</span>
+        </button>
+      </div>
+
+      <div id="pageStatus" class="status-message"></div>
     </div>
+    <!-- =========================================================
+         SETTINGS_MENU_HTML_END
+         ========================================================= -->
 
-    <div class="panel">
-      <div id="loading" class="loading">Loading settings...</div>
 
-      <div id="content" class="hidden">
+    <!-- =========================================================
+         SETTINGS_OVERVIEW_HTML_START
+         ========================================================= -->
+    <section id="overviewSection" class="panel">
+      <div id="loading" class="muted" style="padding:8px 0 12px;">Loading settings...</div>
+
+      <div id="overviewContent" class="hidden">
         <div class="profile-mini">
           <img id="avatar" class="avatar hidden" alt="Profile Photo" />
           <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
@@ -351,6 +753,7 @@
             </div>
             <div id="usernameText" class="mini-username hidden">@username</div>
             <div id="bioText" class="mini-bio">No bio added yet.</div>
+
             <div class="badge-row">
               <span id="profileTypeBadge" class="status-badge status-public">Public</span>
               <span id="adminBadge" class="status-badge status-admin hidden">Admin</span>
@@ -358,76 +761,250 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div id="accountPanel" class="panel hidden">
-      <div class="section-title">Account Info</div>
+        <div class="divider"></div>
 
-      <div class="grid">
-        <div class="info-box">
-          <small>Email</small>
-          <span id="email">-</span>
-        </div>
+        <div class="section-heading">Account Info</div>
+        <div class="section-sub">Your core account details and current profile status.</div>
 
-        <div class="info-box">
-          <small>User ID</small>
-          <span id="uid">-</span>
-        </div>
+        <div class="info-grid">
+          <div class="info-box">
+            <small>Email</small>
+            <span id="email">-</span>
+          </div>
 
-        <div class="info-box">
-          <small>Verified Status</small>
-          <span id="verified">No</span>
-        </div>
+          <div class="info-box">
+            <small>User ID</small>
+            <span id="uid">-</span>
+          </div>
 
-        <div class="info-box">
-          <small>Account Created</small>
-          <span id="createdAt">-</span>
-        </div>
-      </div>
-    </div>
+          <div class="info-box">
+            <small>Verified Status</small>
+            <span id="verified">No</span>
+          </div>
 
-    <div id="privacyPanel" class="panel hidden">
-      <div class="section-title">Privacy Summary</div>
-
-      <div class="grid">
-        <div class="info-box">
-          <small>Profile Type</small>
-          <span id="profileType">Public</span>
-        </div>
-
-        <div class="info-box">
-          <small>City Visibility</small>
-          <span id="cityVisible">Hidden</span>
-        </div>
-
-        <div class="info-box">
-          <small>Gender Visibility</small>
-          <span id="genderVisible">Hidden</span>
-        </div>
-
-        <div class="info-box">
-          <small>Photo</small>
-          <span id="photoStatus">No photo</span>
+          <div class="info-box">
+            <small>Account Created</small>
+            <span id="createdAt">-</span>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_OVERVIEW_HTML_END
+         ========================================================= -->
 
-    <div id="verificationPanel" class="panel hidden">
-      <div class="section-title">Verification</div>
-      <div class="section-note">Manage your verification request on a separate page.</div>
 
-      <a href="verification.html" class="quick-link">
-        <strong>Verification Page</strong>
-        <span>Open verification request form and track status.</span>
-        <div class="badge-row" style="margin-top:10px;">
-          <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
+    <!-- =========================================================
+         SETTINGS_THEME_HTML_START
+         ========================================================= -->
+    <section id="appearanceSection" class="panel hidden">
+      <div class="section-heading">Appearance</div>
+      <div class="section-sub">
+        Choose how BareWorld looks on your device.
+      </div>
+
+      <div class="setting-card">
+        <div class="setting-title">Theme</div>
+        <div class="setting-desc">
+          This applies instantly and is also saved to your account.
         </div>
-      </a>
-    </div>
 
-    <div id="linksPanel" class="panel hidden">
-      <div class="section-title">Quick Links</div>
+        <div class="option-list">
+          <label class="option">
+            <input type="radio" name="themePreference" value="dark" />
+            <div class="option-text">
+              <strong>Dark</strong>
+              <span>Best for the current BareWorld look and low-light use.</span>
+            </div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="themePreference" value="light" />
+            <div class="option-text">
+              <strong>Light</strong>
+              <span>Bright and clean interface for daytime use.</span>
+            </div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="themePreference" value="system" />
+            <div class="option-text">
+              <strong>System</strong>
+              <span>Automatically follow your device theme.</span>
+            </div>
+          </label>
+        </div>
+
+        <div id="themeStatus" class="status-message"></div>
+      </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_THEME_HTML_END
+         ========================================================= -->
+
+
+    <!-- =========================================================
+         SETTINGS_PRIVACY_HTML_START
+         ========================================================= -->
+    <section id="privacySection" class="panel hidden">
+      <div class="section-heading">Privacy</div>
+      <div class="section-sub">
+        Control who can see your account and profile details.
+      </div>
+
+      <div class="setting-card">
+        <div class="toggle-row">
+          <div class="toggle-copy">
+            <strong>Private account</strong>
+            <span>Only approved followers can view your profile and posts.</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="privateAccountToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toggle-row">
+          <div class="toggle-copy">
+            <strong>Show city on profile</strong>
+            <span>Let other members see your city if you added one.</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="cityVisibleToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toggle-row">
+          <div class="toggle-copy">
+            <strong>Show gender on profile</strong>
+            <span>Let other members see your gender if you added one.</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="genderVisibleToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="privacyStatus" class="status-message"></div>
+      </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_PRIVACY_HTML_END
+         ========================================================= -->
+
+
+    <!-- =========================================================
+         SETTINGS_LOCATION_HTML_START
+         ========================================================= -->
+    <section id="locationSection" class="panel hidden">
+      <div class="section-heading">Nearby & Location</div>
+      <div class="section-sub">
+        Decide whether people can discover you in Nearby and how much location detail is shown.
+      </div>
+
+      <div class="setting-card">
+        <div class="toggle-row">
+          <div class="toggle-copy">
+            <strong>Show me in Nearby</strong>
+            <span>Allow your profile to appear in nearby discovery features.</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="showInNearbyToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="setting-title">Location visibility</div>
+        <div class="setting-desc">
+          Pick how much location detail others can see when Nearby is enabled.
+        </div>
+
+        <div class="option-list">
+          <label class="option">
+            <input type="radio" name="locationVisibility" value="hidden" />
+            <div class="option-text">
+              <strong>Hidden</strong>
+              <span>Use location only for your own browsing, not for showing you to others.</span>
+            </div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="locationVisibility" value="approximate" />
+            <div class="option-text">
+              <strong>Approximate</strong>
+              <span>Show only rough distance or general nearby area.</span>
+            </div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="locationVisibility" value="city" />
+            <div class="option-text">
+              <strong>City + approximate distance</strong>
+              <span>Show your city and rough distance, but not exact address.</span>
+            </div>
+          </label>
+        </div>
+
+        <div id="locationStatus" class="status-message"></div>
+      </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_LOCATION_HTML_END
+         ========================================================= -->
+
+
+    <!-- =========================================================
+         SETTINGS_BLOCKED_HTML_START
+         ========================================================= -->
+    <section id="blockedSection" class="panel hidden">
+      <div class="section-heading">Blocked Accounts</div>
+      <div class="section-sub">
+        Accounts you block should stay out of your feed, profile flow and nearby discovery. You can unblock them here.
+      </div>
+
+      <div class="setting-card">
+        <div id="blockedLoading" class="muted">Loading blocked accounts...</div>
+        <div id="blockedList" class="blocked-list hidden"></div>
+        <div id="blockedEmpty" class="empty-box hidden">You have not blocked anyone yet.</div>
+        <div id="blockedStatus" class="status-message"></div>
+      </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_BLOCKED_HTML_END
+         ========================================================= -->
+
+
+    <!-- =========================================================
+         SETTINGS_MORE_HTML_START
+         ========================================================= -->
+    <section id="moreSection" class="panel hidden">
+      <div class="section-heading">Verification</div>
+      <div class="section-sub">Manage your verification request on a separate page.</div>
+
+      <div class="setting-card">
+        <a href="verification.html" class="quick-link">
+          <strong>Verification Page</strong>
+          <span>Open verification request form and track status.</span>
+          <div class="badge-row" style="margin-top:10px;">
+            <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="section-heading" style="margin-top:14px;">Quick Links</div>
+      <div class="section-sub">Useful shortcuts for the rest of the app.</div>
 
       <div class="quick-links">
         <a href="feed.html" class="quick-link">
@@ -475,20 +1052,26 @@
           <span>Review user reports and take moderation actions.</span>
         </a>
       </div>
-    </div>
 
-    <div id="accountActionsPanel" class="panel hidden">
-      <div class="section-title">Account Actions</div>
+      <div class="section-heading" style="margin-top:14px;">Account Actions</div>
+      <div class="section-sub">Sign out from your account on this device.</div>
 
       <div class="danger-box">
         <h3>Logout</h3>
         <p>Sign out from your current account on this device.</p>
         <button id="logoutBtn" class="logout-btn">Logout</button>
-        <div id="message" class="message"></div>
+        <div id="message" class="status-message"></div>
       </div>
-    </div>
+    </section>
+    <!-- =========================================================
+         SETTINGS_MORE_HTML_END
+         ========================================================= -->
+
   </div>
 
+  <!-- =========================================================
+       SETTINGS_BOTTOM_NAV_HTML_START
+       ========================================================= -->
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
       <span class="icon">⌂</span>
@@ -511,6 +1094,10 @@
       <span>Profile</span>
     </a>
   </nav>
+  <!-- =========================================================
+       SETTINGS_BOTTOM_NAV_HTML_END
+       ========================================================= -->
+
 
   <script type="module">
     import { auth, db } from "./firebase.js";
@@ -520,16 +1107,28 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       doc,
-      getDoc
+      getDoc,
+      setDoc,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    let currentUser = null;
+    let currentUserData = {};
+    let currentPublicData = {};
+    let currentBlockedUsers = [];
+
+
+    /* =========================================================
+       SETTINGS_ELEMENT_CACHE_JS_START
+       ========================================================= */
+    const backBtn = document.getElementById("backBtn");
+    const pageStatus = document.getElementById("pageStatus");
+
+    const menuButtons = document.querySelectorAll(".menu-btn");
+    const sections = document.querySelectorAll("section.panel");
+
     const loading = document.getElementById("loading");
-    const content = document.getElementById("content");
-    const accountPanel = document.getElementById("accountPanel");
-    const privacyPanel = document.getElementById("privacyPanel");
-    const verificationPanel = document.getElementById("verificationPanel");
-    const linksPanel = document.getElementById("linksPanel");
-    const accountActionsPanel = document.getElementById("accountActionsPanel");
+    const overviewContent = document.getElementById("overviewContent");
 
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
@@ -541,37 +1140,49 @@
     const adminBadge = document.getElementById("adminBadge");
     const moderationBadge = document.getElementById("moderationBadge");
 
-    const logoutBtn = document.getElementById("logoutBtn");
-    const message = document.getElementById("message");
-
     const emailEl = document.getElementById("email");
     const uidEl = document.getElementById("uid");
     const verifiedEl = document.getElementById("verified");
     const createdAtEl = document.getElementById("createdAt");
 
-    const profileTypeEl = document.getElementById("profileType");
-    const cityVisibleEl = document.getElementById("cityVisible");
-    const genderVisibleEl = document.getElementById("genderVisible");
-    const photoStatusEl = document.getElementById("photoStatus");
+    const themeStatus = document.getElementById("themeStatus");
+
+    const privateAccountToggle = document.getElementById("privateAccountToggle");
+    const cityVisibleToggle = document.getElementById("cityVisibleToggle");
+    const genderVisibleToggle = document.getElementById("genderVisibleToggle");
+    const privacyStatus = document.getElementById("privacyStatus");
+
+    const showInNearbyToggle = document.getElementById("showInNearbyToggle");
+    const locationStatus = document.getElementById("locationStatus");
+
+    const blockedLoading = document.getElementById("blockedLoading");
+    const blockedList = document.getElementById("blockedList");
+    const blockedEmpty = document.getElementById("blockedEmpty");
+    const blockedStatus = document.getElementById("blockedStatus");
+
     const verificationStatusBadge = document.getElementById("verificationStatusBadge");
     const reportsAdminLink = document.getElementById("reportsAdminLink");
 
-    function setMessage(text, type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    const logoutBtn = document.getElementById("logoutBtn");
+    const message = document.getElementById("message");
+    /* =========================================================
+       SETTINGS_ELEMENT_CACHE_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_COMMON_JS_START
+       ========================================================= */
+    function setStatus(el, text, type = "") {
+      if (!el) return;
+      el.textContent = text;
+      el.className = `status-message ${type}`;
     }
 
-    function formatDate(ts, authUser = null) {
-      if (ts?.toDate) {
-        try { return ts.toDate().toLocaleString(); } catch {}
-      }
-      if (ts instanceof Date) {
-        try { return ts.toLocaleString(); } catch {}
-      }
-      if (authUser?.metadata?.creationTime) {
-        return authUser.metadata.creationTime;
-      }
-      return "-";
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -587,8 +1198,23 @@
         cityVisible: !!d.cityVisible,
         genderVisible: !!d.genderVisible,
         moderationStatus: d.moderationStatus || d.status || "",
-        warningUntil: d.warningUntil || null
+        warningUntil: d.warningUntil || null,
+        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        themePreference: d.themePreference || "dark",
+        showInNearby: !!d.showInNearby,
+        locationVisibility: d.locationVisibility || "hidden"
       };
+    }
+
+    function formatDate(ts, authUser = null) {
+      if (ts?.toDate) {
+        try { return ts.toDate().toLocaleString(); } catch {}
+      }
+      if (ts instanceof Date) {
+        try { return ts.toLocaleString(); } catch {}
+      }
+      if (authUser?.metadata?.creationTime) return authUser.metadata.creationTime;
+      return "-";
     }
 
     function mergeProfiles(a, b, uid = "") {
@@ -616,6 +1242,288 @@
       avatarPlaceholder.classList.remove("hidden");
     });
 
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      const resolved = resolveTheme(themeValue);
+      document.documentElement.setAttribute("data-theme", resolved);
+    }
+
+    function getSelectedRadioValue(name) {
+      const checked = document.querySelector(`input[name="${name}"]:checked`);
+      return checked ? checked.value : "";
+    }
+
+    function setCheckedRadioValue(name, value) {
+      const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+      if (radio) radio.checked = true;
+    }
+
+    async function saveSettingsPatch({
+      userPatch = {},
+      publicPatch = {},
+      successTarget = null,
+      successText = "Saved."
+    }) {
+      if (!currentUser) return;
+
+      try {
+        await Promise.all([
+          setDoc(doc(db, "users", currentUser.uid), {
+            uid: currentUser.uid,
+            ...userPatch,
+            updatedAt: serverTimestamp()
+          }, { merge: true }),
+
+          setDoc(doc(db, "publicProfiles", currentUser.uid), {
+            uid: currentUser.uid,
+            ...publicPatch,
+            updatedAt: serverTimestamp()
+          }, { merge: true })
+        ]);
+
+        currentUserData = { ...currentUserData, ...userPatch };
+        currentPublicData = { ...currentPublicData, ...publicPatch };
+
+        setStatus(successTarget || pageStatus, successText, "success");
+      } catch (error) {
+        console.error(error);
+        setStatus(successTarget || pageStatus, "Could not save changes.", "error");
+      }
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "profile.html";
+    });
+
+    applyTheme(getStoredTheme());
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+    /* =========================================================
+       SETTINGS_COMMON_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_VIEW_SWITCH_JS_START
+       ========================================================= */
+    function showSection(sectionId) {
+      sections.forEach(section => {
+        section.classList.toggle("hidden", section.id !== sectionId);
+      });
+
+      menuButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.section === sectionId);
+      });
+    }
+
+    menuButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        showSection(btn.dataset.section);
+      });
+    });
+    /* =========================================================
+       SETTINGS_VIEW_SWITCH_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_THEME_JS_START
+       ========================================================= */
+    async function saveThemePreference(themeValue) {
+      localStorage.setItem("bwTheme", themeValue);
+      applyTheme(themeValue);
+
+      await saveSettingsPatch({
+        userPatch: { themePreference: themeValue },
+        publicPatch: {},
+        successTarget: themeStatus,
+        successText: "Theme updated."
+      });
+    }
+
+    document.querySelectorAll('input[name="themePreference"]').forEach(radio => {
+      radio.addEventListener("change", async () => {
+        const value = getSelectedRadioValue("themePreference");
+        if (!value) return;
+        await saveThemePreference(value);
+      });
+    });
+    /* =========================================================
+       SETTINGS_THEME_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_PRIVACY_JS_START
+       ========================================================= */
+    async function savePrivacyState() {
+      const isPrivate = !!privateAccountToggle.checked;
+      const cityVisible = !!cityVisibleToggle.checked;
+      const genderVisible = !!genderVisibleToggle.checked;
+
+      await saveSettingsPatch({
+        userPatch: { isPrivate, cityVisible, genderVisible },
+        publicPatch: { isPrivate, cityVisible, genderVisible },
+        successTarget: privacyStatus,
+        successText: "Privacy settings updated."
+      });
+
+      profileTypeBadge.textContent = isPrivate ? "Private" : "Public";
+      profileTypeBadge.className = `status-badge ${isPrivate ? "status-private" : "status-public"}`;
+    }
+
+    privateAccountToggle.addEventListener("change", savePrivacyState);
+    cityVisibleToggle.addEventListener("change", savePrivacyState);
+    genderVisibleToggle.addEventListener("change", savePrivacyState);
+    /* =========================================================
+       SETTINGS_PRIVACY_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_LOCATION_JS_START
+       ========================================================= */
+    async function saveLocationState() {
+      const showInNearby = !!showInNearbyToggle.checked;
+      const locationVisibility = getSelectedRadioValue("locationVisibility") || "hidden";
+
+      await saveSettingsPatch({
+        userPatch: { showInNearby, locationVisibility },
+        publicPatch: { showInNearby, locationVisibility },
+        successTarget: locationStatus,
+        successText: "Nearby visibility updated."
+      });
+    }
+
+    showInNearbyToggle.addEventListener("change", saveLocationState);
+
+    document.querySelectorAll('input[name="locationVisibility"]').forEach(radio => {
+      radio.addEventListener("change", saveLocationState);
+    });
+    /* =========================================================
+       SETTINGS_LOCATION_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_BLOCKED_LIST_JS_START
+       ========================================================= */
+    async function fetchProfileForBlockedUser(uid) {
+      try {
+        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
+        if (publicSnap.exists()) {
+          return normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, uid);
+        }
+      } catch {}
+
+      return normalizeProfile({ uid }, uid);
+    }
+
+    async function renderBlockedList() {
+      blockedLoading.classList.remove("hidden");
+      blockedList.classList.add("hidden");
+      blockedEmpty.classList.add("hidden");
+      blockedList.innerHTML = "";
+      setStatus(blockedStatus, "", "");
+
+      if (!currentBlockedUsers.length) {
+        blockedLoading.classList.add("hidden");
+        blockedEmpty.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const profiles = await Promise.all(
+          currentBlockedUsers.map(uid => fetchProfileForBlockedUser(uid))
+        );
+
+        profiles.forEach(profile => {
+          const row = document.createElement("div");
+          row.className = "blocked-item";
+
+          const avatarHtml = profile.photoURL
+            ? `<img class="blocked-avatar" src="${escapeHtml(profile.photoURL)}" alt="User Photo">`
+            : `<div class="blocked-avatar-placeholder">No photo</div>`;
+
+          row.innerHTML = `
+            <div class="blocked-left">
+              ${avatarHtml}
+              <div>
+                <div class="blocked-name">${escapeHtml(profile.displayName || "Member")}</div>
+                ${profile.username ? `<div class="blocked-username">@${escapeHtml(profile.username)}</div>` : ""}
+              </div>
+            </div>
+
+            <button class="ghost-btn unblock-btn" type="button" data-uid="${escapeHtml(profile.uid)}">
+              Unblock
+            </button>
+          `;
+
+          blockedList.appendChild(row);
+        });
+
+        blockedLoading.classList.add("hidden");
+        blockedList.classList.remove("hidden");
+
+        blockedList.querySelectorAll(".unblock-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const uid = btn.getAttribute("data-uid");
+            if (!uid || !currentUser) return;
+
+            btn.disabled = true;
+
+            try {
+              currentBlockedUsers = currentBlockedUsers.filter(item => item !== uid);
+
+              await saveSettingsPatch({
+                userPatch: { blockedUsers: currentBlockedUsers },
+                publicPatch: {},
+                successTarget: blockedStatus,
+                successText: "Account unblocked."
+              });
+
+              await renderBlockedList();
+            } catch (error) {
+              console.error(error);
+              setStatus(blockedStatus, "Could not unblock account.", "error");
+            }
+
+            btn.disabled = false;
+          });
+        });
+
+      } catch (error) {
+        console.error(error);
+        blockedLoading.classList.add("hidden");
+        blockedEmpty.classList.remove("hidden");
+        setStatus(blockedStatus, "Could not load blocked accounts.", "error");
+      }
+    }
+    /* =========================================================
+       SETTINGS_BLOCKED_LIST_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_VERIFICATION_JS_START
+       ========================================================= */
     function setVerificationBadge(status, isVerified) {
       verificationStatusBadge.className = "status-badge";
 
@@ -639,15 +1547,19 @@
         verificationStatusBadge.textContent = "Not requested";
       }
     }
+    /* =========================================================
+       SETTINGS_VERIFICATION_JS_END
+       ========================================================= */
 
+
+    /* =========================================================
+       SETTINGS_OVERVIEW_JS_START
+       ========================================================= */
     function applyProfileHeader(profile, isAdmin) {
       displayNameEl.textContent = profile.displayName || "Member";
 
-      if (profile.isVerified) {
-        verifiedDot.classList.remove("hidden");
-      } else {
-        verifiedDot.classList.add("hidden");
-      }
+      if (profile.isVerified) verifiedDot.classList.remove("hidden");
+      else verifiedDot.classList.add("hidden");
 
       if (profile.username) {
         usernameText.textContent = "@" + profile.username;
@@ -662,11 +1574,8 @@
       profileTypeBadge.textContent = profile.isPrivate ? "Private" : "Public";
       profileTypeBadge.className = `status-badge ${profile.isPrivate ? "status-private" : "status-public"}`;
 
-      if (isAdmin) {
-        adminBadge.classList.remove("hidden");
-      } else {
-        adminBadge.classList.add("hidden");
-      }
+      if (isAdmin) adminBadge.classList.remove("hidden");
+      else adminBadge.classList.add("hidden");
 
       moderationBadge.classList.add("hidden");
       if (profile.moderationStatus === "banned") {
@@ -680,78 +1589,95 @@
         moderationBadge.classList.remove("hidden");
       }
     }
+    /* =========================================================
+       SETTINGS_OVERVIEW_JS_END
+       ========================================================= */
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
 
-      try {
-        const userRef = doc(db, "users", user.uid);
-        const publicRef = doc(db, "publicProfiles", user.uid);
-        const verificationRef = doc(db, "verification_requests", user.uid);
-        const adminRef = doc(db, "admins", user.uid);
-
-        const [userSnap, publicSnap, verificationSnap, adminSnap] = await Promise.all([
-          getDoc(userRef),
-          getDoc(publicRef),
-          getDoc(verificationRef),
-          getDoc(adminRef)
-        ]);
-
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        const publicData = publicSnap.exists() ? publicSnap.data() : {};
-        const mergedProfile = mergeProfiles(publicData, userData, user.uid);
-
-        const isAdmin = adminSnap.exists() || userData.isAdmin === true || userData.role === "admin";
-
-        applyProfileHeader(mergedProfile, isAdmin);
-
-        emailEl.textContent = user.email || "-";
-        uidEl.textContent = user.uid || "-";
-        verifiedEl.textContent = mergedProfile.isVerified ? "Yes" : "No";
-        createdAtEl.textContent = formatDate(userData.createdAt, user);
-
-        profileTypeEl.textContent = mergedProfile.isPrivate ? "Private" : "Public";
-        cityVisibleEl.textContent = mergedProfile.cityVisible ? "Visible" : "Hidden";
-        genderVisibleEl.textContent = mergedProfile.genderVisible ? "Visible" : "Hidden";
-        photoStatusEl.textContent = mergedProfile.photoURL ? "Photo added" : "No photo";
-
-        const requestStatus = verificationSnap.exists()
-          ? (verificationSnap.data().status || "pending")
-          : "not_requested";
-
-        setVerificationBadge(requestStatus, !!mergedProfile.isVerified);
-
-        if (isAdmin) {
-          reportsAdminLink.classList.remove("hidden");
-        } else {
-          reportsAdminLink.classList.add("hidden");
-        }
-
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
-        accountPanel.classList.remove("hidden");
-        privacyPanel.classList.remove("hidden");
-        verificationPanel.classList.remove("hidden");
-        linksPanel.classList.remove("hidden");
-        accountActionsPanel.classList.remove("hidden");
-      } catch (error) {
-        console.error(error);
-        loading.textContent = "Could not load settings.";
-      }
-    });
-
+    /* =========================================================
+       SETTINGS_LOGOUT_JS_START
+       ========================================================= */
     logoutBtn.addEventListener("click", async () => {
       try {
         await signOut(auth);
         window.location.href = "login.html";
       } catch (error) {
         console.error(error);
-        setMessage("Could not log out.", "error");
+        setStatus(message, "Could not log out.", "error");
       }
     });
+    /* =========================================================
+       SETTINGS_LOGOUT_JS_END
+       ========================================================= */
+
+
+    /* =========================================================
+       SETTINGS_INIT_JS_START
+       ========================================================= */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const [userSnap, publicSnap, verificationSnap, adminSnap] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDoc(doc(db, "publicProfiles", user.uid)),
+          getDoc(doc(db, "verification_requests", user.uid)),
+          getDoc(doc(db, "admins", user.uid))
+        ]);
+
+        currentUserData = userSnap.exists() ? userSnap.data() : {};
+        currentPublicData = publicSnap.exists() ? publicSnap.data() : {};
+
+        const merged = mergeProfiles(publicSnap.exists() ? publicSnap.data() : {}, userSnap.exists() ? userSnap.data() : {}, user.uid);
+        const isAdmin = adminSnap.exists() || currentUserData.isAdmin === true || currentUserData.role === "admin";
+
+        currentBlockedUsers = Array.isArray(merged.blockedUsers) ? merged.blockedUsers : [];
+
+        applyProfileHeader(merged, isAdmin);
+
+        emailEl.textContent = user.email || "-";
+        uidEl.textContent = user.uid || "-";
+        verifiedEl.textContent = merged.isVerified ? "Yes" : "No";
+        createdAtEl.textContent = formatDate(currentUserData.createdAt, user);
+
+        setCheckedRadioValue("themePreference", merged.themePreference || getStoredTheme() || "dark");
+        localStorage.setItem("bwTheme", merged.themePreference || getStoredTheme() || "dark");
+        applyTheme(merged.themePreference || getStoredTheme() || "dark");
+
+        privateAccountToggle.checked = !!merged.isPrivate;
+        cityVisibleToggle.checked = !!merged.cityVisible;
+        genderVisibleToggle.checked = !!merged.genderVisible;
+
+        showInNearbyToggle.checked = !!merged.showInNearby;
+        setCheckedRadioValue("locationVisibility", merged.locationVisibility || "hidden");
+
+        const requestStatus = verificationSnap.exists()
+          ? (verificationSnap.data().status || "pending")
+          : "not_requested";
+
+        setVerificationBadge(requestStatus, !!merged.isVerified);
+
+        if (isAdmin) reportsAdminLink.classList.remove("hidden");
+        else reportsAdminLink.classList.add("hidden");
+
+        await renderBlockedList();
+
+        loading.classList.add("hidden");
+        overviewContent.classList.remove("hidden");
+      } catch (error) {
+        console.error(error);
+        loading.textContent = "Could not load settings.";
+        setStatus(pageStatus, "Could not load settings.", "error");
+      }
+    });
+    /* =========================================================
+       SETTINGS_INIT_JS_END
+       ========================================================= */
   </script>
 </body>
 </html>
