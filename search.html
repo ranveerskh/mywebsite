@@ -15,24 +15,28 @@
       color:var(--text);min-height:100vh;padding:14px 14px 92px;
     }
     .app{max-width:760px;margin:0 auto}
+
     .topbar{
       position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
       background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
-      border-radius:18px;padding:12px 14px;margin-bottom:14px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      border-radius:18px;padding:10px 12px;margin-bottom:14px;
+      display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:10px;
     }
+    .top-icon-btn{
+      width:48px;height:48px;border:none;background:var(--soft);color:#fff;border-radius:14px;
+      cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:20px;height:20px;display:block}
+    .top-center{text-align:center;min-width:0}
     .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .chip-btn{
-      border:none;background:var(--soft);color:#fff;border-radius:12px;
-      padding:10px 12px;text-decoration:none;font-size:13px;font-weight:700;
-      cursor:pointer;border:1px solid var(--line);display:inline-block;
-    }
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
     .panel{
       background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;
       padding:16px;margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
     .search-row{
       display:grid;grid-template-columns:1fr auto;gap:10px;
     }
@@ -44,12 +48,15 @@
       border:none;background:rgba(76,201,255,.14);color:#d8f7ff;border-radius:14px;
       padding:14px 18px;font-weight:800;cursor:pointer;border:1px solid rgba(76,201,255,.2);
     }
+
     .helper{
       color:var(--muted);font-size:13px;line-height:1.6;margin-top:10px;
     }
+
     .loading,.empty{
       text-align:center;color:var(--muted);padding:22px 10px;
     }
+
     .results{display:grid;gap:10px}
     .person-card{
       background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:16px;
@@ -75,13 +82,13 @@
       font-size:12px;color:var(--muted);line-height:1.5;margin-top:5px;
       word-break:break-word;
     }
+
     .badge{
       display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;
     }
     .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .badge-verified{background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20)}
     .badge-warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
-    .badge-ban{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
 
     .bottom-nav{
       position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
@@ -94,12 +101,12 @@
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{background:rgba(76,201,255,.14);color:#d8f7ff}
 
     @media (max-width:700px){
       body{padding:12px 12px 92px}
       .topbar{padding:10px 12px}
       .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
       .search-row{grid-template-columns:1fr}
     }
   </style>
@@ -107,15 +114,23 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <div>
+      <a href="feed.html" class="top-icon-btn" aria-label="Back to feed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
         <div class="brand">BareWorld</div>
         <div class="brand-sub">Search members</div>
       </div>
 
-      <div class="top-actions">
-        <a href="feed.html" class="chip-btn">Feed</a>
-        <a href="profile.html" class="chip-btn">My Profile</a>
-      </div>
+      <a href="profile.html" class="top-icon-btn" aria-label="My profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
     </div>
 
     <div class="panel">
@@ -130,8 +145,8 @@
 
     <div class="panel">
       <div id="loading" class="loading">Loading members...</div>
-      <div id="empty" class="empty" style="display:none;">No members found.</div>
-      <div id="results" class="results" style="display:none;"></div>
+      <div id="empty" class="empty hidden">No members found.</div>
+      <div id="results" class="results hidden"></div>
     </div>
   </div>
 
@@ -152,7 +167,7 @@
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
-    <a href="profile.html" class="nav-link">
+    <a href="profile.html" class="nav-link active">
       <span class="icon">◉</span>
       <span>Profile</span>
     </a>
@@ -185,11 +200,13 @@
       return {
         uid: d.uid || d.id || fallbackUid || "",
         displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        displayNameLower: d.displayNameLower || (d.displayName || d.name || d.fullName || d.username || "").toLowerCase(),
         username: d.username || d.handle || d.userName || "",
+        usernameLower: d.usernameLower || (d.username || d.handle || d.userName || "").toLowerCase(),
         bio: d.bio || d.about || d.description || "",
         photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
         isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        verified: !!d.verified,
+        verified: !!(d.verified || d.isVerified),
         moderationStatus: d.moderationStatus || d.status || "",
         warningUntil: d.warningUntil || null,
         isHiddenByAdmin: !!d.isHiddenByAdmin,
@@ -197,41 +214,18 @@
       };
     }
 
-    function mergeProfiles(a, b) {
-      const x = a || {};
-      const y = b || {};
-      return normalizeProfile({
-        ...x,
-        ...y,
-        uid: y.uid || x.uid || ""
-      }, y.uid || x.uid || "");
-    }
-
     async function loadMembers() {
-      const publicMap = new Map();
-      const userMap = new Map();
-
-      const [publicSnap, usersSnap] = await Promise.all([
-        getDocs(collection(db, "publicProfiles")),
-        getDocs(collection(db, "users"))
-      ]);
-
-      publicSnap.forEach(docSnap => {
-        publicMap.set(docSnap.id, normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id));
-      });
-
-      usersSnap.forEach(docSnap => {
-        userMap.set(docSnap.id, normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id));
-      });
-
-      const allIds = new Set([...publicMap.keys(), ...userMap.keys()]);
+      const publicSnap = await getDocs(collection(db, "publicProfiles"));
       const list = [];
 
-      allIds.forEach(uid => {
-        const merged = mergeProfiles(publicMap.get(uid), userMap.get(uid));
-        if (!merged.uid) return;
-        if (merged.moderationStatus === "banned" || merged.isHiddenByAdmin || merged.softDeleted) return;
-        list.push(merged);
+      publicSnap.forEach(docSnap => {
+        const member = normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id);
+
+        if (!member.uid) return;
+        if (member.moderationStatus === "banned") return;
+        if (member.isHiddenByAdmin || member.softDeleted) return;
+
+        list.push(member);
       });
 
       allMembers = list.sort((a, b) => {
@@ -254,13 +248,13 @@
       results.innerHTML = "";
 
       if (!list.length) {
-        results.style.display = "none";
-        empty.style.display = "block";
+        results.classList.add("hidden");
+        empty.classList.remove("hidden");
         return;
       }
 
-      empty.style.display = "none";
-      results.style.display = "grid";
+      empty.classList.add("hidden");
+      results.classList.remove("hidden");
 
       list.forEach(member => {
         const card = document.createElement("div");
@@ -273,7 +267,6 @@
         const badges = [];
         if (member.isPrivate) badges.push(`<span class="badge badge-private">Private</span>`);
         if (member.verified) badges.push(`<span class="badge badge-verified">Verified</span>`);
-        if (member.moderationStatus === "banned") badges.push(`<span class="badge badge-ban">Banned</span>`);
         if (member.moderationStatus === "warned" && isWarningActive(member.warningUntil)) {
           badges.push(`<span class="badge badge-warn">Warned</span>`);
         }
@@ -287,7 +280,7 @@
               </a>
               ${badges.join(" ")}
             </div>
-            <div class="person-username">@${escapeHtml(member.username || "nousername")}</div>
+            ${member.username ? `<div class="person-username">@${escapeHtml(member.username)}</div>` : ""}
             <div class="person-sub">${escapeHtml(member.bio || "")}</div>
           </div>
         `;
@@ -312,8 +305,8 @@
       }
 
       const filtered = allMembers.filter(member => {
-        const username = (member.username || "").toLowerCase();
-        const name = (member.displayName || "").toLowerCase();
+        const username = member.usernameLower || "";
+        const name = member.displayNameLower || "";
         return username.includes(term) || name.includes(term);
       });
 
@@ -334,7 +327,7 @@
 
       try {
         await loadMembers();
-        loading.style.display = "none";
+        loading.classList.add("hidden");
         renderMembers(allMembers);
       } catch (err) {
         console.error("Search page load failed:", err);
