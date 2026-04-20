@@ -211,6 +211,23 @@
     .note { margin-top: 12px; font-size: 12px; }
     .small-note { margin-top: 8px; font-size: 12px; }
 
+    .username-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .username-status {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      min-height: 18px;
+    }
+
+    .username-ok { color: #86efac; }
+    .username-bad { color: #fda4af; }
+
     @media (max-width: 640px) {
       .meta-box, .grid { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; }
@@ -267,6 +284,15 @@
           <div class="field">
             <label for="displayName">Display Name</label>
             <input type="text" id="displayName" placeholder="Your public profile name" required />
+          </div>
+
+          <div class="field">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Choose a unique username" required />
+            <div class="username-note">
+              3–20 characters. Use only letters, numbers, dot and underscore. Example: ranveer_94
+            </div>
+            <div id="usernameStatus" class="username-status"></div>
           </div>
 
           <div class="grid">
@@ -339,6 +365,8 @@
       doc,
       getDoc,
       setDoc,
+      deleteDoc,
+      writeBatch,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -354,6 +382,8 @@
     const verifiedText = document.getElementById("verifiedText");
 
     const displayNameInput = document.getElementById("displayName");
+    const usernameInput = document.getElementById("username");
+    const usernameStatus = document.getElementById("usernameStatus");
     const cityInput = document.getElementById("city");
     const bioInput = document.getElementById("bio");
     const cityVisibleInput = document.getElementById("cityVisible");
@@ -369,10 +399,26 @@
 
     let currentUser = null;
     let verifiedStatus = false;
+    let existingUserData = {};
+    let existingPublicData = {};
+    let originalUsernameLower = "";
 
     function showMessage(text, type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
+    }
+
+    function normalizeUsername(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidUsername(username) {
+      return /^[a-z0-9._]{3,20}$/.test(username);
+    }
+
+    function setUsernameStatus(text = "", ok = false) {
+      usernameStatus.textContent = text;
+      usernameStatus.className = `username-status ${text ? (ok ? "username-ok" : "username-bad") : ""}`;
     }
 
     function showPreview(url) {
@@ -400,7 +446,51 @@
       }
     }
 
+    async function checkUsernameAvailability(rawValue) {
+      const username = normalizeUsername(rawValue);
+
+      if (!username) {
+        setUsernameStatus("");
+        return { ok: false, reason: "empty", username: "" };
+      }
+
+      if (!isValidUsername(username)) {
+        setUsernameStatus("Invalid username format.", false);
+        return { ok: false, reason: "invalid", username };
+      }
+
+      try {
+        const usernameSnap = await getDoc(doc(db, "usernames", username));
+
+        if (!usernameSnap.exists()) {
+          setUsernameStatus("Username available.", true);
+          return { ok: true, reason: "available", username };
+        }
+
+        const ownerUid = usernameSnap.data()?.uid || "";
+        if (ownerUid === auth.currentUser?.uid) {
+          setUsernameStatus("This is your current username.", true);
+          return { ok: true, reason: "own", username };
+        }
+
+        setUsernameStatus("Username already taken.", false);
+        return { ok: false, reason: "taken", username };
+      } catch (err) {
+        console.error("Username check failed:", err);
+        setUsernameStatus("Could not verify username right now.", false);
+        return { ok: false, reason: "error", username };
+      }
+    }
+
     genderInput.addEventListener("change", toggleGenderCustom);
+
+    usernameInput.addEventListener("input", async () => {
+      const normalized = normalizeUsername(usernameInput.value);
+      if (usernameInput.value !== normalized) {
+        usernameInput.value = normalized;
+      }
+      await checkUsernameAvailability(normalized);
+    });
 
     photoPreview.addEventListener("error", () => {
       photoPreview.classList.add("hidden");
@@ -437,75 +527,43 @@
 
       try {
         const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const publicRef = doc(db, "publicProfiles", user.uid);
 
-        if (userSnap.exists()) {
-          const data = userSnap.data();
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(userRef),
+          getDoc(publicRef)
+        ]);
 
-          displayNameInput.value = data.displayName || user.displayName || "";
-          cityInput.value = data.city || "";
-          bioInput.value = data.bio || "";
-          cityVisibleInput.checked = !!data.cityVisible;
-          isPrivateInput.checked = !!data.isPrivate;
-          photoURLInput.value = data.photoURL || "";
-          genderInput.value = data.gender || "";
-          genderCustomInput.value = data.genderCustom || "";
-          genderVisibleInput.checked = !!data.genderVisible;
-          verifiedStatus = !!data.isVerified;
-          verifiedText.textContent = verifiedStatus ? "Yes" : "No";
+        existingUserData = userSnap.exists() ? userSnap.data() : {};
+        existingPublicData = publicSnap.exists() ? publicSnap.data() : {};
 
-          toggleGenderCustom();
-          showPreview(data.photoURL || "");
+        const merged = {
+          ...existingPublicData,
+          ...existingUserData
+        };
+
+        displayNameInput.value = merged.displayName || user.displayName || "";
+        usernameInput.value = normalizeUsername(merged.username || merged.handle || merged.userName || "");
+        cityInput.value = merged.city || "";
+        bioInput.value = merged.bio || "";
+        cityVisibleInput.checked = !!merged.cityVisible;
+        isPrivateInput.checked = !!(merged.isPrivate || merged.privateProfile || merged.private || merged.accountPrivate);
+        photoURLInput.value = merged.photoURL || "";
+        genderInput.value = merged.gender || "";
+        genderCustomInput.value = merged.genderCustom || "";
+        genderVisibleInput.checked = !!merged.genderVisible;
+
+        verifiedStatus = !!(merged.isVerified || merged.verified);
+        verifiedText.textContent = verifiedStatus ? "Yes" : "No";
+
+        originalUsernameLower = normalizeUsername(merged.username || "");
+        toggleGenderCustom();
+        showPreview(merged.photoURL || "");
+
+        if (usernameInput.value) {
+          await checkUsernameAvailability(usernameInput.value);
         } else {
-          displayNameInput.value = user.displayName || "";
-          cityInput.value = "";
-          bioInput.value = "";
-          cityVisibleInput.checked = false;
-          isPrivateInput.checked = false;
-          photoURLInput.value = "";
-          genderInput.value = "";
-          genderCustomInput.value = "";
-          genderVisibleInput.checked = false;
-          verifiedStatus = false;
-          verifiedText.textContent = "No";
-
-          await setDoc(userRef, {
-            uid: user.uid,
-            email: user.email || "",
-            realName: "",
-            displayName: user.displayName || "",
-            city: "",
-            bio: "",
-            cityVisible: false,
-            isPrivate: false,
-            isVerified: false,
-            isAdult: true,
-            photoURL: "",
-            gender: "",
-            genderCustom: "",
-            genderVisible: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-
-          await setDoc(doc(db, "publicProfiles", user.uid), {
-            uid: user.uid,
-            displayName: user.displayName || "",
-            city: "",
-            bio: "",
-            cityVisible: false,
-            isPrivate: false,
-            isVerified: false,
-            photoURL: "",
-            gender: "",
-            genderCustom: "",
-            genderVisible: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-
-          toggleGenderCustom();
-          showPreview("");
+          setUsernameStatus("Username is required.", false);
         }
 
         loading.classList.add("hidden");
@@ -522,6 +580,7 @@
       if (!currentUser) return;
 
       const displayName = displayNameInput.value.trim();
+      const username = normalizeUsername(usernameInput.value);
       const city = cityInput.value.trim();
       const bio = bioInput.value.trim();
       const cityVisible = cityVisibleInput.checked;
@@ -536,6 +595,18 @@
         return;
       }
 
+      if (!username) {
+        showMessage("Username is required.", "error");
+        setUsernameStatus("Username is required.", false);
+        return;
+      }
+
+      if (!isValidUsername(username)) {
+        showMessage("Username must be 3-20 characters and only use letters, numbers, dot or underscore.", "error");
+        setUsernameStatus("Invalid username format.", false);
+        return;
+      }
+
       if (gender === "self_describe" && !genderCustom) {
         showMessage("Please describe your gender.", "error");
         return;
@@ -545,18 +616,49 @@
       saveBtn.textContent = "Saving...";
 
       try {
+        const usernameRef = doc(db, "usernames", username);
+        const usernameSnap = await getDoc(usernameRef);
+
+        if (usernameSnap.exists()) {
+          const reservedUid = usernameSnap.data()?.uid || "";
+          if (reservedUid !== currentUser.uid) {
+            showMessage("Username already taken.", "error");
+            setUsernameStatus("Username already taken.", false);
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Save Profile";
+            return;
+          }
+        }
+
+        const batch = writeBatch(db);
+
+        if (originalUsernameLower && originalUsernameLower !== username) {
+          batch.delete(doc(db, "usernames", originalUsernameLower));
+        }
+
+        batch.set(doc(db, "usernames", username), {
+          uid: currentUser.uid,
+          username,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
         const userRef = doc(db, "users", currentUser.uid);
         const publicProfileRef = doc(db, "publicProfiles", currentUser.uid);
 
-        await setDoc(userRef, {
+        batch.set(userRef, {
           uid: currentUser.uid,
           email: currentUser.email || "",
           displayName,
+          displayNameLower: displayName.toLowerCase(),
+          username,
+          usernameLower: username,
           city,
           bio,
           cityVisible,
           isPrivate,
+          privateProfile: isPrivate,
           isVerified: verifiedStatus,
+          verified: verifiedStatus,
           photoURL,
           gender,
           genderCustom,
@@ -564,14 +666,19 @@
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await setDoc(publicProfileRef, {
+        batch.set(publicProfileRef, {
           uid: currentUser.uid,
           displayName,
+          displayNameLower: displayName.toLowerCase(),
+          username,
+          usernameLower: username,
           city,
           bio,
           cityVisible,
           isPrivate,
+          privateProfile: isPrivate,
           isVerified: verifiedStatus,
+          verified: verifiedStatus,
           photoURL,
           gender,
           genderCustom,
@@ -579,9 +686,16 @@
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await updateProfile(currentUser, { displayName });
+        await batch.commit();
 
+        await updateProfile(currentUser, {
+          displayName,
+          photoURL
+        });
+
+        originalUsernameLower = username;
         showPreview(photoURL);
+        setUsernameStatus("Username saved.", true);
         showMessage("Profile updated successfully.", "success");
       } catch (error) {
         console.error(error);
