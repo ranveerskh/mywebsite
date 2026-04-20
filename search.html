@@ -90,6 +90,8 @@
     .badge-verified{background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20)}
     .badge-warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
 
+    .hidden{display:none!important}
+
     .bottom-nav{
       position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
       background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
@@ -189,6 +191,24 @@
 
     let allMembers = [];
 
+    function showLoading() {
+      loading.classList.remove("hidden");
+      empty.classList.add("hidden");
+      results.classList.add("hidden");
+    }
+
+    function showEmpty() {
+      loading.classList.add("hidden");
+      empty.classList.remove("hidden");
+      results.classList.add("hidden");
+    }
+
+    function showResults() {
+      loading.classList.add("hidden");
+      empty.classList.add("hidden");
+      results.classList.remove("hidden");
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text || "";
@@ -248,13 +268,11 @@
       results.innerHTML = "";
 
       if (!list.length) {
-        results.classList.add("hidden");
-        empty.classList.remove("hidden");
+        showEmpty();
         return;
       }
 
-      empty.classList.add("hidden");
-      results.classList.remove("hidden");
+      showResults();
 
       list.forEach(member => {
         const card = document.createElement("div");
@@ -326,12 +344,15 @@
       }
 
       try {
+        showLoading();
         await loadMembers();
-        loading.classList.add("hidden");
         renderMembers(allMembers);
       } catch (err) {
         console.error("Search page load failed:", err);
+        loading.classList.remove("hidden");
         loading.textContent = "Could not load members.";
+        empty.classList.add("hidden");
+        results.classList.add("hidden");
       }
     });
   </script>
