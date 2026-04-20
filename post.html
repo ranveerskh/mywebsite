@@ -10,6 +10,7 @@
       --bg:#0b1020;
       --card:#121931;
       --soft:#161f3d;
+      --soft2:#0f1630;
       --line:rgba(255,255,255,.08);
       --text:#fff;
       --muted:#9aa7c7;
@@ -138,6 +139,10 @@
       font-size:18px;
       font-weight:800;
       line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
     }
     .post-name a{
       color:#fff;
@@ -145,6 +150,19 @@
     }
     .post-name a:hover{
       text-decoration:underline;
+    }
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:20px;
+      height:20px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:11px;
+      font-weight:900;
     }
     .post-username{
       color:#8fdfff;
@@ -282,7 +300,7 @@
       outline:none;
       padding:14px 15px;
       border-radius:16px;
-      background:#0f1630;
+      background:var(--soft2);
       color:#fff;
       border:1px solid rgba(255,255,255,.07);
       font-size:15px;
@@ -296,7 +314,7 @@
       gap:10px;
     }
     .comment-item{
-      background:#0f1630;
+      background:var(--soft2);
       border:1px solid rgba(255,255,255,.06);
       border-radius:16px;
       padding:12px;
@@ -346,7 +364,7 @@
     .lock-box{
       text-align:center;
       padding:26px 14px;
-      background:#0f1630;
+      background:var(--soft2);
       border-radius:18px;
       border:1px dashed rgba(255,255,255,.08);
     }
@@ -365,7 +383,7 @@
       text-align:center;
       padding:28px 10px;
       color:var(--muted);
-      background:#0f1630;
+      background:var(--soft2);
       border-radius:18px;
       border:1px dashed rgba(255,255,255,.08);
     }
@@ -438,6 +456,7 @@
           <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path>
           <path d="M10 20a2 2 0 0 0 4 0"></path>
         </svg>
+        <span id="notifyCount" class="notify-count hidden">0</span>
       </a>
     </div>
 
@@ -453,6 +472,7 @@
             <div class="post-top-text">
               <div class="post-name">
                 <a id="ownerLink" href="#">Member</a>
+                <span id="verifiedDot" class="verified-dot hidden">✓</span>
               </div>
               <div id="ownerUsername" class="post-username hidden">@username</div>
               <div id="postDate" class="post-date">Just now</div>
@@ -466,7 +486,7 @@
         </div>
 
         <div id="metaRow" class="meta-row"></div>
-        <div id="postCaption" class="post-caption"></div>
+        <div id="postCaption" class="post-caption hidden"></div>
         <img id="postImage" class="post-image hidden" alt="Post image" />
 
         <div class="actions">
@@ -537,7 +557,8 @@
       deleteDoc,
       serverTimestamp,
       where,
-      limit
+      limit,
+      onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const backBtn = document.getElementById("backBtn");
@@ -550,6 +571,7 @@
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const ownerLink = document.getElementById("ownerLink");
     const ownerUsername = document.getElementById("ownerUsername");
+    const verifiedDot = document.getElementById("verifiedDot");
     const postDate = document.getElementById("postDate");
     const metaRow = document.getElementById("metaRow");
     const postCaption = document.getElementById("postCaption");
@@ -560,6 +582,7 @@
     const reportPostBtn = document.getElementById("reportPostBtn");
     const lockedTitle = document.getElementById("lockedTitle");
     const lockedText = document.getElementById("lockedText");
+    const notifyCount = document.getElementById("notifyCount");
 
     const commentForm = document.getElementById("commentForm");
     const commentInput = document.getElementById("commentInput");
@@ -571,6 +594,7 @@
     let currentUserProfile = null;
     let currentPostId = null;
     let currentPostData = null;
+    let currentOwnerUid = "";
     let canViewFull = false;
 
     backBtn.addEventListener("click", () => {
@@ -609,6 +633,53 @@
       catch { return "Just now"; }
     }
 
+    function formatBadgeCount(count) {
+      return count > 99 ? "99+" : String(count);
+    }
+
+    function renderNotificationBadge(unreadCount) {
+      if (!unreadCount) {
+        notifyCount.classList.add("hidden");
+        return;
+      }
+      notifyCount.textContent = formatBadgeCount(unreadCount);
+      notifyCount.classList.remove("hidden");
+    }
+
+    function getPostIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("postId") || params.get("id") || "";
+    }
+
+    function getPostOwnerId(post) {
+      return (
+        post?.userId ||
+        post?.authorId ||
+        post?.ownerId ||
+        post?.uid ||
+        ""
+      );
+    }
+
+    function getPostImage(post) {
+      return (
+        post?.imageURL ||
+        post?.imageUrl ||
+        post?.photoURL ||
+        post?.mediaUrl ||
+        ""
+      );
+    }
+
+    function getPostCaption(post) {
+      return (
+        post?.caption ||
+        post?.text ||
+        post?.content ||
+        ""
+      );
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
@@ -620,7 +691,8 @@
         moderationStatus: d.moderationStatus || d.status || "",
         isHiddenByAdmin: !!d.isHiddenByAdmin,
         softDeleted: !!d.softDeleted,
-        verified: !!d.verified
+        verified: !!(d.verified || d.isVerified),
+        bio: d.bio || ""
       };
     }
 
@@ -673,6 +745,18 @@
       }
     }
 
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
+
     async function refreshLikeUI() {
       if (!currentPostId || !currentUser) return;
 
@@ -700,7 +784,6 @@
       );
 
       const commentsSnap = await getDocs(commentsQuery);
-
       commentAnchorBtn.textContent = `Comments (${commentsSnap.size})`;
 
       if (commentsSnap.empty) {
@@ -777,6 +860,14 @@
       }
     }
 
+    async function createNotificationSafe(toUserId, payload) {
+      try {
+        await addDoc(collection(db, "notifications", toUserId, "items"), payload);
+      } catch (err) {
+        console.warn("Notification failed:", err);
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -784,12 +875,20 @@
       }
 
       currentUser = user;
-      currentPostId = new URLSearchParams(window.location.search).get("postId");
+      currentPostId = getPostIdFromUrl();
 
       if (!currentPostId) {
         loading.textContent = "No post selected.";
         return;
       }
+
+      onSnapshot(collection(db, "notifications", user.uid, "items"), (snapshot) => {
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const unreadCount = items.filter(item => item.isRead !== true).length;
+        renderNotificationBadge(unreadCount);
+      }, () => {
+        renderNotificationBadge(0);
+      });
 
       try {
         const [myProfile, postSnap] = await Promise.all([
@@ -805,6 +904,12 @@
         }
 
         currentPostData = { id: postSnap.id, ...postSnap.data() };
+        currentOwnerUid = getPostOwnerId(currentPostData);
+
+        if (!currentOwnerUid) {
+          loading.textContent = "Post owner missing.";
+          return;
+        }
 
         if (currentPostData.hidden || currentPostData.hiddenByAdmin || currentPostData.softDeleted) {
           loading.classList.add("hidden");
@@ -814,12 +919,11 @@
           return;
         }
 
-        const ownerUid = currentPostData.userId;
-        const ownerProfile = await getMergedProfile(ownerUid);
+        const ownerProfile = await getMergedProfile(currentOwnerUid);
         const isRemoved = ownerProfile?.moderationStatus === "banned" || ownerProfile?.isHiddenByAdmin || ownerProfile?.softDeleted;
-        const alreadyFollowing = await checkFollowing(user.uid, ownerUid);
+        const alreadyFollowing = await checkFollowing(user.uid, currentOwnerUid);
 
-        canViewFull = !isRemoved && (user.uid === ownerUid || !ownerProfile?.isPrivate || alreadyFollowing);
+        canViewFull = !isRemoved && (user.uid === currentOwnerUid || !ownerProfile?.isPrivate || alreadyFollowing);
 
         if (!canViewFull) {
           loading.classList.add("hidden");
@@ -840,7 +944,7 @@
 
         showAvatar(ownerProfile?.photoURL || currentPostData.userPhotoURL || "");
         ownerLink.textContent = ownerProfile?.displayName || currentPostData.displayName || "Member";
-        ownerLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
+        ownerLink.href = `member.html?uid=${encodeURIComponent(currentOwnerUid)}`;
 
         if (ownerProfile?.username || currentPostData.username) {
           ownerUsername.textContent = "@" + (ownerProfile?.username || currentPostData.username);
@@ -849,22 +953,36 @@
           ownerUsername.classList.add("hidden");
         }
 
+        if (ownerProfile?.verified) {
+          verifiedDot.classList.remove("hidden");
+        } else {
+          verifiedDot.classList.add("hidden");
+        }
+
         postDate.textContent = formatDate(currentPostData.createdAt);
         renderMeta(ownerProfile, isRemoved);
 
-        postCaption.textContent = currentPostData.caption || "";
-        if (currentPostData.imageURL) {
-          postImage.src = currentPostData.imageURL;
+        const caption = getPostCaption(currentPostData);
+        if (caption) {
+          postCaption.textContent = caption;
+          postCaption.classList.remove("hidden");
+        } else {
+          postCaption.classList.add("hidden");
+        }
+
+        const imageUrl = getPostImage(currentPostData);
+        if (imageUrl) {
+          postImage.src = imageUrl;
           postImage.classList.remove("hidden");
         } else {
           postImage.classList.add("hidden");
         }
 
-        if (currentUser.uid === ownerUid) {
+        if (currentUser.uid === currentOwnerUid) {
           deleteBtn.classList.remove("hidden");
         } else {
           reportPostBtn.classList.remove("hidden");
-          reportPostBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
+          reportPostBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(currentOwnerUid)}`;
         }
 
         await refreshLikeUI();
@@ -876,18 +994,6 @@
         loading.textContent = "Could not load post.";
       }
     });
-
-    function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
-      if (!cleanUrl) {
-        avatar.classList.add("hidden");
-        avatarPlaceholder.classList.remove("hidden");
-        return;
-      }
-      avatar.src = cleanUrl;
-      avatar.classList.remove("hidden");
-      avatarPlaceholder.classList.add("hidden");
-    }
 
     likeBtn.addEventListener("click", async () => {
       if (!currentUser || !currentPostId || !currentPostData) return;
@@ -905,18 +1011,18 @@
             createdAt: serverTimestamp()
           });
 
-          if (currentPostData.userId !== currentUser.uid) {
+          if (currentOwnerUid && currentOwnerUid !== currentUser.uid) {
             const actorName =
               currentUserProfile?.displayName ||
               currentUser.displayName ||
               "Someone";
 
-            await addDoc(collection(db, "notifications", currentPostData.userId, "items"), {
+            await createNotificationSafe(currentOwnerUid, {
               type: "like",
               title: "New like",
               text: `${actorName} liked your post.`,
               fromUserId: currentUser.uid,
-              toUserId: currentPostData.userId,
+              toUserId: currentOwnerUid,
               postId: currentPostId,
               createdAt: serverTimestamp(),
               isRead: false
@@ -962,13 +1068,13 @@
           createdAt: serverTimestamp()
         });
 
-        if (currentPostData.userId !== currentUser.uid) {
-          await addDoc(collection(db, "notifications", currentPostData.userId, "items"), {
+        if (currentOwnerUid && currentOwnerUid !== currentUser.uid) {
+          await createNotificationSafe(currentOwnerUid, {
             type: "comment",
             title: "New comment",
             text: `${displayName} commented on your post.`,
             fromUserId: currentUser.uid,
-            toUserId: currentPostData.userId,
+            toUserId: currentOwnerUid,
             postId: currentPostId,
             createdAt: serverTimestamp(),
             isRead: false
