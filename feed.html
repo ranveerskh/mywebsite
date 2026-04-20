@@ -24,8 +24,12 @@
       display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:10px;
     }
     .top-center{text-align:center;min-width:0;}
-    .brand{font-size:22px;font-weight:800;letter-spacing:.2px;line-height:1.1;}
-    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .brand{
+      font-size:22px;font-weight:800;letter-spacing:.2px;line-height:1.1;
+    }
+    .brand-sub{
+      font-size:12px;color:var(--muted);margin-top:2px;
+    }
     .top-icon-btn{
       width:48px;height:48px;border:none;background:var(--card-soft);color:#fff;border-radius:14px;
       cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
@@ -432,7 +436,8 @@
         moderationStatus: d.moderationStatus || d.status || "",
         isHiddenByAdmin: !!d.isHiddenByAdmin,
         softDeleted: !!d.softDeleted,
-        bio: d.bio || ""
+        bio: d.bio || "",
+        suspensionUntil: d.suspensionUntil || d.suspendUntil || null
       };
     }
 
@@ -647,15 +652,19 @@
             createdAt: serverTimestamp()
           });
 
-          await addDoc(collection(db, "notifications", authorId, "items"), {
-            type: "follow_request",
-            title: "Follow request",
-            text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
-            fromUserId: currentUser.uid,
-            toUserId: authorId,
-            createdAt: serverTimestamp(),
-            isRead: false
-          });
+          try {
+            await addDoc(collection(db, "notifications", authorId, "items"), {
+              type: "follow_request",
+              title: "Follow request",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
+              fromUserId: currentUser.uid,
+              toUserId: authorId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+          } catch (notifyErr) {
+            console.error("Follow request notification failed:", notifyErr);
+          }
         } else {
           await setDoc(doc(db, "follows", `${currentUser.uid}__${authorId}`), {
             followerId: currentUser.uid,
@@ -663,15 +672,19 @@
             createdAt: serverTimestamp()
           });
 
-          await addDoc(collection(db, "notifications", authorId, "items"), {
-            type: "follow",
-            title: "New follower",
-            text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
-            fromUserId: currentUser.uid,
-            toUserId: authorId,
-            createdAt: serverTimestamp(),
-            isRead: false
-          });
+          try {
+            await addDoc(collection(db, "notifications", authorId, "items"), {
+              type: "follow",
+              title: "New follower",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
+              fromUserId: currentUser.uid,
+              toUserId: authorId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+          } catch (notifyErr) {
+            console.error("Follow notification failed:", notifyErr);
+          }
         }
       } catch (error) {
         console.error("Relation action failed:", error);
@@ -720,16 +733,20 @@
                   currentUser.displayName ||
                   "Someone";
 
-                await addDoc(collection(db, "notifications", ownerId, "items"), {
-                  type: "like",
-                  title: "New like",
-                  text: `${actorName} liked your post.`,
-                  fromUserId: currentUser.uid,
-                  toUserId: ownerId,
-                  postId,
-                  createdAt: serverTimestamp(),
-                  isRead: false
-                });
+                try {
+                  await addDoc(collection(db, "notifications", ownerId, "items"), {
+                    type: "like",
+                    title: "New like",
+                    text: `${actorName} liked your post.`,
+                    fromUserId: currentUser.uid,
+                    toUserId: ownerId,
+                    postId,
+                    createdAt: serverTimestamp(),
+                    isRead: false
+                  });
+                } catch (notifyErr) {
+                  console.error("Like notification failed:", notifyErr);
+                }
               }
             }
             await refreshLikeUI(postId);
@@ -763,6 +780,7 @@
             currentUser.displayName ||
             "Member";
 
+          const username = currentUserProfile?.username || "";
           const userPhotoURL = currentUserProfile?.photoURL || "";
           const submitBtn = commentForm.querySelector("button");
           submitBtn.disabled = true;
@@ -771,30 +789,35 @@
             await addDoc(collection(db, "posts", postId, "comments"), {
               userId: currentUser.uid,
               displayName,
-              username: currentUserProfile?.username || "",
+              username,
               userPhotoURL,
               text,
               createdAt: serverTimestamp()
             });
 
+            commentInput.value = "";
+
             if (ownerId && ownerId !== currentUser.uid) {
-              await addDoc(collection(db, "notifications", ownerId, "items"), {
-                type: "comment",
-                title: "New comment",
-                text: `${displayName} commented on your post.`,
-                fromUserId: currentUser.uid,
-                toUserId: ownerId,
-                postId,
-                createdAt: serverTimestamp(),
-                isRead: false
-              });
+              try {
+                await addDoc(collection(db, "notifications", ownerId, "items"), {
+                  type: "comment",
+                  title: "New comment",
+                  text: `${displayName} commented on your post.`,
+                  fromUserId: currentUser.uid,
+                  toUserId: ownerId,
+                  postId,
+                  createdAt: serverTimestamp(),
+                  isRead: false
+                });
+              } catch (notifyErr) {
+                console.error("Comment notification failed:", notifyErr);
+              }
             }
 
-            commentInput.value = "";
             await refreshCommentsUI(postId);
           } catch (error) {
             console.error(error);
-            alert("Could not add comment.");
+            alert(error?.message || "Could not add comment.");
           }
 
           submitBtn.disabled = false;
@@ -1058,10 +1081,7 @@
         }
 
         const status = currentUserProfile?.moderationStatus || "";
-        const suspendUntilValue =
-          currentUserProfile?.suspendUntil ||
-          currentUserProfile?.suspensionUntil ||
-          null;
+        const suspendUntilValue = currentUserProfile?.suspensionUntil || null;
 
         const suspensionUntil = suspendUntilValue?.toDate
           ? suspendUntilValue.toDate().getTime()
