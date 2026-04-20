@@ -328,7 +328,6 @@
       getDoc,
       collection,
       getDocs,
-      setDoc,
       deleteDoc,
       addDoc,
       serverTimestamp,
@@ -578,37 +577,23 @@
       let requestDocId = null;
 
       try {
-        const directFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
-        if (directFollow.exists()) followDocId = directFollow.id;
-      } catch {}
-
-      if (!followDocId) {
-        try {
-          const followSnap = await getDocs(
-            query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(50))
-          );
-          const found = followSnap.docs.find(d => d.data().followingId === memberUid);
-          if (found) followDocId = found.id;
-        } catch (err) {
-          console.warn("Follow lookup failed:", err);
-        }
+        const followSnap = await getDocs(
+          query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(100))
+        );
+        const found = followSnap.docs.find(d => d.data().followingId === memberUid);
+        if (found) followDocId = found.id;
+      } catch (err) {
+        console.warn("Follow lookup failed:", err);
       }
 
       try {
-        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-        if (directReq.exists()) requestDocId = directReq.id;
-      } catch {}
-
-      if (!requestDocId) {
-        try {
-          const reqSnap = await getDocs(
-            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(50))
-          );
-          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
-          if (found) requestDocId = found.id;
-        } catch (err) {
-          console.warn("Follow request lookup failed:", err);
-        }
+        const reqSnap = await getDocs(
+          query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
+        );
+        const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+        if (found) requestDocId = found.id;
+      } catch (err) {
+        console.warn("Follow request lookup failed:", err);
       }
 
       let relationship = "none";
@@ -730,7 +715,7 @@
       try {
         await addDoc(collection(db, "notifications", memberUid, "items"), payload);
       } catch (err) {
-        console.warn("Notification create failed, but main action may have worked:", err);
+        console.warn("Notification create failed:", err);
       }
     }
 
@@ -772,13 +757,11 @@
           try {
             if (relationshipInfo.followDocId) {
               await deleteDoc(doc(db, "follows", relationshipInfo.followDocId));
-            } else {
-              await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
             }
             window.location.reload();
           } catch (err) {
             console.error("Unfollow failed:", err);
-            setActionMessage("Could not unfollow.", "err");
+            setActionMessage(err?.message || "Could not unfollow.", "err");
             btn.disabled = false;
           }
         });
@@ -797,13 +780,11 @@
           try {
             if (relationshipInfo.requestDocId) {
               await deleteDoc(doc(db, "follow_requests", relationshipInfo.requestDocId));
-            } else {
-              await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
             }
             window.location.reload();
           } catch (err) {
             console.error("Cancel request failed:", err);
-            setActionMessage("Could not cancel request.", "err");
+            setActionMessage(err?.message || "Could not cancel request.", "err");
             btn.disabled = false;
           }
         });
@@ -815,12 +796,27 @@
         const btn = document.createElement("button");
         btn.className = "request-btn";
         btn.textContent = "Request Follow";
+
         btn.addEventListener("click", async () => {
           btn.disabled = true;
           setActionMessage("");
 
           try {
-            await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
+            const existingReqSnap = await getDocs(
+              query(
+                collection(db, "follow_requests"),
+                where("requesterId", "==", viewerUid),
+                where("targetId", "==", memberUid),
+                limit(1)
+              )
+            );
+
+            if (!existingReqSnap.empty) {
+              window.location.reload();
+              return;
+            }
+
+            await addDoc(collection(db, "follow_requests"), {
               requesterId: viewerUid,
               targetId: memberUid,
               createdAt: serverTimestamp()
@@ -839,10 +835,11 @@
             window.location.reload();
           } catch (err) {
             console.error("Request follow failed:", err);
-            setActionMessage("Could not send follow request.", "err");
+            setActionMessage(err?.message || "Could not send follow request.", "err");
             btn.disabled = false;
           }
         });
+
         followArea.appendChild(btn);
         return;
       }
@@ -850,12 +847,27 @@
       const btn = document.createElement("button");
       btn.className = "follow-btn";
       btn.textContent = "Follow";
+
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         setActionMessage("");
 
         try {
-          await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
+          const existingFollowSnap = await getDocs(
+            query(
+              collection(db, "follows"),
+              where("followerId", "==", viewerUid),
+              where("followingId", "==", memberUid),
+              limit(1)
+            )
+          );
+
+          if (!existingFollowSnap.empty) {
+            window.location.reload();
+            return;
+          }
+
+          await addDoc(collection(db, "follows"), {
             followerId: viewerUid,
             followingId: memberUid,
             createdAt: serverTimestamp()
@@ -874,10 +886,11 @@
           window.location.reload();
         } catch (err) {
           console.error("Follow failed:", err);
-          setActionMessage("Could not follow this member.", "err");
+          setActionMessage(err?.message || "Could not follow this member.", "err");
           btn.disabled = false;
         }
       });
+
       followArea.appendChild(btn);
     }
 
