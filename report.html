@@ -1,1294 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Admin Reports</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Report</title>
   <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;
-      --panel:#111831;
-      --card:#151f3d;
-      --card2:#0f1730;
-      --border:#25345f;
-      --text:#edf2ff;
-      --muted:#9fb0e3;
-      --accent:#7c9dff;
-      --accent2:#9a78ff;
-      --ok:#2fd4a8;
-      --warn:#ffbe3d;
-      --danger:#ff6484;
-      --danger2:#ff3d67;
-      --chip:#1a2447;
-      --shadow:0 12px 40px rgba(0,0,0,.35);
-      --radius:18px;
-      --tap:44px;
-      --max:1200px;
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;
     }
-
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0a1020,#08101d 45%,#0b1122);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    a{color:inherit;text-decoration:none}
-    button,input,textarea,select{font:inherit}
-
-    .wrap{
-      width:min(100%,var(--max));
-      margin:0 auto;
-      padding:18px 14px 80px;
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);min-height:100vh;padding:14px 14px 92px;
     }
-
+    .app{max-width:760px;margin:0 auto}
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:40;
-      backdrop-filter: blur(12px);
-      background:rgba(9,15,30,.72);
-      border-bottom:1px solid rgba(255,255,255,.06);
+      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+      background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;padding:12px 14px;margin-bottom:14px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
     }
-
-    .topbar-inner{
-      width:min(100%,var(--max));
-      margin:0 auto;
-      padding:14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+    .left-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+    .back-btn,.chip-btn{
+      border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;
+      font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line);text-decoration:none;display:inline-block;
     }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .brand-badge{
-      width:42px;height:42px;border-radius:14px;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:grid;place-items:center;
-      font-weight:800;color:#fff;box-shadow:var(--shadow);
-    }
-
-    .brand h1{
-      margin:0;
-      font-size:20px;
-      line-height:1.1;
-    }
-
-    .brand p{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:12px;
-    }
-
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      min-height:var(--tap);
-      border:1px solid var(--border);
-      background:linear-gradient(180deg,#172245,#121c39);
-      color:var(--text);
-      border-radius:14px;
-      padding:10px 14px;
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    .btn:hover{transform:translateY(-1px)}
-    .btn.primary{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border:none;
-      color:#fff;
-      font-weight:700;
-    }
-    .btn.warn{background:linear-gradient(180deg,#4a3510,#2d210c);border-color:#6a4b12}
-    .btn.danger{background:linear-gradient(180deg,#491221,#2a0d15);border-color:#6a1a2f}
-    .btn.ok{background:linear-gradient(180deg,#0f3b33,#0c2923);border-color:#1f5b4e}
-
-    .hero{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:14px;
-      margin:18px 0 16px;
-    }
-
+    .brand{font-size:22px;font-weight:800}
+    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
     .panel{
-      background:linear-gradient(180deg,var(--panel),var(--card2));
-      border:1px solid var(--border);
-      border-radius:22px;
-      box-shadow:var(--shadow);
+      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;
+      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
     }
-
-    .hero-main{
-      padding:18px;
-    }
-
-    .hero-main h2{
-      margin:0 0 8px;
-      font-size:24px;
-      line-height:1.1;
-    }
-
-    .hero-main p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.55;
-    }
-
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
-      margin-top:16px;
-    }
-
-    .stat{
-      background:linear-gradient(180deg,#182447,#121b36);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .stat .k{
-      font-size:24px;
-      font-weight:800;
-      margin-top:8px;
-    }
-
-    .stat .l{
-      color:var(--muted);
-      font-size:12px;
-    }
-
-    .hero-side{
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .quick-note{
-      background:linear-gradient(180deg,#161f3f,#101935);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .quick-note h3{
-      margin:0 0 8px;
-      font-size:15px;
-    }
-
-    .quick-note p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.5;
-      font-size:13px;
-    }
-
-    .toolbar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      margin:10px 0 18px;
-    }
-
-    .filters{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .chip{
-      min-height:42px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:var(--chip);
-      color:var(--text);
-      padding:10px 14px;
-      cursor:pointer;
-    }
-    .chip.active{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border-color:transparent;
-      font-weight:700;
-    }
-
-    .search-box{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      width:min(100%,420px);
-    }
-
-    .search-box input{
-      width:100%;
-      min-height:44px;
-      background:#0d1430;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:0 14px;
-      color:var(--text);
-      outline:none;
-    }
-
-    .reports{
-      display:grid;
-      gap:14px;
-    }
-
-    .report-card{
-      background:linear-gradient(180deg,var(--card),#111a34);
-      border:1px solid var(--border);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .report-head{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      padding:16px 16px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-
-    .report-head-left{
-      display:flex;
-      gap:10px;
-      flex-direction:column;
-    }
-
-    .report-id{
-      color:var(--muted);
-      font-size:12px;
-      word-break:break-word;
-    }
-
-    .row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-      border:1px solid transparent;
-    }
-    .b-pending{background:#372a0c;border-color:#5f4812;color:#ffd87f}
-    .b-action{background:#112f2a;border-color:#1f6657;color:#8cffdc}
-    .b-dismissed{background:#2c2e35;border-color:#4c5360;color:#cbd3e3}
-    .b-post{background:#15274b;border-color:#26437e;color:#aecdff}
-    .b-profile{background:#2a1949;border-color:#50338d;color:#ceb4ff}
-    .b-warn{background:#3d2c10;border-color:#6f5317;color:#ffd168}
-    .b-suspend{background:#4a1322;border-color:#7f243d;color:#ff9ab2}
-    .b-ban{background:#4b0e1b;border-color:#8e1e36;color:#ff8ea3}
-    .b-hidden{background:#361822;border-color:#6d2a42;color:#ff9fc3}
-
-    .report-body{
-      display:grid;
-      grid-template-columns:1fr 350px;
-      gap:14px;
-      padding:16px;
-    }
-
-    .content-box{
-      background:linear-gradient(180deg,#111938,#0d1530);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-    }
-
-    .meta-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:12px;
-    }
-
-    .meta{
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:14px;
-      padding:12px;
-    }
-
-    .meta .label{
-      color:var(--muted);
-      font-size:12px;
-      margin-bottom:6px;
-    }
-
-    .meta .value{
-      font-weight:700;
-      line-height:1.45;
-      word-break:break-word;
-    }
-
-    .preview{
-      display:grid;
-      gap:10px;
-    }
-
+    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
+    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:6px}
+    .loading{text-align:center;color:var(--muted);padding:28px 10px}
+    .hidden{display:none!important}
     .preview-card{
-      display:flex;
-      gap:12px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;
-      padding:12px;
-      align-items:flex-start;
+      display:flex;gap:12px;align-items:flex-start;background:#0f1630;border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:14px;
     }
-
-    .preview-thumb{
-      width:76px;height:76px;flex:0 0 76px;
-      border-radius:14px;
-      overflow:hidden;
-      background:#0d1430;
-      border:1px solid var(--border);
-      display:grid;place-items:center;
-      color:var(--muted);
-      font-size:12px;
-      text-align:center;
-      padding:6px;
+    .preview-thumb,.preview-thumb-empty{
+      width:82px;height:82px;border-radius:16px;flex-shrink:0;border:1px solid rgba(255,255,255,.08);background:#1b2445;
     }
-
-    .preview-thumb img{
-      width:100%;height:100%;object-fit:cover;display:block;
+    .preview-thumb{object-fit:cover}
+    .preview-thumb-empty{
+      display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;color:var(--muted);font-size:11px;line-height:1.3;
     }
-
-    .preview-main h4{
-      margin:0 0 5px;
-      font-size:14px;
+    .preview-body{min-width:0;flex:1}
+    .preview-title{font-size:17px;font-weight:800;line-height:1.35;margin-bottom:4px}
+    .preview-sub{font-size:13px;color:#8fdfff;font-weight:700;margin-bottom:8px}
+    .preview-text{font-size:14px;color:#d7def5;line-height:1.6;word-break:break-word;white-space:pre-wrap}
+    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
     }
-
-    .preview-main p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.5;
-      font-size:13px;
-      word-break:break-word;
+    .badge-post{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .badge-profile{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+    .badge-warning{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .field{margin-bottom:14px}
+    label{display:block;font-size:13px;font-weight:700;margin-bottom:8px;color:#dfe7ff}
+    select,textarea{
+      width:100%;border:none;outline:none;border-radius:16px;background:#0f1630;color:#fff;
+      border:1px solid rgba(255,255,255,.07);padding:14px;font-size:14px;
     }
-
-    .side-panel{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+    textarea{min-height:130px;resize:vertical}
+    select option{color:#000}
+    .helper{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .submit-btn,.cancel-btn{
+      border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800;cursor:pointer;
     }
-
-    textarea.note{
-      width:100%;
-      min-height:110px;
-      resize:vertical;
-      background:#0d1430;
-      color:var(--text);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:12px;
-      outline:none;
+    .submit-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.22)}
+    .cancel-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
+    .message{min-height:20px;font-size:14px;margin-top:10px}
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+    .empty-box{
+      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
+      border:1px dashed rgba(255,255,255,.08);
     }
-
-    .action-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
+    .bottom-nav{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
+      background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
+      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
+      box-shadow:0 20px 40px rgba(0,0,0,.25);
     }
-
-    .muted{
-      color:var(--muted);
+    .nav-link{
+      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
     }
-
-    .empty{
-      text-align:center;
-      padding:40px 16px;
-      color:var(--muted);
-      border:1px dashed var(--border);
-      border-radius:20px;
-      background:rgba(255,255,255,.02);
-    }
-
-    .loader{
-      padding:20px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:20px;
-      transform:translateX(-50%);
-      background:#0f1730;
-      color:#fff;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 16px;
-      z-index:100;
-      box-shadow:var(--shadow);
-      display:none;
-      max-width:min(92vw,540px);
-    }
-
-    .small{
-      font-size:12px;
-    }
-
-    @media (max-width: 980px){
-      .hero{grid-template-columns:1fr}
-      .report-body{grid-template-columns:1fr}
-      .stats{grid-template-columns:repeat(2,1fr)}
-    }
-
-    @media (max-width: 640px){
-      .topbar-inner{align-items:flex-start;flex-direction:column}
-      .report-head{flex-direction:column}
-      .meta-grid{grid-template-columns:1fr}
-      .action-grid{grid-template-columns:1fr}
-      .stats{grid-template-columns:1fr 1fr}
-      .search-box{width:100%}
-    }
+    .nav-link .icon{font-size:18px;line-height:1}
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="brand-badge">R</div>
+  <div class="app">
+    <div class="topbar">
+      <div class="left-wrap">
+        <button id="backBtn" class="back-btn" type="button">Back</button>
         <div>
-          <h1>Reports Moderation</h1>
-          <p>Admin review • warnings • suspensions • bans • history</p>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Report content</div>
         </div>
       </div>
 
       <div class="top-actions">
-        <button class="btn" id="refreshBtn">Refresh</button>
-        <button class="btn primary" id="openActionsBtn">Open Actions Collection Guide</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="wrap">
-    <section class="hero">
-      <div class="panel hero-main">
-        <h2>Content safety control center</h2>
-        <p>
-          Non-sexual nudity may be allowed. Sexual nudity, pornography, and explicit sexual content are not allowed.
-          Review reports, apply action, and keep full moderation history.
-        </p>
-
-        <div class="stats">
-          <div class="stat">
-            <div class="l">All Reports</div>
-            <div class="k" id="statAll">0</div>
-          </div>
-          <div class="stat">
-            <div class="l">Pending</div>
-            <div class="k" id="statPending">0</div>
-          </div>
-          <div class="stat">
-            <div class="l">Action Taken</div>
-            <div class="k" id="statAction">0</div>
-          </div>
-          <div class="stat">
-            <div class="l">Dismissed</div>
-            <div class="k" id="statDismissed">0</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel hero-side">
-        <div class="quick-note">
-          <h3>Allowed</h3>
-          <p>Artistic, educational, medical, cultural, or non-sexual nudity where sexual intent is absent.</p>
-        </div>
-        <div class="quick-note">
-          <h3>Not allowed</h3>
-          <p>Sexual nudity, porn, explicit sexual acts, fetish-focused content, or clearly sexualized explicit exposure.</p>
-        </div>
-        <div class="quick-note">
-          <h3>Default action path</h3>
-          <p>Minor issue → Warn. Repeat / serious issue → Suspend 30 days. Extreme violation → Ban + hide content.</p>
-        </div>
-      </div>
-    </section>
-
-    <div class="toolbar">
-      <div class="filters" id="filters">
-        <button class="chip active" data-filter="all">All</button>
-        <button class="chip" data-filter="pending">Pending</button>
-        <button class="chip" data-filter="post">Posts</button>
-        <button class="chip" data-filter="profile">Profiles</button>
-        <button class="chip" data-filter="action_taken">Action Taken</button>
-        <button class="chip" data-filter="dismissed">Dismissed</button>
-      </div>
-
-      <div class="search-box">
-        <input id="searchInput" type="text" placeholder="Search by report reason, username, note, target id..." />
+        <a href="feed.html" class="chip-btn">Feed</a>
+        <a href="profile.html" class="chip-btn">Profile</a>
       </div>
     </div>
 
-    <div id="accessBox" class="empty" style="display:none;"></div>
-    <div id="loader" class="loader">Loading reports...</div>
-    <div id="reports" class="reports" style="display:none;"></div>
+    <div class="panel">
+      <div class="section-title">Submit report</div>
+      <div class="section-note">This report will be reviewed by admin.</div>
+      <div class="badge-row">
+        <span id="targetTypeBadge" class="badge badge-post">Target</span>
+        <span class="badge badge-warning">Non-sexual nudity may be allowed • sexual nudity / porn are not allowed</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading report target...</div>
+
+      <div id="content" class="hidden">
+        <div class="preview-card">
+          <img id="previewImg" class="preview-thumb hidden" alt="Preview" />
+          <div id="previewImgEmpty" class="preview-thumb-empty">No preview</div>
+
+          <div class="preview-body">
+            <div id="previewTitle" class="preview-title">Target</div>
+            <div id="previewSub" class="preview-sub"></div>
+            <div id="previewText" class="preview-text">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="invalidBox" class="empty-box hidden">Invalid report target.</div>
+    </div>
+
+    <div id="formPanel" class="panel hidden">
+      <form id="reportForm">
+        <div class="field">
+          <label for="reason">Reason</label>
+          <select id="reason" required>
+            <option value="">Select reason</option>
+            <option value="sexual_nudity">Sexual nudity</option>
+            <option value="pornography">Pornography / explicit sexual content</option>
+            <option value="harassment">Harassment / abuse</option>
+            <option value="hate_speech">Hate speech</option>
+            <option value="violence">Violence / threat</option>
+            <option value="minor_safety">Minor safety concern</option>
+            <option value="impersonation">Impersonation / fake account</option>
+            <option value="spam">Spam / scam</option>
+            <option value="graphic_content">Graphic / disturbing content</option>
+            <option value="other">Other</option>
+          </select>
+          <div class="helper">Choose the closest reason. Admin will review manually.</div>
+        </div>
+
+        <div class="field">
+          <label for="note">Details</label>
+          <textarea id="note" placeholder="Explain what is wrong with this content..."></textarea>
+          <div class="helper">Add extra detail if needed. Keep it clear and short.</div>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" type="submit" class="submit-btn">Submit Report</button>
+          <button id="cancelBtn" type="button" class="cancel-btn">Cancel</button>
+        </div>
+
+        <div id="message" class="message"></div>
+      </form>
+    </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="events.html" class="nav-link">
+      <span class="icon">◈</span>
+      <span>Events</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-    import {
-      getFirestore,
       collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
       addDoc,
-      updateDoc,
       query,
       where,
-      orderBy,
-      onSnapshot,
-      serverTimestamp,
-      increment,
-      writeBatch,
-      limit
-    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+      getDocs,
+      doc,
+      getDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // =========================
-    // FIREBASE CONFIG
-    // =========================
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    const backBtn = document.getElementById("backBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const invalidBox = document.getElementById("invalidBox");
+    const formPanel = document.getElementById("formPanel");
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const previewImg = document.getElementById("previewImg");
+    const previewImgEmpty = document.getElementById("previewImgEmpty");
+    const previewTitle = document.getElementById("previewTitle");
+    const previewSub = document.getElementById("previewSub");
+    const previewText = document.getElementById("previewText");
+    const targetTypeBadge = document.getElementById("targetTypeBadge");
 
-    // =========================
-    // APP SETTINGS
-    // =========================
-    const AUTHOR_FIELD = "authorId"; // change if your posts owner field is different
-    const ROUTES = {
-      postDetail: (id) => `post.html?id=${encodeURIComponent(id)}`,
-      profile: (uid) => `profile.html?uid=${encodeURIComponent(uid)}`
-    };
+    const reportForm = document.getElementById("reportForm");
+    const reasonInput = document.getElementById("reason");
+    const noteInput = document.getElementById("note");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
 
-    // =========================
-    // STATE
-    // =========================
     let currentUser = null;
-    let allReports = [];
-    let activeFilter = "all";
-    let searchText = "";
+    let targetType = "";
+    let targetId = "";
+    let targetOwnerId = "";
+    let targetTitleText = "";
+    let targetPreviewText = "";
 
-    const userCache = new Map();
-    const postCache = new Map();
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
 
-    const el = {
-      loader: document.getElementById("loader"),
-      reports: document.getElementById("reports"),
-      accessBox: document.getElementById("accessBox"),
-      filters: document.getElementById("filters"),
-      searchInput: document.getElementById("searchInput"),
-      statAll: document.getElementById("statAll"),
-      statPending: document.getElementById("statPending"),
-      statAction: document.getElementById("statAction"),
-      statDismissed: document.getElementById("statDismissed"),
-      toast: document.getElementById("toast"),
-      refreshBtn: document.getElementById("refreshBtn"),
-      openActionsBtn: document.getElementById("openActionsBtn")
-    };
+    cancelBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
 
-    // =========================
-    // HELPERS
-    // =========================
-    function showToast(msg){
-      el.toast.textContent = msg;
-      el.toast.style.display = "block";
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => {
-        el.toast.style.display = "none";
-      }, 2400);
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
     }
 
-    function formatDate(v){
-      try{
-        const d = v?.toDate ? v.toDate() : (v instanceof Date ? v : (typeof v === "number" ? new Date(v) : null));
-        if(!d) return "—";
-        return new Intl.DateTimeFormat([], {
-          year:"numeric", month:"short", day:"numeric",
-          hour:"numeric", minute:"2-digit"
-        }).format(d);
-      }catch{
-        return "—";
+    function showImage(url) {
+      const clean = (url || "").trim();
+      if (!clean) {
+        previewImg.classList.add("hidden");
+        previewImg.removeAttribute("src");
+        previewImgEmpty.classList.remove("hidden");
+        return;
       }
+      previewImg.src = clean;
+      previewImg.classList.remove("hidden");
+      previewImgEmpty.classList.add("hidden");
     }
 
-    function getMillis(v){
-      if (!v) return null;
-      if (v?.toDate) return v.toDate().getTime();
-      if (v instanceof Date) return v.getTime();
-      if (typeof v === "number") return v;
-      return null;
-    }
+    previewImg.addEventListener("error", () => {
+      previewImg.classList.add("hidden");
+      previewImgEmpty.classList.remove("hidden");
+    });
 
-    function isStillActive(untilValue){
-      const ms = getMillis(untilValue);
-      return ms && ms > Date.now();
-    }
-
-    function daysLeft(untilValue){
-      const ms = getMillis(untilValue);
-      if (!ms) return 0;
-      const diff = ms - Date.now();
-      return Math.max(0, Math.ceil(diff / 86400000));
-    }
-
-    function escapeHtml(str = ""){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function shortText(str = "", max = 140){
-      const s = String(str || "");
-      if (s.length <= max) return s;
-      return s.slice(0, max) + "…";
-    }
-
-    function statusBadgeClass(status){
-      if (status === "pending") return "b-pending";
-      if (status === "dismissed") return "b-dismissed";
-      return "b-action";
-    }
-
-    function normalizeText(v){
-      return String(v || "").toLowerCase();
-    }
-
-    async function getUser(uid){
-      if (!uid) return null;
-      if (userCache.has(uid)) return userCache.get(uid);
-      const snap = await getDoc(doc(db, "users", uid));
-      const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-      userCache.set(uid, data);
-      return data;
-    }
-
-    async function getPost(postId){
-      if (!postId) return null;
-      if (postCache.has(postId)) return postCache.get(postId);
-      const snap = await getDoc(doc(db, "posts", postId));
-      const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-      postCache.set(postId, data);
-      return data;
-    }
-
-    async function isAdminUser(uid){
-      const u = await getUser(uid);
-      return !!(u && (u.isAdmin === true || u.role === "admin"));
-    }
-
-    function getUserStatusBits(user){
-      if (!user) return [];
-      const bits = [];
-      if (user.banned) bits.push(`<span class="badge b-ban">Banned</span>`);
-      if (user.warningActive && isStillActive(user.warningUntil)) {
-        bits.push(`<span class="badge b-warn">Warned • ${daysLeft(user.warningUntil)}d left</span>`);
-      }
-      if (user.suspended && isStillActive(user.suspendUntil)) {
-        bits.push(`<span class="badge b-suspend">Suspended • ${daysLeft(user.suspendUntil)}d left</span>`);
-      }
-      return bits;
-    }
-
-    async function createModerationAction({
-      userId = "",
-      actionType = "",
-      reason = "",
-      note = "",
-      adminId = "",
-      reportId = "",
-      targetType = "",
-      targetId = "",
-      reporterId = ""
-    }){
-      await addDoc(collection(db, "moderationActions"), {
-        userId,
-        actionType,
-        reason,
-        note,
-        adminId,
-        reportId,
-        targetType,
-        targetId,
-        reporterId,
-        createdAt: serverTimestamp()
-      });
-    }
-
-    async function updateReportStatus(reportId, payload){
-      await updateDoc(doc(db, "reports", reportId), {
-        ...payload,
-        reviewedAt: serverTimestamp(),
-        reviewedBy: currentUser.uid
-      });
-    }
-
-    function searchMatch(report, owner, reporter, targetPreview){
-      const hay = [
-        report.reason,
-        report.note,
-        report.status,
-        report.targetType,
-        report.targetId,
-        owner?.username,
-        owner?.name,
-        owner?.displayName,
-        reporter?.username,
-        reporter?.name,
-        reporter?.displayName,
-        targetPreview?.text,
-        targetPreview?.caption,
-        targetPreview?.bio
-      ].map(normalizeText).join(" ");
-      return hay.includes(searchText);
-    }
-
-    function applyFilter(list){
-      return list.filter(item => {
-        if (activeFilter === "pending" && item.status !== "pending") return false;
-        if (activeFilter === "post" && item.targetType !== "post") return false;
-        if (activeFilter === "profile" && item.targetType !== "profile") return false;
-        if (activeFilter === "action_taken" && item.status !== "action_taken") return false;
-        if (activeFilter === "dismissed" && item.status !== "dismissed") return false;
-        return true;
-      });
-    }
-
-    function updateStats(list){
-      el.statAll.textContent = list.length;
-      el.statPending.textContent = list.filter(x => x.status === "pending").length;
-      el.statAction.textContent = list.filter(x => x.status === "action_taken").length;
-      el.statDismissed.textContent = list.filter(x => x.status === "dismissed").length;
-    }
-
-    function safeName(user, fallback = "Unknown user"){
-      return user?.username || user?.displayName || user?.name || fallback;
-    }
-
-    async function getTargetPreview(report){
-      if (report.targetType === "profile") {
-        const profileUser = await getUser(report.targetId);
-        return {
-          kind: "profile",
-          title: safeName(profileUser, "Profile"),
-          text: profileUser?.bio || "No bio available.",
-          image: profileUser?.photoURL || profileUser?.avatar || "",
-          hidden: !!profileUser?.banned,
-          data: profileUser
-        };
-      }
-
-      if (report.targetType === "post") {
-        const post = await getPost(report.targetId);
-        return {
-          kind: "post",
-          title: "Reported post",
-          text: post?.text || post?.caption || "No text/caption",
-          image: post?.imageUrl || post?.photoURL || post?.mediaUrl || "",
-          hidden: !!post?.hidden,
-          data: post
-        };
-      }
-
+    function getParams() {
+      const p = new URLSearchParams(window.location.search);
       return {
-        kind: report.targetType || "unknown",
-        title: "Unknown target",
-        text: "",
-        image: "",
-        hidden: false,
-        data: null
+        type: (p.get("type") || "").trim().toLowerCase(),
+        targetId: (p.get("targetId") || "").trim(),
+        targetUserId: (p.get("targetUserId") || "").trim()
       };
     }
 
-    // =========================
-    // ACTIONS
-    // =========================
-    async function handleWarn(report, adminNote){
-      const ownerId = report.targetType === "profile" ? report.targetId : report.targetOwnerId;
-      if (!ownerId) return showToast("Owner user id missing.");
-
-      const until = Date.now() + (30 * 24 * 60 * 60 * 1000);
-
-      await updateDoc(doc(db, "users", ownerId), {
-        warningActive: true,
-        warningUntil: until,
-        warningReason: report.reason || "Policy warning",
-        warningCount: increment(1),
-        moderationStatus: "warned",
-        updatedAt: serverTimestamp()
-      });
-
-      await updateReportStatus(report.id, {
-        status: "action_taken",
-        actionTaken: "warn"
-      });
-
-      await createModerationAction({
-        userId: ownerId,
-        actionType: "warn",
-        reason: report.reason || "",
-        note: adminNote || report.note || "",
-        adminId: currentUser.uid,
-        reportId: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reporterId: report.reporterId || ""
-      });
-
-      userCache.delete(ownerId);
-      showToast("User warned for 30 days.");
-    }
-
-    async function handleSuspend(report, adminNote){
-      const ownerId = report.targetType === "profile" ? report.targetId : report.targetOwnerId;
-      if (!ownerId) return showToast("Owner user id missing.");
-
-      const until = Date.now() + (30 * 24 * 60 * 60 * 1000);
-
-      await updateDoc(doc(db, "users", ownerId), {
-        suspended: true,
-        suspendUntil: until,
-        suspendReason: report.reason || "Policy suspension",
-        suspensionCount: increment(1),
-        moderationStatus: "suspended",
-        updatedAt: serverTimestamp()
-      });
-
-      await updateReportStatus(report.id, {
-        status: "action_taken",
-        actionTaken: "suspend_30_days"
-      });
-
-      await createModerationAction({
-        userId: ownerId,
-        actionType: "suspend",
-        reason: report.reason || "",
-        note: adminNote || report.note || "",
-        adminId: currentUser.uid,
-        reportId: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reporterId: report.reporterId || ""
-      });
-
-      userCache.delete(ownerId);
-      showToast("User suspended for 30 days.");
-    }
-
-    async function handleDeleteContent(report, adminNote){
-      if (report.targetType !== "post") {
-        return showToast("Delete content only applies to post reports.");
-      }
-
-      await updateDoc(doc(db, "posts", report.targetId), {
-        hidden: true,
-        hiddenByAdmin: true,
-        hiddenReason: report.reason || "Policy violation",
-        hiddenAt: serverTimestamp(),
-        hiddenFromReportId: report.id,
-        moderatedBy: currentUser.uid,
-        updatedAt: serverTimestamp()
-      });
-
-      await updateReportStatus(report.id, {
-        status: "action_taken",
-        actionTaken: "delete_content"
-      });
-
-      await createModerationAction({
-        userId: report.targetOwnerId || "",
-        actionType: "delete_post",
-        reason: report.reason || "",
-        note: adminNote || report.note || "",
-        adminId: currentUser.uid,
-        reportId: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reporterId: report.reporterId || ""
-      });
-
-      postCache.delete(report.targetId);
-      showToast("Post hidden by admin.");
-    }
-
-    async function handleBan(report, adminNote){
-      const ownerId = report.targetType === "profile" ? report.targetId : report.targetOwnerId;
-      if (!ownerId) return showToast("Owner user id missing.");
-
-      const batch = writeBatch(db);
-
-      batch.update(doc(db, "users", ownerId), {
-        banned: true,
-        banReason: report.reason || "Policy violation",
-        bannedAt: serverTimestamp(),
-        bannedBy: currentUser.uid,
-        moderationStatus: "banned",
-        updatedAt: serverTimestamp()
-      });
-
-      // Hide all posts by this user
-      const postsQ = query(collection(db, "posts"), where(AUTHOR_FIELD, "==", ownerId), limit(500));
-      const postsSnap = await getDocs(postsQ);
-      postsSnap.forEach(postDoc => {
-        batch.update(doc(db, "posts", postDoc.id), {
-          hidden: true,
-          hiddenByAdmin: true,
-          hiddenReason: "Owner banned",
-          hiddenAt: serverTimestamp(),
-          moderatedBy: currentUser.uid,
-          updatedAt: serverTimestamp()
-        });
-      });
-
-      batch.update(doc(db, "reports", report.id), {
-        status: "action_taken",
-        actionTaken: "ban",
-        reviewedAt: serverTimestamp(),
-        reviewedBy: currentUser.uid
-      });
-
-      await batch.commit();
-
-      await createModerationAction({
-        userId: ownerId,
-        actionType: "ban",
-        reason: report.reason || "",
-        note: adminNote || report.note || "",
-        adminId: currentUser.uid,
-        reportId: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reporterId: report.reporterId || ""
-      });
-
-      userCache.delete(ownerId);
-      showToast("User banned and content hidden.");
-    }
-
-    async function handleDismiss(report, adminNote){
-      await updateReportStatus(report.id, {
-        status: "dismissed",
-        actionTaken: "dismiss"
-      });
-
-      await createModerationAction({
-        userId: report.targetType === "profile" ? report.targetId : (report.targetOwnerId || ""),
-        actionType: "dismiss",
-        reason: report.reason || "",
-        note: adminNote || "No violation found",
-        adminId: currentUser.uid,
-        reportId: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reporterId: report.reporterId || ""
-      });
-
-      showToast("Report dismissed.");
-    }
-
-    async function runAction(action, report, note){
-      const confirmed = confirm(`Are you sure you want to ${action.replaceAll("_"," ")} this report?`);
-      if (!confirmed) return;
-
-      try{
-        if (action === "warn") await handleWarn(report, note);
-        else if (action === "suspend") await handleSuspend(report, note);
-        else if (action === "delete_content") await handleDeleteContent(report, note);
-        else if (action === "ban") await handleBan(report, note);
-        else if (action === "dismiss") await handleDismiss(report, note);
-      }catch(err){
-        console.error(err);
-        showToast(err?.message || "Action failed.");
-      }
-    }
-
-    // =========================
-    // RENDER
-    // =========================
-    async function render(){
-      updateStats(allReports);
-
-      let filtered = applyFilter(allReports);
-
-      const enhanced = await Promise.all(filtered.map(async report => {
-        const ownerId = report.targetType === "profile" ? report.targetId : report.targetOwnerId;
-        const [owner, reporter, targetPreview] = await Promise.all([
-          getUser(ownerId || ""),
-          getUser(report.reporterId || ""),
-          getTargetPreview(report)
-        ]);
-        return { report, owner, reporter, targetPreview };
-      }));
-
-      const searched = !searchText
-        ? enhanced
-        : enhanced.filter(item => searchMatch(item.report, item.owner, item.reporter, item.targetPreview));
-
-      el.loader.style.display = "none";
-      el.reports.style.display = "grid";
-
-      if (!searched.length){
-        el.reports.innerHTML = `<div class="empty">No reports found for the current filter.</div>`;
-        return;
-      }
-
-      el.reports.innerHTML = searched.map(({report, owner, reporter, targetPreview}) => {
-        const ownerName = safeName(owner, "Unknown user");
-        const reporterName = safeName(reporter, "Unknown reporter");
-        const noteValue = report.adminNote || "";
-        const statusBits = getUserStatusBits(owner).join(" ");
-        const targetTitle = targetPreview?.title || "Target";
-        const previewText = shortText(targetPreview?.text || "", 220);
-        const previewImage = targetPreview?.image || "";
-        const canDeleteContent = report.targetType === "post";
-        const hiddenBadge = targetPreview?.hidden
-          ? `<span class="badge b-hidden">Content Hidden</span>`
-          : "";
-
-        return `
-          <article class="report-card" data-id="${report.id}">
-            <div class="report-head">
-              <div class="report-head-left">
-                <div class="row">
-                  <span class="badge ${statusBadgeClass(report.status)}">${escapeHtml(report.status || "pending")}</span>
-                  <span class="badge ${report.targetType === "profile" ? "b-profile" : "b-post"}">${escapeHtml(report.targetType || "unknown")}</span>
-                  ${report.actionTaken ? `<span class="badge b-action">${escapeHtml(report.actionTaken)}</span>` : ""}
-                  ${hiddenBadge}
-                </div>
-                <div class="report-id">Report ID: ${escapeHtml(report.id)}</div>
-              </div>
-              <div class="muted small">${formatDate(report.createdAt)}</div>
-            </div>
-
-            <div class="report-body">
-              <div class="content-box">
-                <div class="meta-grid">
-                  <div class="meta">
-                    <div class="label">Reported user</div>
-                    <div class="value">${escapeHtml(ownerName)}</div>
-                  </div>
-                  <div class="meta">
-                    <div class="label">Reported by</div>
-                    <div class="value">${escapeHtml(reporterName)}</div>
-                  </div>
-                  <div class="meta">
-                    <div class="label">Reason</div>
-                    <div class="value">${escapeHtml(report.reason || "—")}</div>
-                  </div>
-                  <div class="meta">
-                    <div class="label">Current user status</div>
-                    <div class="value">
-                      ${statusBits || `<span class="muted">Normal</span>`}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="preview">
-                  <div class="preview-card">
-                    <div class="preview-thumb">
-                      ${
-                        previewImage
-                        ? `<img src="${escapeHtml(previewImage)}" alt="preview" />`
-                        : `<span>No preview</span>`
-                      }
-                    </div>
-                    <div class="preview-main">
-                      <h4>${escapeHtml(targetTitle)}</h4>
-                      <p>${escapeHtml(previewText || "No preview text available.")}</p>
-                    </div>
-                  </div>
-
-                  <div class="meta">
-                    <div class="label">Reporter note</div>
-                    <div class="value">${escapeHtml(report.note || "No note added.")}</div>
-                  </div>
-
-                  <div class="row">
-                    <button class="btn view-btn" data-view-type="${escapeHtml(report.targetType || "")}" data-target-id="${escapeHtml(report.targetId || "")}" data-owner-id="${escapeHtml(report.targetOwnerId || "")}">View</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="side-panel content-box">
-                <div>
-                  <div class="label muted" style="margin-bottom:8px;">Admin note</div>
-                  <textarea class="note" placeholder="Write internal note before action...">${escapeHtml(noteValue)}</textarea>
-                </div>
-
-                <div class="action-grid">
-                  <button class="btn warn action-btn" data-action="warn">Warn 30d</button>
-                  <button class="btn danger action-btn" data-action="suspend">Suspend 30d</button>
-                  ${canDeleteContent ? `<button class="btn action-btn" data-action="delete_content">Delete Content</button>` : `<button class="btn" disabled style="opacity:.45;cursor:not-allowed;">Delete Content</button>`}
-                  <button class="btn danger action-btn" data-action="ban">Ban User</button>
-                  <button class="btn ok action-btn" data-action="dismiss">Dismiss</button>
-                </div>
-
-                <div class="muted small">
-                  Tip: Use dismiss for allowed non-sexual nudity, educational, medical, or artistic context with no explicit sexual intent.
-                </div>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join("");
-
-      bindCardEvents(searched.map(x => x.report));
-    }
-
-    function bindCardEvents(reportList){
-      const reportMap = new Map(reportList.map(r => [r.id, r]));
-
-      document.querySelectorAll(".action-btn").forEach(btn => {
-        btn.onclick = async () => {
-          const card = btn.closest(".report-card");
-          const reportId = card?.dataset?.id;
-          const report = reportMap.get(reportId);
-          if (!report) return;
-
-          const note = card.querySelector(".note")?.value?.trim() || "";
-          await runAction(btn.dataset.action, report, note);
-        };
-      });
-
-      document.querySelectorAll(".view-btn").forEach(btn => {
-        btn.onclick = () => {
-          const type = btn.dataset.viewType;
-          const targetId = btn.dataset.targetId;
-          const ownerId = btn.dataset.ownerId;
-
-          if (type === "post") {
-            window.open(ROUTES.postDetail(targetId), "_blank");
-          } else if (type === "profile") {
-            window.open(ROUTES.profile(targetId || ownerId), "_blank");
-          }
-        };
-      });
-    }
-
-    // =========================
-    // LOAD
-    // =========================
-    function listenReports(){
-      const qRef = query(collection(db, "reports"), orderBy("createdAt", "desc"));
-      onSnapshot(qRef, (snap) => {
-        allReports = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        render();
-      }, (err) => {
-        console.error(err);
-        el.loader.textContent = "Failed to load reports.";
-      });
-    }
-
-    async function boot(uid){
-      const admin = await isAdminUser(uid);
-
-      if (!admin){
-        el.loader.style.display = "none";
-        el.accessBox.style.display = "block";
-        el.accessBox.innerHTML = `
-          <strong>Access denied.</strong><br><br>
-          This page is only for admin users.<br>
-          Set <code>isAdmin: true</code> or <code>role: "admin"</code> on your user document.
-        `;
-        return;
-      }
-
-      listenReports();
-    }
-
-    // =========================
-    // EVENTS
-    // =========================
-    el.filters.addEventListener("click", (e) => {
-      const btn = e.target.closest(".chip");
-      if (!btn) return;
-      document.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
-      btn.classList.add("active");
-      activeFilter = btn.dataset.filter;
-      render();
-    });
-
-    el.searchInput.addEventListener("input", () => {
-      searchText = normalizeText(el.searchInput.value.trim());
-      render();
-    });
-
-    el.refreshBtn.onclick = () => {
-      render();
-      showToast("Refreshed.");
-    };
-
-    el.openActionsBtn.onclick = () => {
-      alert(
-`Collections used in this page:
-
-1. reports
-2. users
-3. posts
-4. moderationActions
-
-Required user admin fields:
-- isAdmin: true
-OR
-- role: "admin"
-
-Important:
-- posts owner field currently assumed as "${AUTHOR_FIELD}"
-- change AUTHOR_FIELD in code if your field name is different`
+    function getPostOwnerId(postData) {
+      return (
+        postData?.userId ||
+        postData?.authorId ||
+        postData?.ownerId ||
+        postData?.uid ||
+        ""
       );
-    };
+    }
+
+    async function loadTarget() {
+      const params = getParams();
+      targetType = params.type;
+      targetId = params.targetId;
+      targetOwnerId = params.targetUserId || "";
+
+      if (!targetType || !targetId || !["post", "profile"].includes(targetType)) {
+        loading.classList.add("hidden");
+        invalidBox.classList.remove("hidden");
+        return false;
+      }
+
+      targetTypeBadge.textContent = targetType === "post" ? "Post report" : "Profile report";
+      targetTypeBadge.className = `badge ${targetType === "post" ? "badge-post" : "badge-profile"}`;
+
+      if (targetType === "post") {
+        const postSnap = await getDoc(doc(db, "posts", targetId));
+        if (!postSnap.exists()) {
+          loading.classList.add("hidden");
+          invalidBox.classList.remove("hidden");
+          return false;
+        }
+
+        const post = postSnap.data();
+        targetOwnerId = targetOwnerId || getPostOwnerId(post);
+
+        const caption = post.caption || post.text || post.content || "No caption";
+        const displayName = post.displayName || "Member";
+        const imageUrl = post.imageURL || post.imageUrl || post.photoURL || post.mediaUrl || "";
+
+        targetTitleText = "Reported post";
+        targetPreviewText = caption;
+
+        previewTitle.textContent = targetTitleText;
+        previewSub.textContent = `By ${displayName}`;
+        previewText.textContent = caption;
+        showImage(imageUrl);
+      } else {
+        const profileSnap = await getDoc(doc(db, "publicProfiles", targetId));
+        if (!profileSnap.exists()) {
+          loading.classList.add("hidden");
+          invalidBox.classList.remove("hidden");
+          return false;
+        }
+
+        const profile = profileSnap.data();
+        targetOwnerId = targetId;
+
+        const displayName = profile.displayName || "Member";
+        const username = profile.username ? `@${profile.username}` : "";
+        const bio = profile.bio || "No bio added yet.";
+        const photoUrl = profile.photoURL || "";
+
+        targetTitleText = displayName;
+        targetPreviewText = bio;
+
+        previewTitle.textContent = displayName;
+        previewSub.textContent = username;
+        previewText.textContent = bio;
+        showImage(photoUrl);
+      }
+
+      loading.classList.add("hidden");
+      content.classList.remove("hidden");
+      formPanel.classList.remove("hidden");
+      return true;
+    }
+
+    async function hasExistingPendingReport() {
+      const q = query(
+        collection(db, "reports"),
+        where("reporterId", "==", currentUser.uid),
+        where("targetType", "==", targetType),
+        where("targetId", "==", targetId)
+      );
+
+      const snap = await getDocs(q);
+      return snap.docs.some(d => (d.data().status || "pending") === "pending");
+    }
 
     onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if (!user){
-        el.loader.style.display = "none";
-        el.accessBox.style.display = "block";
-        el.accessBox.innerHTML = `
-          <strong>Please log in first.</strong><br><br>
-          This page needs an authenticated admin account.
-        `;
+      if (!user) {
+        window.location.href = "login.html";
         return;
       }
-      await boot(user.uid);
+
+      currentUser = user;
+
+      try {
+        const ok = await loadTarget();
+        if (!ok) return;
+
+        if (targetOwnerId && targetOwnerId === currentUser.uid) {
+          formPanel.classList.add("hidden");
+          setMessage("You cannot report your own content.", "error");
+          return;
+        }
+
+        const alreadyPending = await hasExistingPendingReport();
+        if (alreadyPending) {
+          setMessage("You already submitted a pending report for this.", "error");
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Already Reported";
+        }
+      } catch (err) {
+        console.error("Report page load failed:", err);
+        loading.textContent = "Could not load report target.";
+      }
+    });
+
+    reportForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser) return;
+
+      const reason = reasonInput.value.trim();
+      const note = noteInput.value.trim();
+
+      if (!reason) {
+        setMessage("Please select a reason.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+      setMessage("");
+
+      try {
+        await addDoc(collection(db, "reports"), {
+          reporterId: currentUser.uid,
+          reporterName: currentUser.displayName || currentUser.email || "Member",
+          targetType,
+          targetId,
+          targetOwnerId,
+          reason,
+          note,
+          status: "pending",
+          createdAt: serverTimestamp()
+        });
+
+        setMessage("Report submitted successfully.", "success");
+        reasonInput.value = "";
+        noteInput.value = "";
+        submitBtn.textContent = "Reported";
+      } catch (err) {
+        console.error("Report submit failed:", err);
+        setMessage(err?.message || "Could not submit report.", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Report";
+      }
     });
   </script>
 </body>
