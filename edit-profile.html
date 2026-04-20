@@ -365,7 +365,6 @@
       doc,
       getDoc,
       setDoc,
-      deleteDoc,
       writeBatch,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -399,8 +398,6 @@
 
     let currentUser = null;
     let verifiedStatus = false;
-    let existingUserData = {};
-    let existingPublicData = {};
     let originalUsernameLower = "";
 
     function showMessage(text, type = "") {
@@ -450,7 +447,7 @@
       const username = normalizeUsername(rawValue);
 
       if (!username) {
-        setUsernameStatus("");
+        setUsernameStatus("Username is required.", false);
         return { ok: false, reason: "empty", username: "" };
       }
 
@@ -477,18 +474,48 @@
         return { ok: false, reason: "taken", username };
       } catch (err) {
         console.error("Username check failed:", err);
-        setUsernameStatus("Could not verify username right now.", false);
+        setUsernameStatus("Could not verify username.", false);
         return { ok: false, reason: "error", username };
       }
     }
 
     genderInput.addEventListener("change", toggleGenderCustom);
 
-    usernameInput.addEventListener("input", async () => {
+    usernameInput.addEventListener("input", () => {
       const normalized = normalizeUsername(usernameInput.value);
       if (usernameInput.value !== normalized) {
         usernameInput.value = normalized;
       }
+
+      if (!normalized) {
+        setUsernameStatus("");
+        return;
+      }
+
+      setUsernameStatus("");
+    });
+
+    usernameInput.addEventListener("blur", async () => {
+      const normalized = normalizeUsername(usernameInput.value);
+      usernameInput.value = normalized;
+
+      if (!normalized) {
+        setUsernameStatus("Username is required.", false);
+        return;
+      }
+
+      await checkUsernameAvailability(normalized);
+    });
+
+    usernameInput.addEventListener("change", async () => {
+      const normalized = normalizeUsername(usernameInput.value);
+      usernameInput.value = normalized;
+
+      if (!normalized) {
+        setUsernameStatus("Username is required.", false);
+        return;
+      }
+
       await checkUsernameAvailability(normalized);
     });
 
@@ -534,13 +561,9 @@
           getDoc(publicRef)
         ]);
 
-        existingUserData = userSnap.exists() ? userSnap.data() : {};
-        existingPublicData = publicSnap.exists() ? publicSnap.data() : {};
-
-        const merged = {
-          ...existingPublicData,
-          ...existingUserData
-        };
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const publicData = publicSnap.exists() ? publicSnap.data() : {};
+        const merged = { ...publicData, ...userData };
 
         displayNameInput.value = merged.displayName || user.displayName || "";
         usernameInput.value = normalizeUsername(merged.username || merged.handle || merged.userName || "");
@@ -562,8 +585,6 @@
 
         if (usernameInput.value) {
           await checkUsernameAvailability(usernameInput.value);
-        } else {
-          setUsernameStatus("Username is required.", false);
         }
 
         loading.classList.add("hidden");
@@ -616,18 +637,12 @@
       saveBtn.textContent = "Saving...";
 
       try {
-        const usernameRef = doc(db, "usernames", username);
-        const usernameSnap = await getDoc(usernameRef);
-
-        if (usernameSnap.exists()) {
-          const reservedUid = usernameSnap.data()?.uid || "";
-          if (reservedUid !== currentUser.uid) {
-            showMessage("Username already taken.", "error");
-            setUsernameStatus("Username already taken.", false);
-            saveBtn.disabled = false;
-            saveBtn.textContent = "Save Profile";
-            return;
-          }
+        const availability = await checkUsernameAvailability(username);
+        if (!availability.ok && availability.reason !== "own") {
+          showMessage("Please choose a different username.", "error");
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Save Profile";
+          return;
         }
 
         const batch = writeBatch(db);
