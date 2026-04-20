@@ -588,16 +588,11 @@
       }
 
       try {
-        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-        if (directReq.exists()) {
-          requestDocId = directReq.id;
-        } else {
-          const reqSnap = await getDocs(
-            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
-          );
-          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
-          if (found) requestDocId = found.id;
-        }
+        const reqSnap = await getDocs(
+          query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
+        );
+        const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+        if (found) requestDocId = found.id;
       } catch (err) {
         console.warn("Follow request lookup failed:", err);
       }
@@ -786,6 +781,8 @@
           try {
             if (relationshipInfo.requestDocId) {
               await deleteDoc(doc(db, "follow_requests", relationshipInfo.requestDocId));
+            } else {
+              await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
             }
             window.location.reload();
           } catch (err) {
@@ -808,17 +805,15 @@
           setActionMessage("");
 
           try {
-            const existingDirect = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-            if (existingDirect.exists()) {
-              window.location.reload();
-              return;
-            }
-
-            await setDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`), {
-              requesterId: viewerUid,
-              targetId: memberUid,
-              createdAt: serverTimestamp()
-            });
+            await setDoc(
+              doc(db, "follow_requests", `${viewerUid}__${memberUid}`),
+              {
+                requesterId: viewerUid,
+                targetId: memberUid,
+                createdAt: serverTimestamp()
+              },
+              { merge: true }
+            );
 
             await createNotificationSafe(memberUid, {
               type: "follow_request",
