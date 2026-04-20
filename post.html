@@ -199,6 +199,10 @@
       color:#c9d5ff;
       border:1px solid rgba(255,255,255,.06);
     }
+    .top-follow-btn:disabled,.delete-btn:disabled,.icon-action-btn:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
     .delete-btn{
       background:rgba(255,93,115,.14);
       color:#ffd3d9;
@@ -389,6 +393,11 @@
       font-size:14px;
       line-height:1.7;
     }
+    .lock-action-wrap{
+      margin-top:14px;
+      display:flex;
+      justify-content:center;
+    }
 
     .empty-box{
       text-align:center;
@@ -472,6 +481,7 @@
 
     <div class="panel">
       <div id="loading" class="loading">Loading post...</div>
+      <div id="pageMessage" class="message"></div>
 
       <div id="postContent" class="hidden">
         <div class="post-top">
@@ -492,15 +502,7 @@
           <div class="post-top-actions">
             <button id="topRelationBtn" class="top-follow-btn follow hidden" type="button">Follow</button>
 
-            <a id="reportPostBtn" class="icon-report-link hidden" href="#">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M5 3v18"></path>
-                <path d="M5 4h10l-2.5 4L15 12H5"></path>
-              </svg>
-              <span>Report</span>
-            </a>
-
-            <button id="deleteBtn" class="delete-btn hidden">
+            <button id="deleteBtn" class="delete-btn hidden" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 6h18"></path>
                 <path d="M8 6V4h8v2"></path>
@@ -516,14 +518,14 @@
         <img id="postImage" class="post-image hidden" alt="Post image" />
 
         <div class="actions">
-          <button id="likeBtn" class="icon-action-btn like-btn" aria-label="Like">
+          <button id="likeBtn" class="icon-action-btn like-btn" aria-label="Like" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
             </svg>
             <span id="likeCount">0</span>
           </button>
 
-          <button id="commentAnchorBtn" class="icon-action-btn comment-anchor-btn" aria-label="Comments">
+          <button id="commentAnchorBtn" class="icon-action-btn comment-anchor-btn" aria-label="Comments" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
             </svg>
@@ -547,6 +549,9 @@
         <div id="lockedText" class="lock-text">
           You need to follow this member to view this post.
         </div>
+        <div class="lock-action-wrap">
+          <button id="lockedRelationBtn" class="top-follow-btn follow hidden" type="button">Follow</button>
+        </div>
       </div>
     </div>
 
@@ -554,7 +559,7 @@
       <div class="comments-panel-title">Comments</div>
 
       <form id="commentForm" class="comment-form">
-        <input id="commentInput" class="comment-input" type="text" placeholder="Write a comment..." />
+        <input id="commentInput" class="comment-input" type="text" placeholder="Write a comment..." maxlength="1000" />
         <button type="submit" class="icon-action-btn comment-submit">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M22 2L11 13"></path>
@@ -613,6 +618,7 @@
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
+    const pageMessage = document.getElementById("pageMessage");
     const postContent = document.getElementById("postContent");
     const lockedPanel = document.getElementById("lockedPanel");
     const commentsPanel = document.getElementById("commentsPanel");
@@ -631,11 +637,11 @@
     const commentAnchorBtn = document.getElementById("commentAnchorBtn");
     const commentCount = document.getElementById("commentCount");
     const deleteBtn = document.getElementById("deleteBtn");
-    const reportPostBtn = document.getElementById("reportPostBtn");
     const reportBottomBtn = document.getElementById("reportBottomBtn");
     const topRelationBtn = document.getElementById("topRelationBtn");
     const lockedTitle = document.getElementById("lockedTitle");
     const lockedText = document.getElementById("lockedText");
+    const lockedRelationBtn = document.getElementById("lockedRelationBtn");
 
     const commentForm = document.getElementById("commentForm");
     const commentInput = document.getElementById("commentInput");
@@ -651,12 +657,15 @@
     let ownerUid = "";
     let relationState = "none";
 
+    const relationButtons = [topRelationBtn, lockedRelationBtn];
+
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "feed.html";
     });
 
     commentAnchorBtn.addEventListener("click", () => {
+      if (commentsPanel.classList.contains("hidden")) return;
       commentsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       setTimeout(() => commentInput.focus(), 250);
     });
@@ -669,6 +678,11 @@
     postImage.addEventListener("error", () => {
       postImage.classList.add("hidden");
     });
+
+    function setPageMessage(text, type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
 
     function setFormMessage(text, type = "") {
       formMessage.textContent = text;
@@ -793,35 +807,150 @@
       }
     }
 
-    async function refreshRelationButton() {
-      topRelationBtn.classList.add("hidden");
-      topRelationBtn.disabled = false;
+    async function findFollowDocId(viewerUid, targetUid) {
+      if (!viewerUid || !targetUid) return null;
+
+      try {
+        const directId = `${viewerUid}__${targetUid}`;
+        const direct = await getDoc(doc(db, "follows", directId));
+        if (direct.exists()) return directId;
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "follows"),
+            where("followerId", "==", viewerUid),
+            where("followingId", "==", targetUid),
+            limit(1)
+          )
+        );
+        if (!snap.empty) return snap.docs[0].id;
+      } catch {}
+
+      return null;
+    }
+
+    async function findRequestDocId(viewerUid, targetUid) {
+      if (!viewerUid || !targetUid) return null;
+
+      try {
+        const directId = `${viewerUid}__${targetUid}`;
+        const direct = await getDoc(doc(db, "follow_requests", directId));
+        if (direct.exists()) return directId;
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "follow_requests"),
+            where("requesterId", "==", viewerUid),
+            where("targetId", "==", targetUid),
+            limit(1)
+          )
+        );
+        if (!snap.empty) return snap.docs[0].id;
+      } catch {}
+
+      return null;
+    }
+
+    function styleRelationButton(btn, state) {
+      if (!btn) return;
+
+      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) {
+        btn.classList.add("hidden");
+        return;
+      }
+
+      btn.classList.remove("hidden");
+
+      if (state === "following") {
+        btn.className = "top-follow-btn unfollow";
+        btn.textContent = "Unfollow";
+      } else if (state === "requested") {
+        btn.className = "top-follow-btn requested";
+        btn.textContent = "Requested";
+      } else if (state === "request") {
+        btn.className = "top-follow-btn request";
+        btn.textContent = "Request";
+      } else {
+        btn.className = "top-follow-btn follow";
+        btn.textContent = "Follow";
+      }
+    }
+
+    async function refreshRelationButtons() {
+      relationButtons.forEach(btn => {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.add("hidden");
+        }
+      });
 
       if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
 
       const following = await checkFollowing(currentUser.uid, ownerUid);
       const requested = !following ? await checkRequested(currentUser.uid, ownerUid) : false;
 
-      if (following) {
-        relationState = "following";
-        topRelationBtn.className = "top-follow-btn unfollow";
-        topRelationBtn.textContent = "Unfollow";
-      } else if (ownerProfile?.isPrivate && requested) {
-        relationState = "requested";
-        topRelationBtn.className = "top-follow-btn requested";
-        topRelationBtn.textContent = "Requested";
-      } else if (ownerProfile?.isPrivate) {
-        relationState = "request";
-        topRelationBtn.className = "top-follow-btn request";
-        topRelationBtn.textContent = "Request";
-      } else {
-        relationState = "follow";
-        topRelationBtn.className = "top-follow-btn follow";
-        topRelationBtn.textContent = "Follow";
+      if (following) relationState = "following";
+      else if (ownerProfile?.isPrivate && requested) relationState = "requested";
+      else if (ownerProfile?.isPrivate) relationState = "request";
+      else relationState = "follow";
+
+      relationButtons.forEach(btn => styleRelationButton(btn, relationState));
+    }
+
+    async function handleRelationAction() {
+      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
+
+      relationButtons.forEach(btn => btn.disabled = true);
+      setPageMessage("", "");
+
+      try {
+        if (relationState === "following") {
+          const followDocId = await findFollowDocId(currentUser.uid, ownerUid);
+          if (followDocId) {
+            await deleteDoc(doc(db, "follows", followDocId));
+          }
+        } else if (relationState === "requested") {
+          const requestDocId = await findRequestDocId(currentUser.uid, ownerUid);
+          if (requestDocId) {
+            await deleteDoc(doc(db, "follow_requests", requestDocId));
+          }
+        } else if (relationState === "request") {
+          await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`), {
+            requesterId: currentUser.uid,
+            targetId: ownerUid,
+            createdAt: serverTimestamp()
+          });
+        } else if (relationState === "follow") {
+          await setDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`), {
+            followerId: currentUser.uid,
+            followingId: ownerUid,
+            createdAt: serverTimestamp()
+          });
+        }
+
+        await refreshRelationButtons();
+
+        if (lockedPanel && !lockedPanel.classList.contains("hidden")) {
+          const followingNow = await checkFollowing(currentUser.uid, ownerUid);
+          if (!ownerProfile?.isPrivate || followingNow) {
+            location.reload();
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Relation update failed:", error);
+        setPageMessage("Could not update follow state.", "error");
       }
 
-      topRelationBtn.classList.remove("hidden");
+      relationButtons.forEach(btn => btn.disabled = false);
     }
+
+    topRelationBtn.addEventListener("click", handleRelationAction);
+    lockedRelationBtn.addEventListener("click", handleRelationAction);
 
     async function refreshLikeUI() {
       if (!currentPostId || !currentUser) return;
@@ -834,6 +963,68 @@
       const liked = myLike.exists();
       likeBtn.dataset.liked = liked ? "yes" : "no";
       likeCount.textContent = String(likesSnap.size);
+    }
+
+    function buildCommentElement(commentDoc) {
+      const comment = commentDoc.data();
+      const commentId = commentDoc.id;
+      const canDelete = comment.userId === currentUser.uid || ownerUid === currentUser.uid;
+
+      const wrap = document.createElement("div");
+      wrap.className = "comment-item";
+
+      const top = document.createElement("div");
+      top.className = "comment-top";
+
+      const left = document.createElement("div");
+
+      const author = document.createElement("div");
+      author.className = "comment-author";
+      author.textContent = comment.displayName || "Member";
+      left.appendChild(author);
+
+      if (comment.username) {
+        const username = document.createElement("div");
+        username.className = "comment-username";
+        username.textContent = "@" + comment.username;
+        left.appendChild(username);
+      }
+
+      const date = document.createElement("div");
+      date.className = "comment-date";
+      date.textContent = formatDate(comment.createdAt);
+      left.appendChild(date);
+
+      top.appendChild(left);
+
+      if (canDelete) {
+        const delBtn = document.createElement("button");
+        delBtn.className = "comment-delete-btn";
+        delBtn.type = "button";
+        delBtn.textContent = "Delete";
+        delBtn.addEventListener("click", async () => {
+          const ok = confirm("Delete this comment?");
+          if (!ok) return;
+
+          try {
+            await deleteDoc(doc(db, "posts", currentPostId, "comments", commentId));
+            await refreshCommentsUI();
+          } catch (error) {
+            console.error(error);
+            setFormMessage("Could not delete comment.", "error");
+          }
+        });
+        top.appendChild(delBtn);
+      }
+
+      const text = document.createElement("div");
+      text.className = "comment-text";
+      text.textContent = comment.text || "";
+
+      wrap.appendChild(top);
+      wrap.appendChild(text);
+
+      return wrap;
     }
 
     async function refreshCommentsUI() {
@@ -857,41 +1048,7 @@
       commentsEmpty.classList.add("hidden");
 
       commentsSnap.forEach((commentDoc) => {
-        const comment = commentDoc.data();
-        const commentId = commentDoc.id;
-        const canDelete = comment.userId === currentUser.uid;
-
-        const commentEl = document.createElement("div");
-        commentEl.className = "comment-item";
-        commentEl.innerHTML = `
-          <div class="comment-top">
-            <div>
-              <div class="comment-author">${comment.displayName || "Member"}</div>
-              ${comment.username ? `<div class="comment-username">@${comment.username}</div>` : ""}
-              <div class="comment-date">${formatDate(comment.createdAt)}</div>
-            </div>
-            ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${commentId}">Delete</button>` : ""}
-          </div>
-          <div class="comment-text">${comment.text || ""}</div>
-        `;
-
-        commentsList.appendChild(commentEl);
-      });
-
-      commentsList.querySelectorAll(".comment-delete-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const commentId = btn.getAttribute("data-comment-id");
-          const ok = confirm("Delete this comment?");
-          if (!ok) return;
-
-          try {
-            await deleteDoc(doc(db, "posts", currentPostId, "comments", commentId));
-            await refreshCommentsUI();
-          } catch (error) {
-            console.error(error);
-            setFormMessage("Could not delete comment.", "error");
-          }
-        });
+        commentsList.appendChild(buildCommentElement(commentDoc));
       });
     }
 
@@ -948,14 +1105,6 @@
 
         currentPostData = { id: postSnap.id, ...postSnap.data() };
 
-        if (currentPostData.hidden || currentPostData.hiddenByAdmin || currentPostData.softDeleted) {
-          loading.classList.add("hidden");
-          lockedTitle.textContent = "Removed Post";
-          lockedText.textContent = "This content was removed for policy violation.";
-          setVisibilityMode(false);
-          return;
-        }
-
         ownerUid = getPostOwnerId(currentPostData);
         if (!ownerUid) {
           loading.textContent = "Post owner not found.";
@@ -963,7 +1112,11 @@
         }
 
         ownerProfile = await getPublicProfile(ownerUid);
+
         const isRemoved =
+          currentPostData.hidden ||
+          currentPostData.hiddenByAdmin ||
+          currentPostData.softDeleted ||
           ownerProfile?.moderationStatus === "banned" ||
           ownerProfile?.isHiddenByAdmin ||
           ownerProfile?.softDeleted;
@@ -975,12 +1128,17 @@
           alreadyFollowing
         );
 
+        if (!isRemoved) {
+          await refreshRelationButtons();
+        }
+
         if (!canViewFull) {
           loading.classList.add("hidden");
 
           if (isRemoved) {
             lockedTitle.textContent = "Removed Post";
             lockedText.textContent = "This content was removed for policy violation.";
+            lockedRelationBtn.classList.add("hidden");
           } else {
             lockedTitle.textContent = "Private Post";
             lockedText.textContent = "You need to follow this member to view this post.";
@@ -1031,15 +1189,13 @@
 
         if (currentUser.uid === ownerUid) {
           deleteBtn.classList.remove("hidden");
+          reportBottomBtn.classList.add("hidden");
         } else {
-          reportPostBtn.classList.remove("hidden");
+          deleteBtn.classList.add("hidden");
           reportBottomBtn.classList.remove("hidden");
-          const reportHref = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
-          reportPostBtn.href = reportHref;
-          reportBottomBtn.href = reportHref;
+          reportBottomBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
         }
 
-        await refreshRelationButton();
         await refreshLikeUI();
         await refreshCommentsUI();
 
@@ -1048,39 +1204,6 @@
         console.error(error);
         loading.textContent = "Could not load post.";
       }
-    });
-
-    topRelationBtn.addEventListener("click", async () => {
-      if (!currentUser || !ownerUid || ownerUid === currentUser.uid) return;
-
-      topRelationBtn.disabled = true;
-
-      try {
-        if (relationState === "following") {
-          await deleteDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`));
-        } else if (relationState === "requested") {
-          await deleteDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`));
-        } else if (relationState === "request") {
-          await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${ownerUid}`), {
-            requesterId: currentUser.uid,
-            targetId: ownerUid,
-            createdAt: serverTimestamp()
-          });
-        } else if (relationState === "follow") {
-          await setDoc(doc(db, "follows", `${currentUser.uid}__${ownerUid}`), {
-            followerId: currentUser.uid,
-            followingId: ownerUid,
-            createdAt: serverTimestamp()
-          });
-        }
-
-        await refreshRelationButton();
-      } catch (error) {
-        console.error("Relation update failed:", error);
-        setFormMessage("Could not update follow state.", "error");
-      }
-
-      topRelationBtn.disabled = false;
     });
 
     likeBtn.addEventListener("click", async () => {
@@ -1104,10 +1227,10 @@
         }
 
         await refreshLikeUI();
-        setFormMessage("", "");
+        setPageMessage("", "");
       } catch (error) {
         console.error("LIKE WRITE FAILED:", error);
-        setFormMessage("Like save failed: " + (error?.message || "Unknown error"), "error");
+        setPageMessage("Like save failed: " + (error?.message || "Unknown error"), "error");
         likeBtn.disabled = false;
         return;
       }
@@ -1191,7 +1314,6 @@
           });
         } catch (notifyErr) {
           console.error("COMMENT NOTIFICATION FAILED:", notifyErr);
-          setFormMessage("Comment added. Notification failed only.", "success");
         }
       }
 
@@ -1209,7 +1331,7 @@
         window.location.href = "profile.html";
       } catch (error) {
         console.error(error);
-        setFormMessage("Could not delete post.", "error");
+        setPageMessage("Could not delete post.", "error");
       }
     });
   </script>
