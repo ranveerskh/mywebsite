@@ -133,7 +133,10 @@
       collection,
       query,
       orderBy,
-      onSnapshot
+      onSnapshot,
+      doc,
+      updateDoc,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const backBtn = document.getElementById("backBtn");
@@ -169,7 +172,7 @@
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
       if ((item.type === "like" || item.type === "comment") && item.postId) {
-        return "feed.html";
+        return `post.html?postId=${encodeURIComponent(item.postId)}`;
       }
       return "feed.html";
     }
@@ -204,6 +207,20 @@
       });
     }
 
+    async function markAllAsRead(userId, docs) {
+      const unreadDocs = docs.filter(d => d.data().isRead !== true);
+      if (!unreadDocs.length) return;
+
+      await Promise.all(
+        unreadDocs.map(d =>
+          updateDoc(doc(db, "notifications", userId, "items", d.id), {
+            isRead: true,
+            readAt: serverTimestamp()
+          }).catch(() => {})
+        )
+      );
+    }
+
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -215,10 +232,11 @@
         orderBy("createdAt", "desc")
       );
 
-      onSnapshot(q, (snapshot) => {
-        const items = snapshot.docs.map(d => d.data());
+      onSnapshot(q, async (snapshot) => {
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         loading.classList.add("hidden");
         renderItems(items);
+        await markAllAsRead(user.uid, snapshot.docs);
       }, () => {
         loading.textContent = "Could not load notifications.";
       });
