@@ -987,10 +987,12 @@
 
       const ownerId = getPostOwnerId(currentPostData);
       const likeRef = doc(db, "posts", currentPostId, "likes", currentUser.uid);
-      const existing = await getDoc(likeRef);
+
       likeBtn.disabled = true;
 
       try {
+        const existing = await getDoc(likeRef);
+
         if (existing.exists()) {
           await deleteDoc(likeRef);
         } else {
@@ -998,34 +1000,34 @@
             userId: currentUser.uid,
             createdAt: serverTimestamp()
           });
+        }
 
-          if (ownerId && ownerId !== currentUser.uid) {
+        await refreshLikeUI();
+
+        if (!existing.exists() && ownerId && ownerId !== currentUser.uid) {
+          try {
             const actorName =
               currentUserProfile?.displayName ||
               currentUser.displayName ||
               "Someone";
 
-            try {
-              await addDoc(collection(db, "notifications", ownerId, "items"), {
-                type: "like",
-                title: "New like",
-                text: `${actorName} liked your post.`,
-                fromUserId: currentUser.uid,
-                toUserId: ownerId,
-                postId: currentPostId,
-                createdAt: serverTimestamp(),
-                isRead: false
-              });
-            } catch (notifyErr) {
-              console.error("Like notification failed:", notifyErr);
-            }
+            await addDoc(collection(db, "notifications", ownerId, "items"), {
+              type: "like",
+              title: "New like",
+              text: `${actorName} liked your post.`,
+              fromUserId: currentUser.uid,
+              toUserId: ownerId,
+              postId: currentPostId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+          } catch (notifyErr) {
+            console.error("Like notification failed only:", notifyErr);
           }
         }
-
-        await refreshLikeUI();
       } catch (error) {
-        console.error("Like create failed:", error);
-        setFormMessage(error?.message || "Could not update like.", "error");
+        console.error("LIKE MAIN ERROR:", error);
+        setFormMessage((error?.code || "") + " " + (error?.message || "Could not update like."), "error");
       }
 
       likeBtn.disabled = false;
@@ -1060,6 +1062,7 @@
         });
 
         commentInput.value = "";
+        await refreshCommentsUI();
         setFormMessage("Comment added.", "success");
 
         if (ownerId && ownerId !== currentUser.uid) {
@@ -1075,18 +1078,12 @@
               isRead: false
             });
           } catch (notifyErr) {
-            console.error("Comment notification failed:", notifyErr);
+            console.error("Comment notification failed only:", notifyErr);
           }
         }
-
-        try {
-          await refreshCommentsUI();
-        } catch (refreshErr) {
-          console.error("Comments refresh failed:", refreshErr);
-        }
       } catch (error) {
-        console.error("Comment create failed:", error);
-        setFormMessage(error?.message || "Could not add comment.", "error");
+        console.error("COMMENT MAIN ERROR:", error);
+        setFormMessage((error?.code || "") + " " + (error?.message || "Could not add comment."), "error");
       }
 
       submitBtn.disabled = false;
