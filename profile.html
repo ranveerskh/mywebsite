@@ -7,7 +7,7 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
+      --bg:#0b1020;--card:#121931;--soft:#161f3d;--soft2:#0f1630;--line:rgba(255,255,255,.08);
       --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;--red:#ff5d73;
     }
     body{
@@ -25,7 +25,7 @@
     .top-icon-btn{
       width:48px;height:48px;border:none;background:var(--soft);color:#fff;border-radius:14px;
       cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
-      text-decoration:none;
+      text-decoration:none;position:relative;
     }
     .top-icon-btn svg{width:20px;height:20px;display:block}
     .top-center{text-align:center;min-width:0}
@@ -53,12 +53,18 @@
     }
 
     .name-row{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px;
     }
     .name-inline{
       display:flex;align-items:center;gap:8px;flex-wrap:wrap;
     }
     .display-name{font-size:24px;font-weight:800;line-height:1.2}
+    .verified-dot{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:20px;height:20px;border-radius:999px;
+      background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20);
+      font-size:11px;font-weight:900;
+    }
     .username{
       color:#8fdfff;font-size:14px;font-weight:700;margin-bottom:8px;word-break:break-word;
     }
@@ -83,6 +89,7 @@
     .badge-public{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
     .badge-private{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .badge-verified{background:rgba(61,220,132,.14);color:#d9ffe8;border:1px solid rgba(61,220,132,.20)}
+    .badge-state{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
 
     .bio{
       color:#e8eeff;line-height:1.7;font-size:14px;
@@ -102,7 +109,7 @@
       display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;
     }
     .stat{
-      background:#0f1630;border:1px solid rgba(255,255,255,.06);
+      background:var(--soft2);border:1px solid rgba(255,255,255,.06);
       border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;
     }
     .stat-value{font-size:18px;font-weight:800;margin-bottom:4px}
@@ -110,14 +117,14 @@
 
     .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
     .tab-btn{
-      border:none;background:#0f1630;color:#c9d5ff;border:1px solid rgba(255,255,255,.06);
+      border:none;background:var(--soft2);color:#c9d5ff;border:1px solid rgba(255,255,255,.06);
       border-radius:14px;padding:12px 10px;font-weight:800;font-size:13px;cursor:pointer;
     }
     .tab-btn.active{background:rgba(76,201,255,.14);color:#d8f7ff}
 
     .posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .post-tile{
-      aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#0f1630;
+      aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:var(--soft2);
       border:1px solid rgba(255,255,255,.06);position:relative;display:block;
     }
     .post-tile img{width:100%;height:100%;object-fit:cover;display:block}
@@ -128,7 +135,7 @@
 
     .events-grid{display:grid;gap:12px}
     .event-card{
-      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;
+      background:var(--soft2);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;
     }
     .event-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
     .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -141,7 +148,7 @@
     .network-title{font-size:16px;font-weight:800;margin-bottom:10px}
     .network-list{display:grid;gap:10px}
     .person-card{
-      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:16px;
+      background:var(--soft2);border:1px solid rgba(255,255,255,.06);border-radius:16px;
       padding:12px;display:flex;gap:12px;align-items:center;
     }
     .person-avatar,.person-avatar-placeholder{
@@ -159,7 +166,7 @@
     .person-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
 
     .empty-box{
-      text-align:center;padding:24px 10px;color:var(--muted);background:#0f1630;
+      text-align:center;padding:24px 10px;color:var(--muted);background:var(--soft2);
       border-radius:16px;border:1px dashed rgba(255,255,255,.08);
     }
 
@@ -221,6 +228,7 @@
             <div class="name-row">
               <div class="name-inline">
                 <div class="display-name" id="displayName">Member</div>
+                <span id="verifiedDot" class="verified-dot hidden">✓</span>
                 <span id="moderationBadge" class="moderation-badge hidden">!</span>
               </div>
             </div>
@@ -336,6 +344,7 @@
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const displayNameEl = document.getElementById("displayName");
+    const verifiedDot = document.getElementById("verifiedDot");
     const usernameText = document.getElementById("usernameText");
     const bioEl = document.getElementById("bio");
     const followRequestsBtn = document.getElementById("followRequestsBtn");
@@ -384,7 +393,7 @@
         isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
         moderationStatus: d.moderationStatus || d.status || "",
         warningUntil: d.warningUntil || null,
-        verified: !!d.verified,
+        verified: !!(d.verified || d.isVerified),
         isHiddenByAdmin: !!d.isHiddenByAdmin,
         softDeleted: !!d.softDeleted
       };
@@ -444,6 +453,14 @@
         bits.push(`<span class="badge badge-verified">Verified</span>`);
       }
 
+      if (profile.moderationStatus === "banned") {
+        bits.push(`<span class="badge badge-state">Banned</span>`);
+      } else if (profile.moderationStatus === "suspended") {
+        bits.push(`<span class="badge badge-state">Suspended</span>`);
+      } else if (profile.moderationStatus === "warned") {
+        bits.push(`<span class="badge badge-state">Warned</span>`);
+      }
+
       metaRow.innerHTML = bits.join("");
     }
 
@@ -473,6 +490,18 @@
       return Number.isNaN(ms) ? 0 : ms;
     }
 
+    function getPostOwnerId(post) {
+      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
+    }
+
+    function getPostImage(post) {
+      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
+    }
+
+    function getPostCaption(post) {
+      return post?.caption || post?.text || post?.content || "Post";
+    }
+
     function renderPosts(posts) {
       postsGrid.innerHTML = "";
       postsCountEl.textContent = String(posts.length);
@@ -491,14 +520,17 @@
         tile.className = "post-tile";
         tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
 
-        if (post.imageURL) {
-          tile.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Post image">`;
+        const imageUrl = getPostImage(post);
+        const caption = getPostCaption(post);
+
+        if (imageUrl) {
+          tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Post image">`;
           const img = tile.querySelector("img");
           img.addEventListener("error", () => {
-            tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+            tile.innerHTML = `<div class="post-fallback">${escapeHtml(String(caption).slice(0, 80))}</div>`;
           });
         } else {
-          tile.innerHTML = `<div class="post-fallback">${escapeHtml((post.caption || "Post").slice(0, 80))}</div>`;
+          tile.innerHTML = `<div class="post-fallback">${escapeHtml(String(caption).slice(0, 80))}</div>`;
         }
 
         postsGrid.appendChild(tile);
@@ -620,6 +652,12 @@
 
       displayNameEl.textContent = mergedProfile.displayName || "Member";
 
+      if (mergedProfile.verified) {
+        verifiedDot.classList.remove("hidden");
+      } else {
+        verifiedDot.classList.add("hidden");
+      }
+
       if (mergedProfile.username) {
         usernameText.textContent = "@" + mergedProfile.username;
         usernameText.classList.remove("hidden");
@@ -639,12 +677,10 @@
 
       const allPosts = postsSnap.docs
         .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p =>
-          p.userId === uid &&
-          !p.hidden &&
-          !p.hiddenByAdmin &&
-          !p.softDeleted
-        )
+        .filter(p => {
+          const ownerId = getPostOwnerId(p);
+          return ownerId === uid && !p.hidden && !p.hiddenByAdmin && !p.softDeleted;
+        })
         .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
 
       renderPosts(allPosts);
