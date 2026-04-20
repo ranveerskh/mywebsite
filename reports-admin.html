@@ -10,12 +10,18 @@
       --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
       --text:#fff;--muted:#9aa7c7;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;--blue:#4cc9ff;--purple:#a78bfa;
     }
-    body{background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);color:var(--text);min-height:100vh;padding:14px 14px 92px}
+    body{
+      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      color:var(--text);min-height:100vh;padding:14px 14px 92px;
+    }
     .app{max-width:980px;margin:0 auto}
     .topbar,.panel{
       background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px
     }
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);flex-wrap:wrap}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);flex-wrap:wrap
+    }
     .left-wrap{display:flex;align-items:center;gap:10px}
     .back-btn,.action-btn{
       border:none;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer
@@ -39,24 +45,48 @@
     .card-title{font-size:17px;font-weight:800;line-height:1.4}
     .card-sub{color:var(--muted);font-size:13px;line-height:1.6;margin-top:4px;word-break:break-word}
     .status-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
-    .status-open{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .status-pending{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .status-actioned{background:rgba(61,220,132,.14);color:#c9f7dd;border:1px solid rgba(61,220,132,.20)}
     .status-dismissed{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
+    .type-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-right:8px}
+    .type-post{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .type-profile{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
     .reason-box,.info-box{
       background:#111936;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:12px;margin-bottom:12px
     }
     .reason-box small,.info-box small{display:block;color:var(--muted);margin-bottom:6px;font-size:12px}
     .reason-box div,.info-box div,.info-box a{color:#fff;font-size:14px;line-height:1.7;word-break:break-word}
     .info-box a{text-decoration:none}
+    .preview{
+      display:flex;gap:12px;align-items:flex-start;background:#111936;border:1px solid rgba(255,255,255,.05);
+      border-radius:14px;padding:12px;margin-bottom:12px
+    }
+    .preview-img,.preview-empty{
+      width:82px;height:82px;border-radius:14px;flex-shrink:0;border:1px solid rgba(255,255,255,.08);background:#1b2445
+    }
+    .preview-img{object-fit:cover}
+    .preview-empty{
+      display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;color:var(--muted);font-size:11px;line-height:1.3
+    }
+    .preview-body{min-width:0;flex:1}
+    .preview-title{font-size:15px;font-weight:800;margin-bottom:4px}
+    .preview-sub{font-size:12px;color:#8fdfff;font-weight:700;margin-bottom:6px}
+    .preview-text{font-size:13px;color:#d7def5;line-height:1.6;white-space:pre-wrap;word-break:break-word}
     .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
     .warn-btn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
     .suspend-btn{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
     .ban-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
     .dismiss-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
     .open-btn{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
+    .delete-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
     .message{min-height:20px;font-size:14px;margin-top:10px}
     .success{color:#9cf0bf}.error{color:#ffb3bd}
     .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
+    .helper{color:var(--muted);font-size:12px;line-height:1.6;margin-top:6px}
+    @media (max-width:700px){
+      .filters{grid-template-columns:1fr}
+      .preview{flex-direction:column}
+    }
   </style>
 </head>
 <body>
@@ -73,16 +103,20 @@
 
     <div class="panel">
       <div class="section-title">Reports</div>
-      <div class="section-note">Warn, suspend, ban, or dismiss reports here.</div>
+      <div class="section-note">Warn, suspend, delete content, ban, or dismiss reports here.</div>
 
       <div class="filters">
-        <input type="text" id="searchInput" placeholder="Search by reason, details, user id..." />
+        <input type="text" id="searchInput" placeholder="Search by reason, note, user id, target id..." />
         <select id="statusFilter">
           <option value="all">All reports</option>
-          <option value="open">Open only</option>
+          <option value="pending">Pending only</option>
           <option value="actioned">Actioned only</option>
           <option value="dismissed">Dismissed only</option>
         </select>
+      </div>
+
+      <div class="helper">
+        Allowed non-sexual nudity can be dismissed. Sexual nudity / porn / explicit sexual content should get action.
       </div>
 
       <div id="pageMessage" class="message"></div>
@@ -105,6 +139,9 @@
       getDoc,
       updateDoc,
       setDoc,
+      addDoc,
+      query,
+      where,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -117,6 +154,9 @@
     const statusFilter = document.getElementById("statusFilter");
 
     let allReports = [];
+    const userCache = new Map();
+    const publicCache = new Map();
+    const postCache = new Map();
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -140,48 +180,304 @@
       catch { return "Just now"; }
     }
 
+    function shortText(text = "", max = 220) {
+      const s = String(text || "");
+      return s.length > max ? s.slice(0, max) + "…" : s;
+    }
+
+    async function getUser(uid) {
+      if (!uid) return null;
+      if (userCache.has(uid)) return userCache.get(uid);
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        userCache.set(uid, data);
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    async function getPublicProfile(uid) {
+      if (!uid) return null;
+      if (publicCache.has(uid)) return publicCache.get(uid);
+      try {
+        const snap = await getDoc(doc(db, "publicProfiles", uid));
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        publicCache.set(uid, data);
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    async function getPost(postId) {
+      if (!postId) return null;
+      if (postCache.has(postId)) return postCache.get(postId);
+      try {
+        const snap = await getDoc(doc(db, "posts", postId));
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        postCache.set(postId, data);
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
     function getFilteredReports() {
       const q = searchInput.value.trim().toLowerCase();
       const status = statusFilter.value;
 
       return allReports.filter(item => {
-        if (status !== "all" && (item.status || "open") !== status) return false;
+        const itemStatus = item.status || "pending";
+        if (status !== "all" && itemStatus !== status) return false;
         if (!q) return true;
 
         const haystack = [
           item.targetType || "",
           item.targetId || "",
-          item.targetUserId || "",
+          item.targetOwnerId || "",
           item.reporterId || "",
-          item.category || "",
-          item.details || "",
-          item.adminNote || ""
+          item.reason || "",
+          item.note || "",
+          item.adminNote || "",
+          item.actionType || ""
         ].join(" ").toLowerCase();
 
         return haystack.includes(q);
       });
     }
 
-    async function applyModeration(targetUserId, moderationStatus, adminNote, reportId, actionType, reportStatus) {
+    async function addModerationHistory({
+      userId = "",
+      actionType = "",
+      reason = "",
+      note = "",
+      reportId = "",
+      targetType = "",
+      targetId = ""
+    }) {
+      try {
+        await addDoc(collection(db, "moderation_history"), {
+          userId,
+          actionType,
+          reason,
+          note,
+          reportId,
+          targetType,
+          targetId,
+          adminId: auth.currentUser?.uid || "",
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.warn("Moderation history save failed:", err);
+      }
+    }
+
+    async function updateReport(reportId, payload) {
+      await updateDoc(doc(db, "reports", reportId), {
+        ...payload,
+        reviewedAt: serverTimestamp()
+      });
+    }
+
+    async function warnUser(targetUserId, adminNote, report) {
+      const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
       await setDoc(doc(db, "users", targetUserId), {
-        moderationStatus,
+        moderationStatus: "warned",
+        warningActive: true,
+        warningUntil: until,
         moderationNote: adminNote || "",
         moderationUpdatedAt: serverTimestamp()
       }, { merge: true });
 
       await setDoc(doc(db, "publicProfiles", targetUserId), {
-        accountState: moderationStatus
+        accountState: "warned"
       }, { merge: true });
 
-      await updateDoc(doc(db, "reports", reportId), {
-        status: reportStatus,
-        actionType,
-        adminNote: adminNote || "",
-        reviewedAt: serverTimestamp()
+      await updateReport(report.id, {
+        status: "actioned",
+        actionType: "warn",
+        adminNote: adminNote || ""
+      });
+
+      await addModerationHistory({
+        userId: targetUserId,
+        actionType: "warn",
+        reason: report.reason || "",
+        note: adminNote || "",
+        reportId: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId
       });
     }
 
-    function renderReports() {
+    async function suspendUser(targetUserId, adminNote, report) {
+      const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      await setDoc(doc(db, "users", targetUserId), {
+        moderationStatus: "suspended",
+        suspended: true,
+        suspensionUntil: until,
+        suspendUntil: until,
+        moderationNote: adminNote || "",
+        moderationUpdatedAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, "publicProfiles", targetUserId), {
+        accountState: "suspended"
+      }, { merge: true });
+
+      await updateReport(report.id, {
+        status: "actioned",
+        actionType: "suspend",
+        adminNote: adminNote || ""
+      });
+
+      await addModerationHistory({
+        userId: targetUserId,
+        actionType: "suspend",
+        reason: report.reason || "",
+        note: adminNote || "",
+        reportId: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId
+      });
+    }
+
+    async function deleteReportedContent(report, adminNote) {
+      if (report.targetType !== "post") throw new Error("Delete content only works for post reports.");
+
+      await updateDoc(doc(db, "posts", report.targetId), {
+        hidden: true,
+        hiddenByAdmin: true,
+        hiddenReason: report.reason || "Policy violation",
+        hiddenAt: serverTimestamp(),
+        moderatedBy: auth.currentUser?.uid || "",
+        updatedAt: serverTimestamp()
+      });
+
+      await updateReport(report.id, {
+        status: "actioned",
+        actionType: "delete_content",
+        adminNote: adminNote || ""
+      });
+
+      await addModerationHistory({
+        userId: report.targetOwnerId || "",
+        actionType: "delete_content",
+        reason: report.reason || "",
+        note: adminNote || "",
+        reportId: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId
+      });
+
+      postCache.delete(report.targetId);
+    }
+
+    async function banUser(targetUserId, adminNote, report) {
+      await setDoc(doc(db, "users", targetUserId), {
+        banned: true,
+        moderationStatus: "banned",
+        moderationNote: adminNote || "",
+        bannedAt: serverTimestamp(),
+        moderationUpdatedAt: serverTimestamp()
+      }, { merge: true });
+
+      await setDoc(doc(db, "publicProfiles", targetUserId), {
+        accountState: "banned",
+        isHiddenByAdmin: true
+      }, { merge: true });
+
+      try {
+        const postsSnap = await getDocs(query(collection(db, "posts"), where("userId", "==", targetUserId)));
+        await Promise.all(postsSnap.docs.map(d =>
+          updateDoc(doc(db, "posts", d.id), {
+            hidden: true,
+            hiddenByAdmin: true,
+            hiddenReason: "Owner banned",
+            hiddenAt: serverTimestamp(),
+            moderatedBy: auth.currentUser?.uid || "",
+            updatedAt: serverTimestamp()
+          }).catch(() => {})
+        ));
+      } catch (err) {
+        console.warn("Could not hide all banned user posts:", err);
+      }
+
+      await updateReport(report.id, {
+        status: "actioned",
+        actionType: "ban",
+        adminNote: adminNote || ""
+      });
+
+      await addModerationHistory({
+        userId: targetUserId,
+        actionType: "ban",
+        reason: report.reason || "",
+        note: adminNote || "",
+        reportId: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId
+      });
+
+      userCache.delete(targetUserId);
+      publicCache.delete(targetUserId);
+    }
+
+    async function dismissReport(report, adminNote) {
+      await updateReport(report.id, {
+        status: "dismissed",
+        actionType: "dismiss",
+        adminNote: adminNote || ""
+      });
+
+      await addModerationHistory({
+        userId: report.targetOwnerId || report.targetId || "",
+        actionType: "dismiss",
+        reason: report.reason || "",
+        note: adminNote || "",
+        reportId: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId
+      });
+    }
+
+    async function buildPreview(report) {
+      if (report.targetType === "profile") {
+        const profile = await getPublicProfile(report.targetId);
+        return {
+          title: profile?.displayName || "Profile",
+          sub: profile?.username ? `@${profile.username}` : "",
+          text: profile?.bio || "No bio added yet.",
+          image: profile?.photoURL || "",
+          openUrl: `member.html?uid=${encodeURIComponent(report.targetId)}`
+        };
+      }
+
+      if (report.targetType === "post") {
+        const post = await getPost(report.targetId);
+        return {
+          title: "Reported post",
+          sub: post?.displayName || "",
+          text: post?.caption || post?.text || post?.content || "No caption",
+          image: post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "",
+          openUrl: `post.html?postId=${encodeURIComponent(report.targetId)}`
+        };
+      }
+
+      return {
+        title: "Unknown target",
+        sub: "",
+        text: "",
+        image: "",
+        openUrl: "#"
+      };
+    }
+
+    async function renderReports() {
       const items = getFilteredReports();
       list.innerHTML = "";
 
@@ -194,60 +490,80 @@
       emptyBox.classList.add("hidden");
       list.classList.remove("hidden");
 
-      items.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = "card";
+      const cards = await Promise.all(items.map(async (item) => {
+        const reporter = await getUser(item.reporterId || "");
+        const preview = await buildPreview(item);
 
-        const statusClass = item.status === "actioned"
+        const reporterName = reporter?.displayName || reporter?.name || reporter?.username || item.reporterName || item.reporterId || "Member";
+        const status = item.status || "pending";
+        const statusClass = status === "actioned"
           ? "status-actioned"
-          : item.status === "dismissed"
+          : status === "dismissed"
           ? "status-dismissed"
-          : "status-open";
+          : "status-pending";
 
-        card.innerHTML = `
-          <div class="card-head">
-            <div>
-              <div class="card-title">${escapeHtml((item.targetType || "item").toUpperCase())} Report</div>
-              <div class="card-sub">
-                Reporter: ${escapeHtml(item.reporterId || "-")}<br>
-                Target user: ${escapeHtml(item.targetUserId || "-")}<br>
-                Target ID: ${escapeHtml(item.targetId || "-")}<br>
-                Created: ${escapeHtml(formatDate(item.createdAt))}
+        return `
+          <div class="card" data-id="${item.id}">
+            <div class="card-head">
+              <div>
+                <div class="card-title">
+                  <span class="type-badge ${item.targetType === "post" ? "type-post" : "type-profile"}">${escapeHtml((item.targetType || "item").toUpperCase())}</span>
+                  Report
+                </div>
+                <div class="card-sub">
+                  Reporter: ${escapeHtml(reporterName)}<br>
+                  Reporter ID: ${escapeHtml(item.reporterId || "-")}<br>
+                  Target user: ${escapeHtml(item.targetOwnerId || item.targetId || "-")}<br>
+                  Target ID: ${escapeHtml(item.targetId || "-")}<br>
+                  Created: ${escapeHtml(formatDate(item.createdAt))}
+                </div>
+              </div>
+              <span class="status-badge ${statusClass}">${escapeHtml(status.toUpperCase())}</span>
+            </div>
+
+            <div class="info-box">
+              <small>Reason</small>
+              <div>${escapeHtml(item.reason || "other")}</div>
+            </div>
+
+            <div class="reason-box">
+              <small>Reporter details</small>
+              <div>${escapeHtml(item.note || "No details")}</div>
+            </div>
+
+            <div class="preview">
+              ${preview.image
+                ? `<img class="preview-img" src="${escapeHtml(preview.image)}" alt="Preview">`
+                : `<div class="preview-empty">No preview</div>`
+              }
+              <div class="preview-body">
+                <div class="preview-title">${escapeHtml(preview.title)}</div>
+                <div class="preview-sub">${escapeHtml(preview.sub)}</div>
+                <div class="preview-text">${escapeHtml(shortText(preview.text, 260))}</div>
               </div>
             </div>
-            <span class="status-badge ${statusClass}">${escapeHtml((item.status || "open").toUpperCase())}</span>
-          </div>
 
-          <div class="info-box">
-            <small>Reason</small>
-            <div>${escapeHtml(item.category || "other")}</div>
-          </div>
+            <div class="field">
+              <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
+              <textarea class="admin-note-input" data-id="${item.id}" placeholder="Write admin note...">${escapeHtml(item.adminNote || "")}</textarea>
+            </div>
 
-          <div class="reason-box">
-            <small>Details</small>
-            <div>${escapeHtml(item.details || "No details")}</div>
-          </div>
-
-          <div class="field">
-            <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
-            <textarea class="admin-note-input" data-id="${item.id}" placeholder="Write admin note...">${escapeHtml(item.adminNote || "")}</textarea>
-          </div>
-
-          <div class="actions">
-            ${
-              item.targetType === "post"
-                ? `<a class="action-btn open-btn" href="post.html?postId=${encodeURIComponent(item.targetId)}" target="_blank">Open Post</a>`
-                : `<a class="action-btn open-btn" href="member.html?uid=${encodeURIComponent(item.targetUserId)}" target="_blank">Open Profile</a>`
-            }
-            <button class="action-btn warn-btn" data-action="warn" data-id="${item.id}" data-user="${item.targetUserId}">Warn</button>
-            <button class="action-btn suspend-btn" data-action="suspend" data-id="${item.id}" data-user="${item.targetUserId}">Suspend</button>
-            <button class="action-btn ban-btn" data-action="ban" data-id="${item.id}" data-user="${item.targetUserId}">Ban</button>
-            <button class="action-btn dismiss-btn" data-action="dismiss" data-id="${item.id}" data-user="${item.targetUserId}">Dismiss</button>
+            <div class="actions">
+              <a class="action-btn open-btn" href="${escapeHtml(preview.openUrl)}" target="_blank">Open</a>
+              <button class="action-btn warn-btn" data-action="warn" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Warn</button>
+              <button class="action-btn suspend-btn" data-action="suspend" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Suspend</button>
+              ${item.targetType === "post"
+                ? `<button class="action-btn delete-btn" data-action="delete_content" data-id="${item.id}" data-user="${item.targetOwnerId || ""}">Delete Content</button>`
+                : ""
+              }
+              <button class="action-btn ban-btn" data-action="ban" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Ban</button>
+              <button class="action-btn dismiss-btn" data-action="dismiss" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Dismiss</button>
+            </div>
           </div>
         `;
+      }));
 
-        list.appendChild(card);
-      });
+      list.innerHTML = cards.join("");
 
       list.querySelectorAll("button[data-action]").forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -256,26 +572,38 @@
           const action = btn.getAttribute("data-action");
           const noteEl = list.querySelector(`.admin-note-input[data-id="${reportId}"]`);
           const adminNote = noteEl ? noteEl.value.trim() : "";
+          const report = allReports.find(x => x.id === reportId);
+          if (!report) return;
+
+          const labelMap = {
+            warn: "warn this user",
+            suspend: "suspend this user for 30 days",
+            delete_content: "delete this content",
+            ban: "ban this user",
+            dismiss: "dismiss this report"
+          };
+
+          const ok = confirm(`Are you sure you want to ${labelMap[action] || action}?`);
+          if (!ok) return;
 
           btn.disabled = true;
+          setMessage("");
 
           try {
             if (action === "warn") {
-              await applyModeration(targetUserId, "warned", adminNote, reportId, "warn", "actioned");
-              setMessage("User warned.", "success");
+              await warnUser(targetUserId, adminNote, report);
+              setMessage("User warned for 30 days.", "success");
             } else if (action === "suspend") {
-              await applyModeration(targetUserId, "suspended", adminNote, reportId, "suspend", "actioned");
-              setMessage("User suspended.", "success");
+              await suspendUser(targetUserId, adminNote, report);
+              setMessage("User suspended for 30 days.", "success");
+            } else if (action === "delete_content") {
+              await deleteReportedContent(report, adminNote);
+              setMessage("Reported content hidden.", "success");
             } else if (action === "ban") {
-              await applyModeration(targetUserId, "banned", adminNote, reportId, "ban", "actioned");
-              setMessage("User banned.", "success");
+              await banUser(targetUserId, adminNote, report);
+              setMessage("User banned and content hidden.", "success");
             } else if (action === "dismiss") {
-              await updateDoc(doc(db, "reports", reportId), {
-                status: "dismissed",
-                actionType: "dismiss",
-                adminNote,
-                reviewedAt: serverTimestamp()
-              });
+              await dismissReport(report, adminNote);
               setMessage("Report dismissed.", "success");
             }
 
@@ -288,10 +616,9 @@
             renderReports();
           } catch (error) {
             console.error(error);
-            setMessage("Action failed.", "error");
+            setMessage(error?.message || "Action failed.", "error");
+            btn.disabled = false;
           }
-
-          btn.disabled = false;
         });
       });
     }
@@ -313,7 +640,8 @@
         }
 
         const reportsSnap = await getDocs(collection(db, "reports"));
-        allReports = reportsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        allReports = reportsSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
         loading.classList.add("hidden");
