@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+    .app{max-width:860px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr auto;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+    .top-icon-btn,.chip-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      border:1px solid var(--line);
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:800;
+      min-height:44px;
+      padding:10px 12px;
+      gap:6px;
+    }
+    .top-icon-btn{width:44px;height:44px;padding:0}
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+    .hero-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .summary-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .summary-label{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+    .summary-value{
+      font-size:22px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:8px;
+    }
+    .tab-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 8px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .tab-btn.active{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .loading-box,
+    .empty-box,
+    .denied-box{
+      text-align:center;
+      color:var(--muted);
+      padding:24px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      gap:6px;
+    }
+    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .list{
+      display:grid;
+      gap:12px;
+    }
+    .card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .card-title{
+      font-size:16px;
+      font-weight:800;
+      line-height:1.35;
+    }
+    .card-time{
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+    }
+    .card-text{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .muted{color:var(--muted)}
+
+    .meta-grid{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+      margin-bottom:10px;
+    }
+    .meta-item{
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      line-height:1.55;
+    }
+    .meta-item strong{
+      display:block;
+      margin-bottom:4px;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+    }
+    .badge.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .inline-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .editor{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .form{
+      display:grid;
+      gap:12px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:7px;
+    }
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:16px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    .textarea{
+      min-height:110px;
+      resize:vertical;
+      line-height:1.55;
+    }
+
+    .switch-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .switch-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(860px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{font-size:18px;line-height:1;display:block}
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:900px){
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .tabs{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .topbar{grid-template-columns:44px 1fr}
+      .top-actions{grid-column:1 / -1}
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .tabs{grid-template-columns:repeat(2,1fr)}
+      .grid-2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Admin Panel</div>
+      </div>
+
+      <div class="top-actions">
+        <button id="refreshSummaryBtn" class="chip-btn" type="button">Refresh</button>
+        <a href="profile.html" class="chip-btn">Profile</a>
+      </div>
+    </div>
+
+    <div id="accessPanel" class="panel">
+      <div id="accessLoading" class="loading-box">Checking admin access...</div>
+      <div id="accessDenied" class="denied-box hidden">You do not have admin access for this page.</div>
+    </div>
+
+    <div id="adminWrap" class="hidden">
+      <div class="panel">
+        <div class="hero-title">Central Admin</div>
+        <div class="hero-sub">
+          One admin page, section-based loading. Only the active tab loads its data.
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Pending Places</div>
+            <div id="sumPlaces" class="summary-value">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Open Reports</div>
+            <div id="sumReports" class="summary-value">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Verification</div>
+            <div id="sumVerification" class="summary-value">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">History Logs</div>
+            <div id="sumHistory" class="summary-value">0</div>
+          </div>
+        </div>
+
+        <div class="chips">
+          <span class="chip blue">Admin</span>
+          <span class="chip purple">Lazy-loaded sections</span>
+          <span class="chip green">One control center</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="dashboard" type="button">Dashboard</button>
+          <button class="tab-btn" data-tab="places" type="button">Places</button>
+          <button class="tab-btn" data-tab="reports" type="button">Reports</button>
+          <button class="tab-btn" data-tab="school" type="button">School</button>
+          <button class="tab-btn" data-tab="verification" type="button">Verification</button>
+          <button class="tab-btn" data-tab="history" type="button">History</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <button id="refreshSectionBtn" class="action-btn blue" type="button">Refresh Section</button>
+          <span id="sectionNameChip" class="chip blue">Dashboard</span>
+        </div>
+
+        <div id="pageMessage" class="message"></div>
+        <div id="sectionLoading" class="loading-box hidden">Loading section...</div>
+        <div id="sectionContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
+    </a>
+    <a href="profile.html" class="nav-link active">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      addDoc,
+      setDoc,
+      collection,
+      writeBatch,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const refreshSummaryBtn = document.getElementById("refreshSummaryBtn");
+    const refreshSectionBtn = document.getElementById("refreshSectionBtn");
+
+    const accessLoading = document.getElementById("accessLoading");
+    const accessDenied = document.getElementById("accessDenied");
+    const adminWrap = document.getElementById("adminWrap");
+
+    const sumPlaces = document.getElementById("sumPlaces");
+    const sumReports = document.getElementById("sumReports");
+    const sumVerification = document.getElementById("sumVerification");
+    const sumHistory = document.getElementById("sumHistory");
+
+    const sectionNameChip = document.getElementById("sectionNameChip");
+    const pageMessage = document.getElementById("pageMessage");
+    const sectionLoading = document.getElementById("sectionLoading");
+    const sectionContent = document.getElementById("sectionContent");
+
+    let currentUser = null;
+    let currentTab = "dashboard";
+    let state = {
+      placesFilter: "pending",
+      reportsFilter: "open",
+      schoolEdit: { source: "school_posts", id: null }
+    };
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+    applyTheme(getStoredTheme());
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "profile.html";
+    });
+
+    function setMessage(text = "", type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
+
+    function setSectionLoading(show, text = "Loading section...") {
+      sectionLoading.textContent = text;
+      sectionLoading.classList.toggle("hidden", !show);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function tsMs(ts) {
+      if (!ts) return 0;
+      try { return ts.toDate().getTime(); } catch {}
+      try {
+        const ms = new Date(ts).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); } catch {}
+      try { return new Date(ts).toLocaleString(); } catch {}
+      return "Just now";
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || d.about || d.description || "",
+        verified: !!(d.verified || d.isVerified),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted
+      };
+    }
+
+    async function getProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+      try {
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", uid)),
+          getDoc(doc(db, "publicProfiles", uid))
+        ]);
+        return normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function ensureAdmin(uid) {
+      const snap = await getDoc(doc(db, "admins", uid));
+      return snap.exists();
+    }
+
+    async function logAdminAction(action, payload = {}) {
+      try {
+        await addDoc(collection(db, "moderation_history"), {
+          action,
+          adminUid: currentUser.uid,
+          ...payload,
+          createdAt: serverTimestamp()
+        });
+      } catch {}
+    }
+
+    function setActiveTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      sectionNameChip.textContent =
+        tab === "dashboard" ? "Dashboard" :
+        tab === "places" ? "Places" :
+        tab === "reports" ? "Reports" :
+        tab === "school" ? "School" :
+        tab === "verification" ? "Verification" : "History";
+      loadSection(tab);
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+    });
+
+    refreshSummaryBtn.addEventListener("click", async () => {
+      await loadSummary();
+      setMessage("Summary refreshed.", "ok");
+    });
+
+    refreshSectionBtn.addEventListener("click", () => {
+      loadSection(currentTab, true);
+    });
+
+    async function loadSummary() {
+      const [placesSnap, reportsSnap, verificationSnap, historySnap] = await Promise.all([
+        getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "reports")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }))
+      ]);
+
+      const places = placesSnap.docs.map(d => d.data());
+      const reports = reportsSnap.docs.map(d => d.data());
+      const verifications = verificationSnap.docs.map(d => d.data());
+
+      sumPlaces.textContent = String(
+        places.filter(p => String(p.status || "").toLowerCase() === "pending" || p.pending === true || p.approved !== true).length
+      );
+      sumReports.textContent = String(
+        reports.filter(r => !["resolved", "closed", "done"].includes(String(r.status || "").toLowerCase())).length
+      );
+      sumVerification.textContent = String(
+        verifications.filter(v => String(v.status || "pending").toLowerCase() === "pending").length
+      );
+      sumHistory.textContent = String(historySnap.docs.length);
+    }
+
+    async function loadSection(tab, force = false) {
+      setMessage("");
+      setSectionLoading(true);
+      sectionContent.innerHTML = "";
+
+      try {
+        if (tab === "dashboard") await loadDashboard();
+        else if (tab === "places") await loadPlaces();
+        else if (tab === "reports") await loadReports();
+        else if (tab === "school") await loadSchool();
+        else if (tab === "verification") await loadVerification();
+        else if (tab === "history") await loadHistory();
+      } catch (err) {
+        console.error(err);
+        sectionContent.innerHTML = `<div class="empty-box">Could not load this section.</div>`;
+      }
+
+      setSectionLoading(false);
+      if (force) setMessage("Section refreshed.", "ok");
+    }
+
+    async function loadDashboard() {
+      const [placesSnap, reportsSnap, verificationSnap, historySnap] = await Promise.all([
+        getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "reports")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] })),
+        getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }))
+      ]);
+
+      const places = placesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const reports = reportsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const verifications = verificationSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const history = historySnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      const pendingPlaces = places.filter(p => String(p.status || "").toLowerCase() === "pending" || p.pending === true || p.approved !== true).slice(0, 5);
+      const openReports = reports.filter(r => !["resolved", "closed", "done"].includes(String(r.status || "").toLowerCase())).slice(0, 5);
+      const pendingVerification = verifications.filter(v => String(v.status || "pending").toLowerCase() === "pending").slice(0, 5);
+      const recentHistory = history.slice(0, 8);
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Dashboard</div>
+        <div class="section-note">Quick view of pending work and recent actions.</div>
+
+        <div class="list">
+          <div class="card">
+            <div class="card-title">Pending Places</div>
+            ${pendingPlaces.length ? pendingPlaces.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.name || item.title || "Unnamed Place")}</strong>
+                ${escapeHtml(item.city || "No city")} • ${escapeHtml(item.category || "General")}
+              </div>
+            `).join("") : `<div class="empty-box">No pending places.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn blue dash-go" data-tab="places" type="button">Open Places</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Open Reports</div>
+            ${openReports.length ? openReports.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.targetType || item.type || "Report")}</strong>
+                ${escapeHtml(item.reason || item.title || "No reason provided")}
+              </div>
+            `).join("") : `<div class="empty-box">No open reports.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn purple dash-go" data-tab="reports" type="button">Open Reports</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pending Verification</div>
+            ${pendingVerification.length ? pendingVerification.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.displayName || item.fullName || item.username || item.id || "Request")}</strong>
+                ${escapeHtml(item.status || "pending")}
+              </div>
+            `).join("") : `<div class="empty-box">No pending verification.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn green dash-go" data-tab="verification" type="button">Open Verification</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent History</div>
+            ${recentHistory.length ? recentHistory.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.action || "Action")}</strong>
+                ${escapeHtml(fmtDate(item.createdAt))}
+              </div>
+            `).join("") : `<div class="empty-box">No history yet.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn yellow dash-go" data-tab="history" type="button">Open History</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".dash-go").forEach(btn => {
+        btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+      });
+    }
+
+    async function loadPlaces() {
+      const snap = await getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] }));
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      const filtered = docs.filter(item => {
+        const status = String(item.status || "").toLowerCase();
+        const isPending = status === "pending" || item.pending === true || item.approved !== true;
+        const isApproved = item.approved === true || status === "approved";
+        const isRejected = status === "rejected" || item.rejected === true;
+
+        if (state.placesFilter === "pending") return isPending && !isApproved && !isRejected;
+        if (state.placesFilter === "approved") return isApproved;
+        if (state.placesFilter === "rejected") return isRejected;
+        return true;
+      });
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Places</div>
+        <div class="section-note">Approve, reject or delete place submissions.</div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.placesFilter === "pending" ? "blue" : ""} places-filter" data-filter="pending" type="button">Pending</button>
+          <button class="action-btn ${state.placesFilter === "approved" ? "green" : ""} places-filter" data-filter="approved" type="button">Approved</button>
+          <button class="action-btn ${state.placesFilter === "rejected" ? "red" : ""} places-filter" data-filter="rejected" type="button">Rejected</button>
+          <button class="action-btn ${state.placesFilter === "all" ? "purple" : ""} places-filter" data-filter="all" type="button">All</button>
+        </div>
+
+        <div class="list">
+          ${filtered.length ? filtered.map(item => {
+            const status = String(item.status || "").toLowerCase();
+            const statusClass = item.approved === true || status === "approved"
+              ? "green" : status === "rejected" || item.rejected === true
+              ? "red" : "yellow";
+
+            return `
+              <div class="card">
+                <div class="card-top">
+                  <div class="card-title">${escapeHtml(item.name || item.title || "Unnamed Place")}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+                </div>
+
+                <div class="badge-row">
+                  <span class="badge ${statusClass}">${escapeHtml(item.status || (item.approved ? "approved" : "pending"))}</span>
+                  <span class="badge blue">${escapeHtml(item.city || "No city")}</span>
+                  <span class="badge purple">${escapeHtml(item.category || "General")}</span>
+                </div>
+
+                <div class="meta-grid">
+                  <div class="meta-item"><strong>Address</strong>${escapeHtml(item.address || "Not added")}</div>
+                  <div class="meta-item"><strong>Website</strong>${escapeHtml(item.website || "Not added")}</div>
+                  <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(item.creatorName || item.createdBy || "Unknown")}</div>
+                </div>
+
+                <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+
+                <div class="inline-actions">
+                  <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(item.id)}&source=nearby_places">Open Place</a>
+                  <button class="action-btn green approve-place-btn" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
+                  <button class="action-btn yellow reject-place-btn" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
+                  <button class="action-btn red delete-place-btn" data-id="${escapeHtml(item.id)}" type="button">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join("") : `<div class="empty-box">No places found in this filter.</div>`}
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".places-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.placesFilter = btn.dataset.filter;
+          loadPlaces();
+        });
+      });
+
+      sectionContent.querySelectorAll(".approve-place-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          btn.disabled = true;
+          try {
+            await updateDoc(doc(db, "nearby_places", id), {
+              approved: true,
+              pending: false,
+              rejected: false,
+              status: "approved",
+              reviewedAt: serverTimestamp(),
+              reviewedBy: currentUser.uid
+            });
+            await logAdminAction("place_approved", { targetId: id, targetType: "place" });
+            await loadSummary();
+            await loadPlaces();
+            setMessage("Place approved.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not approve place.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".reject-place-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          btn.disabled = true;
+          try {
+            await updateDoc(doc(db, "nearby_places", id), {
+              approved: false,
+              pending: false,
+              rejected: true,
+              status: "rejected",
+              reviewedAt: serverTimestamp(),
+              reviewedBy: currentUser.uid
+            });
+            await logAdminAction("place_rejected", { targetId: id, targetType: "place" });
+            await loadSummary();
+            await loadPlaces();
+            setMessage("Place rejected.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not reject place.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const ok = confirm("Delete this place?");
+          if (!ok) return;
+          btn.disabled = true;
+          try {
+            await deleteDoc(doc(db, "nearby_places", id));
+            await logAdminAction("place_deleted", { targetId: id, targetType: "place" });
+            await loadSummary();
+            await loadPlaces();
+            setMessage("Place deleted.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not delete place.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function hideReportedContent(report) {
+      const targetType = String(report.targetType || report.type || "").toLowerCase();
+      const targetId = report.targetId || "";
+      if (!targetId) return;
+
+      if (targetType === "post") {
+        await updateDoc(doc(db, "posts", targetId), {
+          hidden: true,
+          hiddenByAdmin: true,
+          softDeleted: true
+        });
+      } else if (targetType === "event") {
+        await updateDoc(doc(db, "events", targetId), {
+          hidden: true,
+          hiddenByAdmin: true,
+          softDeleted: true
+        });
+      } else if (targetType === "place") {
+        const source = report.targetSource || report.source || "nearby_places";
+        await updateDoc(doc(db, source, targetId), {
+          hidden: true,
+          hiddenByAdmin: true,
+          softDeleted: true
+        });
+      }
+    }
+
+    async function applyModerationAction(report, action) {
+      const targetUid = report.targetUserId || report.reportedUserId || report.targetUid || "";
+      const reportId = report.id;
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const batch = writeBatch(db);
+
+      if (targetUid) {
+        if (action === "warn") {
+          batch.set(doc(db, "users", targetUid), {
+            moderationStatus: "warned",
+            warningUntil: new Date(Date.now() + thirtyDaysMs)
+          }, { merge: true });
+
+          batch.set(doc(db, "publicProfiles", targetUid), {
+            moderationStatus: "warned",
+            warningUntil: new Date(Date.now() + thirtyDaysMs)
+          }, { merge: true });
+        }
+
+        if (action === "suspend") {
+          batch.set(doc(db, "users", targetUid), {
+            moderationStatus: "suspended",
+            suspensionUntil: new Date(Date.now() + thirtyDaysMs)
+          }, { merge: true });
+
+          batch.set(doc(db, "publicProfiles", targetUid), {
+            moderationStatus: "suspended"
+          }, { merge: true });
+        }
+
+        if (action === "ban") {
+          batch.set(doc(db, "users", targetUid), {
+            moderationStatus: "banned",
+            isHiddenByAdmin: true,
+            softDeleted: true
+          }, { merge: true });
+
+          batch.set(doc(db, "publicProfiles", targetUid), {
+            moderationStatus: "banned",
+            isHiddenByAdmin: true,
+            softDeleted: true
+          }, { merge: true });
+        }
+      }
+
+      batch.set(doc(db, "reports", reportId), {
+        status: action === "resolve" ? "resolved" : action,
+        reviewedAt: serverTimestamp(),
+        reviewedBy: currentUser.uid
+      }, { merge: true });
+
+      await batch.commit();
+      await logAdminAction(`report_${action}`, {
+        reportId,
+        targetId: report.targetId || "",
+        targetUserId: targetUid || "",
+        targetType: report.targetType || report.type || "report"
+      });
+    }
+
+    async function loadReports() {
+      const snap = await getDocs(collection(db, "reports")).catch(() => ({ docs: [] }));
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      const filtered = docs.filter(item => {
+        const status = String(item.status || "").toLowerCase();
+        if (state.reportsFilter === "open") return !["resolved", "closed", "done"].includes(status);
+        if (state.reportsFilter === "resolved") return ["resolved", "closed", "done"].includes(status);
+        return true;
+      });
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Reports</div>
+        <div class="section-note">Review reports and take moderation action.</div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.reportsFilter === "open" ? "blue" : ""} reports-filter" data-filter="open" type="button">Open</button>
+          <button class="action-btn ${state.reportsFilter === "resolved" ? "green" : ""} reports-filter" data-filter="resolved" type="button">Resolved</button>
+          <button class="action-btn ${state.reportsFilter === "all" ? "purple" : ""} reports-filter" data-filter="all" type="button">All</button>
+        </div>
+
+        <div class="list">
+          ${filtered.length ? filtered.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.title || item.reason || "Report")}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge yellow">${escapeHtml(item.targetType || item.type || "unknown")}</span>
+                <span class="badge ${["resolved","closed","done"].includes(String(item.status || "").toLowerCase()) ? "green" : "red"}">${escapeHtml(item.status || "open")}</span>
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item"><strong>Reporter</strong>${escapeHtml(item.reporterId || "Unknown")}</div>
+                <div class="meta-item"><strong>Target User</strong>${escapeHtml(item.targetUserId || item.reportedUserId || "Unknown")}</div>
+                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(item.targetId || "Not linked")}</div>
+              </div>
+
+              <div class="card-text">${escapeHtml(item.reason || item.text || item.description || "No report description added.")}</div>
+
+              <div class="inline-actions">
+                <button class="action-btn yellow hide-content-btn" data-id="${escapeHtml(item.id)}" type="button">Hide Content</button>
+                <button class="action-btn blue warn-btn" data-id="${escapeHtml(item.id)}" type="button">Warn</button>
+                <button class="action-btn purple suspend-btn" data-id="${escapeHtml(item.id)}" type="button">Suspend</button>
+                <button class="action-btn red ban-btn" data-id="${escapeHtml(item.id)}" type="button">Ban</button>
+                <button class="action-btn green resolve-btn" data-id="${escapeHtml(item.id)}" type="button">Resolve</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No reports found in this filter.</div>`}
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".reports-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.reportsFilter = btn.dataset.filter;
+          loadReports();
+        });
+      });
+
+      sectionContent.querySelectorAll(".hide-content-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const report = filtered.find(r => r.id === btn.dataset.id);
+          if (!report) return;
+          btn.disabled = true;
+          try {
+            await hideReportedContent(report);
+            await logAdminAction("content_hidden", {
+              reportId: report.id,
+              targetId: report.targetId || "",
+              targetType: report.targetType || report.type || ""
+            });
+            setMessage("Reported content hidden.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not hide content.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".warn-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const report = filtered.find(r => r.id === btn.dataset.id);
+          if (!report) return;
+          btn.disabled = true;
+          try {
+            await applyModerationAction(report, "warn");
+            await loadSummary();
+            await loadReports();
+            setMessage("User warned.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not warn user.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".suspend-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const report = filtered.find(r => r.id === btn.dataset.id);
+          if (!report) return;
+          btn.disabled = true;
+          try {
+            await applyModerationAction(report, "suspend");
+            await loadSummary();
+            await loadReports();
+            setMessage("User suspended.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not suspend user.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".ban-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const report = filtered.find(r => r.id === btn.dataset.id);
+          if (!report) return;
+          const ok = confirm("Ban this user?");
+          if (!ok) return;
+          btn.disabled = true;
+          try {
+            await applyModerationAction(report, "ban");
+            await hideReportedContent(report).catch(() => {});
+            await loadSummary();
+            await loadReports();
+            setMessage("User banned and content hidden when possible.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not ban user.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".resolve-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const report = filtered.find(r => r.id === btn.dataset.id);
+          if (!report) return;
+          btn.disabled = true;
+          try {
+            await applyModerationAction(report, "resolve");
+            await loadSummary();
+            await loadReports();
+            setMessage("Report resolved.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not resolve report.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadSchool() {
+      const sources = ["school_posts", "schoolLessons", "school"];
+      const all = [];
+
+      for (const source of sources) {
+        try {
+          const snap = await getDocs(collection(db, source));
+          snap.docs.forEach(d => {
+            all.push({
+              id: d.id,
+              source,
+              ...d.data()
+            });
+          });
+        } catch {}
+      }
+
+      all.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      const edit = state.schoolEdit;
+
+      sectionContent.innerHTML = `
+        <div class="section-title">School</div>
+        <div class="section-note">Add, edit, publish or remove school lessons.</div>
+
+        <div class="editor">
+          <form id="schoolForm" class="form">
+            <div class="grid-2">
+              <div class="field">
+                <label class="label" for="schoolTitle">Title</label>
+                <input id="schoolTitle" class="input" type="text" placeholder="Lesson title" />
+              </div>
+              <div class="field">
+                <label class="label" for="schoolCategory">Category</label>
+                <input id="schoolCategory" class="input" type="text" placeholder="Category" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label class="label" for="schoolSummary">Summary</label>
+                <input id="schoolSummary" class="input" type="text" placeholder="Short summary" />
+              </div>
+              <div class="field">
+                <label class="label" for="schoolImageURL">Image URL</label>
+                <input id="schoolImageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label class="label" for="schoolOrder">Order</label>
+                <input id="schoolOrder" class="input" type="number" placeholder="Optional order" />
+              </div>
+              <div class="field">
+                <label class="label" for="schoolSource">Collection</label>
+                <select id="schoolSource" class="select">
+                  <option value="school_posts">school_posts</option>
+                  <option value="schoolLessons">schoolLessons</option>
+                  <option value="school">school</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="schoolBody">Body</label>
+              <textarea id="schoolBody" class="textarea" placeholder="Full lesson body"></textarea>
+            </div>
+
+            <div class="switch-row">
+              <label class="switch-chip">
+                <input id="schoolPublished" type="checkbox" checked />
+                <span>Published</span>
+              </label>
+            </div>
+
+            <div class="toolbar">
+              <button id="saveSchoolBtn" class="action-btn blue" type="submit">Save Lesson</button>
+              <button id="clearSchoolBtn" class="action-btn" type="button">Clear</button>
+            </div>
+
+            <div id="schoolMessage" class="message"></div>
+          </form>
+        </div>
+
+        <div class="list">
+          ${all.length ? all.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.title || "Untitled Lesson")}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge blue">${escapeHtml(item.category || "General")}</span>
+                <span class="badge purple">${escapeHtml(item.source)}</span>
+                <span class="badge ${item.published === false ? "yellow" : "green"}">${item.published === false ? "Draft" : "Published"}</span>
+              </div>
+
+              <div class="card-text">${escapeHtml(item.summary || item.description || "No summary added.")}</div>
+
+              <div class="inline-actions">
+                <button class="action-btn purple edit-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" type="button">Edit</button>
+                <button class="action-btn ${item.published === false ? "green" : "yellow"} toggle-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" data-published="${item.published === false ? "no" : "yes"}" type="button">
+                  ${item.published === false ? "Publish" : "Unpublish"}
+                </button>
+                <button class="action-btn red delete-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" type="button">Delete</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No school content yet.</div>`}
+        </div>
+      `;
+
+      const schoolTitle = document.getElementById("schoolTitle");
+      const schoolCategory = document.getElementById("schoolCategory");
+      const schoolSummary = document.getElementById("schoolSummary");
+      const schoolImageURL = document.getElementById("schoolImageURL");
+      const schoolOrder = document.getElementById("schoolOrder");
+      const schoolSource = document.getElementById("schoolSource");
+      const schoolBody = document.getElementById("schoolBody");
+      const schoolPublished = document.getElementById("schoolPublished");
+      const schoolMessage = document.getElementById("schoolMessage");
+      const schoolForm = document.getElementById("schoolForm");
+      const clearSchoolBtn = document.getElementById("clearSchoolBtn");
+
+      function setSchoolMessage(text = "", type = "") {
+        schoolMessage.textContent = text;
+        schoolMessage.className = `message ${type}`;
+      }
+
+      function fillSchoolForm(item = null) {
+        if (!item) {
+          state.schoolEdit = { source: "school_posts", id: null };
+          schoolTitle.value = "";
+          schoolCategory.value = "";
+          schoolSummary.value = "";
+          schoolImageURL.value = "";
+          schoolOrder.value = "";
+          schoolSource.value = "school_posts";
+          schoolBody.value = "";
+          schoolPublished.checked = true;
+          setSchoolMessage("");
+          return;
+        }
+
+        state.schoolEdit = { source: item.source, id: item.id };
+        schoolTitle.value = item.title || "";
+        schoolCategory.value = item.category || "";
+        schoolSummary.value = item.summary || item.description || "";
+        schoolImageURL.value = item.imageURL || item.imageUrl || item.photoURL || "";
+        schoolOrder.value = item.order ?? "";
+        schoolSource.value = item.source || "school_posts";
+        schoolBody.value = item.body || item.content || item.text || "";
+        schoolPublished.checked = item.published !== false;
+        setSchoolMessage("Editing existing lesson.", "ok");
+      }
+
+      clearSchoolBtn.addEventListener("click", () => fillSchoolForm(null));
+
+      schoolForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const payload = {
+          title: schoolTitle.value.trim(),
+          category: schoolCategory.value.trim(),
+          summary: schoolSummary.value.trim(),
+          imageURL: schoolImageURL.value.trim(),
+          body: schoolBody.value.trim(),
+          published: !!schoolPublished.checked,
+          order: schoolOrder.value.trim() ? Number(schoolOrder.value.trim()) : null,
+          updatedAt: serverTimestamp()
+        };
+
+        if (!payload.title) {
+          setSchoolMessage("Title is required.", "err");
+          return;
+        }
+
+        const targetSource = schoolSource.value || state.schoolEdit.source || "school_posts";
+        const editing = !!state.schoolEdit.id;
+
+        try {
+          if (editing) {
+            await updateDoc(doc(db, state.schoolEdit.source, state.schoolEdit.id), payload);
+            await logAdminAction("school_updated", {
+              targetId: state.schoolEdit.id,
+              source: state.schoolEdit.source
+            });
+            setSchoolMessage("Lesson updated.", "ok");
+          } else {
+            await addDoc(collection(db, targetSource), {
+              ...payload,
+              createdAt: serverTimestamp()
+            });
+            await logAdminAction("school_created", {
+              source: targetSource
+            });
+            setSchoolMessage("Lesson created.", "ok");
+          }
+
+          await loadSchool();
+        } catch (err) {
+          console.error(err);
+          setSchoolMessage("Could not save lesson.", "err");
+        }
+      });
+
+      sectionContent.querySelectorAll(".edit-school-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const item = all.find(x => x.id === btn.dataset.id && x.source === btn.dataset.source);
+          if (!item) return;
+          fillSchoolForm(item);
+          schoolTitle.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      });
+
+      sectionContent.querySelectorAll(".toggle-school-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const item = all.find(x => x.id === btn.dataset.id && x.source === btn.dataset.source);
+          if (!item) return;
+          btn.disabled = true;
+          try {
+            await updateDoc(doc(db, item.source, item.id), {
+              published: item.published === false ? true : false,
+              updatedAt: serverTimestamp()
+            });
+            await logAdminAction("school_publish_toggle", {
+              targetId: item.id,
+              source: item.source
+            });
+            await loadSchool();
+            setMessage("Lesson publish state updated.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not update lesson.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".delete-school-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const ok = confirm("Delete this lesson?");
+          if (!ok) return;
+          btn.disabled = true;
+          try {
+            await deleteDoc(doc(db, btn.dataset.source, btn.dataset.id));
+            await logAdminAction("school_deleted", {
+              targetId: btn.dataset.id,
+              source: btn.dataset.source
+            });
+            await loadSchool();
+            setMessage("Lesson deleted.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not delete lesson.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      fillSchoolForm(edit.id ? all.find(x => x.id === edit.id && x.source === edit.source) || null : null);
+    }
+
+    async function loadVerification() {
+      const snap = await getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] }));
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Verification</div>
+        <div class="section-note">Approve or reject verification requests.</div>
+
+        <div class="list">
+          ${docs.length ? docs.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.displayName || item.fullName || item.username || item.id)}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge ${String(item.status || "pending").toLowerCase() === "approved" ? "green" : String(item.status || "pending").toLowerCase() === "rejected" ? "red" : "yellow"}">
+                  ${escapeHtml(item.status || "pending")}
+                </span>
+              </div>
+
+              <div class="card-text">${escapeHtml(item.reason || item.note || item.text || "No details added.")}</div>
+
+              <div class="inline-actions">
+                <button class="action-btn green approve-verification-btn" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
+                <button class="action-btn red reject-verification-btn" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No verification requests found.</div>`}
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".approve-verification-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.id;
+          btn.disabled = true;
+          try {
+            const batch = writeBatch(db);
+
+            batch.set(doc(db, "verification_requests", uid), {
+              status: "approved",
+              reviewedAt: serverTimestamp(),
+              approvedAt: serverTimestamp(),
+              reviewedBy: currentUser.uid
+            }, { merge: true });
+
+            batch.set(doc(db, "users", uid), {
+              verified: true,
+              isVerified: true
+            }, { merge: true });
+
+            batch.set(doc(db, "publicProfiles", uid), {
+              verified: true,
+              isVerified: true
+            }, { merge: true });
+
+            await batch.commit();
+
+            await logAdminAction("verification_approved", { targetUserId: uid });
+            await loadSummary();
+            await loadVerification();
+            setMessage("Verification approved.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not approve verification.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".reject-verification-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.id;
+          btn.disabled = true;
+          try {
+            await setDoc(doc(db, "verification_requests", uid), {
+              status: "rejected",
+              reviewedAt: serverTimestamp(),
+              rejectedAt: serverTimestamp(),
+              reviewedBy: currentUser.uid
+            }, { merge: true });
+
+            await logAdminAction("verification_rejected", { targetUserId: uid });
+            await loadSummary();
+            await loadVerification();
+            setMessage("Verification rejected.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not reject verification.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadHistory() {
+      const snap = await getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }));
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Moderation History</div>
+        <div class="section-note">Recent admin actions and logs.</div>
+
+        <div class="list">
+          ${docs.length ? docs.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.action || "Action")}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item"><strong>Admin</strong>${escapeHtml(item.adminUid || "Unknown")}</div>
+                <div class="meta-item"><strong>Target Type</strong>${escapeHtml(item.targetType || "Not set")}</div>
+                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(item.targetId || item.targetUserId || item.reportId || "Not set")}</div>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No moderation history found.</div>`}
+        </div>
+      `;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const ok = await ensureAdmin(user.uid);
+        accessLoading.classList.add("hidden");
+
+        if (!ok) {
+          accessDenied.classList.remove("hidden");
+          return;
+        }
+
+        adminWrap.classList.remove("hidden");
+        await loadSummary();
+        await loadSection(currentTab);
+      } catch (err) {
+        console.error(err);
+        accessLoading.classList.add("hidden");
+        accessDenied.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
