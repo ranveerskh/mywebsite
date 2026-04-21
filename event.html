@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Event</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+    .top-icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading-box,
+    .empty-box,
+    .locked-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .hero-image{
+      width:100%;
+      max-height:340px;
+      object-fit:cover;
+      display:block;
+      border-radius:18px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      margin-bottom:12px;
+    }
+
+    .event-title{
+      font-size:22px;
+      font-weight:900;
+      line-height:1.3;
+      margin-bottom:10px;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .meta-grid{
+      display:grid;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .meta-item{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      font-size:14px;
+      line-height:1.55;
+    }
+    .meta-item strong{display:block;margin-bottom:4px;font-size:12px;color:var(--muted)}
+
+    .desc{
+      color:var(--text);
+      line-height:1.65;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .host-card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .host-avatar,.host-avatar-placeholder{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .host-avatar{object-fit:cover}
+    .host-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+    .host-body{min-width:0;flex:1}
+    .host-name{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .host-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .host-name a:hover{text-decoration:underline}
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+    .host-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+    .host-bio{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+    }
+
+    .section-title{
+      font-size:17px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:42px;
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .btn-soft{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.20);
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:10px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .members-list{
+      display:grid;
+      gap:10px;
+    }
+    .member-card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+    }
+    .member-avatar,.member-avatar-placeholder{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .member-avatar{object-fit:cover}
+    .member-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+    .member-body{min-width:0;flex:1}
+    .member-name{
+      font-size:14px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .member-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .member-name a:hover{text-decoration:underline}
+    .member-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+
+    .edit-form{
+      display:grid;
+      gap:12px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:7px;
+    }
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:16px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    .textarea{
+      min-height:120px;
+      resize:vertical;
+      line-height:1.55;
+    }
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .grid-2{grid-template-columns:1fr}
+      .event-title{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Event detail</div>
+      </div>
+
+      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <div id="loadingPanel" class="panel">
+      <div class="loading-box">Loading event...</div>
+    </div>
+
+    <div id="notFoundPanel" class="panel hidden">
+      <div class="empty-box">Event not found.</div>
+    </div>
+
+    <div id="lockedPanel" class="panel hidden">
+      <div class="locked-box" id="lockedText">
+        This private event is not available to view.
+      </div>
+    </div>
+
+    <div id="eventPanel" class="hidden">
+      <div class="panel">
+        <img id="heroImage" class="hero-image hidden" alt="Event image" />
+
+        <div id="eventTitle" class="event-title">Untitled Event</div>
+
+        <div id="badgeRow" class="badge-row"></div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <strong>Date</strong>
+            <span id="dateText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Time</strong>
+            <span id="timeText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>City</strong>
+            <span id="cityText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Venue / Address</strong>
+            <span id="venueText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>People Going</strong>
+            <span id="membersCountText">0</span>
+          </div>
+        </div>
+
+        <div id="descText" class="desc">No description added.</div>
+
+        <div class="action-row" id="topActionRow"></div>
+        <div id="topMessage" class="message"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Host</div>
+        <div id="hostCard" class="host-card"></div>
+      </div>
+
+      <div id="editPanel" class="panel hidden">
+        <div class="section-title">Edit Event</div>
+
+        <form id="editForm" class="edit-form">
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editTitle">Event Title</label>
+              <input id="editTitle" class="input" type="text" placeholder="Event title" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editVisibility">Visibility</label>
+              <select id="editVisibility" class="select">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editCity">City</label>
+              <input id="editCity" class="input" type="text" placeholder="City" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editVenue">Venue / Spot</label>
+              <input id="editVenue" class="input" type="text" placeholder="Venue" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editDate">Date</label>
+              <input id="editDate" class="input" type="date" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editTime">Time</label>
+              <input id="editTime" class="input" type="time" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editAddress">Address</label>
+              <input id="editAddress" class="input" type="text" placeholder="Address" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editImageURL">Image Link</label>
+              <input id="editImageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editLat">Latitude</label>
+              <input id="editLat" class="input" type="text" placeholder="Latitude" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editLng">Longitude</label>
+              <input id="editLng" class="input" type="text" placeholder="Longitude" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="editDescription">Description</label>
+            <textarea id="editDescription" class="textarea" placeholder="Description"></textarea>
+          </div>
+
+          <div class="action-row">
+            <button id="saveEditBtn" type="submit" class="action-btn btn-primary">Save Changes</button>
+            <button id="cancelEditBtn" type="button" class="action-btn btn-soft">Cancel</button>
+          </div>
+
+          <div id="editMessage" class="message"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">People Going</div>
+        <div id="membersList" class="members-list"></div>
+        <div id="membersEmpty" class="empty-box hidden">No one has joined yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link active">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      getDocs,
+      setDoc,
+      deleteDoc,
+      addDoc,
+      updateDoc,
+      collection,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+
+    const loadingPanel = document.getElementById("loadingPanel");
+    const notFoundPanel = document.getElementById("notFoundPanel");
+    const lockedPanel = document.getElementById("lockedPanel");
+    const lockedText = document.getElementById("lockedText");
+    const eventPanel = document.getElementById("eventPanel");
+
+    const heroImage = document.getElementById("heroImage");
+    const eventTitle = document.getElementById("eventTitle");
+    const badgeRow = document.getElementById("badgeRow");
+    const dateText = document.getElementById("dateText");
+    const timeText = document.getElementById("timeText");
+    const cityText = document.getElementById("cityText");
+    const venueText = document.getElementById("venueText");
+    const membersCountText = document.getElementById("membersCountText");
+    const descText = document.getElementById("descText");
+    const topActionRow = document.getElementById("topActionRow");
+    const topMessage = document.getElementById("topMessage");
+
+    const hostCard = document.getElementById("hostCard");
+
+    const editPanel = document.getElementById("editPanel");
+    const editForm = document.getElementById("editForm");
+    const editTitle = document.getElementById("editTitle");
+    const editVisibility = document.getElementById("editVisibility");
+    const editCity = document.getElementById("editCity");
+    const editVenue = document.getElementById("editVenue");
+    const editDate = document.getElementById("editDate");
+    const editTime = document.getElementById("editTime");
+    const editAddress = document.getElementById("editAddress");
+    const editImageURL = document.getElementById("editImageURL");
+    const editLat = document.getElementById("editLat");
+    const editLng = document.getElementById("editLng");
+    const editDescription = document.getElementById("editDescription");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const editMessage = document.getElementById("editMessage");
+
+    const membersList = document.getElementById("membersList");
+    const membersEmpty = document.getElementById("membersEmpty");
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentEventId = "";
+    let currentEvent = null;
+    let currentHostProfile = null;
+    let joined = false;
+    let isCreator = false;
+    let isExpired = false;
+    let membersRows = [];
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "nearby-events.html";
+    });
+
+    function setTopMessage(text = "", type = "") {
+      topMessage.textContent = text;
+      topMessage.className = `message ${type}`;
+    }
+
+    function setEditMessage(text = "", type = "") {
+      editMessage.textContent = text;
+      editMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || d.about || d.description || "",
+        verified: !!(d.verified || d.isVerified),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted
+      };
+    }
+
+    function normalizeEvent(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        title: d.title || d.name || "Untitled Event",
+        description: d.description || d.desc || "",
+        city: d.city || d.locationCity || "",
+        venue: d.venue || d.spot || "",
+        address: d.address || "",
+        date: d.date || "",
+        time: d.time || "",
+        visibility: d.visibility || d.eventVisibility || "public",
+        creatorId: d.creatorId || d.userId || d.uid || "",
+        creatorName: d.creatorName || d.displayName || d.hostName || "Member",
+        creatorUsername: d.creatorUsername || "",
+        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
+        lat: num(d.lat ?? d.latitude),
+        lng: num(d.lng ?? d.longitude),
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted
+      };
+    }
+
+    function parseEventDateTime(dateStr, timeStr) {
+      const dateRaw = String(dateStr || "").trim();
+      if (!dateRaw) return null;
+
+      let year, month, day;
+
+      const isoMatch = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) {
+        year = Number(isoMatch[1]);
+        month = Number(isoMatch[2]) - 1;
+        day = Number(isoMatch[3]);
+      } else {
+        const parsed = new Date(dateRaw);
+        if (Number.isNaN(parsed.getTime())) return null;
+        year = parsed.getFullYear();
+        month = parsed.getMonth();
+        day = parsed.getDate();
+      }
+
+      let hour = 23;
+      let minute = 59;
+
+      const timeRaw = String(timeStr || "").trim().toLowerCase();
+      if (timeRaw) {
+        let match = timeRaw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+        if (match) {
+          hour = Number(match[1]) % 12;
+          minute = Number(match[2]);
+          if (match[3] === "pm") hour += 12;
+        } else {
+          match = timeRaw.match(/^(\d{1,2})\s*(am|pm)$/);
+          if (match) {
+            hour = Number(match[1]) % 12;
+            minute = 0;
+            if (match[2] === "pm") hour += 12;
+          } else {
+            match = timeRaw.match(/^(\d{1,2}):(\d{2})$/);
+            if (match) {
+              hour = Number(match[1]);
+              minute = Number(match[2]);
+            }
+          }
+        }
+      }
+
+      return new Date(year, month, day, hour, minute, 0, 0);
+    }
+
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
+    }
+
+    async function loadHostProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+      try {
+        const snap = await getDoc(doc(db, "publicProfiles", uid));
+        if (snap.exists()) {
+          return normalizeProfile({ id: snap.id, ...snap.data() }, uid);
+        }
+      } catch {}
+      return normalizeProfile({ uid }, uid);
+    }
+
+    async function loadCurrentUserProfile(uid) {
+      try {
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", uid)),
+          getDoc(doc(db, "publicProfiles", uid))
+        ]);
+
+        return normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function loadMembers() {
+      membersRows = [];
+      membersList.innerHTML = "";
+
+      try {
+        const snap = await getDocs(collection(db, "events", currentEventId, "members"));
+        const rows = await Promise.all(
+          snap.docs.map(async (d) => {
+            const data = d.data();
+            const profile = await loadHostProfile(d.id);
+            return {
+              uid: d.id,
+              displayName: profile.displayName || data.displayName || "Member",
+              username: profile.username || data.username || "",
+              photoURL: profile.photoURL || "",
+              verified: !!profile.verified,
+              joinedAtMs: data.joinedAt?.toDate ? data.joinedAt.toDate().getTime() : 0
+            };
+          })
+        );
+
+        membersRows = rows.sort((a, b) => b.joinedAtMs - a.joinedAtMs);
+      } catch {}
+
+      membersCountText.textContent = String(membersRows.length);
+
+      if (!membersRows.length) {
+        membersList.innerHTML = "";
+        membersEmpty.classList.remove("hidden");
+        return;
+      }
+
+      membersEmpty.classList.add("hidden");
+
+      membersRows.forEach(member => {
+        const card = document.createElement("div");
+        card.className = "member-card";
+
+        const avatarHtml = member.photoURL
+          ? `<img class="member-avatar" src="${escapeHtml(member.photoURL)}" alt="Member photo">`
+          : `<div class="member-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="member-body">
+            <div class="member-name">
+              <a href="member.html?uid=${encodeURIComponent(member.uid)}">${escapeHtml(member.displayName)}</a>
+              ${member.verified ? `<span class="verified-dot">✓</span>` : ""}
+            </div>
+            ${member.username ? `<div class="member-username">@${escapeHtml(member.username)}</div>` : ""}
+          </div>
+        `;
+
+        const img = card.querySelector(".member-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="member-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        membersList.appendChild(card);
+      });
+    }
+
+    function renderBadges() {
+      const badges = [];
+      badges.push(`<span class="badge ${currentEvent.visibility === "private" ? "badge-yellow" : "badge-blue"}">${currentEvent.visibility === "private" ? "Private" : "Public"}</span>`);
+      if (isCreator) badges.push(`<span class="badge badge-purple">Your Event</span>`);
+      if (joined && !isCreator) badges.push(`<span class="badge badge-green">Joined</span>`);
+      if (isExpired) badges.push(`<span class="badge badge-red">Expired</span>`);
+      if (currentEvent.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentEvent.city)}</span>`);
+      badgeRow.innerHTML = badges.join("");
+    }
+
+    function renderHost() {
+      const avatarHtml = currentHostProfile.photoURL
+        ? `<img class="host-avatar" src="${escapeHtml(currentHostProfile.photoURL)}" alt="Host photo">`
+        : `<div class="host-avatar-placeholder">No photo</div>`;
+
+      hostCard.innerHTML = `
+        ${avatarHtml}
+        <div class="host-body">
+          <div class="host-name">
+            <a href="member.html?uid=${encodeURIComponent(currentEvent.creatorId)}">${escapeHtml(currentHostProfile.displayName || currentEvent.creatorName || "Member")}</a>
+            ${currentHostProfile.verified ? `<span class="verified-dot">✓</span>` : ""}
+          </div>
+          ${currentHostProfile.username ? `<div class="host-username">@${escapeHtml(currentHostProfile.username)}</div>` : ""}
+          <div class="host-bio">${escapeHtml(currentHostProfile.bio || "Event host")}</div>
+        </div>
+      `;
+
+      const img = hostCard.querySelector(".host-avatar");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="host-avatar-placeholder">No photo</div>`;
+        });
+      }
+    }
+
+    function fillEditForm() {
+      editTitle.value = currentEvent.title || "";
+      editVisibility.value = currentEvent.visibility || "public";
+      editCity.value = currentEvent.city || "";
+      editVenue.value = currentEvent.venue || "";
+      editDate.value = currentEvent.date || "";
+      editTime.value = currentEvent.time || "";
+      editAddress.value = currentEvent.address || "";
+      editImageURL.value = currentEvent.imageURL || "";
+      editLat.value = currentEvent.lat ?? "";
+      editLng.value = currentEvent.lng ?? "";
+      editDescription.value = currentEvent.description || "";
+      setEditMessage("");
+    }
+
+    function renderTopActions() {
+      const buttons = [];
+
+      if (isCreator) {
+        buttons.push(`<button id="toggleEditBtn" class="action-btn btn-primary" type="button">Edit Event</button>`);
+        buttons.push(`<button id="deleteEventBtn" class="action-btn btn-red" type="button">Delete Event</button>`);
+      } else {
+        if (isExpired) {
+          buttons.push(`<button class="action-btn btn-soft" type="button" disabled>Expired</button>`);
+        } else if (joined) {
+          buttons.push(`<button id="leaveEventBtn" class="action-btn btn-red" type="button">Leave Event</button>`);
+        } else {
+          buttons.push(`<button id="joinEventBtn" class="action-btn btn-green" type="button">Join Event</button>`);
+        }
+
+        buttons.push(`<a href="member.html?uid=${encodeURIComponent(currentEvent.creatorId)}" class="action-btn btn-soft">Host Profile</a>`);
+        buttons.push(`<a href="report.html?type=event&targetId=${encodeURIComponent(currentEventId)}&targetUserId=${encodeURIComponent(currentEvent.creatorId)}" class="action-btn btn-yellow">Report</a>`);
+      }
+
+      topActionRow.innerHTML = buttons.join("");
+
+      const joinBtn = document.getElementById("joinEventBtn");
+      const leaveBtn = document.getElementById("leaveEventBtn");
+      const deleteBtn = document.getElementById("deleteEventBtn");
+      const toggleEditBtn = document.getElementById("toggleEditBtn");
+
+      if (joinBtn) {
+        joinBtn.addEventListener("click", async () => {
+          joinBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await setDoc(doc(db, "events", currentEventId, "members", currentUser.uid), {
+              userId: currentUser.uid,
+              displayName: currentUserProfile?.displayName || currentUser.displayName || "Member",
+              username: currentUserProfile?.username || "",
+              joinedAt: serverTimestamp()
+            }, { merge: true });
+
+            joined = true;
+            await createNotificationSafe(currentEvent.creatorId, {
+              type: "event_join",
+              title: "Event joined",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} joined your event.`,
+              fromUserId: currentUser.uid,
+              toUserId: currentEvent.creatorId,
+              eventId: currentEventId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+
+            renderBadges();
+            renderTopActions();
+            await loadMembers();
+            setTopMessage("Joined event.", "ok");
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not join event.", "err");
+            joinBtn.disabled = false;
+          }
+        });
+      }
+
+      if (leaveBtn) {
+        leaveBtn.addEventListener("click", async () => {
+          const ok = confirm("Leave this event?");
+          if (!ok) return;
+
+          leaveBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await deleteDoc(doc(db, "events", currentEventId, "members", currentUser.uid));
+            joined = false;
+            renderBadges();
+            renderTopActions();
+            await loadMembers();
+            setTopMessage("Left event.", "ok");
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not leave event.", "err");
+            leaveBtn.disabled = false;
+          }
+        });
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          const ok = confirm("Delete this event?");
+          if (!ok) return;
+
+          deleteBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await deleteDoc(doc(db, "events", currentEventId));
+            window.location.href = "nearby-events.html";
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not delete event.", "err");
+            deleteBtn.disabled = false;
+          }
+        });
+      }
+
+      if (toggleEditBtn) {
+        toggleEditBtn.addEventListener("click", () => {
+          const opening = editPanel.classList.contains("hidden");
+          if (opening) {
+            fillEditForm();
+            editPanel.classList.remove("hidden");
+            editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+            toggleEditBtn.textContent = "Hide Edit";
+          } else {
+            editPanel.classList.add("hidden");
+            toggleEditBtn.textContent = "Edit Event";
+          }
+        });
+      }
+    }
+
+    async function renderEventView() {
+      eventTitle.textContent = currentEvent.title || "Untitled Event";
+      dateText.textContent = currentEvent.date || "-";
+      timeText.textContent = currentEvent.time || "-";
+      cityText.textContent = currentEvent.city || "-";
+      venueText.textContent = [currentEvent.venue, currentEvent.address].filter(Boolean).join(" • ") || "-";
+      descText.textContent = currentEvent.description || "No description added.";
+
+      if (currentEvent.imageURL) {
+        heroImage.src = currentEvent.imageURL;
+        heroImage.classList.remove("hidden");
+      } else {
+        heroImage.classList.add("hidden");
+      }
+
+      renderBadges();
+      renderHost();
+      renderTopActions();
+      await loadMembers();
+    }
+
+    cancelEditBtn.addEventListener("click", () => {
+      editPanel.classList.add("hidden");
+      const toggleEditBtn = document.getElementById("toggleEditBtn");
+      if (toggleEditBtn) toggleEditBtn.textContent = "Edit Event";
+    });
+
+    heroImage.addEventListener("error", () => {
+      heroImage.classList.add("hidden");
+    });
+
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentEvent || !isCreator) return;
+
+      const title = editTitle.value.trim();
+      const visibility = editVisibility.value.trim() || "public";
+      const city = editCity.value.trim();
+      const venue = editVenue.value.trim();
+      const date = editDate.value.trim();
+      const time = editTime.value.trim();
+      const address = editAddress.value.trim();
+      const imageURL = editImageURL.value.trim();
+      const description = editDescription.value.trim();
+      const latText = editLat.value.trim();
+      const lngText = editLng.value.trim();
+
+      if (!title) {
+        setEditMessage("Event title is required.", "err");
+        return;
+      }
+      if (!city) {
+        setEditMessage("City is required.", "err");
+        return;
+      }
+      if (!date) {
+        setEditMessage("Date is required.", "err");
+        return;
+      }
+      if (!time) {
+        setEditMessage("Time is required.", "err");
+        return;
+      }
+      if (!description) {
+        setEditMessage("Description is required.", "err");
+        return;
+      }
+
+      const dt = new Date(`${date}T${time}`);
+      if (Number.isNaN(dt.getTime())) {
+        setEditMessage("Date or time is invalid.", "err");
+        return;
+      }
+
+      const lat = latText ? Number(latText) : null;
+      const lng = lngText ? Number(lngText) : null;
+
+      if (latText && !Number.isFinite(lat)) {
+        setEditMessage("Latitude must be a valid number.", "err");
+        return;
+      }
+      if (lngText && !Number.isFinite(lng)) {
+        setEditMessage("Longitude must be a valid number.", "err");
+        return;
+      }
+
+      const saveBtn = document.getElementById("saveEditBtn");
+      saveBtn.disabled = true;
+      setEditMessage("");
+
+      try {
+        await updateDoc(doc(db, "events", currentEventId), {
+          title,
+          visibility,
+          city,
+          venue,
+          date,
+          time,
+          address,
+          imageURL,
+          description,
+          lat,
+          lng
+        });
+
+        currentEvent = {
+          ...currentEvent,
+          title,
+          visibility,
+          city,
+          venue,
+          date,
+          time,
+          address,
+          imageURL,
+          description,
+          lat,
+          lng
+        };
+
+        const eventDateTime = parseEventDateTime(currentEvent.date, currentEvent.time);
+        isExpired = eventDateTime ? Date.now() > eventDateTime.getTime() : false;
+
+        await renderEventView();
+        setEditMessage("Event updated.", "ok");
+        setTopMessage("Event updated.", "ok");
+      } catch (err) {
+        console.error(err);
+        setEditMessage("Could not update event.", "err");
+      }
+
+      saveBtn.disabled = false;
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      currentEventId = new URLSearchParams(window.location.search).get("eventId") || "";
+
+      if (!currentEventId) {
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        currentUserProfile = await loadCurrentUserProfile(user.uid);
+
+        const eventSnap = await getDoc(doc(db, "events", currentEventId));
+        if (!eventSnap.exists()) {
+          loadingPanel.classList.add("hidden");
+          notFoundPanel.classList.remove("hidden");
+          return;
+        }
+
+        currentEvent = normalizeEvent({ id: eventSnap.id, ...eventSnap.data() }, eventSnap.id);
+
+        if (currentEvent.hidden) {
+          loadingPanel.classList.add("hidden");
+          notFoundPanel.classList.remove("hidden");
+          return;
+        }
+
+        currentHostProfile = await loadHostProfile(currentEvent.creatorId);
+        isCreator = currentEvent.creatorId === user.uid;
+
+        let joinedSnap = null;
+        try {
+          joinedSnap = await getDoc(doc(db, "events", currentEventId, "members", user.uid));
+        } catch {}
+        joined = joinedSnap ? joinedSnap.exists() : false;
+
+        const eventDateTime = parseEventDateTime(currentEvent.date, currentEvent.time);
+        isExpired = eventDateTime ? Date.now() > eventDateTime.getTime() : false;
+
+        const canView = currentEvent.visibility !== "private" || isCreator || joined;
+        if (!canView) {
+          loadingPanel.classList.add("hidden");
+          lockedPanel.classList.remove("hidden");
+          lockedText.textContent = "This private event is only available to the host and joined members.";
+          return;
+        }
+
+        await renderEventView();
+
+        loadingPanel.classList.add("hidden");
+        eventPanel.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
