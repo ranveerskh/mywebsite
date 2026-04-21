@@ -512,7 +512,6 @@
       getDoc,
       setDoc,
       updateDoc,
-      deleteDoc,
       addDoc,
       getDocs,
       collection,
@@ -570,8 +569,9 @@
     let currentMode = "loading";
     let requestDocModel = null;
     let messagesUnsub = null;
-    let targetBlockedMe = false;
+    let requestDocUnsub = null;
     let iBlockedTarget = false;
+    let targetBlockedMe = false;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -627,21 +627,12 @@
       }
     }
 
-    function tsMs(ts) {
-      if (!ts) return 0;
-      try { return ts.toDate().getTime(); }
-      catch {
-        try {
-          const ms = new Date(ts).getTime();
-          return Number.isFinite(ms) ? ms : 0;
-        } catch {
-          return 0;
-        }
-      }
-    }
-
     function getSortedPair(a, b) {
       return [a, b].sort((x, y) => x.localeCompare(y));
+    }
+
+    function makeThreadId(a, b) {
+      return getSortedPair(a, b).join("__");
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -743,6 +734,25 @@
       showAvatar(profile.photoURL || "");
     }
 
+    function clearMessageListener() {
+      if (messagesUnsub) {
+        try { messagesUnsub(); } catch {}
+        messagesUnsub = null;
+      }
+    }
+
+    function clearRequestListener() {
+      if (requestDocUnsub) {
+        try { requestDocUnsub(); } catch {}
+        requestDocUnsub = null;
+      }
+    }
+
+    function clearAllListeners() {
+      clearMessageListener();
+      clearRequestListener();
+    }
+
     function showBlocked(text) {
       blockedText.textContent = text;
       blockedPanel.classList.remove("hidden");
@@ -766,14 +776,12 @@
       requestActionRow.classList.add("hidden");
       requestPreviewBox.classList.add("hidden");
       setFormMessage("");
-      setPageMessage("");
 
       if (mode === "chat") {
         modeChip.textContent = "Chat";
         modeChip.className = "chip chip-blue";
         statusChip.textContent = "Accepted";
         statusChip.className = "chip chip-green";
-
         messagesPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
         composerNote.textContent = "This is a direct chat.";
@@ -785,7 +793,6 @@
         modeChip.className = "chip chip-blue";
         statusChip.textContent = "Ready to start";
         statusChip.className = "chip chip-purple";
-
         messagesPanel.classList.remove("hidden");
         messagesEmpty.classList.remove("hidden");
         messagesList.classList.add("hidden");
@@ -800,7 +807,6 @@
         modeChip.className = "chip chip-yellow";
         statusChip.textContent = "One message allowed";
         statusChip.className = "chip chip-purple";
-
         requestInfoPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
         requestInfoBox.textContent = "You are not a follower yet. Send one message request. They must accept it before full chat opens.";
@@ -813,7 +819,6 @@
         modeChip.className = "chip chip-yellow";
         statusChip.textContent = "Pending";
         statusChip.className = "chip chip-purple";
-
         requestInfoPanel.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
         requestPreviewBox.textContent = requestDocModel?.text
@@ -828,7 +833,6 @@
         modeChip.className = "chip chip-yellow";
         statusChip.textContent = "Incoming request";
         statusChip.className = "chip chip-purple";
-
         requestInfoPanel.classList.remove("hidden");
         requestActionRow.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
@@ -838,19 +842,22 @@
         requestInfoBox.textContent = "This person is not an approved chat yet. Accept to open full chat.";
         topSub.textContent = "Incoming request";
       }
+
+      if (mode === "request_declined") {
+        modeChip.textContent = "Request";
+        modeChip.className = "chip chip-yellow";
+        statusChip.textContent = "Declined";
+        statusChip.className = "chip chip-red";
+        requestInfoPanel.classList.remove("hidden");
+        requestInfoBox.textContent = "This request was declined.";
+        topSub.textContent = "Request declined";
+      }
     }
 
     function scrollMessagesToBottom() {
       requestAnimationFrame(() => {
         messagesList.scrollTop = messagesList.scrollHeight + 200;
       });
-    }
-
-    function clearMessageListener() {
-      if (messagesUnsub) {
-        try { messagesUnsub(); } catch {}
-        messagesUnsub = null;
-      }
     }
 
     function listenToMessages(threadId) {
@@ -906,6 +913,40 @@
       });
     }
 
+    function listenToPendingRequest(requestId, direction) {
+      clearRequestListener();
+
+      requestDocUnsub = onSnapshot(doc(db, "message_requests", requestId), async (snap) => {
+        if (!snap.exists()) return;
+
+        requestDocModel = normalizeRequest({ id: snap.id, ...snap.data() }, snap.id);
+
+        if (requestDocModel.status === "accepted") {
+          const threadId = makeThreadId(requestDocModel.requesterId, requestDocModel.targetId);
+          const threadSnap = await getDoc(doc(db, "chat_threads", threadId));
+
+          if (threadSnap.exists()) {
+            await openThread(normalizeThread({ id: threadSnap.id, ...threadSnap.data() }, threadSnap.id));
+            setPageMessage("Request accepted.", "ok");
+            return;
+          }
+        }
+
+        if (requestDocModel.status === "declined") {
+          setModeUI("request_declined");
+          if (direction === "outgoing") {
+            requestPreviewBox.classList.remove("hidden");
+            requestPreviewBox.textContent = requestDocModel.text
+              ? `Your request message:\n\n${requestDocModel.text}`
+              : "Request declined.";
+          }
+          return;
+        }
+
+        setModeUI(direction === "incoming" ? "request_incoming_pending" : "request_outgoing_pending");
+      });
+    }
+
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.uid) return;
       try {
@@ -935,8 +976,7 @@
     }
 
     async function findExistingThreadByUsers(uidA, uidB) {
-      const pair = getSortedPair(uidA, uidB);
-      const threadId = `${pair[0]}__${pair[1]}`;
+      const threadId = makeThreadId(uidA, uidB);
       const snap = await getDoc(doc(db, "chat_threads", threadId));
       if (!snap.exists()) return null;
       return normalizeThread({ id: snap.id, ...snap.data() }, snap.id);
@@ -950,6 +990,8 @@
     }
 
     async function openThread(threadModel) {
+      clearAllListeners();
+
       currentThreadId = threadModel.id;
       currentThreadData = threadModel;
       currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
@@ -971,9 +1013,10 @@
       setHeader(currentTargetProfile);
 
       if (iBlockedTarget || targetBlockedMe) {
-        showBlocked(iBlockedTarget
-          ? "You blocked this member. Unblock them from settings to chat again."
-          : "This member is not available for chat."
+        showBlocked(
+          iBlockedTarget
+            ? "You blocked this member. Unblock them from settings to chat again."
+            : "This member is not available for chat."
         );
         return;
       }
@@ -983,6 +1026,8 @@
     }
 
     async function openByTargetUid(targetUid) {
+      clearAllListeners();
+
       currentTargetUid = targetUid;
       currentTargetProfile = await loadFullProfile(targetUid);
       setHeader(currentTargetProfile);
@@ -1000,9 +1045,10 @@
       targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.uid);
 
       if (iBlockedTarget || targetBlockedMe) {
-        showBlocked(iBlockedTarget
-          ? "You blocked this member. Unblock them from settings to chat again."
-          : "This member is not available for chat."
+        showBlocked(
+          iBlockedTarget
+            ? "You blocked this member. Unblock them from settings to chat again."
+            : "This member is not available for chat."
         );
         return;
       }
@@ -1017,6 +1063,7 @@
       if (outgoingReq && outgoingReq.status === "pending") {
         requestDocModel = outgoingReq;
         setModeUI("request_outgoing_pending");
+        listenToPendingRequest(outgoingReq.id, "outgoing");
         return;
       }
 
@@ -1024,13 +1071,14 @@
       if (incomingReq && incomingReq.status === "pending") {
         requestDocModel = incomingReq;
         setModeUI("request_incoming_pending");
+        listenToPendingRequest(incomingReq.id, "incoming");
         return;
       }
 
       const iFollowTarget = await checkFollowing(currentUser.uid, targetUid);
 
       if (iFollowTarget) {
-        currentThreadId = `${getSortedPair(currentUser.uid, targetUid).join("__")}`;
+        currentThreadId = makeThreadId(currentUser.uid, targetUid);
         currentThreadData = null;
         setModeUI("direct_new");
         return;
@@ -1040,18 +1088,16 @@
     }
 
     async function sendDirectMessage(text) {
-      const pair = getSortedPair(currentUser.uid, currentTargetUid);
-      const threadId = `${pair[0]}__${pair[1]}`;
+      const threadId = makeThreadId(currentUser.uid, currentTargetUid);
       const threadRef = doc(db, "chat_threads", threadId);
-
       const threadSnap = await getDoc(threadRef);
 
       if (!threadSnap.exists()) {
         await setDoc(threadRef, {
           type: "direct",
           status: "accepted",
-          participantA: pair[0],
-          participantB: pair[1],
+          participantA: getSortedPair(currentUser.uid, currentTargetUid)[0],
+          participantB: getSortedPair(currentUser.uid, currentTargetUid)[1],
           createdBy: currentUser.uid,
           createdAt: serverTimestamp(),
           lastMessageText: text,
@@ -1124,6 +1170,7 @@
       };
 
       setModeUI("request_outgoing_pending");
+      listenToPendingRequest(requestId, "outgoing");
     }
 
     async function acceptIncomingRequest() {
@@ -1140,8 +1187,7 @@
           acceptedBy: currentUser.uid
         });
 
-        const pair = getSortedPair(requestDocModel.requesterId, requestDocModel.targetId);
-        const threadId = `${pair[0]}__${pair[1]}`;
+        const threadId = makeThreadId(requestDocModel.requesterId, requestDocModel.targetId);
         const threadRef = doc(db, "chat_threads", threadId);
         const threadSnap = await getDoc(threadRef);
 
@@ -1149,8 +1195,8 @@
           await setDoc(threadRef, {
             type: "direct",
             status: "accepted",
-            participantA: pair[0],
-            participantB: pair[1],
+            participantA: getSortedPair(requestDocModel.requesterId, requestDocModel.targetId)[0],
+            participantB: getSortedPair(requestDocModel.requesterId, requestDocModel.targetId)[1],
             createdBy: currentUser.uid,
             acceptedFromRequestId: requestDocModel.id,
             starterText: requestDocModel.text || "",
@@ -1198,17 +1244,7 @@
           declinedBy: currentUser.uid
         });
 
-        setModeUI("direct_new");
-        messagesPanel.classList.add("hidden");
-        composerPanel.classList.add("hidden");
-        requestInfoPanel.classList.remove("hidden");
-        requestInfoBox.textContent = "Request declined.";
-        requestActionRow.classList.add("hidden");
-        requestPreviewBox.classList.add("hidden");
-        statusChip.textContent = "Declined";
-        statusChip.className = "chip chip-red";
-        modeChip.textContent = "Request";
-        modeChip.className = "chip chip-yellow";
+        setModeUI("request_declined");
         setPageMessage("Request declined.", "ok");
       } catch (err) {
         console.error(err);
@@ -1255,6 +1291,7 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        clearAllListeners();
         window.location.href = "login.html";
         return;
       }
@@ -1290,18 +1327,32 @@
             return;
           }
 
-          if (threadModel.status !== "accepted") {
-            currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
-            currentTargetProfile = await loadFullProfile(currentTargetUid);
-            setHeader(currentTargetProfile);
-            requestDocModel = threadModel.acceptedFromRequestId
-              ? await loadRequestBetween(currentTargetUid, currentUser.uid)
-              : null;
-            setModeUI("request_incoming_pending");
+          if (threadModel.status === "accepted") {
+            await openThread(threadModel);
             return;
           }
 
-          await openThread(threadModel);
+          currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
+          currentTargetProfile = await loadFullProfile(currentTargetUid);
+          setHeader(currentTargetProfile);
+
+          const incomingReq = await loadRequestBetween(currentTargetUid, currentUser.uid);
+          if (incomingReq && incomingReq.status === "pending") {
+            requestDocModel = incomingReq;
+            setModeUI("request_incoming_pending");
+            listenToPendingRequest(incomingReq.id, "incoming");
+            return;
+          }
+
+          const outgoingReq = await loadRequestBetween(currentUser.uid, currentTargetUid);
+          if (outgoingReq && outgoingReq.status === "pending") {
+            requestDocModel = outgoingReq;
+            setModeUI("request_outgoing_pending");
+            listenToPendingRequest(outgoingReq.id, "outgoing");
+            return;
+          }
+
+          showBlocked("This request is no longer available.");
           return;
         }
 
@@ -1320,7 +1371,7 @@
     });
 
     window.addEventListener("beforeunload", () => {
-      clearMessageListener();
+      clearAllListeners();
     });
   </script>
 </body>
