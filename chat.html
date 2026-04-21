@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Chat</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --red:#e74c66;
+      --purple:#7f63ff;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading-box,
+    .empty-box,
+    .info-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .head-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .avatar,
+    .avatar-placeholder{
+      width:62px;
+      height:62px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .avatar{object-fit:cover}
+    .avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:6px;
+      color:var(--muted);
+      font-size:10px;
+    }
+
+    .head-body{
+      min-width:0;
+      flex:1;
+    }
+
+    .head-name{
+      font-size:18px;
+      font-weight:800;
+      line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .head-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .head-name a:hover{text-decoration:underline}
+
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .head-username{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+
+    .head-bio{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      margin-top:7px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
+    }
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:10px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .messages-shell{
+      min-height:240px;
+      max-height:58vh;
+      overflow:auto;
+      display:grid;
+      gap:10px;
+      padding-right:2px;
+    }
+
+    .bubble-row{
+      display:flex;
+      width:100%;
+    }
+    .bubble-row.mine{justify-content:flex-end}
+    .bubble-row.other{justify-content:flex-start}
+
+    .bubble{
+      max-width:min(78%, 520px);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:14px;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+      border:1px solid var(--line);
+      box-shadow:0 8px 18px rgba(0,0,0,.06);
+    }
+    .bubble.mine{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .bubble.other{
+      background:var(--surface-2);
+    }
+
+    .bubble-time{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:7px;
+    }
+
+    .composer{
+      display:grid;
+      gap:10px;
+    }
+
+    .input{
+      width:100%;
+      border:none;
+      outline:none;
+      resize:none;
+      padding:14px;
+      border-radius:16px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:15px;
+      min-height:110px;
+    }
+    .input::placeholder{color:var(--muted)}
+
+    .composer-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .bubble{max-width:86%}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div id="topSub" class="brand-sub">Chat</div>
+      </div>
+
+      <a id="profileBtn" href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <div class="panel">
+      <div class="head-row">
+        <img id="avatar" class="avatar hidden" alt="User photo" />
+        <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
+
+        <div class="head-body">
+          <div class="head-name">
+            <a id="targetNameLink" href="#">Member</a>
+            <span id="verifiedDot" class="verified-dot hidden">✓</span>
+          </div>
+          <div id="targetUsername" class="head-username hidden">@username</div>
+          <div id="targetBio" class="head-bio">Loading...</div>
+
+          <div class="chip-row">
+            <span id="modeChip" class="chip chip-blue">Chat</span>
+            <span id="statusChip" class="chip chip-purple">Loading...</span>
+          </div>
+
+          <div class="toolbar">
+            <a id="memberProfileBtn" href="#" class="action-btn btn-primary">Profile</a>
+            <a href="inbox.html" class="action-btn">Inbox</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="pageMessage" class="message"></div>
+    </div>
+
+    <div id="blockedPanel" class="panel hidden">
+      <div id="blockedText" class="info-box">
+        This conversation is not available.
+      </div>
+    </div>
+
+    <div id="messagesPanel" class="panel hidden">
+      <div id="messagesLoading" class="loading-box hidden">Loading messages...</div>
+      <div id="messagesList" class="messages-shell hidden"></div>
+      <div id="messagesEmpty" class="empty-box hidden">No messages yet.</div>
+    </div>
+
+    <div id="requestInfoPanel" class="panel hidden">
+      <div id="requestInfoBox" class="info-box">
+        You can send one request message. They must accept it before chat opens.
+      </div>
+
+      <div id="requestActionRow" class="toolbar hidden" style="margin-top:12px;">
+        <button id="acceptRequestBtn" class="action-btn btn-green" type="button">Accept Request</button>
+        <button id="declineRequestBtn" class="action-btn btn-red" type="button">Decline Request</button>
+      </div>
+
+      <div id="requestPreviewBox" class="info-box hidden" style="margin-top:12px;"></div>
+    </div>
+
+    <div id="composerPanel" class="panel hidden">
+      <div class="composer">
+        <textarea id="messageInput" class="input" placeholder="Write your message..."></textarea>
+
+        <div class="composer-actions">
+          <div id="formMessage" class="message"></div>
+          <button id="sendBtn" class="action-btn btn-green" type="button">Send</button>
+        </div>
+
+        <div id="composerNote" class="small-note"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="inbox.html" class="nav-link active">
+      <span class="icon">✉</span>
+      <span>Inbox</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      deleteDoc,
+      addDoc,
+      getDocs,
+      collection,
+      query,
+      where,
+      orderBy,
+      limit,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+    const topSub = document.getElementById("topSub");
+    const profileBtn = document.getElementById("profileBtn");
+
+    const avatar = document.getElementById("avatar");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+    const targetNameLink = document.getElementById("targetNameLink");
+    const verifiedDot = document.getElementById("verifiedDot");
+    const targetUsername = document.getElementById("targetUsername");
+    const targetBio = document.getElementById("targetBio");
+    const modeChip = document.getElementById("modeChip");
+    const statusChip = document.getElementById("statusChip");
+    const memberProfileBtn = document.getElementById("memberProfileBtn");
+
+    const pageMessage = document.getElementById("pageMessage");
+
+    const blockedPanel = document.getElementById("blockedPanel");
+    const blockedText = document.getElementById("blockedText");
+
+    const messagesPanel = document.getElementById("messagesPanel");
+    const messagesLoading = document.getElementById("messagesLoading");
+    const messagesList = document.getElementById("messagesList");
+    const messagesEmpty = document.getElementById("messagesEmpty");
+
+    const requestInfoPanel = document.getElementById("requestInfoPanel");
+    const requestInfoBox = document.getElementById("requestInfoBox");
+    const requestActionRow = document.getElementById("requestActionRow");
+    const requestPreviewBox = document.getElementById("requestPreviewBox");
+    const acceptRequestBtn = document.getElementById("acceptRequestBtn");
+    const declineRequestBtn = document.getElementById("declineRequestBtn");
+
+    const composerPanel = document.getElementById("composerPanel");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const formMessage = document.getElementById("formMessage");
+    const composerNote = document.getElementById("composerNote");
+
+    let currentUser = null;
+    let currentViewerProfile = null;
+    let currentTargetUid = "";
+    let currentTargetProfile = null;
+    let currentThreadId = "";
+    let currentThreadData = null;
+    let currentMode = "loading";
+    let requestDocModel = null;
+    let messagesUnsub = null;
+    let targetBlockedMe = false;
+    let iBlockedTarget = false;
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    function setPageMessage(text = "", type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
+
+    function setFormMessage(text = "", type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Just now";
+      try { return ts.toDate().toLocaleString(); }
+      catch {
+        try {
+          const d = new Date(ts);
+          return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+        } catch {
+          return "Just now";
+        }
+      }
+    }
+
+    function tsMs(ts) {
+      if (!ts) return 0;
+      try { return ts.toDate().getTime(); }
+      catch {
+        try {
+          const ms = new Date(ts).getTime();
+          return Number.isFinite(ms) ? ms : 0;
+        } catch {
+          return 0;
+        }
+      }
+    }
+
+    function getSortedPair(a, b) {
+      return [a, b].sort((x, y) => x.localeCompare(y));
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        verified: !!(d.verified || d.isVerified),
+        bio: d.bio || "",
+        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted
+      };
+    }
+
+    function normalizeThread(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        type: d.type || "direct",
+        status: d.status || "accepted",
+        participantA: d.participantA || "",
+        participantB: d.participantB || "",
+        createdBy: d.createdBy || "",
+        acceptedFromRequestId: d.acceptedFromRequestId || "",
+        starterText: d.starterText || "",
+        starterFrom: d.starterFrom || "",
+        lastMessageText: d.lastMessageText || "",
+        lastMessageAt: d.lastMessageAt || d.createdAt || null,
+        lastSenderId: d.lastSenderId || "",
+        createdAt: d.createdAt || null
+      };
+    }
+
+    function normalizeRequest(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        requesterId: d.requesterId || "",
+        targetId: d.targetId || "",
+        text: d.text || "",
+        status: d.status || "pending",
+        createdAt: d.createdAt || null,
+        updatedAt: d.updatedAt || null
+      };
+    }
+
+    async function loadFullProfile(uid) {
+      const [userSnap, publicSnap] = await Promise.all([
+        getDoc(doc(db, "users", uid)).catch(() => null),
+        getDoc(doc(db, "publicProfiles", uid)).catch(() => null)
+      ]);
+
+      return normalizeProfile({
+        ...(publicSnap?.exists ? publicSnap.data() : {}),
+        ...(userSnap?.exists ? userSnap.data() : {}),
+        uid
+      }, uid);
+    }
+
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatar.removeAttribute("src");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
+      }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
+
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    function setHeader(profile) {
+      targetNameLink.textContent = profile.displayName || "Member";
+      targetNameLink.href = `member.html?uid=${encodeURIComponent(profile.uid)}`;
+      memberProfileBtn.href = `member.html?uid=${encodeURIComponent(profile.uid)}`;
+      profileBtn.href = `member.html?uid=${encodeURIComponent(profile.uid)}`;
+
+      if (profile.username) {
+        targetUsername.textContent = "@" + profile.username;
+        targetUsername.classList.remove("hidden");
+      } else {
+        targetUsername.classList.add("hidden");
+      }
+
+      if (profile.verified) verifiedDot.classList.remove("hidden");
+      else verifiedDot.classList.add("hidden");
+
+      targetBio.textContent = profile.bio?.trim() ? profile.bio : "BareWorld member";
+      showAvatar(profile.photoURL || "");
+    }
+
+    function showBlocked(text) {
+      blockedText.textContent = text;
+      blockedPanel.classList.remove("hidden");
+      messagesPanel.classList.add("hidden");
+      requestInfoPanel.classList.add("hidden");
+      composerPanel.classList.add("hidden");
+    }
+
+    function hideBlocked() {
+      blockedPanel.classList.add("hidden");
+    }
+
+    function setModeUI(mode) {
+      currentMode = mode;
+      hideBlocked();
+
+      messagesPanel.classList.add("hidden");
+      requestInfoPanel.classList.add("hidden");
+      composerPanel.classList.add("hidden");
+
+      requestActionRow.classList.add("hidden");
+      requestPreviewBox.classList.add("hidden");
+      setFormMessage("");
+      setPageMessage("");
+
+      if (mode === "chat") {
+        modeChip.textContent = "Chat";
+        modeChip.className = "chip chip-blue";
+        statusChip.textContent = "Accepted";
+        statusChip.className = "chip chip-green";
+
+        messagesPanel.classList.remove("hidden");
+        composerPanel.classList.remove("hidden");
+        composerNote.textContent = "This is a direct chat.";
+        topSub.textContent = "Chat";
+      }
+
+      if (mode === "direct_new") {
+        modeChip.textContent = "Chat";
+        modeChip.className = "chip chip-blue";
+        statusChip.textContent = "Ready to start";
+        statusChip.className = "chip chip-purple";
+
+        messagesPanel.classList.remove("hidden");
+        messagesEmpty.classList.remove("hidden");
+        messagesList.classList.add("hidden");
+        messagesLoading.classList.add("hidden");
+        composerPanel.classList.remove("hidden");
+        composerNote.textContent = "Your first message will start the chat.";
+        topSub.textContent = "New chat";
+      }
+
+      if (mode === "request_compose") {
+        modeChip.textContent = "Request";
+        modeChip.className = "chip chip-yellow";
+        statusChip.textContent = "One message allowed";
+        statusChip.className = "chip chip-purple";
+
+        requestInfoPanel.classList.remove("hidden");
+        composerPanel.classList.remove("hidden");
+        requestInfoBox.textContent = "You are not a follower yet. Send one message request. They must accept it before full chat opens.";
+        composerNote.textContent = "Only one request message is allowed until accepted.";
+        topSub.textContent = "Message request";
+      }
+
+      if (mode === "request_outgoing_pending") {
+        modeChip.textContent = "Request";
+        modeChip.className = "chip chip-yellow";
+        statusChip.textContent = "Pending";
+        statusChip.className = "chip chip-purple";
+
+        requestInfoPanel.classList.remove("hidden");
+        requestPreviewBox.classList.remove("hidden");
+        requestPreviewBox.textContent = requestDocModel?.text
+          ? `Your request message:\n\n${requestDocModel.text}`
+          : "Your request is pending.";
+        requestInfoBox.textContent = "Your message request is pending. Full chat will open after they accept.";
+        topSub.textContent = "Request pending";
+      }
+
+      if (mode === "request_incoming_pending") {
+        modeChip.textContent = "Request";
+        modeChip.className = "chip chip-yellow";
+        statusChip.textContent = "Incoming request";
+        statusChip.className = "chip chip-purple";
+
+        requestInfoPanel.classList.remove("hidden");
+        requestActionRow.classList.remove("hidden");
+        requestPreviewBox.classList.remove("hidden");
+        requestPreviewBox.textContent = requestDocModel?.text
+          ? `Request message:\n\n${requestDocModel.text}`
+          : "No request message.";
+        requestInfoBox.textContent = "This person is not an approved chat yet. Accept to open full chat.";
+        topSub.textContent = "Incoming request";
+      }
+    }
+
+    function scrollMessagesToBottom() {
+      requestAnimationFrame(() => {
+        messagesList.scrollTop = messagesList.scrollHeight + 200;
+      });
+    }
+
+    function clearMessageListener() {
+      if (messagesUnsub) {
+        try { messagesUnsub(); } catch {}
+        messagesUnsub = null;
+      }
+    }
+
+    function listenToMessages(threadId) {
+      clearMessageListener();
+
+      messagesPanel.classList.remove("hidden");
+      messagesLoading.classList.remove("hidden");
+      messagesList.classList.add("hidden");
+      messagesEmpty.classList.add("hidden");
+
+      const q = query(
+        collection(db, "chat_threads", threadId, "messages"),
+        orderBy("createdAt", "asc")
+      );
+
+      messagesUnsub = onSnapshot(q, (snap) => {
+        messagesLoading.classList.add("hidden");
+        messagesList.innerHTML = "";
+
+        if (snap.empty) {
+          messagesList.classList.add("hidden");
+          messagesEmpty.classList.remove("hidden");
+          return;
+        }
+
+        messagesEmpty.classList.add("hidden");
+        messagesList.classList.remove("hidden");
+
+        snap.docs.forEach(d => {
+          const msg = d.data();
+          const mine = msg.senderId === currentUser.uid;
+
+          const row = document.createElement("div");
+          row.className = `bubble-row ${mine ? "mine" : "other"}`;
+
+          row.innerHTML = `
+            <div class="bubble ${mine ? "mine" : "other"}">
+              <div>${escapeHtml(msg.text || "")}</div>
+              <div class="bubble-time">${escapeHtml(formatDate(msg.createdAt))}</div>
+            </div>
+          `;
+
+          messagesList.appendChild(row);
+        });
+
+        scrollMessagesToBottom();
+      }, (err) => {
+        console.error(err);
+        messagesLoading.classList.add("hidden");
+        messagesList.classList.add("hidden");
+        messagesEmpty.classList.remove("hidden");
+        messagesEmpty.textContent = "Could not load messages.";
+      });
+    }
+
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
+    }
+
+    async function checkFollowing(viewerUid, targetUid) {
+      try {
+        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${targetUid}`));
+        if (direct.exists()) return true;
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "follows"),
+            where("followerId", "==", viewerUid),
+            where("followingId", "==", targetUid),
+            limit(1)
+          )
+        );
+        return !snap.empty;
+      } catch {
+        return false;
+      }
+    }
+
+    async function findExistingThreadByUsers(uidA, uidB) {
+      const pair = getSortedPair(uidA, uidB);
+      const threadId = `${pair[0]}__${pair[1]}`;
+      const snap = await getDoc(doc(db, "chat_threads", threadId));
+      if (!snap.exists()) return null;
+      return normalizeThread({ id: snap.id, ...snap.data() }, snap.id);
+    }
+
+    async function loadRequestBetween(requesterId, targetId) {
+      const requestId = `${requesterId}__${targetId}`;
+      const snap = await getDoc(doc(db, "message_requests", requestId));
+      if (!snap.exists()) return null;
+      return normalizeRequest({ id: snap.id, ...snap.data() }, snap.id);
+    }
+
+    async function openThread(threadModel) {
+      currentThreadId = threadModel.id;
+      currentThreadData = threadModel;
+      currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
+      currentTargetProfile = await loadFullProfile(currentTargetUid);
+
+      if (
+        currentTargetProfile.softDeleted ||
+        currentTargetProfile.isHiddenByAdmin ||
+        currentTargetProfile.moderationStatus === "banned"
+      ) {
+        setHeader(currentTargetProfile);
+        showBlocked("This account is not available for chat.");
+        return;
+      }
+
+      iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
+      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.uid);
+
+      setHeader(currentTargetProfile);
+
+      if (iBlockedTarget || targetBlockedMe) {
+        showBlocked(iBlockedTarget
+          ? "You blocked this member. Unblock them from settings to chat again."
+          : "This member is not available for chat."
+        );
+        return;
+      }
+
+      setModeUI("chat");
+      listenToMessages(currentThreadId);
+    }
+
+    async function openByTargetUid(targetUid) {
+      currentTargetUid = targetUid;
+      currentTargetProfile = await loadFullProfile(targetUid);
+      setHeader(currentTargetProfile);
+
+      if (
+        currentTargetProfile.softDeleted ||
+        currentTargetProfile.isHiddenByAdmin ||
+        currentTargetProfile.moderationStatus === "banned"
+      ) {
+        showBlocked("This account is not available for chat.");
+        return;
+      }
+
+      iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(targetUid);
+      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.uid);
+
+      if (iBlockedTarget || targetBlockedMe) {
+        showBlocked(iBlockedTarget
+          ? "You blocked this member. Unblock them from settings to chat again."
+          : "This member is not available for chat."
+        );
+        return;
+      }
+
+      const existingThread = await findExistingThreadByUsers(currentUser.uid, targetUid);
+      if (existingThread && existingThread.status === "accepted") {
+        await openThread(existingThread);
+        return;
+      }
+
+      const outgoingReq = await loadRequestBetween(currentUser.uid, targetUid);
+      if (outgoingReq && outgoingReq.status === "pending") {
+        requestDocModel = outgoingReq;
+        setModeUI("request_outgoing_pending");
+        return;
+      }
+
+      const incomingReq = await loadRequestBetween(targetUid, currentUser.uid);
+      if (incomingReq && incomingReq.status === "pending") {
+        requestDocModel = incomingReq;
+        setModeUI("request_incoming_pending");
+        return;
+      }
+
+      const iFollowTarget = await checkFollowing(currentUser.uid, targetUid);
+
+      if (iFollowTarget) {
+        currentThreadId = `${getSortedPair(currentUser.uid, targetUid).join("__")}`;
+        currentThreadData = null;
+        setModeUI("direct_new");
+        return;
+      }
+
+      setModeUI("request_compose");
+    }
+
+    async function sendDirectMessage(text) {
+      const pair = getSortedPair(currentUser.uid, currentTargetUid);
+      const threadId = `${pair[0]}__${pair[1]}`;
+      const threadRef = doc(db, "chat_threads", threadId);
+
+      const threadSnap = await getDoc(threadRef);
+
+      if (!threadSnap.exists()) {
+        await setDoc(threadRef, {
+          type: "direct",
+          status: "accepted",
+          participantA: pair[0],
+          participantB: pair[1],
+          createdBy: currentUser.uid,
+          createdAt: serverTimestamp(),
+          lastMessageText: text,
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: currentUser.uid
+        });
+      } else {
+        await updateDoc(threadRef, {
+          status: "accepted",
+          lastMessageText: text,
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: currentUser.uid
+        });
+      }
+
+      await addDoc(collection(db, "chat_threads", threadId, "messages"), {
+        senderId: currentUser.uid,
+        text,
+        createdAt: serverTimestamp()
+      });
+
+      await createNotificationSafe(currentTargetUid, {
+        type: "message",
+        title: "New message",
+        text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a message.`,
+        fromUserId: currentUser.uid,
+        toUserId: currentTargetUid,
+        threadId,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+
+      const finalThreadSnap = await getDoc(threadRef);
+      currentThreadData = normalizeThread({ id: finalThreadSnap.id, ...finalThreadSnap.data() }, finalThreadSnap.id);
+      currentThreadId = threadId;
+      setModeUI("chat");
+      listenToMessages(threadId);
+    }
+
+    async function sendRequestMessage(text) {
+      const requestId = `${currentUser.uid}__${currentTargetUid}`;
+
+      await setDoc(doc(db, "message_requests", requestId), {
+        requesterId: currentUser.uid,
+        targetId: currentTargetUid,
+        text,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      await createNotificationSafe(currentTargetUid, {
+        type: "message_request",
+        title: "New message request",
+        text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a message request.`,
+        fromUserId: currentUser.uid,
+        toUserId: currentTargetUid,
+        requestId,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+
+      requestDocModel = {
+        id: requestId,
+        requesterId: currentUser.uid,
+        targetId: currentTargetUid,
+        text,
+        status: "pending",
+        createdAt: new Date()
+      };
+
+      setModeUI("request_outgoing_pending");
+    }
+
+    async function acceptIncomingRequest() {
+      if (!requestDocModel) return;
+
+      acceptRequestBtn.disabled = true;
+      declineRequestBtn.disabled = true;
+      setPageMessage("");
+
+      try {
+        await updateDoc(doc(db, "message_requests", requestDocModel.id), {
+          status: "accepted",
+          acceptedAt: serverTimestamp(),
+          acceptedBy: currentUser.uid
+        });
+
+        const pair = getSortedPair(requestDocModel.requesterId, requestDocModel.targetId);
+        const threadId = `${pair[0]}__${pair[1]}`;
+        const threadRef = doc(db, "chat_threads", threadId);
+        const threadSnap = await getDoc(threadRef);
+
+        if (!threadSnap.exists()) {
+          await setDoc(threadRef, {
+            type: "direct",
+            status: "accepted",
+            participantA: pair[0],
+            participantB: pair[1],
+            createdBy: currentUser.uid,
+            acceptedFromRequestId: requestDocModel.id,
+            starterText: requestDocModel.text || "",
+            starterFrom: requestDocModel.requesterId,
+            createdAt: serverTimestamp(),
+            lastMessageText: "",
+            lastMessageAt: serverTimestamp(),
+            lastSenderId: ""
+          });
+        }
+
+        await createNotificationSafe(requestDocModel.requesterId, {
+          type: "message_request_accepted",
+          title: "Message request accepted",
+          text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} accepted your message request.`,
+          fromUserId: currentUser.uid,
+          toUserId: requestDocModel.requesterId,
+          threadId,
+          createdAt: serverTimestamp(),
+          isRead: false
+        });
+
+        const freshThreadSnap = await getDoc(threadRef);
+        await openThread(normalizeThread({ id: freshThreadSnap.id, ...freshThreadSnap.data() }, freshThreadSnap.id));
+        setPageMessage("Request accepted.", "ok");
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not accept request.", "err");
+        acceptRequestBtn.disabled = false;
+        declineRequestBtn.disabled = false;
+      }
+    }
+
+    async function declineIncomingRequest() {
+      if (!requestDocModel) return;
+
+      acceptRequestBtn.disabled = true;
+      declineRequestBtn.disabled = true;
+      setPageMessage("");
+
+      try {
+        await updateDoc(doc(db, "message_requests", requestDocModel.id), {
+          status: "declined",
+          declinedAt: serverTimestamp(),
+          declinedBy: currentUser.uid
+        });
+
+        setModeUI("direct_new");
+        messagesPanel.classList.add("hidden");
+        composerPanel.classList.add("hidden");
+        requestInfoPanel.classList.remove("hidden");
+        requestInfoBox.textContent = "Request declined.";
+        requestActionRow.classList.add("hidden");
+        requestPreviewBox.classList.add("hidden");
+        statusChip.textContent = "Declined";
+        statusChip.className = "chip chip-red";
+        modeChip.textContent = "Request";
+        modeChip.className = "chip chip-yellow";
+        setPageMessage("Request declined.", "ok");
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not decline request.", "err");
+        acceptRequestBtn.disabled = false;
+        declineRequestBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener("click", async () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      if (!currentUser || !currentTargetUid) return;
+      if (iBlockedTarget || targetBlockedMe) return;
+
+      sendBtn.disabled = true;
+      setFormMessage("");
+
+      try {
+        if (currentMode === "chat" || currentMode === "direct_new") {
+          await sendDirectMessage(text);
+          messageInput.value = "";
+          setFormMessage("Message sent.", "ok");
+        } else if (currentMode === "request_compose") {
+          await sendRequestMessage(text);
+          messageInput.value = "";
+          setFormMessage("Request sent.", "ok");
+        }
+      } catch (err) {
+        console.error(err);
+        setFormMessage(err?.message || "Could not send message.", "err");
+      }
+
+      sendBtn.disabled = false;
+    });
+
+    acceptRequestBtn.addEventListener("click", acceptIncomingRequest);
+    declineRequestBtn.addEventListener("click", declineIncomingRequest);
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "inbox.html";
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      currentViewerProfile = await loadFullProfile(user.uid);
+
+      const params = new URLSearchParams(window.location.search);
+      const threadIdParam = (params.get("threadId") || "").trim();
+      const uidParam = (params.get("uid") || "").trim();
+
+      if (!threadIdParam && !uidParam) {
+        showBlocked("No conversation selected.");
+        return;
+      }
+
+      try {
+        if (threadIdParam) {
+          const threadSnap = await getDoc(doc(db, "chat_threads", threadIdParam));
+          if (!threadSnap.exists()) {
+            showBlocked("Chat not found.");
+            return;
+          }
+
+          const threadModel = normalizeThread({ id: threadSnap.id, ...threadSnap.data() }, threadSnap.id);
+
+          const isParticipant =
+            threadModel.participantA === currentUser.uid ||
+            threadModel.participantB === currentUser.uid;
+
+          if (!isParticipant) {
+            showBlocked("This chat is not available to you.");
+            return;
+          }
+
+          if (threadModel.status !== "accepted") {
+            currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
+            currentTargetProfile = await loadFullProfile(currentTargetUid);
+            setHeader(currentTargetProfile);
+            requestDocModel = threadModel.acceptedFromRequestId
+              ? await loadRequestBetween(currentTargetUid, currentUser.uid)
+              : null;
+            setModeUI("request_incoming_pending");
+            return;
+          }
+
+          await openThread(threadModel);
+          return;
+        }
+
+        if (uidParam) {
+          if (uidParam === currentUser.uid) {
+            showBlocked("You cannot chat with yourself.");
+            return;
+          }
+
+          await openByTargetUid(uidParam);
+        }
+      } catch (err) {
+        console.error(err);
+        showBlocked("Could not load chat.");
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      clearMessageListener();
+    });
+  </script>
+</body>
+</html>
