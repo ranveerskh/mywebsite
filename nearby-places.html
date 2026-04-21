@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Nearby Places</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+    .top-icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+    .hero-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .btn-soft{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .tab-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 10px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .tab-btn.active{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .search-box{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:16px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+      margin-bottom:12px;
+    }
+    .search-box::placeholder{color:var(--muted)}
+
+    .list{
+      display:grid;
+      gap:12px;
+    }
+
+    .card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .card-title{
+      font-size:17px;
+      font-weight:800;
+      line-height:1.4;
+      margin-bottom:10px;
+    }
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .mini-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+    }
+    .mini-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .mini-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .mini-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .mini-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .mini-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .meta-grid{
+      display:grid;
+      gap:6px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.52;
+      margin-bottom:10px;
+    }
+    .desc{
+      color:var(--text);
+      line-height:1.55;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-bottom:12px;
+    }
+    .card-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .loading-box{
+      text-align:center;
+      color:var(--muted);
+      padding:20px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+    }
+    .empty-box{
+      text-align:center;
+      padding:22px 10px;
+      color:var(--muted);
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+    }
+    .status-text{
+      min-height:18px;
+      font-size:13px;
+      margin-top:10px;
+    }
+    .status-ok{color:#86efac}
+    .status-err{color:#fda4af}
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="nearby.html" class="top-icon-btn" aria-label="Back to nearby">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Nearby places</div>
+      </div>
+
+      <a href="add-place.html" class="top-icon-btn" aria-label="Add place">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div class="panel">
+      <div class="hero-title">Places Around You</div>
+      <div class="hero-sub">
+        Browse verified places, review your submissions, and keep pending places separate so the main list stays clean.
+      </div>
+
+      <div class="chip-row">
+        <span class="chip chip-blue" id="cityChip">City: -</span>
+        <span class="chip chip-purple" id="modeChip">Mode: -</span>
+        <span class="chip chip-yellow" id="browserChip">Browser location off</span>
+      </div>
+
+      <div class="action-row">
+        <button id="useBrowserLocationBtn" class="action-btn btn-primary" type="button">Use Browser Location</button>
+        <button id="refreshBtn" class="action-btn btn-soft" type="button">Refresh Places</button>
+        <a href="add-place.html" class="action-btn btn-purple">Add Place</a>
+      </div>
+
+      <div id="pageStatus" class="status-text"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="verified">Verified</button>
+        <button class="tab-btn" data-tab="mine">My Places</button>
+        <button class="tab-btn" data-tab="pending">Pending</button>
+      </div>
+
+      <input id="searchInput" class="search-box" type="text" placeholder="Search verified places..." />
+
+      <div id="listLoading" class="loading-box">Loading places...</div>
+      <div id="listWrap" class="list hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No places found.</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link active">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      getDocs,
+      collection
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const cityChip = document.getElementById("cityChip");
+    const modeChip = document.getElementById("modeChip");
+    const browserChip = document.getElementById("browserChip");
+
+    const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const pageStatus = document.getElementById("pageStatus");
+
+    const searchInput = document.getElementById("searchInput");
+    const listLoading = document.getElementById("listLoading");
+    const listWrap = document.getElementById("listWrap");
+    const emptyBox = document.getElementById("emptyBox");
+
+    let currentUser = null;
+    let viewerProfile = null;
+    let browserCoords = null;
+    let currentTab = "verified";
+    let placesData = [];
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    function setPageStatus(text = "", type = "") {
+      pageStatus.textContent = text;
+      pageStatus.className = `status-text ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function readLat(obj) {
+      return num(
+        obj?.lat ??
+        obj?.latitude ??
+        obj?.location?.lat ??
+        obj?.location?.latitude ??
+        obj?.coords?.lat ??
+        obj?.coords?.latitude
+      );
+    }
+
+    function readLng(obj) {
+      return num(
+        obj?.lng ??
+        obj?.lon ??
+        obj?.long ??
+        obj?.longitude ??
+        obj?.location?.lng ??
+        obj?.location?.lon ??
+        obj?.location?.long ??
+        obj?.location?.longitude ??
+        obj?.coords?.lng ??
+        obj?.coords?.longitude
+      );
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        city: d.city || d.locationCity || d.currentCity || "",
+        locationVisibility: d.locationVisibility || "hidden",
+        lat: readLat(d),
+        lng: readLng(d)
+      };
+    }
+
+    function normalizePlace(raw, fallbackId = "", sourceName = "") {
+      const d = raw || {};
+      const status = String(d.status || "").toLowerCase();
+
+      return {
+        id: d.id || fallbackId || "",
+        source: sourceName,
+        name: d.name || d.title || d.placeName || "Unnamed Place",
+        description: d.description || d.desc || d.notes || "",
+        city: d.city || d.locationCity || "",
+        address: d.address || d.fullAddress || "",
+        website: d.website || d.url || d.link || "",
+        createdBy: d.createdBy || d.userId || d.uid || "",
+        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
+        pending: status === "pending" || d.pending === true,
+        rejected: status === "rejected",
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        lat: readLat(d),
+        lng: readLng(d),
+        createdAtMs: getCreatedMs(d)
+      };
+    }
+
+    function getCreatedMs(obj) {
+      const value = obj?.createdAt || obj?.timestamp || null;
+      if (!value) return 0;
+      if (value?.toDate) return value.toDate().getTime();
+      const ms = new Date(value).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    function kmDistance(lat1, lng1, lat2, lng2) {
+      if ([lat1, lng1, lat2, lng2].some(v => v === null || v === undefined)) return null;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function sameCity(a, b) {
+      const aa = String(a || "").trim().toLowerCase();
+      const bb = String(b || "").trim().toLowerCase();
+      return aa && bb && aa === bb;
+    }
+
+    function formatDistanceLabel(distanceKm) {
+      if (distanceKm === null || distanceKm === undefined) return "";
+      if (distanceKm < 1) return "Under 1 km";
+      if (distanceKm < 10) return `${distanceKm.toFixed(1)} km away`;
+      return `${Math.round(distanceKm)} km away`;
+    }
+
+    async function requestBrowserLocation() {
+      if (!navigator.geolocation) {
+        browserCoords = null;
+        browserChip.textContent = "Browser location unsupported";
+        browserChip.className = "chip chip-red";
+        renderPlaces();
+        return;
+      }
+
+      browserChip.textContent = "Checking browser location...";
+      browserChip.className = "chip chip-yellow";
+
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            browserCoords = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            browserChip.textContent = "Browser location on";
+            browserChip.className = "chip chip-green";
+            resolve();
+          },
+          () => {
+            browserCoords = null;
+            browserChip.textContent = "Browser location off";
+            browserChip.className = "chip chip-yellow";
+            resolve();
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        );
+      });
+
+      renderPlaces();
+    }
+
+    function renderViewerChips() {
+      if (!viewerProfile) return;
+
+      cityChip.textContent = `City: ${viewerProfile.city || "Not added"}`;
+      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "hidden"}`;
+
+      cityChip.className = "chip chip-blue";
+      modeChip.className = "chip chip-purple";
+
+      if (!browserCoords) {
+        browserChip.textContent = "Browser location off";
+        browserChip.className = "chip chip-yellow";
+      }
+    }
+
+    function openLoading() {
+      listLoading.classList.remove("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.add("hidden");
+      listWrap.innerHTML = "";
+    }
+
+    function showEmpty(text) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.remove("hidden");
+      emptyBox.textContent = text;
+    }
+
+    function showList() {
+      listLoading.classList.add("hidden");
+      listWrap.classList.remove("hidden");
+      emptyBox.classList.add("hidden");
+    }
+
+    function buildPlaceViewModel(place) {
+      const viewerLat = browserCoords?.lat ?? viewerProfile?.lat ?? null;
+      const viewerLng = browserCoords?.lng ?? viewerProfile?.lng ?? null;
+
+      let distanceKm = null;
+      let score = 0;
+
+      if (viewerLat !== null && viewerLng !== null && place.lat !== null && place.lng !== null) {
+        distanceKm = kmDistance(viewerLat, viewerLng, place.lat, place.lng);
+        if (distanceKm !== null) score = Math.max(0, 500 - distanceKm);
+      } else if (sameCity(viewerProfile?.city, place.city)) {
+        score = 250;
+      }
+
+      return {
+        ...place,
+        distanceKm,
+        distanceLabel: distanceKm !== null ? formatDistanceLabel(distanceKm) : (sameCity(viewerProfile?.city, place.city) ? "Same city" : ""),
+        score
+      };
+    }
+
+    function matchesSearch(place, q) {
+      if (!q) return true;
+      const joined = [
+        place.name,
+        place.description,
+        place.city,
+        place.address,
+        place.website
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      return joined.includes(q.toLowerCase());
+    }
+
+    function getFilteredPlaces() {
+      const q = searchInput.value.trim();
+
+      let rows = placesData
+        .filter(p => !p.hidden)
+        .map(buildPlaceViewModel)
+        .filter(p => matchesSearch(p, q));
+
+      if (currentTab === "verified") {
+        rows = rows
+          .filter(p => p.approved)
+          .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+      } else if (currentTab === "mine") {
+        rows = rows
+          .filter(p => p.createdBy === currentUser.uid)
+          .sort((a, b) => b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name));
+      } else {
+        rows = rows
+          .filter(p => p.createdBy === currentUser.uid)
+          .filter(p => p.pending || (!p.approved && !p.rejected))
+          .sort((a, b) => b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name));
+      }
+
+      return rows;
+    }
+
+    function buildBadges(model) {
+      const badges = [];
+
+      if (model.approved) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+      if (model.pending || (!model.approved && !model.rejected)) badges.push(`<span class="mini-badge mini-yellow">Pending</span>`);
+      if (model.rejected) badges.push(`<span class="mini-badge mini-red">Rejected</span>`);
+      if (model.distanceLabel) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.distanceLabel)}</span>`);
+      if (model.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.city)}</span>`);
+      if (model.createdBy === currentUser.uid) badges.push(`<span class="mini-badge mini-blue">Submitted by you</span>`);
+
+      return badges.join("");
+    }
+
+    function renderPlaces() {
+      openLoading();
+
+      requestAnimationFrame(() => {
+        const rows = getFilteredPlaces();
+
+        if (!rows.length) {
+          const emptyText = currentTab === "mine"
+            ? "You have not submitted any places yet."
+            : currentTab === "pending"
+            ? "No pending places right now."
+            : "No verified places found.";
+          showEmpty(emptyText);
+          return;
+        }
+
+        listWrap.innerHTML = "";
+
+        rows.forEach(model => {
+          const websiteHtml = model.website
+            ? `<a href="${escapeHtml(model.website)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>`
+            : "";
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-title">${escapeHtml(model.name)}</div>
+
+            <div class="badge-row">
+              ${buildBadges(model)}
+            </div>
+
+            <div class="meta-grid">
+              <div><strong>City:</strong> ${escapeHtml(model.city || "Not added")}</div>
+              ${model.address ? `<div><strong>Address:</strong> ${escapeHtml(model.address)}</div>` : ""}
+              <div><strong>Type:</strong> ${model.approved ? "Verified place" : model.rejected ? "Rejected submission" : "Under review"}</div>
+            </div>
+
+            <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
+
+            <div class="card-actions">
+              ${websiteHtml}
+              ${model.createdBy === currentUser.uid ? `<a href="add-place.html" class="action-btn btn-purple">Add Another</a>` : ""}
+            </div>
+          `;
+
+          listWrap.appendChild(card);
+        });
+
+        showList();
+      });
+    }
+
+    async function loadViewer(uid) {
+      const [userSnap, publicSnap] = await Promise.all([
+        getDoc(doc(db, "users", uid)),
+        getDoc(doc(db, "publicProfiles", uid))
+      ]);
+
+      viewerProfile = normalizeProfile({
+        ...(publicSnap.exists() ? publicSnap.data() : {}),
+        ...(userSnap.exists() ? userSnap.data() : {}),
+        uid
+      }, uid);
+
+      renderViewerChips();
+    }
+
+    async function loadPlaces() {
+      const sources = ["nearby_places", "places", "nudist_places"];
+      const map = new Map();
+
+      for (const source of sources) {
+        try {
+          const snap = await getDocs(collection(db, source));
+          snap.forEach(d => {
+            const place = normalizePlace({ id: d.id, ...d.data() }, d.id, source);
+            map.set(`${source}:${place.id}`, place);
+          });
+        } catch {}
+      }
+
+      placesData = Array.from(map.values());
+    }
+
+    async function refreshAll() {
+      openLoading();
+      await loadPlaces();
+      renderViewerChips();
+      renderPlaces();
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+
+      searchInput.placeholder =
+        tab === "verified"
+          ? "Search verified places..."
+          : tab === "mine"
+          ? "Search my places..."
+          : "Search pending places...";
+
+      renderPlaces();
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab));
+    });
+
+    searchInput.addEventListener("input", renderPlaces);
+    useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
+    refreshBtn.addEventListener("click", refreshAll);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        await loadViewer(user.uid);
+        await refreshAll();
+      } catch (err) {
+        console.error(err);
+        showEmpty("Could not load nearby places.");
+      }
+    });
+  </script>
+</body>
+</html>
