@@ -1,182 +1,364 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --shadow:0 18px 36px rgba(0,0,0,.18);
+      --hero-grad:linear-gradient(135deg,#07101f 0%, #0d1834 45%, #142753 100%);
     }
 
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #020617, #0f172a, #1e293b);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --shadow:0 16px 28px rgba(20,33,61,.08);
+      --hero-grad:linear-gradient(135deg,#eef4ff 0%, #f8fbff 45%, #e9f2ff 100%);
     }
 
-    .wrap {
-      width: 100%;
-      max-width: 1000px;
+    body{
+      min-height:100vh;
+      background:var(--bg);
+      color:var(--text);
+      padding:14px;
     }
 
-    .card {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 28px;
-      padding: 32px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-      overflow: hidden;
+    .wrap{
+      width:100%;
+      max-width:1080px;
+      margin:0 auto;
     }
 
-    .hero {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 24px;
-      align-items: center;
+    .loader{
+      position:fixed;
+      inset:0;
+      background:var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      color:var(--muted);
+      font-size:15px;
+      letter-spacing:.2px;
+    }
+    .hidden{display:none!important}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:10px 12px;
+      box-shadow:var(--shadow);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(56, 189, 248, 0.14);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: #bae6fd;
-      font-size: 13px;
-      margin-bottom: 16px;
-      font-weight: 700;
+    .brand-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .brand-mark{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background:linear-gradient(135deg, rgba(76,201,255,.22), rgba(167,139,250,.22));
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:900;
+      color:var(--text);
+      flex-shrink:0;
+    }
+    .brand{
+      font-size:20px;
+      font-weight:800;
+      line-height:1.05;
+    }
+    .brand-sub{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:2px;
     }
 
-    h1 {
-      font-size: 46px;
-      line-height: 1.1;
-      margin-bottom: 14px;
+    .top-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .icon-btn,
+    .chip-btn,
+    .btn{
+      border:none;
+      text-decoration:none;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:13px;
+      min-height:42px;
+      font-weight:800;
+      transition:.18s ease;
+    }
+    .icon-btn:hover,
+    .chip-btn:hover,
+    .btn:hover{
+      transform:translateY(-1px);
+      opacity:.96;
+    }
+    .icon-btn{
+      width:42px;
+      height:42px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:16px;
+    }
+    .chip-btn{
+      padding:0 14px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:12px;
     }
 
-    .sub {
-      color: #cbd5e1;
-      font-size: 17px;
-      line-height: 1.7;
-      max-width: 600px;
-      margin-bottom: 24px;
+    .hero-card{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
     }
 
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+    .hero{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:0;
     }
 
-    .btn {
-      display: inline-block;
-      text-decoration: none;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-weight: 700;
-      transition: 0.2s ease;
-      border: 1px solid transparent;
+    .hero-main{
+      padding:28px;
+      background:var(--hero-grad);
+      border-right:1px solid var(--line-soft);
     }
 
-    .btn-login {
-      background: #38bdf8;
-      color: #082f49;
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(76,201,255,.14);
+      border:1px solid rgba(76,201,255,.25);
+      color:var(--text);
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:16px;
     }
 
-    .btn-signup {
-      background: #22c55e;
-      color: #052e16;
+    h1{
+      font-size:44px;
+      line-height:1.08;
+      margin-bottom:14px;
+      letter-spacing:-.5px;
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
+    .sub{
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.7;
+      max-width:620px;
+      margin-bottom:22px;
     }
 
-    .points {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 8px;
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
     }
 
-    .point {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 14px;
-      color: #e2e8f0;
-      font-size: 14px;
-      line-height: 1.5;
+    .btn{
+      padding:0 18px;
+      font-size:14px;
+    }
+    .btn-login{
+      background:rgba(76,201,255,.16);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.22);
+    }
+    .btn-signup{
+      background:rgba(61,220,132,.16);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.22);
+    }
+    .btn-ghost{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border:1px solid var(--line);
     }
 
-    .side-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 22px;
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .stat{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 12px;
+    }
+    .stat-value{
+      font-size:18px;
+      font-weight:900;
+      margin-bottom:4px;
+    }
+    .stat-label{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
     }
 
-    .side-card h3 {
-      font-size: 22px;
-      margin-bottom: 12px;
+    .points{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .point{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:13px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.55;
     }
 
-    .side-card p {
-      color: #cbd5e1;
-      line-height: 1.7;
-      margin-bottom: 16px;
+    .hero-side{
+      padding:22px;
+      display:grid;
+      gap:12px;
+      align-content:start;
+      background:var(--surface);
     }
 
-    .mini-list {
-      display: grid;
-      gap: 10px;
+    .side-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .side-card h3{
+      font-size:17px;
+      margin-bottom:8px;
+      line-height:1.3;
+    }
+    .side-card p{
+      color:var(--muted);
+      line-height:1.6;
+      font-size:13px;
+      margin-bottom:12px;
     }
 
-    .mini-item {
-      background: rgba(255,255,255,0.05);
-      border-radius: 14px;
-      padding: 12px;
-      color: #e2e8f0;
-      font-size: 14px;
+    .mini-list{
+      display:grid;
+      gap:8px;
+    }
+    .mini-item{
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 12px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.45;
     }
 
-    .loader {
-      position: fixed;
-      inset: 0;
-      background: #020617;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      color: #cbd5e1;
-      font-size: 16px;
+    .foot-note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+      text-align:center;
+      margin-top:12px;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 850px) {
-      .hero {
-        grid-template-columns: 1fr;
+    @media (max-width:900px){
+      .hero{
+        grid-template-columns:1fr;
       }
-
-      h1 {
-        font-size: 36px;
+      .hero-main{
+        border-right:none;
+        border-bottom:1px solid var(--line-soft);
       }
+      h1{
+        font-size:36px;
+      }
+    }
 
-      .points {
-        grid-template-columns: 1fr;
+    @media (max-width:640px){
+      body{padding:10px}
+      .topbar{
+        padding:9px 10px;
+        align-items:flex-start;
+        flex-direction:column;
+      }
+      .top-actions{
+        width:100%;
+        justify-content:flex-start;
+      }
+      .hero-main,
+      .hero-side{
+        padding:16px;
+      }
+      h1{
+        font-size:30px;
+      }
+      .sub{
+        font-size:14px;
+      }
+      .stats,
+      .points{
+        grid-template-columns:1fr;
+      }
+      .actions .btn{
+        width:100%;
       }
     }
   </style>
@@ -185,44 +367,95 @@
   <div id="loader" class="loader">Checking login...</div>
 
   <div class="wrap hidden" id="pageContent">
-    <div class="card">
-      <div class="hero">
+    <div class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">B</div>
         <div>
+          <div class="brand">BareWorld</div>
+          <div class="brand-sub">Private member community</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Theme">◐</button>
+        <a href="login.html" class="chip-btn">Login</a>
+        <a href="signup.html" class="chip-btn">Create Account</a>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero">
+        <div class="hero-main">
           <div class="badge">Private • Trusted • Community</div>
+
           <h1>Welcome to BareWorld</h1>
+
           <p class="sub">
-            A private member space where people can create profiles, share updates,
-            discover members, and join events in a more controlled community setup.
+            A cleaner private member space where people can build profiles, control visibility, share updates, discover members, and join events in a more controlled community setup.
           </p>
 
           <div class="actions">
             <a href="login.html" class="btn btn-login">Login</a>
             <a href="signup.html" class="btn btn-signup">Create Account</a>
+            <a href="school.html" class="btn btn-ghost">School</a>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">Private</div>
+              <div class="stat-label">Choose public or private profile access</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">Nearby</div>
+              <div class="stat-label">Explore people, events and places</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">Safer</div>
+              <div class="stat-label">Moderated community flow and member controls</div>
+            </div>
           </div>
 
           <div class="points">
             <div class="point">Face optional profile setup</div>
             <div class="point">Public or private profile choice</div>
-            <div class="point">City visibility controls</div>
-            <div class="point">Updates, members, and events</div>
+            <div class="point">City and gender visibility controls</div>
+            <div class="point">Feed, members, events and nearby flow</div>
           </div>
         </div>
 
-        <div class="side-card">
-          <h3>Inside the website</h3>
-          <p>
-            After login, members can go to the feed, manage their profile,
-            and later explore nearby members and events.
-          </p>
+        <div class="hero-side">
+          <div class="side-card">
+            <h3>Inside the website</h3>
+            <p>
+              After login, members can go to the feed, manage their profile, send follow requests, explore nearby pages, and join or create events.
+            </p>
 
-          <div class="mini-list">
-            <div class="mini-item">Feed for member updates</div>
-            <div class="mini-item">Profile and edit profile pages</div>
-            <div class="mini-item">Nearby members section</div>
-            <div class="mini-item">Events and join/create flow</div>
+            <div class="mini-list">
+              <div class="mini-item">Feed for member updates</div>
+              <div class="mini-item">Profile, settings and edit profile</div>
+              <div class="mini-item">Nearby people, events and places</div>
+              <div class="mini-item">School page for guided community content</div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <h3>Why this feels better</h3>
+            <p>
+              The goal is a more controlled community feel instead of an open noisy social feed.
+            </p>
+
+            <div class="mini-list">
+              <div class="mini-item">Private follow request system</div>
+              <div class="mini-item">Simple navigation and compact UI</div>
+              <div class="mini-item">Verified and moderated member flow</div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="foot-note">
+      If you are already logged in, you will be sent to the feed automatically.
     </div>
   </div>
 
@@ -232,6 +465,44 @@
 
     const loader = document.getElementById("loader");
     const pageContent = document.getElementById("pageContent");
+    const themeBtn = document.getElementById("themeBtn");
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    function toggleTheme() {
+      const current = getStoredTheme();
+      const next = current === "dark" ? "light" : "dark";
+      localStorage.setItem("bwTheme", next);
+      applyTheme(next);
+    }
+
+    applyTheme();
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme();
+    });
+
+    themeBtn.addEventListener("click", toggleTheme);
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
