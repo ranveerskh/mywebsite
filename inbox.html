@@ -540,10 +540,14 @@
 
     let currentUser = null;
     let currentTab = "chats";
+
     let publicProfilesMap = new Map();
-    let chatThreadsMap = new Map();
+    let threadMapA = new Map();
+    let threadMapB = new Map();
     let requestDocsMap = new Map();
+
     let unsubscribers = [];
+    let isBootstrapping = false;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -650,6 +654,28 @@
       };
     }
 
+    function mapFromSnapshot(snapshot, normalizer) {
+      const map = new Map();
+      snapshot.forEach(d => {
+        map.set(d.id, normalizer({ id: d.id, ...d.data() }, d.id));
+      });
+      return map;
+    }
+
+    function getMergedThreadsMap() {
+      return new Map([...threadMapA.entries(), ...threadMapB.entries()]);
+    }
+
+    function getAcceptedThreads() {
+      return Array.from(getMergedThreadsMap().values())
+        .filter(thread => thread.status === "accepted");
+    }
+
+    function getPendingRequests() {
+      return Array.from(requestDocsMap.values())
+        .filter(requestDoc => requestDoc.status === "pending");
+    }
+
     function getOtherUidFromThread(thread) {
       if (!currentUser) return "";
       return thread.participantA === currentUser.uid ? thread.participantB : thread.participantA;
@@ -663,6 +689,11 @@
       return [a, b].sort((x, y) => x.localeCompare(y));
     }
 
+    function makeThreadId(a, b) {
+      const pair = getSortedPair(a, b);
+      return `${pair[0]}__${pair[1]}`;
+    }
+
     function setTab(tab) {
       currentTab = tab;
       chatsTabBtn.classList.toggle("active", tab === "chats");
@@ -671,15 +702,13 @@
     }
 
     function updateCounts() {
-      const chatRows = Array.from(chatThreadsMap.values())
-        .filter(t => t.status === "accepted");
-      const requestRows = Array.from(requestDocsMap.values())
-        .filter(r => r.status === "pending");
+      const chats = getAcceptedThreads();
+      const requests = getPendingRequests();
 
-      chatsTabCount.textContent = String(chatRows.length);
-      requestsTabCount.textContent = String(requestRows.length);
-      chatCountChip.textContent = `Chats: ${chatRows.length}`;
-      requestCountChip.textContent = `Requests: ${requestRows.length}`;
+      chatsTabCount.textContent = String(chats.length);
+      requestsTabCount.textContent = String(requests.length);
+      chatCountChip.textContent = `Chats: ${chats.length}`;
+      requestCountChip.textContent = `Requests: ${requests.length}`;
     }
 
     function showLoading(text = "Loading inbox...") {
@@ -709,11 +738,56 @@
       return `<div class="avatar-placeholder">No photo</div>`;
     }
 
+    function buildChatPreview(thread) {
+      if (thread.lastMessageText) {
+        const prefix = thread.lastSenderId === currentUser.uid ? "You: " : "";
+        return prefix + thread.lastMessageText;
+      }
+
+      if (thread.starterText) {
+        return "Started from request: " + thread.starterText;
+      }
+
+      return "Open chat";
+    }
+
+    async function ensureProfilesForRows() {
+      const uids = [];
+
+      getAcceptedThreads().forEach(thread => {
+        const uid = getOtherUidFromThread(thread);
+        if (uid) uids.push(uid);
+      });
+
+      getPendingRequests().forEach(requestDoc => {
+        if (requestDoc.requesterId) uids.push(requestDoc.requesterId);
+      });
+
+      const unique = [...new Set(uids)];
+      const missing = unique.filter(uid => !publicProfilesMap.has(uid));
+
+      if (!missing.length) return;
+
+      await Promise.all(
+        missing.map(async (uid) => {
+          try {
+            const snap = await getDoc(doc(db, "publicProfiles", uid));
+            if (snap.exists()) {
+              publicProfilesMap.set(uid, normalizeProfile({ id: snap.id, ...snap.data() }, uid));
+            } else {
+              publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
+            }
+          } catch {
+            publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
+          }
+        })
+      );
+    }
+
     function renderChats() {
       listWrap.innerHTML = "";
 
-      const rows = Array.from(chatThreadsMap.values())
-        .filter(thread => thread.status === "accepted")
+      const rows = getAcceptedThreads()
         .sort((a, b) => tsMs(b.lastMessageAt) - tsMs(a.lastMessageAt));
 
       if (!rows.length) {
@@ -724,14 +798,7 @@
       rows.forEach(thread => {
         const otherUid = getOtherUidFromThread(thread);
         const profile = getProfile(otherUid);
-
-        let previewText = thread.lastMessageText || "";
-        if (!previewText && thread.starterText) {
-          previewText = `Request: ${thread.starterText}`;
-        }
-        if (!previewText) {
-          previewText = "Open chat";
-        }
+        const previewText = buildChatPreview(thread);
 
         const item = document.createElement("div");
         item.className = "item";
@@ -749,7 +816,7 @@
                 <div class="preview">${escapeHtml(previewText)}</div>
                 <div class="mini-badges">
                   <span class="mini-badge mini-blue">Direct chat</span>
-                  ${thread.starterText && !thread.lastMessageText ? `<span class="mini-badge mini-purple">Started from request</span>` : ""}
+                  ${thread.acceptedFromRequestId ? `<span class="mini-badge mini-purple">Accepted request</span>` : ""}
                 </div>
               </div>
             </div>
@@ -794,24 +861,18 @@
         const pair = getSortedPair(requestModel.requesterId, requestModel.targetId);
         const threadId = `${pair[0]}__${pair[1]}`;
         const threadRef = doc(db, "chat_threads", threadId);
-        const threadSnap = await getDoc(threadRef);
 
-        if (!threadSnap.exists()) {
-          await setDoc(threadRef, {
-            type: "direct",
-            status: "accepted",
-            participantA: pair[0],
-            participantB: pair[1],
-            createdBy: currentUser.uid,
-            acceptedFromRequestId: requestModel.id,
-            starterText: requestModel.text || "",
-            starterFrom: requestModel.requesterId,
-            createdAt: serverTimestamp(),
-            lastMessageText: "",
-            lastMessageAt: serverTimestamp(),
-            lastSenderId: ""
-          });
-        }
+        await setDoc(threadRef, {
+          type: "direct",
+          status: "accepted",
+          participantA: pair[0],
+          participantB: pair[1],
+          createdBy: currentUser.uid,
+          acceptedFromRequestId: requestModel.id,
+          starterText: requestModel.text || "",
+          starterFrom: requestModel.requesterId,
+          lastMessageAt: serverTimestamp()
+        }, { merge: true });
 
         if (requestModel.requesterId !== currentUser.uid) {
           try {
@@ -828,7 +889,7 @@
           } catch {}
         }
 
-        setPageMessage("Request accepted. Chat opened.", "ok");
+        setPageMessage("Request accepted. Opening chat...", "ok");
         window.location.href = `chat.html?threadId=${encodeURIComponent(threadId)}`;
       } catch (err) {
         console.error(err);
@@ -862,8 +923,7 @@
     function renderRequests() {
       listWrap.innerHTML = "";
 
-      const rows = Array.from(requestDocsMap.values())
-        .filter(r => r.status === "pending")
+      const rows = getPendingRequests()
         .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
 
       if (!rows.length) {
@@ -887,7 +947,7 @@
                 </div>
                 ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
                 <div class="preview">${escapeHtml(requestModel.text || "")}</div>
-                <div class="meta">This is their only request message until you accept.</div>
+                <div class="meta">They can only send this one request message until you accept.</div>
                 <div class="mini-badges">
                   <span class="mini-badge mini-yellow">Pending request</span>
                   <span class="mini-badge mini-purple">Non-follower first message</span>
@@ -928,7 +988,8 @@
       showList();
     }
 
-    function renderCurrentTab() {
+    async function renderCurrentTab() {
+      await ensureProfilesForRows();
       updateCounts();
 
       if (currentTab === "requests") {
@@ -938,31 +999,20 @@
       }
     }
 
-    async function loadProfilesForUids(uids) {
-      const unique = [...new Set(uids.filter(Boolean))];
-      const missing = unique.filter(uid => !publicProfilesMap.has(uid));
-      if (!missing.length) return;
-
-      await Promise.all(
-        missing.map(async (uid) => {
-          try {
-            const snap = await getDoc(doc(db, "publicProfiles", uid));
-            if (snap.exists()) {
-              publicProfilesMap.set(uid, normalizeProfile({ id: snap.id, ...snap.data() }, uid));
-            } else {
-              publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
-            }
-          } catch {
-            publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
-          }
-        })
-      );
+    function clearLiveListeners() {
+      unsubscribers.forEach(fn => {
+        try { fn(); } catch {}
+      });
+      unsubscribers = [];
     }
 
-    async function refreshOnce() {
-      if (!currentUser) return;
+    async function bootstrapInbox() {
+      if (!currentUser || isBootstrapping) return;
+      isBootstrapping = true;
 
-      showLoading("Refreshing inbox...");
+      clearLiveListeners();
+      setPageMessage("");
+      showLoading("Loading inbox...");
 
       try {
         const [
@@ -975,95 +1025,54 @@
           getDocs(query(collection(db, "message_requests"), where("targetId", "==", currentUser.uid), where("status", "==", "pending")))
         ]);
 
-        chatThreadsMap = new Map();
-        requestDocsMap = new Map();
+        threadMapA = mapFromSnapshot(chatASnap, normalizeThread);
+        threadMapB = mapFromSnapshot(chatBSnap, normalizeThread);
+        requestDocsMap = mapFromSnapshot(requestSnap, normalizeRequest);
 
-        chatASnap.forEach(d => {
-          chatThreadsMap.set(d.id, normalizeThread({ id: d.id, ...d.data() }, d.id));
-        });
-        chatBSnap.forEach(d => {
-          chatThreadsMap.set(d.id, normalizeThread({ id: d.id, ...d.data() }, d.id));
-        });
-        requestSnap.forEach(d => {
-          requestDocsMap.set(d.id, normalizeRequest({ id: d.id, ...d.data() }, d.id));
-        });
-
-        const needProfiles = [];
-        chatThreadsMap.forEach(thread => needProfiles.push(getOtherUidFromThread(thread)));
-        requestDocsMap.forEach(r => needProfiles.push(r.requesterId));
-
-        await loadProfilesForUids(needProfiles);
-        renderCurrentTab();
-        setPageMessage("Inbox refreshed.", "ok");
+        await renderCurrentTab();
+        startLiveListeners();
       } catch (err) {
         console.error(err);
         showEmpty("Could not load inbox.");
-        setPageMessage("Could not refresh inbox.", "err");
+        setPageMessage("Could not load inbox.", "err");
       }
+
+      isBootstrapping = false;
     }
 
-    function clearLiveListeners() {
-      unsubscribers.forEach(fn => {
-        try { fn(); } catch {}
-      });
-      unsubscribers = [];
-    }
-
-    async function startLiveListeners() {
+    function startLiveListeners() {
       if (!currentUser) return;
-
-      clearLiveListeners();
-      showLoading("Loading inbox...");
 
       const subA = onSnapshot(
         query(collection(db, "chat_threads"), where("participantA", "==", currentUser.uid)),
         async (snap) => {
-          snap.docs.forEach(d => {
-            chatThreadsMap.set(d.id, normalizeThread({ id: d.id, ...d.data() }, d.id));
-          });
-
-          const needProfiles = Array.from(chatThreadsMap.values()).map(getOtherUidFromThread);
-          await loadProfilesForUids(needProfiles);
-          renderCurrentTab();
+          threadMapA = mapFromSnapshot(snap, normalizeThread);
+          await renderCurrentTab();
         },
         (err) => {
           console.error(err);
-          showEmpty("Could not load chats.");
         }
       );
 
       const subB = onSnapshot(
         query(collection(db, "chat_threads"), where("participantB", "==", currentUser.uid)),
         async (snap) => {
-          snap.docs.forEach(d => {
-            chatThreadsMap.set(d.id, normalizeThread({ id: d.id, ...d.data() }, d.id));
-          });
-
-          const needProfiles = Array.from(chatThreadsMap.values()).map(getOtherUidFromThread);
-          await loadProfilesForUids(needProfiles);
-          renderCurrentTab();
+          threadMapB = mapFromSnapshot(snap, normalizeThread);
+          await renderCurrentTab();
         },
         (err) => {
           console.error(err);
-          showEmpty("Could not load chats.");
         }
       );
 
       const subRequests = onSnapshot(
         query(collection(db, "message_requests"), where("targetId", "==", currentUser.uid), where("status", "==", "pending")),
         async (snap) => {
-          requestDocsMap = new Map();
-          snap.docs.forEach(d => {
-            requestDocsMap.set(d.id, normalizeRequest({ id: d.id, ...d.data() }, d.id));
-          });
-
-          const needProfiles = Array.from(requestDocsMap.values()).map(r => r.requesterId);
-          await loadProfilesForUids(needProfiles);
-          renderCurrentTab();
+          requestDocsMap = mapFromSnapshot(snap, normalizeRequest);
+          await renderCurrentTab();
         },
         (err) => {
           console.error(err);
-          showEmpty("Could not load requests.");
         }
       );
 
@@ -1076,7 +1085,8 @@
     });
 
     refreshBtn.addEventListener("click", async () => {
-      await refreshOnce();
+      await bootstrapInbox();
+      setPageMessage("Inbox refreshed.", "ok");
     });
 
     chatsTabBtn.addEventListener("click", () => setTab("chats"));
@@ -1084,12 +1094,13 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        clearLiveListeners();
         window.location.href = "login.html";
         return;
       }
 
       currentUser = user;
-      await startLiveListeners();
+      await bootstrapInbox();
     });
 
     window.addEventListener("beforeunload", clearLiveListeners);
