@@ -1,228 +1,290 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Verification</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
       --line:rgba(255,255,255,.08);
-      --text:#fff;
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
       --red:#ff5d73;
       --purple:#a78bfa;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --red:#e74c66;
+      --purple:#7f63ff;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
+      padding:10px 10px 108px;
     }
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar{
       position:sticky;
       top:0;
       z-index:30;
       backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:12px 14px;
-      margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
+      padding:8px 10px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:44px 1fr auto;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:8px;
+      box-shadow:var(--shadow);
     }
-    .left-wrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .back-btn,.chip-btn{
+    .top-icon-btn,.chip-btn{
       border:none;
-      background:var(--soft);
-      color:#fff;
-      border-radius:12px;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
       padding:10px 12px;
-      font-size:13px;
+      font-size:12px;
       font-weight:800;
       cursor:pointer;
       border:1px solid var(--line);
       text-decoration:none;
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-height:44px;
     }
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
+    .top-icon-btn{width:44px;height:44px;padding:0}
+    .top-icon-btn svg{width:18px;height:18px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:18px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
     .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
     .panel{
-      background:rgba(18,25,49,.88);
+      background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
+      border-radius:20px;
+      padding:14px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
     }
     .section-title{
-      font-size:20px;
+      font-size:18px;
       font-weight:800;
-      margin-bottom:8px;
+      margin-bottom:4px;
     }
     .section-note{
       color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      margin-bottom:16px;
+      font-size:12px;
+      line-height:1.55;
+      max-width:520px;
     }
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:28px 10px;
-    }
-    .hidden{display:none!important}
-    .status-row{
+
+    .status-row,.info-row,.proof-links,.actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top:6px;
     }
-    .status-badge{
-      display:inline-block;
-      padding:6px 10px;
+
+    .status-badge,.info-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
       border-radius:999px;
-      font-size:12px;
+      font-size:11px;
       font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
     }
-    .status-not-requested{
-      background:#182248;
-      color:#c9d5ff;
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .status-pending{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .status-approved{
-      background:rgba(61,220,132,.14);
-      color:#c9f7dd;
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .status-rejected{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
+    .status-not-requested{background:var(--surface-2)}
+    .status-pending{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .status-approved{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .status-rejected{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+
     .note-box{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,.06);
+      background:var(--surface-2);
+      border:1px solid var(--line);
       border-radius:16px;
-      padding:14px;
+      padding:12px;
       margin-top:12px;
     }
     .note-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:8px;
-      font-size:12px;
+      margin-bottom:7px;
+      font-size:11px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.3px;
     }
     .note-box div{
-      color:#fff;
+      color:var(--text);
       font-size:14px;
       line-height:1.6;
       white-space:pre-wrap;
       word-break:break-word;
     }
-    .field{margin-bottom:14px}
-    label{
-      display:block;
-      margin-bottom:8px;
-      font-size:13px;
-      color:#d7def5;
-      font-weight:700;
+
+    .form{
+      display:grid;
+      gap:12px;
     }
-    input,textarea,select{
-      width:100%;
-      border:none;
-      outline:none;
-      padding:14px 15px;
-      border-radius:16px;
-      background:#0f1630;
-      color:#fff;
-      border:1px solid rgba(255,255,255,.07);
-      font-size:15px;
+    .field{
+      display:grid;
+      gap:7px;
     }
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-    input::placeholder,textarea::placeholder{color:#7f8cad}
-    select option{color:#000}
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--text);
+      font-weight:800;
+    }
+    input,textarea,select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    textarea{
+      min-height:110px;
+      resize:vertical;
+      line-height:1.55;
+    }
+    input::placeholder,textarea::placeholder{color:var(--muted)}
+    select option{color:#000}
+
     .small-note{
       color:var(--muted);
       font-size:12px;
       line-height:1.5;
-      margin-top:6px;
+      margin-top:2px;
     }
-    .actions{
-      display:flex;
-      justify-content:space-between;
+
+    .action-btn,.save-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      font-size:12px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top:6px;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
     }
     .save-btn{
-      border:none;
-      background:var(--blue);
-      color:#031723;
-      padding:12px 18px;
-      border-radius:14px;
-      font-weight:800;
-      cursor:pointer;
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
       min-width:170px;
     }
+    .action-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .action-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .action-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .action-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+
     .message{
-      min-height:20px;
-      font-size:14px;
+      min-height:18px;
+      font-size:13px;
+      flex:1;
+      min-width:180px;
     }
     .success{color:#9cf0bf}
     .error{color:#ffb3bd}
+
+    .loading-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      font-size:14px;
+    }
+
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:12px;
-      width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(18px);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
       gap:8px;
       z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
     }
     .nav-link{
       text-decoration:none;
-      color:#b9c4e3;
+      color:var(--muted);
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -238,26 +300,36 @@
       cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
     @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
+      body{padding:10px 10px 108px}
+      .brand{font-size:18px}
+      .topbar{grid-template-columns:44px 1fr}
+      .top-actions{grid-column:1 / -1}
+      .top-actions .chip-btn{flex:1}
       .grid{grid-template-columns:1fr}
       .actions{align-items:stretch}
-      .save-btn{width:100%}
+      .save-btn,.action-btn{width:100%}
+      .message{min-width:100%}
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Verification</div>
-        </div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Verification</div>
       </div>
 
       <div class="top-actions">
@@ -266,13 +338,22 @@
     </div>
 
     <div class="panel">
-      <div class="section-title">Verification Request</div>
-      <div class="section-note">
-        Submit your details and track approval status here.
+      <div class="hero-head">
+        <div>
+          <div class="section-title">Verification Request</div>
+          <div class="section-note">Submit your details once, track status here, and resubmit later if needed.</div>
+        </div>
       </div>
 
       <div class="status-row">
         <span id="statusBadge" class="status-badge status-not-requested">Not requested</span>
+        <span id="accountTypeChip" class="info-chip chip-purple hidden">Type: -</span>
+        <span id="emailChip" class="info-chip chip-blue hidden">Email: -</span>
+      </div>
+
+      <div id="proofLinks" class="proof-links hidden" style="margin-top:10px;">
+        <a id="idLinkBtn" class="action-btn action-yellow" href="#" target="_blank" rel="noopener noreferrer">Open ID Link</a>
+        <a id="selfieLinkBtn" class="action-btn action-purple" href="#" target="_blank" rel="noopener noreferrer">Open Selfie Link</a>
       </div>
 
       <div id="adminNoteBox" class="note-box hidden">
@@ -282,13 +363,13 @@
     </div>
 
     <div class="panel">
-      <div id="loading" class="loading">Loading verification page...</div>
+      <div id="loading" class="loading-box">Loading verification page...</div>
 
-      <form id="verificationForm" class="hidden">
+      <form id="verificationForm" class="form hidden">
         <div class="grid">
           <div class="field">
             <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" placeholder="Your full legal/public name" required />
+            <input type="text" id="fullName" placeholder="Your full legal or public name" required />
           </div>
 
           <div class="field">
@@ -321,12 +402,13 @@
         <div class="field">
           <label for="idPhotoURL">Government ID Photo Link</label>
           <input type="url" id="idPhotoURL" placeholder="https://..." required />
+          <div class="small-note">Use a secure direct link that you can still access later.</div>
         </div>
 
         <div class="field">
           <label for="selfieWithIdURL">Selfie with ID Link</label>
           <input type="url" id="selfieWithIdURL" placeholder="https://..." required />
-          <div class="small-note">Upload image somewhere safe and paste direct link.</div>
+          <div class="small-note">Direct image link only.</div>
         </div>
 
         <div class="actions">
@@ -350,11 +432,11 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
     </a>
-    <a href="profile.html" class="nav-link">
+    <a href="profile.html" class="nav-link active">
       <span class="icon">◉</span>
       <span>Profile</span>
     </a>
@@ -379,6 +461,11 @@
     const statusBadge = document.getElementById("statusBadge");
     const adminNoteBox = document.getElementById("adminNoteBox");
     const adminNoteText = document.getElementById("adminNoteText");
+    const accountTypeChip = document.getElementById("accountTypeChip");
+    const emailChip = document.getElementById("emailChip");
+    const proofLinks = document.getElementById("proofLinks");
+    const idLinkBtn = document.getElementById("idLinkBtn");
+    const selfieLinkBtn = document.getElementById("selfieLinkBtn");
 
     const fullName = document.getElementById("fullName");
     const email = document.getElementById("email");
@@ -392,12 +479,37 @@
     let currentRequestStatus = "not_requested";
     let isAlreadyVerified = false;
 
-    backBtn.addEventListener("click", () => {
-      if (document.referrer) {
-        history.back();
-      } else {
-        window.location.href = "settings.html";
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "settings.html";
     });
 
     function setFormMessage(text, type = "") {
@@ -436,6 +548,50 @@
       selfieWithIdURL.value = data.selfieWithIdURL || "";
     }
 
+    function updateHeaderBits(data, userEmail = "") {
+      const accountValue = data?.accountType || accountType.value || "personal";
+      const emailValue = data?.email || userEmail || "";
+
+      accountTypeChip.textContent = `Type: ${accountValue}`;
+      accountTypeChip.classList.remove("hidden");
+
+      if (emailValue) {
+        emailChip.textContent = `Email: ${emailValue}`;
+        emailChip.classList.remove("hidden");
+      } else {
+        emailChip.classList.add("hidden");
+      }
+
+      const hasId = !!(data?.idPhotoURL || idPhotoURL.value.trim());
+      const hasSelfie = !!(data?.selfieWithIdURL || selfieWithIdURL.value.trim());
+
+      if (hasId) {
+        idLinkBtn.href = data?.idPhotoURL || idPhotoURL.value.trim();
+      }
+      if (hasSelfie) {
+        selfieLinkBtn.href = data?.selfieWithIdURL || selfieWithIdURL.value.trim();
+      }
+
+      proofLinks.classList.toggle("hidden", !(hasId || hasSelfie));
+      idLinkBtn.classList.toggle("hidden", !hasId);
+      selfieLinkBtn.classList.toggle("hidden", !hasSelfie);
+    }
+
+    async function syncVerifiedState(uid) {
+      try {
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", uid)),
+          getDoc(doc(db, "publicProfiles", uid))
+        ]);
+
+        const userVerified = userSnap.exists() && !!(userSnap.data().isVerified || userSnap.data().verified);
+        const publicVerified = publicSnap.exists() && !!(publicSnap.data().isVerified || publicSnap.data().verified);
+        isAlreadyVerified = userVerified || publicVerified;
+      } catch {
+        isAlreadyVerified = false;
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -445,20 +601,16 @@
       currentUser = user;
 
       try {
-        const userRef = doc(db, "users", user.uid);
+        await syncVerifiedState(user.uid);
+
         const requestRef = doc(db, "verification_requests", user.uid);
-
-        const [userSnap, requestSnap] = await Promise.all([
-          getDoc(userRef),
-          getDoc(requestRef)
-        ]);
-
-        isAlreadyVerified = userSnap.exists() && !!userSnap.data().isVerified;
+        const requestSnap = await getDoc(requestRef);
 
         if (requestSnap.exists()) {
           const data = requestSnap.data();
           currentRequestStatus = data.status || "pending";
           fillForm(data, user.email || "");
+          updateHeaderBits(data, user.email || "");
 
           if (data.adminNote && data.adminNote.trim()) {
             adminNoteBox.classList.remove("hidden");
@@ -469,6 +621,7 @@
         } else {
           currentRequestStatus = "not_requested";
           fillForm({}, user.email || "");
+          updateHeaderBits({}, user.email || "");
           adminNoteBox.classList.add("hidden");
         }
 
@@ -491,6 +644,11 @@
         console.error(error);
         loading.textContent = "Could not load verification page.";
       }
+    });
+
+    [email, accountType, idPhotoURL, selfieWithIdURL].forEach(el => {
+      el.addEventListener("input", () => updateHeaderBits({}, auth.currentUser?.email || ""));
+      el.addEventListener("change", () => updateHeaderBits({}, auth.currentUser?.email || ""));
     });
 
     verificationForm.addEventListener("submit", async (e) => {
@@ -520,23 +678,35 @@
       saveBtn.textContent = "Sending...";
 
       try {
-        const existingRef = doc(db, "verification_requests", currentUser.uid);
-        const existingSnap = await getDoc(existingRef);
+        const requestRef = doc(db, "verification_requests", currentUser.uid);
+        const existingSnap = await getDoc(requestRef);
+        const existingData = existingSnap.exists() ? existingSnap.data() : {};
 
-        await setDoc(existingRef, {
-          ...payload,
-          createdAt: existingSnap.exists() ? (existingSnap.data().createdAt || serverTimestamp()) : serverTimestamp()
+        await setDoc(requestRef, {
+          uid: currentUser.uid,
+          fullName: payload.fullName,
+          email: payload.email,
+          accountType: payload.accountType,
+          socialLink: payload.socialLink,
+          reason: payload.reason,
+          idPhotoURL: payload.idPhotoURL,
+          selfieWithIdURL: payload.selfieWithIdURL,
+          status: "pending",
+          adminNote: "",
+          createdAt: existingData.createdAt || serverTimestamp(),
+          updatedAt: serverTimestamp()
         }, { merge: true });
 
         currentRequestStatus = "pending";
         setStatus("pending", false);
         adminNoteBox.classList.add("hidden");
+        updateHeaderBits(payload, payload.email);
         setFormMessage("Verification request saved.", "success");
         saveBtn.textContent = "Update Request";
       } catch (error) {
         console.error(error);
         setFormMessage("Could not save verification request.", "error");
-        saveBtn.textContent = "Send Request";
+        saveBtn.textContent = currentRequestStatus === "pending" ? "Update Request" : "Send Request";
       }
 
       saveBtn.disabled = false;
