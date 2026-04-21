@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Add Place</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+    .top-icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+    .hero-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .form{
+      display:grid;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:7px;
+    }
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:16px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    .textarea{
+      min-height:120px;
+      resize:vertical;
+      line-height:1.55;
+    }
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      margin-top:2px;
+    }
+
+    .preview-wrap{
+      background:var(--surface-2);
+      border:1px dashed var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .preview-title{
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .preview-image{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .preview-empty{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      padding:16px 10px;
+      border-radius:14px;
+      background:var(--surface-3);
+      border:1px dashed var(--line);
+    }
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:42px;
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .btn-soft{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:6px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .locked-box{
+      text-align:center;
+      padding:20px 12px;
+      border-radius:18px;
+      background:var(--surface-2);
+      border:1px dashed var(--line);
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .grid-2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="nearby-places.html" class="top-icon-btn" aria-label="Back to places">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Add place</div>
+      </div>
+
+      <button id="clearFormBtn" class="top-icon-btn" type="button" aria-label="Clear form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="panel">
+      <div class="hero-title">Submit a Place</div>
+      <div class="hero-sub">
+        Send a place for review. It will stay pending until you verify it from the admin side later.
+      </div>
+
+      <div class="chip-row">
+        <span class="chip chip-blue">Collection: nearby_places</span>
+        <span class="chip chip-yellow">Default status: pending</span>
+        <span class="chip chip-green">Visible after approval</span>
+      </div>
+    </div>
+
+    <div id="blockedPanel" class="panel hidden">
+      <div class="locked-box" id="blockedText">
+        Posting is not available for your account right now.
+      </div>
+    </div>
+
+    <div id="formPanel" class="panel hidden">
+      <form id="placeForm" class="form">
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="placeName">Place Name</label>
+            <input id="placeName" class="input" type="text" placeholder="Example: Quiet Nature Spot" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="category">Category</label>
+            <select id="category" class="select">
+              <option value="General">General</option>
+              <option value="Park">Park</option>
+              <option value="Beach">Beach</option>
+              <option value="Club">Club</option>
+              <option value="Retreat">Retreat</option>
+              <option value="Private Spot">Private Spot</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="city">City</label>
+            <input id="city" class="input" type="text" placeholder="City name" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="address">Address</label>
+            <input id="address" class="input" type="text" placeholder="Optional address" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="website">Website / Link</label>
+            <input id="website" class="input" type="text" placeholder="https://example.com" />
+            <div class="note">Optional. Add a direct website or reference link.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="imageURL">Image Link</label>
+            <input id="imageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
+            <div class="note">Optional direct image URL.</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="latitude">Latitude</label>
+            <input id="latitude" class="input" type="text" placeholder="Optional latitude" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="longitude">Longitude</label>
+            <input id="longitude" class="input" type="text" placeholder="Optional longitude" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="description">Description</label>
+          <textarea id="description" class="textarea" placeholder="Write a short clear description of the place..."></textarea>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-title">Image Preview</div>
+          <img id="previewImage" class="preview-image hidden" alt="Preview" />
+          <div id="previewEmpty" class="preview-empty">
+            Add an image link if you want a preview here.
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="submitBtn" type="submit" class="action-btn btn-primary">Submit Place</button>
+          <button id="resetBtn" type="button" class="action-btn btn-soft">Reset</button>
+          <a href="nearby-places.html" class="action-btn btn-green">View Places</a>
+        </div>
+
+        <div id="formMessage" class="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link active">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      addDoc,
+      collection,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const blockedPanel = document.getElementById("blockedPanel");
+    const blockedText = document.getElementById("blockedText");
+    const formPanel = document.getElementById("formPanel");
+
+    const placeForm = document.getElementById("placeForm");
+    const placeName = document.getElementById("placeName");
+    const category = document.getElementById("category");
+    const city = document.getElementById("city");
+    const address = document.getElementById("address");
+    const website = document.getElementById("website");
+    const imageURL = document.getElementById("imageURL");
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+    const description = document.getElementById("description");
+
+    const previewImage = document.getElementById("previewImage");
+    const previewEmpty = document.getElementById("previewEmpty");
+
+    const clearFormBtn = document.getElementById("clearFormBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const formMessage = document.getElementById("formMessage");
+
+    let currentUser = null;
+    let currentProfile = null;
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    function setMessage(text = "", type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        city: d.city || d.locationCity || d.currentCity || "",
+        moderationStatus: d.moderationStatus || d.status || "",
+        suspensionUntil: d.suspensionUntil || d.suspendUntil || null
+      };
+    }
+
+    function isSuspendedNow(profile) {
+      if (profile?.moderationStatus !== "suspended") return false;
+      const until = profile?.suspensionUntil;
+      if (!until) return false;
+
+      const ms = until?.toDate
+        ? until.toDate().getTime()
+        : new Date(until).getTime();
+
+      return !Number.isNaN(ms) && Date.now() < ms;
+    }
+
+    function resetForm() {
+      placeForm.reset();
+      if (currentProfile?.city) {
+        city.value = currentProfile.city;
+      }
+      previewImage.classList.add("hidden");
+      previewImage.removeAttribute("src");
+      previewEmpty.classList.remove("hidden");
+      setMessage("");
+    }
+
+    function updatePreview() {
+      const url = imageURL.value.trim();
+      if (!url) {
+        previewImage.classList.add("hidden");
+        previewImage.removeAttribute("src");
+        previewEmpty.classList.remove("hidden");
+        return;
+      }
+
+      previewImage.src = url;
+      previewImage.classList.remove("hidden");
+      previewEmpty.classList.add("hidden");
+    }
+
+    previewImage.addEventListener("error", () => {
+      previewImage.classList.add("hidden");
+      previewEmpty.classList.remove("hidden");
+      previewEmpty.textContent = "Could not load this image preview.";
+    });
+
+    previewImage.addEventListener("load", () => {
+      previewEmpty.classList.add("hidden");
+    });
+
+    imageURL.addEventListener("input", updatePreview);
+    clearFormBtn.addEventListener("click", resetForm);
+    resetBtn.addEventListener("click", resetForm);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDoc(doc(db, "publicProfiles", user.uid))
+        ]);
+
+        currentProfile = normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid: user.uid
+        }, user.uid);
+
+        if (currentProfile.city) {
+          city.value = currentProfile.city;
+        }
+
+        if (currentProfile.moderationStatus === "banned") {
+          blockedPanel.classList.remove("hidden");
+          formPanel.classList.add("hidden");
+          blockedText.textContent = "Your account is banned. Place submissions are disabled.";
+          return;
+        }
+
+        if (isSuspendedNow(currentProfile)) {
+          blockedPanel.classList.remove("hidden");
+          formPanel.classList.add("hidden");
+          blockedText.textContent = "Your account is suspended. Place submissions are disabled for now.";
+          return;
+        }
+
+        blockedPanel.classList.add("hidden");
+        formPanel.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        blockedPanel.classList.remove("hidden");
+        formPanel.classList.add("hidden");
+        blockedText.textContent = "Could not load your account right now.";
+      }
+    });
+
+    placeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const cleanName = placeName.value.trim();
+      const cleanCategory = category.value.trim() || "General";
+      const cleanCity = city.value.trim();
+      const cleanAddress = address.value.trim();
+      const cleanWebsite = website.value.trim();
+      const cleanImageURL = imageURL.value.trim();
+      const cleanDescription = description.value.trim();
+
+      const lat = latitude.value.trim();
+      const lng = longitude.value.trim();
+
+      if (!cleanName) {
+        setMessage("Place name is required.", "err");
+        placeName.focus();
+        return;
+      }
+
+      if (!cleanCity) {
+        setMessage("City is required.", "err");
+        city.focus();
+        return;
+      }
+
+      if (!cleanDescription) {
+        setMessage("Description is required.", "err");
+        description.focus();
+        return;
+      }
+
+      const parsedLat = lat ? Number(lat) : null;
+      const parsedLng = lng ? Number(lng) : null;
+
+      if (lat && !Number.isFinite(parsedLat)) {
+        setMessage("Latitude must be a valid number.", "err");
+        latitude.focus();
+        return;
+      }
+
+      if (lng && !Number.isFinite(parsedLng)) {
+        setMessage("Longitude must be a valid number.", "err");
+        longitude.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+      setMessage("");
+
+      try {
+        await addDoc(collection(db, "nearby_places"), {
+          name: cleanName,
+          category: cleanCategory,
+          city: cleanCity,
+          address: cleanAddress,
+          website: cleanWebsite,
+          imageURL: cleanImageURL,
+          description: cleanDescription,
+          createdBy: currentUser.uid,
+          creatorName: currentProfile?.displayName || currentUser.displayName || "Member",
+          creatorUsername: currentProfile?.username || "",
+          status: "pending",
+          approved: false,
+          pending: true,
+          lat: parsedLat,
+          lng: parsedLng,
+          createdAt: serverTimestamp()
+        });
+
+        setMessage("Place submitted. It is now pending review.", "ok");
+        resetForm();
+      } catch (err) {
+        console.error(err);
+        setMessage(err?.message || "Could not submit place.", "err");
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Place";
+    });
+  </script>
+</body>
+</html>
