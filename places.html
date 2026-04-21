@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BareWorld - Place</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:12px 12px 110px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      gap:10px;
+      box-shadow:var(--shadow);
+    }
+    .top-icon-btn{
+      width:44px;
+      height:44px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading-box,
+    .empty-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .hero-image{
+      width:100%;
+      max-height:340px;
+      object-fit:cover;
+      display:block;
+      border-radius:18px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      margin-bottom:12px;
+    }
+
+    .place-title{
+      font-size:22px;
+      font-weight:900;
+      line-height:1.3;
+      margin-bottom:10px;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .meta-grid{
+      display:grid;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .meta-item{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      font-size:14px;
+      line-height:1.55;
+    }
+    .meta-item strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .desc{
+      color:var(--text);
+      line-height:1.65;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .submitter-card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .submitter-avatar,.submitter-avatar-placeholder{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .submitter-avatar{object-fit:cover}
+    .submitter-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+    .submitter-body{min-width:0;flex:1}
+    .submitter-name{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .submitter-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .submitter-name a:hover{text-decoration:underline}
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+    .submitter-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+    .submitter-bio{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+    }
+
+    .section-title{
+      font-size:17px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:42px;
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .btn-soft{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.20);
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:10px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .edit-form{
+      display:grid;
+      gap:12px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:7px;
+    }
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:16px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    .textarea{
+      min-height:120px;
+      resize:vertical;
+      line-height:1.55;
+    }
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+    }
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .grid-2{grid-template-columns:1fr}
+      .place-title{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Place detail</div>
+      </div>
+
+      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <div id="loadingPanel" class="panel">
+      <div class="loading-box">Loading place...</div>
+    </div>
+
+    <div id="notFoundPanel" class="panel hidden">
+      <div class="empty-box">Place not found.</div>
+    </div>
+
+    <div id="placePanel" class="hidden">
+      <div class="panel">
+        <img id="heroImage" class="hero-image hidden" alt="Place image" />
+
+        <div id="placeTitle" class="place-title">Unnamed Place</div>
+        <div id="badgeRow" class="badge-row"></div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <strong>Category</strong>
+            <span id="categoryText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>City</strong>
+            <span id="cityText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Address</strong>
+            <span id="addressText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Source</strong>
+            <span id="sourceText">-</span>
+          </div>
+        </div>
+
+        <div id="descText" class="desc">No description added.</div>
+
+        <div class="action-row" id="topActionRow"></div>
+        <div id="topMessage" class="message"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Submitted By</div>
+        <div id="submitterCard" class="submitter-card"></div>
+      </div>
+
+      <div id="editPanel" class="panel hidden">
+        <div class="section-title">Edit Place</div>
+
+        <form id="editForm" class="edit-form">
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editName">Place Name</label>
+              <input id="editName" class="input" type="text" placeholder="Place name" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editCategory">Category</label>
+              <select id="editCategory" class="select">
+                <option value="General">General</option>
+                <option value="Park">Park</option>
+                <option value="Beach">Beach</option>
+                <option value="Club">Club</option>
+                <option value="Retreat">Retreat</option>
+                <option value="Private Spot">Private Spot</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editCity">City</label>
+              <input id="editCity" class="input" type="text" placeholder="City" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editAddress">Address</label>
+              <input id="editAddress" class="input" type="text" placeholder="Address" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editWebsite">Website / Link</label>
+              <input id="editWebsite" class="input" type="text" placeholder="https://example.com" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editImageURL">Image Link</label>
+              <input id="editImageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editLat">Latitude</label>
+              <input id="editLat" class="input" type="text" placeholder="Latitude" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editLng">Longitude</label>
+              <input id="editLng" class="input" type="text" placeholder="Longitude" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="editDescription">Description</label>
+            <textarea id="editDescription" class="textarea" placeholder="Description"></textarea>
+          </div>
+
+          <div class="action-row">
+            <button id="saveEditBtn" type="submit" class="action-btn btn-primary">Save Changes</button>
+            <button id="cancelEditBtn" type="button" class="action-btn btn-soft">Cancel</button>
+          </div>
+
+          <div id="editMessage" class="message"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon">⌂</span>
+      <span>Feed</span>
+    </a>
+    <a href="nearby.html" class="nav-link active">
+      <span class="icon">◎</span>
+      <span>Nearby</span>
+    </a>
+    <a href="feed.html#composerPanel" class="nav-link">
+      <span class="icon">＋</span>
+      <span>Create</span>
+    </a>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
+    </a>
+    <a href="profile.html" class="nav-link">
+      <span class="icon">◉</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      deleteDoc,
+      addDoc,
+      updateDoc,
+      collection,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const backBtn = document.getElementById("backBtn");
+
+    const loadingPanel = document.getElementById("loadingPanel");
+    const notFoundPanel = document.getElementById("notFoundPanel");
+    const placePanel = document.getElementById("placePanel");
+
+    const heroImage = document.getElementById("heroImage");
+    const placeTitle = document.getElementById("placeTitle");
+    const badgeRow = document.getElementById("badgeRow");
+    const categoryText = document.getElementById("categoryText");
+    const cityText = document.getElementById("cityText");
+    const addressText = document.getElementById("addressText");
+    const sourceText = document.getElementById("sourceText");
+    const descText = document.getElementById("descText");
+    const topActionRow = document.getElementById("topActionRow");
+    const topMessage = document.getElementById("topMessage");
+
+    const submitterCard = document.getElementById("submitterCard");
+
+    const editPanel = document.getElementById("editPanel");
+    const editForm = document.getElementById("editForm");
+    const editName = document.getElementById("editName");
+    const editCategory = document.getElementById("editCategory");
+    const editCity = document.getElementById("editCity");
+    const editAddress = document.getElementById("editAddress");
+    const editWebsite = document.getElementById("editWebsite");
+    const editImageURL = document.getElementById("editImageURL");
+    const editLat = document.getElementById("editLat");
+    const editLng = document.getElementById("editLng");
+    const editDescription = document.getElementById("editDescription");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const editMessage = document.getElementById("editMessage");
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentPlaceId = "";
+    let currentSource = "";
+    let currentPlace = null;
+    let currentSubmitterProfile = null;
+    let isCreator = false;
+
+    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "nearby-places.html";
+    });
+
+    function setTopMessage(text = "", type = "") {
+      topMessage.textContent = text;
+      topMessage.className = `message ${type}`;
+    }
+
+    function setEditMessage(text = "", type = "") {
+      editMessage.textContent = text;
+      editMessage.className = `message ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || d.about || d.description || "",
+        verified: !!(d.verified || d.isVerified),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted
+      };
+    }
+
+    function normalizePlace(raw, fallbackId = "", sourceName = "") {
+      const d = raw || {};
+      const status = String(d.status || "").toLowerCase();
+
+      return {
+        id: d.id || fallbackId || "",
+        source: sourceName,
+        name: d.name || d.title || d.placeName || "Unnamed Place",
+        category: d.category || d.topic || "General",
+        description: d.description || d.desc || d.notes || "",
+        city: d.city || d.locationCity || "",
+        address: d.address || d.fullAddress || "",
+        website: d.website || d.url || d.link || "",
+        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
+        createdBy: d.createdBy || d.userId || d.uid || "",
+        creatorName: d.creatorName || d.displayName || "Member",
+        creatorUsername: d.creatorUsername || "",
+        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
+        pending: status === "pending" || d.pending === true,
+        rejected: status === "rejected",
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        lat: num(d.lat ?? d.latitude),
+        lng: num(d.lng ?? d.longitude)
+      };
+    }
+
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
+    }
+
+    async function loadProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+      try {
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", uid)),
+          getDoc(doc(db, "publicProfiles", uid))
+        ]);
+
+        return normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function findPlace(placeId, source) {
+      if (source && PLACE_SOURCES.includes(source)) {
+        try {
+          const snap = await getDoc(doc(db, source, placeId));
+          if (snap.exists()) {
+            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, source);
+          }
+        } catch {}
+      }
+
+      for (const col of PLACE_SOURCES) {
+        try {
+          const snap = await getDoc(doc(db, col, placeId));
+          if (snap.exists()) {
+            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, col);
+          }
+        } catch {}
+      }
+
+      return null;
+    }
+
+    function renderBadges() {
+      const badges = [];
+      badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.category || "General")}</span>`);
+      badges.push(`<span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">${currentPlace.approved ? "Verified" : currentPlace.rejected ? "Rejected" : "Pending"}</span>`);
+      if (isCreator) badges.push(`<span class="badge badge-purple">Your Place</span>`);
+      if (currentPlace.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.city)}</span>`);
+      badgeRow.innerHTML = badges.join("");
+    }
+
+    function renderSubmitter() {
+      const avatarHtml = currentSubmitterProfile.photoURL
+        ? `<img class="submitter-avatar" src="${escapeHtml(currentSubmitterProfile.photoURL)}" alt="Submitter photo">`
+        : `<div class="submitter-avatar-placeholder">No photo</div>`;
+
+      submitterCard.innerHTML = `
+        ${avatarHtml}
+        <div class="submitter-body">
+          <div class="submitter-name">
+            <a href="member.html?uid=${encodeURIComponent(currentPlace.createdBy)}">${escapeHtml(currentSubmitterProfile.displayName || currentPlace.creatorName || "Member")}</a>
+            ${currentSubmitterProfile.verified ? `<span class="verified-dot">✓</span>` : ""}
+          </div>
+          ${currentSubmitterProfile.username ? `<div class="submitter-username">@${escapeHtml(currentSubmitterProfile.username)}</div>` : ""}
+          <div class="submitter-bio">${escapeHtml(currentSubmitterProfile.bio || "Member profile")}</div>
+        </div>
+      `;
+
+      const img = submitterCard.querySelector(".submitter-avatar");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="submitter-avatar-placeholder">No photo</div>`;
+        });
+      }
+    }
+
+    function fillEditForm() {
+      editName.value = currentPlace.name || "";
+      editCategory.value = currentPlace.category || "General";
+      editCity.value = currentPlace.city || "";
+      editAddress.value = currentPlace.address || "";
+      editWebsite.value = currentPlace.website || "";
+      editImageURL.value = currentPlace.imageURL || "";
+      editLat.value = currentPlace.lat ?? "";
+      editLng.value = currentPlace.lng ?? "";
+      editDescription.value = currentPlace.description || "";
+      setEditMessage("");
+    }
+
+    function renderTopActions() {
+      const buttons = [];
+
+      if (currentPlace.website) {
+        buttons.push(`<a href="${escapeHtml(currentPlace.website)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-primary">Open Link</a>`);
+      }
+
+      if (currentPlace.createdBy) {
+        buttons.push(`<a href="member.html?uid=${encodeURIComponent(currentPlace.createdBy)}" class="action-btn btn-soft">View Profile</a>`);
+      }
+
+      if (isCreator) {
+        buttons.push(`<button id="toggleEditBtn" class="action-btn btn-purple" type="button">Edit Place</button>`);
+        buttons.push(`<button id="deletePlaceBtn" class="action-btn btn-red" type="button">Delete Place</button>`);
+      } else {
+        buttons.push(`<a href="report.html?type=place&targetId=${encodeURIComponent(currentPlaceId)}&targetUserId=${encodeURIComponent(currentPlace.createdBy || "")}" class="action-btn btn-yellow">Report</a>`);
+      }
+
+      topActionRow.innerHTML = buttons.join("");
+
+      const toggleEditBtn = document.getElementById("toggleEditBtn");
+      const deletePlaceBtn = document.getElementById("deletePlaceBtn");
+
+      if (toggleEditBtn) {
+        toggleEditBtn.addEventListener("click", () => {
+          const opening = editPanel.classList.contains("hidden");
+          if (opening) {
+            fillEditForm();
+            editPanel.classList.remove("hidden");
+            editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+            toggleEditBtn.textContent = "Hide Edit";
+          } else {
+            editPanel.classList.add("hidden");
+            toggleEditBtn.textContent = "Edit Place";
+          }
+        });
+      }
+
+      if (deletePlaceBtn) {
+        deletePlaceBtn.addEventListener("click", async () => {
+          const ok = confirm("Delete this place?");
+          if (!ok) return;
+
+          deletePlaceBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await deleteDoc(doc(db, currentSource, currentPlaceId));
+            window.location.href = "nearby-places.html";
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not delete place.", "err");
+            deletePlaceBtn.disabled = false;
+          }
+        });
+      }
+    }
+
+    async function renderPlaceView() {
+      placeTitle.textContent = currentPlace.name || "Unnamed Place";
+      categoryText.textContent = currentPlace.category || "General";
+      cityText.textContent = currentPlace.city || "-";
+      addressText.textContent = currentPlace.address || "-";
+      sourceText.textContent = currentSource || "-";
+      descText.textContent = currentPlace.description || "No description added.";
+
+      if (currentPlace.imageURL) {
+        heroImage.src = currentPlace.imageURL;
+        heroImage.classList.remove("hidden");
+      } else {
+        heroImage.classList.add("hidden");
+      }
+
+      renderBadges();
+      renderSubmitter();
+      renderTopActions();
+    }
+
+    cancelEditBtn.addEventListener("click", () => {
+      editPanel.classList.add("hidden");
+      const toggleEditBtn = document.getElementById("toggleEditBtn");
+      if (toggleEditBtn) toggleEditBtn.textContent = "Edit Place";
+    });
+
+    heroImage.addEventListener("error", () => {
+      heroImage.classList.add("hidden");
+    });
+
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentPlace || !isCreator) return;
+
+      const name = editName.value.trim();
+      const category = editCategory.value.trim() || "General";
+      const city = editCity.value.trim();
+      const address = editAddress.value.trim();
+      const website = editWebsite.value.trim();
+      const imageURL = editImageURL.value.trim();
+      const description = editDescription.value.trim();
+      const latText = editLat.value.trim();
+      const lngText = editLng.value.trim();
+
+      if (!name) {
+        setEditMessage("Place name is required.", "err");
+        return;
+      }
+      if (!city) {
+        setEditMessage("City is required.", "err");
+        return;
+      }
+      if (!description) {
+        setEditMessage("Description is required.", "err");
+        return;
+      }
+
+      const lat = latText ? Number(latText) : null;
+      const lng = lngText ? Number(lngText) : null;
+
+      if (latText && !Number.isFinite(lat)) {
+        setEditMessage("Latitude must be a valid number.", "err");
+        return;
+      }
+      if (lngText && !Number.isFinite(lng)) {
+        setEditMessage("Longitude must be a valid number.", "err");
+        return;
+      }
+
+      const saveBtn = document.getElementById("saveEditBtn");
+      saveBtn.disabled = true;
+      setEditMessage("");
+
+      try {
+        await updateDoc(doc(db, currentSource, currentPlaceId), {
+          name,
+          category,
+          city,
+          address,
+          website,
+          imageURL,
+          description,
+          lat,
+          lng,
+          updatedAt: serverTimestamp()
+        });
+
+        currentPlace = {
+          ...currentPlace,
+          name,
+          category,
+          city,
+          address,
+          website,
+          imageURL,
+          description,
+          lat,
+          lng
+        };
+
+        await renderPlaceView();
+        setEditMessage("Place updated.", "ok");
+        setTopMessage("Place updated.", "ok");
+      } catch (err) {
+        console.error(err);
+        setEditMessage("Could not update place.", "err");
+      }
+
+      saveBtn.disabled = false;
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      currentUserProfile = await loadProfile(user.uid);
+
+      const params = new URLSearchParams(window.location.search);
+      currentPlaceId = params.get("placeId") || "";
+      currentSource = params.get("source") || "";
+
+      if (!currentPlaceId) {
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        currentPlace = await findPlace(currentPlaceId, currentSource);
+
+        if (!currentPlace || currentPlace.hidden) {
+          loadingPanel.classList.add("hidden");
+          notFoundPanel.classList.remove("hidden");
+          return;
+        }
+
+        currentSource = currentPlace.source;
+        currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
+        isCreator = currentPlace.createdBy === user.uid;
+
+        await renderPlaceView();
+
+        loadingPanel.classList.add("hidden");
+        placePanel.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
