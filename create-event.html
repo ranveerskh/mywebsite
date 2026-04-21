@@ -1,164 +1,303 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Create Event</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
       --line:rgba(255,255,255,.08);
-      --text:#fff;
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
-      --red:#ff5d73;
       --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
+      padding:12px 12px 110px;
     }
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar{
       position:sticky;
       top:0;
       z-index:30;
       backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:12px 14px;
-      margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
+      padding:8px 10px;
+      margin-bottom:12px;
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:10px;
+      box-shadow:var(--shadow);
     }
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .chip-btn{
+    .top-icon-btn{
+      width:44px;
+      height:44px;
       border:none;
-      background:var(--soft);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:700;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:14px;
       cursor:pointer;
       border:1px solid var(--line);
-      display:inline-block;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
     }
-    .chip-btn.primary{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border-color:rgba(245,185,66,.20);
-    }
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
     .panel{
-      background:rgba(18,25,49,.88);
+      background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
     }
-    .section-title{
-      font-size:22px;
+
+    .hero-title{
+      font-size:18px;
       font-weight:800;
-      margin-bottom:8px;
+      margin-bottom:6px;
     }
-    .section-note{
+    .hero-sub{
       color:var(--muted);
       font-size:13px;
-      line-height:1.6;
-      margin-bottom:16px;
+      line-height:1.55;
+      margin-bottom:12px;
     }
-    .field{margin-bottom:14px}
-    label{
-      display:block;
-      margin-bottom:8px;
+
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .form{
+      display:grid;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:7px;
+    }
+    .label{
       font-size:13px;
-      color:#d7def5;
-      font-weight:700;
+      font-weight:800;
+      color:var(--text);
     }
-    input,textarea,select{
+    .input,
+    .textarea,
+    .select{
       width:100%;
       border:none;
       outline:none;
-      padding:14px 15px;
+      padding:13px 14px;
       border-radius:16px;
-      background:#0f1630;
-      color:#fff;
-      border:1px solid rgba(255,255,255,.07);
-      font-size:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
     }
-    textarea{
+    .textarea{
       min-height:120px;
       resize:vertical;
+      line-height:1.55;
     }
-    input::placeholder,textarea::placeholder{color:#7f8cad}
-    select option{color:#000}
-    .grid{
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .grid-2{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
-    .small-note{
+
+    .note{
       color:var(--muted);
       font-size:12px;
       line-height:1.5;
-      margin-top:6px;
+      margin-top:2px;
     }
-    .actions{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top:6px;
+
+    .preview-wrap{
+      background:var(--surface-2);
+      border:1px dashed var(--line);
+      border-radius:18px;
+      padding:12px;
     }
-    .save-btn{
-      border:none;
-      background:var(--green);
-      color:#062513;
-      padding:12px 18px;
-      border-radius:14px;
+    .preview-title{
+      font-size:13px;
       font-weight:800;
-      cursor:pointer;
-      min-width:150px;
+      margin-bottom:10px;
     }
-    .message{min-height:20px;font-size:14px}
-    .success{color:#9cf0bf}
-    .error{color:#ffb3bd}
+    .preview-image{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .preview-empty{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      padding:16px 10px;
+      border-radius:14px;
+      background:var(--surface-3);
+      border:1px dashed var(--line);
+    }
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:42px;
+    }
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .btn-soft{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:6px;
+    }
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .locked-box{
+      text-align:center;
+      padding:20px 12px;
+      border-radius:18px;
+      background:var(--surface-2);
+      border:1px dashed var(--line);
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:12px;
-      width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(18px);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
       gap:8px;
       z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
     }
     .nav-link{
       text-decoration:none;
-      color:#b9c4e3;
+      color:var(--muted);
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -173,90 +312,156 @@
       background:transparent;
       cursor:pointer;
     }
-    .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link .icon{
+      font-size:18px;
+      line-height:1;
+      display:block;
+    }
     .nav-link.active{
       background:rgba(76,201,255,.14);
-      color:#d8f7ff;
+      color:var(--text);
     }
+
     @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .chip-btn{padding:9px 10px;font-size:12px}
-      .grid{grid-template-columns:1fr}
-      .actions{align-items:stretch}
-      .save-btn{width:100%}
+      body{padding:10px 10px 110px}
+      .brand{font-size:18px}
+      .grid-2{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div>
+      <a href="nearby-events.html" class="top-icon-btn" aria-label="Back to events">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
         <div class="brand">BareWorld</div>
         <div class="brand-sub">Create event</div>
       </div>
 
-      <div class="top-actions">
-        <a href="events.html" class="chip-btn primary">Back to Events</a>
-        <a href="settings.html" class="chip-btn">Settings</a>
-      </div>
+      <button id="clearFormBtn" class="top-icon-btn" type="button" aria-label="Clear form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+        </svg>
+      </button>
     </div>
 
     <div class="panel">
-      <div class="section-title">Create Event</div>
-      <div class="section-note">
-        Add a new event for members. City suggestions come from already created events so names stay consistent.
+      <div class="hero-title">Create an Event</div>
+      <div class="hero-sub">
+        Publish an event directly. It will appear in the nearby events flow and people can join it before the event expires.
       </div>
 
-      <form id="eventForm">
-        <div class="field">
-          <label for="title">Event Title</label>
-          <input type="text" id="title" placeholder="Example: Summer Meetup" required />
-        </div>
+      <div class="chip-row">
+        <span class="chip chip-blue">Collection: events</span>
+        <span class="chip chip-green">Publishes immediately</span>
+        <span class="chip chip-yellow">Join closes after event time</span>
+      </div>
+    </div>
 
-        <div class="field">
-          <label for="description">Description</label>
-          <textarea id="description" placeholder="Write event details..." required></textarea>
-        </div>
+    <div id="blockedPanel" class="panel hidden">
+      <div class="locked-box" id="blockedText">
+        Event creation is not available for your account right now.
+      </div>
+    </div>
 
-        <div class="grid">
+    <div id="formPanel" class="panel hidden">
+      <form id="eventForm" class="form">
+        <div class="grid-2">
           <div class="field">
-            <label for="city">City</label>
-            <input type="text" id="city" list="citySuggestions" placeholder="Start typing city name" required />
-            <datalist id="citySuggestions"></datalist>
-            <div class="small-note">Existing event cities will appear as suggestions.</div>
+            <label class="label" for="title">Event Title</label>
+            <input id="title" class="input" type="text" placeholder="Example: Sunset Meetup" />
           </div>
 
           <div class="field">
-            <label for="visibility">Visibility</label>
-            <select id="visibility" required>
+            <label class="label" for="visibility">Visibility</label>
+            <select id="visibility" class="select">
               <option value="public">Public</option>
               <option value="private">Private</option>
             </select>
           </div>
         </div>
 
-        <div class="grid">
+        <div class="grid-2">
           <div class="field">
-            <label for="date">Date</label>
-            <input type="date" id="date" required />
+            <label class="label" for="city">City</label>
+            <input id="city" class="input" type="text" placeholder="City name" />
           </div>
 
           <div class="field">
-            <label for="time">Time</label>
-            <input type="time" id="time" required />
+            <label class="label" for="venue">Venue / Spot</label>
+            <input id="venue" class="input" type="text" placeholder="Optional venue or place name" />
           </div>
         </div>
 
-        <div class="small-note">
-          Host name automatically current logged-in profile ton aa ju.
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="date">Date</label>
+            <input id="date" class="input" type="date" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="time">Time</label>
+            <input id="time" class="input" type="time" />
+          </div>
         </div>
 
-        <div class="actions">
-          <div id="message" class="message"></div>
-          <button type="submit" id="saveBtn" class="save-btn">Create Event</button>
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="address">Address</label>
+            <input id="address" class="input" type="text" placeholder="Optional address" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="imageURL">Image Link</label>
+            <input id="imageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
+            <div class="note">Optional direct image URL.</div>
+          </div>
         </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="latitude">Latitude</label>
+            <input id="latitude" class="input" type="text" placeholder="Optional latitude" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="longitude">Longitude</label>
+            <input id="longitude" class="input" type="text" placeholder="Optional longitude" />
+          </div>
+        </div>
+
+        <div class="action-row" style="margin-top:-2px;">
+          <button id="useBrowserLocationBtn" type="button" class="action-btn btn-yellow">Use Browser Location</button>
+          <span class="note">Fills latitude and longitude if permission is allowed.</span>
+        </div>
+
+        <div class="field">
+          <label class="label" for="description">Description</label>
+          <textarea id="description" class="textarea" placeholder="Write clear details about the event..."></textarea>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-title">Image Preview</div>
+          <img id="previewImage" class="preview-image hidden" alt="Preview" />
+          <div id="previewEmpty" class="preview-empty">
+            Add an image link if you want a preview here.
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="submitBtn" type="submit" class="action-btn btn-primary">Publish Event</button>
+          <button id="resetBtn" type="button" class="action-btn btn-soft">Reset</button>
+          <a href="nearby-events.html" class="action-btn btn-green">View Events</a>
+        </div>
+
+        <div id="formMessage" class="message"></div>
       </form>
     </div>
   </div>
@@ -266,7 +471,7 @@
       <span class="icon">⌂</span>
       <span>Feed</span>
     </a>
-    <a href="nearby.html" class="nav-link">
+    <a href="nearby.html" class="nav-link active">
       <span class="icon">◎</span>
       <span>Nearby</span>
     </a>
@@ -274,9 +479,9 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link active">
-      <span class="icon">◈</span>
-      <span>Events</span>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
     </a>
     <a href="profile.html" class="nav-link">
       <span class="icon">◉</span>
@@ -288,70 +493,160 @@
     import { auth, db } from "./firebase.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      collection,
-      addDoc,
       doc,
       getDoc,
-      getDocs,
+      addDoc,
+      collection,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    const blockedPanel = document.getElementById("blockedPanel");
+    const blockedText = document.getElementById("blockedText");
+    const formPanel = document.getElementById("formPanel");
+
     const eventForm = document.getElementById("eventForm");
-    const saveBtn = document.getElementById("saveBtn");
-    const message = document.getElementById("message");
+    const titleInput = document.getElementById("title");
+    const visibilityInput = document.getElementById("visibility");
     const cityInput = document.getElementById("city");
-    const citySuggestions = document.getElementById("citySuggestions");
+    const venueInput = document.getElementById("venue");
+    const dateInput = document.getElementById("date");
+    const timeInput = document.getElementById("time");
+    const addressInput = document.getElementById("address");
+    const imageURLInput = document.getElementById("imageURL");
+    const latitudeInput = document.getElementById("latitude");
+    const longitudeInput = document.getElementById("longitude");
+    const descriptionInput = document.getElementById("description");
+
+    const previewImage = document.getElementById("previewImage");
+    const previewEmpty = document.getElementById("previewEmpty");
+
+    const clearFormBtn = document.getElementById("clearFormBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
+    const formMessage = document.getElementById("formMessage");
 
     let currentUser = null;
-    let creatorName = "Member";
-    const existingCitiesMap = new Map();
+    let currentProfile = null;
 
-    function setMessage(text, type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
     }
 
-    function normalizeCity(inputCity) {
-      const clean = (inputCity || "").trim();
-      if (!clean) return "";
-      const existing = existingCitiesMap.get(clean.toLowerCase());
-      return existing || clean;
-    }
-
-    async function loadCitySuggestions() {
-      try {
-        const snap = await getDocs(collection(db, "events"));
-        existingCitiesMap.clear();
-        citySuggestions.innerHTML = "";
-
-        const uniqueCities = new Set();
-
-        snap.forEach((docSnap) => {
-          const data = docSnap.data();
-          const city = (data.city || "").trim();
-          if (!city) return;
-
-          const key = city.toLowerCase();
-          if (!existingCitiesMap.has(key)) {
-            existingCitiesMap.set(key, city);
-          }
-          uniqueCities.add(existingCitiesMap.get(key));
-        });
-
-        [...uniqueCities]
-          .sort((a, b) => a.localeCompare(b))
-          .forEach((city) => {
-            const option = document.createElement("option");
-            option.value = city;
-            citySuggestions.appendChild(option);
-          });
-      } catch (error) {
-        console.error("Could not load city suggestions:", error);
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
+      return themeValue === "light" ? "light" : "dark";
     }
 
-    cityInput.addEventListener("blur", () => {
-      cityInput.value = normalizeCity(cityInput.value);
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+
+    function setMessage(text = "", type = "") {
+      formMessage.textContent = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        city: d.city || d.locationCity || d.currentCity || "",
+        moderationStatus: d.moderationStatus || d.status || "",
+        suspensionUntil: d.suspensionUntil || d.suspendUntil || null
+      };
+    }
+
+    function isSuspendedNow(profile) {
+      if (profile?.moderationStatus !== "suspended") return false;
+      const until = profile?.suspensionUntil;
+      if (!until) return false;
+
+      const ms = until?.toDate
+        ? until.toDate().getTime()
+        : new Date(until).getTime();
+
+      return !Number.isNaN(ms) && Date.now() < ms;
+    }
+
+    function resetForm() {
+      eventForm.reset();
+      if (currentProfile?.city) {
+        cityInput.value = currentProfile.city;
+      }
+      previewImage.classList.add("hidden");
+      previewImage.removeAttribute("src");
+      previewEmpty.classList.remove("hidden");
+      previewEmpty.textContent = "Add an image link if you want a preview here.";
+      setMessage("");
+    }
+
+    function updatePreview() {
+      const url = imageURLInput.value.trim();
+      if (!url) {
+        previewImage.classList.add("hidden");
+        previewImage.removeAttribute("src");
+        previewEmpty.classList.remove("hidden");
+        previewEmpty.textContent = "Add an image link if you want a preview here.";
+        return;
+      }
+
+      previewImage.src = url;
+      previewImage.classList.remove("hidden");
+      previewEmpty.classList.add("hidden");
+    }
+
+    previewImage.addEventListener("error", () => {
+      previewImage.classList.add("hidden");
+      previewEmpty.classList.remove("hidden");
+      previewEmpty.textContent = "Could not load this image preview.";
+    });
+
+    previewImage.addEventListener("load", () => {
+      previewEmpty.classList.add("hidden");
+    });
+
+    imageURLInput.addEventListener("input", updatePreview);
+    clearFormBtn.addEventListener("click", resetForm);
+    resetBtn.addEventListener("click", resetForm);
+
+    useBrowserLocationBtn.addEventListener("click", async () => {
+      if (!navigator.geolocation) {
+        setMessage("Browser location is not supported on this device.", "err");
+        return;
+      }
+
+      setMessage("Checking browser location...", "");
+
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            latitudeInput.value = String(position.coords.latitude);
+            longitudeInput.value = String(position.coords.longitude);
+            setMessage("Browser location added.", "ok");
+            resolve();
+          },
+          () => {
+            setMessage("Could not get browser location.", "err");
+            resolve();
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        );
+      });
     });
 
     onAuthStateChanged(auth, async (user) => {
@@ -363,69 +658,150 @@
       currentUser = user;
 
       try {
-        const publicRef = doc(db, "publicProfiles", user.uid);
-        const publicSnap = await getDoc(publicRef);
+        const [userSnap, publicSnap] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDoc(doc(db, "publicProfiles", user.uid))
+        ]);
 
-        if (publicSnap.exists()) {
-          creatorName = publicSnap.data().displayName || user.displayName || "Member";
-        } else {
-          creatorName = user.displayName || "Member";
+        currentProfile = normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid: user.uid
+        }, user.uid);
+
+        if (currentProfile.city) {
+          cityInput.value = currentProfile.city;
         }
-      } catch (error) {
-        console.error(error);
-        creatorName = user.displayName || "Member";
-      }
 
-      await loadCitySuggestions();
+        if (currentProfile.moderationStatus === "banned") {
+          blockedPanel.classList.remove("hidden");
+          formPanel.classList.add("hidden");
+          blockedText.textContent = "Your account is banned. Event creation is disabled.";
+          return;
+        }
+
+        if (isSuspendedNow(currentProfile)) {
+          blockedPanel.classList.remove("hidden");
+          formPanel.classList.add("hidden");
+          blockedText.textContent = "Your account is suspended. Event creation is disabled for now.";
+          return;
+        }
+
+        blockedPanel.classList.add("hidden");
+        formPanel.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        blockedPanel.classList.remove("hidden");
+        formPanel.classList.add("hidden");
+        blockedText.textContent = "Could not load your account right now.";
+      }
     });
 
     eventForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       if (!currentUser) return;
 
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const city = normalizeCity(cityInput.value);
-      const visibility = document.getElementById("visibility").value;
-      const date = document.getElementById("date").value;
-      const time = document.getElementById("time").value;
+      const title = titleInput.value.trim();
+      const visibility = visibilityInput.value.trim() || "public";
+      const city = cityInput.value.trim();
+      const venue = venueInput.value.trim();
+      const date = dateInput.value.trim();
+      const time = timeInput.value.trim();
+      const address = addressInput.value.trim();
+      const imageURL = imageURLInput.value.trim();
+      const description = descriptionInput.value.trim();
 
-      cityInput.value = city;
+      const latText = latitudeInput.value.trim();
+      const lngText = longitudeInput.value.trim();
 
-      if (!title || !description || !city || !date || !time) {
-        setMessage("Please fill all fields.", "error");
+      if (!title) {
+        setMessage("Event title is required.", "err");
+        titleInput.focus();
         return;
       }
 
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Creating...";
+      if (!city) {
+        setMessage("City is required.", "err");
+        cityInput.focus();
+        return;
+      }
+
+      if (!date) {
+        setMessage("Date is required.", "err");
+        dateInput.focus();
+        return;
+      }
+
+      if (!time) {
+        setMessage("Time is required.", "err");
+        timeInput.focus();
+        return;
+      }
+
+      if (!description) {
+        setMessage("Description is required.", "err");
+        descriptionInput.focus();
+        return;
+      }
+
+      const dateTime = new Date(`${date}T${time}`);
+      if (Number.isNaN(dateTime.getTime())) {
+        setMessage("Date or time is invalid.", "err");
+        return;
+      }
+
+      if (dateTime.getTime() <= Date.now()) {
+        setMessage("Please choose a future date and time.", "err");
+        return;
+      }
+
+      const lat = latText ? Number(latText) : null;
+      const lng = lngText ? Number(lngText) : null;
+
+      if (latText && !Number.isFinite(lat)) {
+        setMessage("Latitude must be a valid number.", "err");
+        latitudeInput.focus();
+        return;
+      }
+
+      if (lngText && !Number.isFinite(lng)) {
+        setMessage("Longitude must be a valid number.", "err");
+        longitudeInput.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Publishing...";
+      setMessage("");
 
       try {
         await addDoc(collection(db, "events"), {
-          creatorId: currentUser.uid,
-          creatorName,
           title,
-          description,
+          visibility,
           city,
+          venue,
+          address,
           date,
           time,
-          visibility,
+          imageURL,
+          description,
+          creatorId: currentUser.uid,
+          creatorName: currentProfile?.displayName || currentUser.displayName || "Member",
+          creatorUsername: currentProfile?.username || "",
+          lat,
+          lng,
           createdAt: serverTimestamp()
         });
 
-        setMessage("Event created successfully.", "success");
-
-        setTimeout(() => {
-          window.location.href = "events.html";
-        }, 800);
-      } catch (error) {
-        console.error(error);
-        setMessage("Could not create event.", "error");
+        setMessage("Event published successfully.", "ok");
+        resetForm();
+      } catch (err) {
+        console.error(err);
+        setMessage(err?.message || "Could not publish event.", "err");
       }
 
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Create Event";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Publish Event";
     });
   </script>
 </body>
