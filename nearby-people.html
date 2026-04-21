@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Nearby Places</title>
+  <title>BareWorld - Nearby People</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -173,6 +173,11 @@
       color:var(--text);
       border:1px solid rgba(61,220,132,.20);
     }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
     .btn-yellow{
       background:rgba(245,185,66,.14);
       color:var(--text);
@@ -224,19 +229,82 @@
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
-      padding:14px;
+      padding:12px;
     }
-    .card-title{
-      font-size:17px;
+
+    .person-card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .person-avatar,.person-avatar-placeholder{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .person-avatar{object-fit:cover}
+    .person-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+
+    .person-body{
+      min-width:0;
+      flex:1;
+    }
+    .person-name{
+      font-size:15px;
       font-weight:800;
-      line-height:1.4;
-      margin-bottom:10px;
+      line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .person-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .person-name a:hover{text-decoration:underline}
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+    .person-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:3px;
+      word-break:break-word;
+    }
+    .card-sub{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
     }
     .badge-row{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-bottom:10px;
+      margin-top:8px;
     }
     .mini-badge{
       display:inline-flex;
@@ -254,28 +322,12 @@
     .mini-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .mini-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .mini-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .mini-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
-    .meta-grid{
-      display:grid;
-      gap:6px;
-      color:var(--text);
-      font-size:13px;
-      line-height:1.52;
-      margin-bottom:10px;
-    }
-    .desc{
-      color:var(--text);
-      line-height:1.55;
-      font-size:14px;
-      white-space:pre-wrap;
-      word-break:break-word;
-      margin-bottom:12px;
-    }
     .card-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      margin-top:12px;
     }
 
     .loading-box{
@@ -362,21 +414,21 @@
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
-        <div class="brand-sub">Nearby places</div>
+        <div class="brand-sub">Nearby people</div>
       </div>
 
-      <a href="add-place.html" class="top-icon-btn" aria-label="Add place">
+      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh people">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+          <path d="M21 3v6h-6"></path>
         </svg>
-      </a>
+      </button>
     </div>
 
     <div class="panel">
-      <div class="hero-title">Places Around You</div>
+      <div class="hero-title">People Around You</div>
       <div class="hero-sub">
-        Browse verified places, review your submissions, and keep pending places separate so the main list stays clean.
+        Discover members nearby, filter by following or verified accounts, and open their profiles fast.
       </div>
 
       <div class="chip-row">
@@ -387,8 +439,8 @@
 
       <div class="action-row">
         <button id="useBrowserLocationBtn" class="action-btn btn-primary" type="button">Use Browser Location</button>
-        <button id="refreshBtn" class="action-btn btn-soft" type="button">Refresh Places</button>
-        <a href="add-place.html" class="action-btn btn-purple">Add Place</a>
+        <a href="search.html" class="action-btn btn-soft">Search Members</a>
+        <a href="settings.html" class="action-btn btn-purple">Nearby Settings</a>
       </div>
 
       <div id="pageStatus" class="status-text"></div>
@@ -396,16 +448,16 @@
 
     <div class="panel">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="verified">Verified</button>
-        <button class="tab-btn" data-tab="mine">My Places</button>
-        <button class="tab-btn" data-tab="pending">Pending</button>
+        <button class="tab-btn active" data-tab="discover">Discover</button>
+        <button class="tab-btn" data-tab="following">Following</button>
+        <button class="tab-btn" data-tab="verified">Verified</button>
       </div>
 
-      <input id="searchInput" class="search-box" type="text" placeholder="Search verified places..." />
+      <input id="searchInput" class="search-box" type="text" placeholder="Search nearby people..." />
 
-      <div id="listLoading" class="loading-box">Loading places...</div>
+      <div id="listLoading" class="loading-box">Loading nearby people...</div>
       <div id="listWrap" class="list hidden"></div>
-      <div id="emptyBox" class="empty-box hidden">No places found.</div>
+      <div id="emptyBox" class="empty-box hidden">No nearby people found.</div>
     </div>
   </div>
 
@@ -439,15 +491,19 @@
       doc,
       getDoc,
       getDocs,
-      collection
+      setDoc,
+      deleteDoc,
+      addDoc,
+      collection,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const cityChip = document.getElementById("cityChip");
     const modeChip = document.getElementById("modeChip");
     const browserChip = document.getElementById("browserChip");
 
-    const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const refreshBtn = document.getElementById("refreshBtn");
+    const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const pageStatus = document.getElementById("pageStatus");
 
     const searchInput = document.getElementById("searchInput");
@@ -457,9 +513,13 @@
 
     let currentUser = null;
     let viewerProfile = null;
+    let viewerBlockedUsers = [];
     let browserCoords = null;
-    let currentTab = "verified";
-    let placesData = [];
+    let currentTab = "discover";
+
+    let peopleData = [];
+    let followMap = new Map();
+    let requestMap = new Map();
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -533,42 +593,21 @@
       return {
         uid: d.uid || d.id || fallbackUid || "",
         displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        city: d.city || d.locationCity || d.currentCity || "",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || d.about || d.description || "",
+        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
+        verified: !!(d.verified || d.isVerified),
+        moderationStatus: d.moderationStatus || d.status || "",
+        isHiddenByAdmin: !!d.isHiddenByAdmin,
+        softDeleted: !!d.softDeleted,
+        showInNearby: !!d.showInNearby,
         locationVisibility: d.locationVisibility || "hidden",
+        city: d.city || d.locationCity || d.currentCity || "",
+        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
         lat: readLat(d),
         lng: readLng(d)
       };
-    }
-
-    function normalizePlace(raw, fallbackId = "", sourceName = "") {
-      const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
-
-      return {
-        id: d.id || fallbackId || "",
-        source: sourceName,
-        name: d.name || d.title || d.placeName || "Unnamed Place",
-        description: d.description || d.desc || d.notes || "",
-        city: d.city || d.locationCity || "",
-        address: d.address || d.fullAddress || "",
-        website: d.website || d.url || d.link || "",
-        createdBy: d.createdBy || d.userId || d.uid || "",
-        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
-        pending: status === "pending" || d.pending === true,
-        rejected: status === "rejected",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
-        lat: readLat(d),
-        lng: readLng(d),
-        createdAtMs: getCreatedMs(d)
-      };
-    }
-
-    function getCreatedMs(obj) {
-      const value = obj?.createdAt || obj?.timestamp || null;
-      if (!value) return 0;
-      if (value?.toDate) return value.toDate().getTime();
-      const ms = new Date(value).getTime();
-      return Number.isNaN(ms) ? 0 : ms;
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -602,7 +641,7 @@
         browserCoords = null;
         browserChip.textContent = "Browser location unsupported";
         browserChip.className = "chip chip-red";
-        renderPlaces();
+        renderPeople();
         return;
       }
 
@@ -630,7 +669,7 @@
         );
       });
 
-      renderPlaces();
+      renderPeople();
     }
 
     function renderViewerChips() {
@@ -668,127 +707,242 @@
       emptyBox.classList.add("hidden");
     }
 
-    function buildPlaceViewModel(place) {
+    function getRelation(profile) {
+      if (profile.uid === currentUser.uid) return "self";
+      if (followMap.has(profile.uid)) return "following";
+      if (requestMap.has(profile.uid)) return "requested";
+      return profile.isPrivate ? "request" : "follow";
+    }
+
+    function buildPersonViewModel(profile) {
       const viewerLat = browserCoords?.lat ?? viewerProfile?.lat ?? null;
       const viewerLng = browserCoords?.lng ?? viewerProfile?.lng ?? null;
 
       let distanceKm = null;
       let score = 0;
 
-      if (viewerLat !== null && viewerLng !== null && place.lat !== null && place.lng !== null) {
-        distanceKm = kmDistance(viewerLat, viewerLng, place.lat, place.lng);
+      if (viewerLat !== null && viewerLng !== null && profile.lat !== null && profile.lng !== null) {
+        distanceKm = kmDistance(viewerLat, viewerLng, profile.lat, profile.lng);
         if (distanceKm !== null) score = Math.max(0, 500 - distanceKm);
-      } else if (sameCity(viewerProfile?.city, place.city)) {
+      } else if (sameCity(viewerProfile?.city, profile.city)) {
         score = 250;
       }
 
+      let locationText = "";
+      const mode = profile.locationVisibility || "hidden";
+
+      if (mode === "city" && profile.city) {
+        locationText = profile.city;
+      } else if (mode === "approximate" && distanceKm !== null) {
+        locationText = formatDistanceLabel(distanceKm);
+      } else if (mode === "approximate" && sameCity(viewerProfile?.city, profile.city)) {
+        locationText = "Same area";
+      }
+
       return {
-        ...place,
+        ...profile,
         distanceKm,
-        distanceLabel: distanceKm !== null ? formatDistanceLabel(distanceKm) : (sameCity(viewerProfile?.city, place.city) ? "Same city" : ""),
-        score
+        score,
+        locationText,
+        relation: getRelation(profile)
       };
     }
 
-    function matchesSearch(place, q) {
+    function matchesSearch(profile, q) {
       if (!q) return true;
       const joined = [
-        place.name,
-        place.description,
-        place.city,
-        place.address,
-        place.website
+        profile.displayName,
+        profile.username,
+        profile.bio,
+        profile.city
       ].filter(Boolean).join(" ").toLowerCase();
 
       return joined.includes(q.toLowerCase());
     }
 
-    function getFilteredPlaces() {
+    function getFilteredPeople() {
       const q = searchInput.value.trim();
 
-      let rows = placesData
-        .filter(p => !p.hidden)
-        .map(buildPlaceViewModel)
+      let rows = peopleData
+        .filter(p => p.uid !== currentUser.uid)
+        .filter(p => p.showInNearby)
+        .filter(p => !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned")
+        .filter(p => !viewerBlockedUsers.includes(p.uid))
+        .map(buildPersonViewModel)
         .filter(p => matchesSearch(p, q));
 
-      if (currentTab === "verified") {
-        rows = rows
-          .filter(p => p.approved)
-          .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-      } else if (currentTab === "mine") {
-        rows = rows
-          .filter(p => p.createdBy === currentUser.uid)
-          .sort((a, b) => b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name));
-      } else {
-        rows = rows
-          .filter(p => p.createdBy === currentUser.uid)
-          .filter(p => p.pending || (!p.approved && !p.rejected))
-          .sort((a, b) => b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name));
+      if (currentTab === "following") {
+        rows = rows.filter(p => p.relation === "following");
+      } else if (currentTab === "verified") {
+        rows = rows.filter(p => p.verified);
       }
 
-      return rows;
+      return rows.sort((a, b) => {
+        if (a.relation === "following" && b.relation !== "following") return -1;
+        if (b.relation === "following" && a.relation !== "following") return 1;
+        if (a.verified && !b.verified) return -1;
+        if (b.verified && !a.verified) return 1;
+        return b.score - a.score || a.displayName.localeCompare(b.displayName);
+      });
     }
 
-    function buildBadges(model) {
-      const badges = [];
-
-      if (model.approved) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
-      if (model.pending || (!model.approved && !model.rejected)) badges.push(`<span class="mini-badge mini-yellow">Pending</span>`);
-      if (model.rejected) badges.push(`<span class="mini-badge mini-red">Rejected</span>`);
-      if (model.distanceLabel) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.distanceLabel)}</span>`);
-      if (model.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.city)}</span>`);
-      if (model.createdBy === currentUser.uid) badges.push(`<span class="mini-badge mini-blue">Submitted by you</span>`);
-
-      return badges.join("");
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
     }
 
-    function renderPlaces() {
+    async function followPerson(profile) {
+      await setDoc(doc(db, "follows", `${currentUser.uid}__${profile.uid}`), {
+        followerId: currentUser.uid,
+        followingId: profile.uid,
+        createdAt: serverTimestamp()
+      });
+
+      await createNotificationSafe(profile.uid, {
+        type: "follow",
+        title: "New follower",
+        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
+        fromUserId: currentUser.uid,
+        toUserId: profile.uid,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+    }
+
+    async function unfollowPerson(profile) {
+      const docId = followMap.get(profile.uid) || `${currentUser.uid}__${profile.uid}`;
+      await deleteDoc(doc(db, "follows", docId));
+    }
+
+    async function requestFollow(profile) {
+      await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${profile.uid}`), {
+        requesterId: currentUser.uid,
+        targetId: profile.uid,
+        createdAt: serverTimestamp()
+      });
+
+      await createNotificationSafe(profile.uid, {
+        type: "follow_request",
+        title: "Follow request",
+        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
+        fromUserId: currentUser.uid,
+        toUserId: profile.uid,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+    }
+
+    async function cancelRequest(profile) {
+      const docId = requestMap.get(profile.uid) || `${currentUser.uid}__${profile.uid}`;
+      await deleteDoc(doc(db, "follow_requests", docId));
+    }
+
+    function buildRelationButton(profile) {
+      if (profile.relation === "following") {
+        return `<button class="action-btn btn-red relation-btn" data-action="unfollow" data-uid="${escapeHtml(profile.uid)}" type="button">Unfollow</button>`;
+      }
+      if (profile.relation === "requested") {
+        return `<button class="action-btn btn-yellow relation-btn" data-action="cancel" data-uid="${escapeHtml(profile.uid)}" type="button">Requested</button>`;
+      }
+      if (profile.relation === "request") {
+        return `<button class="action-btn btn-purple relation-btn" data-action="request" data-uid="${escapeHtml(profile.uid)}" type="button">Request</button>`;
+      }
+      return `<button class="action-btn btn-green relation-btn" data-action="follow" data-uid="${escapeHtml(profile.uid)}" type="button">Follow</button>`;
+    }
+
+    function renderPeople() {
       openLoading();
 
       requestAnimationFrame(() => {
-        const rows = getFilteredPlaces();
+        const rows = getFilteredPeople();
 
         if (!rows.length) {
-          const emptyText = currentTab === "mine"
-            ? "You have not submitted any places yet."
-            : currentTab === "pending"
-            ? "No pending places right now."
-            : "No verified places found.";
+          const emptyText = currentTab === "following"
+            ? "No nearby people you follow right now."
+            : currentTab === "verified"
+            ? "No verified nearby people found."
+            : "No nearby people found.";
           showEmpty(emptyText);
           return;
         }
 
         listWrap.innerHTML = "";
 
-        rows.forEach(model => {
-          const websiteHtml = model.website
-            ? `<a href="${escapeHtml(model.website)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>`
-            : "";
+        rows.forEach(profile => {
+          const avatarHtml = profile.photoURL
+            ? `<img class="person-avatar" src="${escapeHtml(profile.photoURL)}" alt="Profile photo">`
+            : `<div class="person-avatar-placeholder">No photo</div>`;
+
+          const badges = [];
+          badges.push(`<span class="mini-badge ${profile.isPrivate ? "mini-yellow" : "mini-blue"}">${profile.isPrivate ? "Private" : "Public"}</span>`);
+          if (profile.verified) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+          if (profile.locationText) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(profile.locationText)}</span>`);
 
           const card = document.createElement("div");
           card.className = "card";
           card.innerHTML = `
-            <div class="card-title">${escapeHtml(model.name)}</div>
-
-            <div class="badge-row">
-              ${buildBadges(model)}
-            </div>
-
-            <div class="meta-grid">
-              <div><strong>City:</strong> ${escapeHtml(model.city || "Not added")}</div>
-              ${model.address ? `<div><strong>Address:</strong> ${escapeHtml(model.address)}</div>` : ""}
-              <div><strong>Type:</strong> ${model.approved ? "Verified place" : model.rejected ? "Rejected submission" : "Under review"}</div>
-            </div>
-
-            <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
-
-            <div class="card-actions">
-              ${websiteHtml}
-              ${model.createdBy === currentUser.uid ? `<a href="add-place.html" class="action-btn btn-purple">Add Another</a>` : ""}
+            <div class="person-card">
+              ${avatarHtml}
+              <div class="person-body">
+                <div class="person-name">
+                  <a href="member.html?uid=${encodeURIComponent(profile.uid)}">${escapeHtml(profile.displayName)}</a>
+                  ${profile.verified ? `<span class="verified-dot">✓</span>` : ""}
+                </div>
+                ${profile.username ? `<div class="person-username">@${escapeHtml(profile.username)}</div>` : ""}
+                <div class="card-sub">${escapeHtml(profile.bio || "Nearby member")}</div>
+                <div class="badge-row">${badges.join("")}</div>
+                <div class="card-actions">
+                  <a href="member.html?uid=${encodeURIComponent(profile.uid)}" class="action-btn btn-soft">View Profile</a>
+                  ${buildRelationButton(profile)}
+                </div>
+              </div>
             </div>
           `;
 
+          const img = card.querySelector(".person-avatar");
+          if (img) {
+            img.addEventListener("error", () => {
+              img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+            });
+          }
+
           listWrap.appendChild(card);
+        });
+
+        listWrap.querySelectorAll(".relation-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const action = btn.getAttribute("data-action");
+            const uid = btn.getAttribute("data-uid");
+            const profile = rows.find(p => p.uid === uid);
+            if (!profile) return;
+
+            btn.disabled = true;
+            setPageStatus("");
+
+            try {
+              if (action === "follow") await followPerson(profile);
+              else if (action === "unfollow") await unfollowPerson(profile);
+              else if (action === "request") await requestFollow(profile);
+              else if (action === "cancel") await cancelRequest(profile);
+
+              await loadRelations();
+              renderPeople();
+
+              const messages = {
+                follow: "Now following member.",
+                unfollow: "Unfollowed member.",
+                request: "Follow request sent.",
+                cancel: "Follow request cancelled."
+              };
+              setPageStatus(messages[action] || "Updated.", "status-ok");
+            } catch (err) {
+              console.error(err);
+              setPageStatus("Could not update follow state.", "status-err");
+              btn.disabled = false;
+            }
+          });
         });
 
         showList();
@@ -807,31 +961,48 @@
         uid
       }, uid);
 
-      renderViewerChips();
+      viewerBlockedUsers = viewerProfile.blockedUsers || [];
+      cityChip.textContent = `City: ${viewerProfile.city || "Not added"}`;
+      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "hidden"}`;
     }
 
-    async function loadPlaces() {
-      const sources = ["nearby_places", "places", "nudist_places"];
-      const map = new Map();
+    async function loadPeople() {
+      const snap = await getDocs(collection(db, "publicProfiles"));
+      peopleData = snap.docs.map(d => normalizeProfile({ id: d.id, ...d.data() }, d.id));
+    }
 
-      for (const source of sources) {
-        try {
-          const snap = await getDocs(collection(db, source));
-          snap.forEach(d => {
-            const place = normalizePlace({ id: d.id, ...d.data() }, d.id, source);
-            map.set(`${source}:${place.id}`, place);
-          });
-        } catch {}
-      }
+    async function loadRelations() {
+      followMap = new Map();
+      requestMap = new Map();
 
-      placesData = Array.from(map.values());
+      const [followsSnap, requestsSnap] = await Promise.all([
+        getDocs(collection(db, "follows")),
+        getDocs(collection(db, "follow_requests"))
+      ]);
+
+      followsSnap.forEach(d => {
+        const data = d.data();
+        if (data.followerId === currentUser.uid && data.followingId) {
+          followMap.set(data.followingId, d.id);
+        }
+      });
+
+      requestsSnap.forEach(d => {
+        const data = d.data();
+        if (data.requesterId === currentUser.uid && data.targetId) {
+          requestMap.set(data.targetId, d.id);
+        }
+      });
     }
 
     async function refreshAll() {
       openLoading();
-      await loadPlaces();
+      await Promise.all([
+        loadPeople(),
+        loadRelations()
+      ]);
       renderViewerChips();
-      renderPlaces();
+      renderPeople();
     }
 
     function setTab(tab) {
@@ -841,22 +1012,22 @@
       });
 
       searchInput.placeholder =
-        tab === "verified"
-          ? "Search verified places..."
-          : tab === "mine"
-          ? "Search my places..."
-          : "Search pending places...";
+        tab === "following"
+          ? "Search nearby people you follow..."
+          : tab === "verified"
+          ? "Search verified nearby people..."
+          : "Search nearby people...";
 
-      renderPlaces();
+      renderPeople();
     }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => setTab(btn.dataset.tab));
     });
 
-    searchInput.addEventListener("input", renderPlaces);
-    useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
+    searchInput.addEventListener("input", renderPeople);
     refreshBtn.addEventListener("click", refreshAll);
+    useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -871,7 +1042,7 @@
         await refreshAll();
       } catch (err) {
         console.error(err);
-        showEmpty("Could not load nearby places.");
+        showEmpty("Could not load nearby people.");
       }
     });
   </script>
