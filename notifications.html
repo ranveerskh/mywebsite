@@ -1,89 +1,400 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Notifications</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
+
+    :root,
+    html[data-theme="dark"]{
       --bg:#0b1020;
       --card:#121931;
       --soft:#161f3d;
+      --soft2:#0f1630;
       --line:rgba(255,255,255,.08);
       --text:#fff;
       --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --soft:#eef3fb;
+      --soft2:#f7f9fd;
+      --line:rgba(15,23,42,.08);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+    }
+
     body{
       background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
       color:var(--text);
       min-height:100vh;
       padding:14px 14px 92px;
     }
+    html[data-theme="light"] body{
+      background:linear-gradient(180deg,#eef4ff 0%,#f8fbff 100%);
+    }
+
     .app{max-width:760px;margin:0 auto}
+
     .topbar{
       position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
-      border-radius:18px;padding:12px 14px;margin-bottom:14px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      background:rgba(11,16,32,.82);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:10px 12px;
+      margin-bottom:14px;
+      display:grid;
+      grid-template-columns:48px 1fr auto;
+      align-items:center;
+      gap:10px;
     }
-    .left-wrap{display:flex;align-items:center;gap:10px;min-width:0}
-    .back-btn,.chip-btn{
-      border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;
-      font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line);text-decoration:none;display:inline-block;
+    html[data-theme="light"] .topbar{
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(15,23,42,.06);
     }
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .top-icon-btn,.chip-btn{
+      border:none;
+      background:var(--soft);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-height:44px;
+    }
+    .top-icon-btn{
+      width:48px;
+      height:48px;
+      padding:0;
+    }
+    .top-icon-btn svg{width:20px;height:20px;display:block}
+
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:22px;font-weight:800;line-height:1.1}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
     .panel{
-      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;
-      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
     }
+    html[data-theme="light"] .panel{
+      background:rgba(255,255,255,.92);
+      box-shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
     .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
-    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:6px}
+    .section-note{color:var(--muted);font-size:13px;line-height:1.6}
+
+    .stats-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .stat-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--soft2);
+      color:var(--text);
+    }
+    .stat-chip.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .stat-chip.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .stat-chip.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+
+    .toolbar{
+      display:grid;
+      gap:12px;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+    }
+    .tab-btn{
+      border:none;
+      background:var(--soft2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 10px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .tab-btn.active{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+      color:var(--text);
+    }
+
+    .search-wrap{
+      position:relative;
+    }
+    .search-input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:var(--soft2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 46px 14px 14px;
+      font-size:14px;
+    }
+    .search-input::placeholder{color:var(--muted)}
+    .clear-search-btn{
+      position:absolute;
+      right:8px;
+      top:50%;
+      transform:translateY(-50%);
+      width:32px;height:32px;
+      border:none;
+      border-radius:10px;
+      background:var(--soft);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .actions-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .action-btn{
+      border:none;
+      background:var(--soft2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-height:42px;
+    }
+    .action-btn.primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .action-btn.green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.20);
+    }
+
     .loading{text-align:center;color:var(--muted);padding:28px 10px}
     .list{display:grid;gap:12px}
     .item{
-      display:block;text-decoration:none;background:#0f1630;border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:14px;color:#fff;
+      display:block;
+      text-decoration:none;
+      background:var(--soft2);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:14px;
+      color:var(--text);
     }
+    html[data-theme="light"] .item{
+      border:1px solid rgba(15,23,42,.06);
+    }
+    .item.unread{
+      border-color:rgba(76,201,255,.26);
+      box-shadow:0 0 0 1px rgba(76,201,255,.08) inset;
+    }
+
     .item-top{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
     }
-    .item-title{font-size:15px;font-weight:800;line-height:1.4}
-    .item-time{color:var(--muted);font-size:11px;white-space:nowrap}
-    .item-text{color:#d7def5;font-size:14px;line-height:1.6;margin-bottom:8px}
+    .item-title{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.4;
+    }
+    .item-time{
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .item-text{
+      color:#d7def5;
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:10px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    html[data-theme="light"] .item-text{
+      color:#33415c;
+    }
+
+    .item-bottom{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .type-wrap{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
     .item-type{
-      display:inline-block;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;
-      background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20);
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid transparent;
     }
+    .type-default{background:rgba(76,201,255,.14);color:#d8f7ff;border-color:rgba(76,201,255,.20)}
+    .type-follow{background:rgba(167,139,250,.14);color:#efe7ff;border-color:rgba(167,139,250,.20)}
+    .type-like{background:rgba(255,93,115,.14);color:#ffd6dd;border-color:rgba(255,93,115,.20)}
+    .type-comment{background:rgba(245,185,66,.14);color:#ffeab8;border-color:rgba(245,185,66,.20)}
+    .type-request{background:rgba(61,220,132,.14);color:#d9ffe8;border-color:rgba(61,220,132,.20)}
+    .type-event{background:rgba(76,201,255,.14);color:#d8f7ff;border-color:rgba(76,201,255,.20)}
+    .type-place{background:rgba(167,139,250,.14);color:#efe7ff;border-color:rgba(167,139,250,.20)}
+    .type-unread{background:rgba(245,185,66,.14);color:#ffeab8;border-color:rgba(245,185,66,.20)}
+
+    .item-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .mini-btn{
+      border:none;
+      background:var(--soft);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+    }
+
     .empty-box{
-      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:var(--soft2);
+      border-radius:18px;
       border:1px dashed rgba(255,255,255,.08);
     }
     .hidden{display:none!important}
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .message.ok{color:#9cf0bf}
+    .message.err{color:#ffb3bd}
+
     .bottom-nav{
       position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
       background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
       border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
       box-shadow:0 20px 40px rgba(0,0,0,.25);
     }
+    html[data-theme="light"] .bottom-nav{
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(15,23,42,.08);
+      box-shadow:0 16px 30px rgba(20,33,61,.10);
+    }
+
     .nav-link{
       text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
       gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
     }
+    html[data-theme="light"] .nav-link{color:#6b7893}
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+    }
+    html[data-theme="light"] .nav-link.active{
+      color:#1f8fff;
+    }
     .nav-link .icon{font-size:18px;line-height:1}
+
+    @media (max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{grid-template-columns:48px 1fr}
+      .top-actions{grid-column:1 / -1;justify-content:stretch}
+      .top-actions .chip-btn{flex:1}
+      .brand{font-size:20px}
+      .tabs{grid-template-columns:1fr}
+      .item-bottom{align-items:flex-start}
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Notifications</div>
-        </div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Notifications</div>
       </div>
 
       <div class="top-actions">
@@ -94,6 +405,35 @@
     <div class="panel">
       <div class="section-title">Notifications</div>
       <div class="section-note">Latest activity on your account.</div>
+
+      <div class="stats-row">
+        <span id="allCountChip" class="stat-chip blue">All: 0</span>
+        <span id="unreadCountChip" class="stat-chip yellow">Unread: 0</span>
+        <span id="requestCountChip" class="stat-chip purple">Requests: 0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="all" type="button">All</button>
+          <button class="tab-btn" data-tab="unread" type="button">Unread</button>
+          <button class="tab-btn" data-tab="requests" type="button">Requests</button>
+        </div>
+
+        <div class="search-wrap">
+          <input id="searchInput" class="search-input" type="text" placeholder="Search notifications..." />
+          <button id="clearSearchBtn" class="clear-search-btn hidden" type="button">✕</button>
+        </div>
+
+        <div class="actions-row">
+          <button id="markAllBtn" class="action-btn primary" type="button">Mark All Read</button>
+          <a href="follow-requests.html" class="action-btn" id="followRequestsLink">Follow Requests</a>
+          <button id="refreshBtn" class="action-btn green" type="button">Refresh</button>
+        </div>
+
+        <div id="pageMessage" class="message"></div>
+      </div>
     </div>
 
     <div class="panel">
@@ -120,7 +460,7 @@
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
-    <a href="profile.html" class="nav-link">
+    <a href="profile.html" class="nav-link active">
       <span class="icon">◉</span>
       <span>Profile</span>
     </a>
@@ -143,11 +483,55 @@
     const loading = document.getElementById("loading");
     const list = document.getElementById("list");
     const emptyBox = document.getElementById("emptyBox");
+    const markAllBtn = document.getElementById("markAllBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const searchInput = document.getElementById("searchInput");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const pageMessage = document.getElementById("pageMessage");
+    const allCountChip = document.getElementById("allCountChip");
+    const unreadCountChip = document.getElementById("unreadCountChip");
+    const requestCountChip = document.getElementById("requestCountChip");
+    const followRequestsLink = document.getElementById("followRequestsLink");
+
+    let currentUser = null;
+    let currentTab = "all";
+    let allDocs = [];
+    let unsubscribeNotifications = null;
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "feed.html";
     });
+
+    function setMessage(text = "", type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -159,6 +543,22 @@
       if (!ts) return "Just now";
       try { return ts.toDate().toLocaleString(); }
       catch { return "Just now"; }
+    }
+
+    function isUnread(item) {
+      return item.isRead !== true && item.read !== true;
+    }
+
+    function normalizeType(type = "") {
+      const t = String(type || "").toLowerCase();
+      if (t === "follow") return { label: "Follow", cls: "type-follow" };
+      if (t === "follow_request") return { label: "Request", cls: "type-request" };
+      if (t === "follow_accept") return { label: "Accepted", cls: "type-follow" };
+      if (t === "like") return { label: "Like", cls: "type-like" };
+      if (t === "comment") return { label: "Comment", cls: "type-comment" };
+      if (t === "event_join") return { label: "Event", cls: "type-event" };
+      if (t === "place_update" || t === "place_approved" || t === "place_rejected" || t === "place") return { label: "Place", cls: "type-place" };
+      return { label: t || "Activity", cls: "type-default" };
     }
 
     function getTargetUrl(item) {
@@ -174,7 +574,61 @@
       if ((item.type === "like" || item.type === "comment") && item.postId) {
         return `post.html?postId=${encodeURIComponent(item.postId)}`;
       }
+      if (item.eventId) {
+        return `event.html?eventId=${encodeURIComponent(item.eventId)}`;
+      }
+      if (item.placeId) {
+        const sourcePart = item.source ? `&source=${encodeURIComponent(item.source)}` : "";
+        return `place.html?placeId=${encodeURIComponent(item.placeId)}${sourcePart}`;
+      }
+      if (item.fromUserId) {
+        return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
+      }
       return "feed.html";
+    }
+
+    function getActionLabel(item) {
+      if (item.type === "follow_request") return "Open Requests";
+      if (item.postId) return "Open Post";
+      if (item.eventId) return "Open Event";
+      if (item.placeId) return "Open Place";
+      if (item.fromUserId) return "Open Profile";
+      return "Open";
+    }
+
+    function updateCounts(items) {
+      const allCount = items.length;
+      const unreadCount = items.filter(isUnread).length;
+      const requestCount = items.filter(item => item.type === "follow_request").length;
+      const unreadRequestCount = items.filter(item => item.type === "follow_request" && isUnread(item)).length;
+
+      allCountChip.textContent = `All: ${allCount}`;
+      unreadCountChip.textContent = `Unread: ${unreadCount}`;
+      requestCountChip.textContent = `Requests: ${requestCount}`;
+      followRequestsLink.textContent = unreadRequestCount > 0
+        ? `Follow Requests (${unreadRequestCount > 99 ? "99+" : unreadRequestCount})`
+        : "Follow Requests";
+    }
+
+    function matchesSearch(item, queryText) {
+      const q = queryText.trim().toLowerCase();
+      if (!q) return true;
+
+      return [
+        item.title,
+        item.text,
+        item.type
+      ].filter(Boolean).join(" ").toLowerCase().includes(q);
+    }
+
+    function filterItems() {
+      const queryText = searchInput.value || "";
+      return allDocs.filter(item => {
+        if (!matchesSearch(item, queryText)) return false;
+        if (currentTab === "unread") return isUnread(item);
+        if (currentTab === "requests") return item.type === "follow_request";
+        return true;
+      });
     }
 
     function renderItems(items) {
@@ -183,6 +637,10 @@
       if (!items.length) {
         list.classList.add("hidden");
         emptyBox.classList.remove("hidden");
+        emptyBox.textContent =
+          currentTab === "unread" ? "No unread notifications." :
+          currentTab === "requests" ? "No follow requests yet." :
+          "No notifications yet.";
         return;
       }
 
@@ -191,35 +649,152 @@
 
       items.forEach((item) => {
         const a = document.createElement("a");
-        a.className = "item";
+        a.className = `item ${isUnread(item) ? "unread" : ""}`;
         a.href = getTargetUrl(item);
+        a.dataset.id = item.id;
+
+        const typeInfo = normalizeType(item.type);
 
         a.innerHTML = `
           <div class="item-top">
             <div class="item-title">${escapeHtml(item.title || "Notification")}</div>
             <div class="item-time">${escapeHtml(formatDate(item.createdAt))}</div>
           </div>
+
           <div class="item-text">${escapeHtml(item.text || "No details")}</div>
-          <span class="item-type">${escapeHtml(item.type || "activity")}</span>
+
+          <div class="item-bottom">
+            <div class="type-wrap">
+              <span class="item-type ${typeInfo.cls}">${escapeHtml(typeInfo.label)}</span>
+              ${isUnread(item) ? `<span class="item-type type-unread">Unread</span>` : ""}
+            </div>
+
+            <div class="item-actions">
+              <span class="mini-btn">${escapeHtml(getActionLabel(item))}</span>
+            </div>
+          </div>
         `;
+
+        a.addEventListener("click", async () => {
+          if (isUnread(item)) {
+            await markOneAsRead(item.id);
+          }
+        });
 
         list.appendChild(a);
       });
     }
 
-    async function markAllAsRead(userId, docs) {
-      const unreadDocs = docs.filter(d => d.data().isRead !== true);
-      if (!unreadDocs.length) return;
+    async function markOneAsRead(notificationId) {
+      if (!currentUser) return;
 
-      await Promise.all(
-        unreadDocs.map(d =>
-          updateDoc(doc(db, "notifications", userId, "items", d.id), {
-            isRead: true,
-            readAt: serverTimestamp()
-          }).catch(() => {})
-        )
-      );
+      try {
+        await updateDoc(doc(db, "notifications", currentUser.uid, "items", notificationId), {
+          isRead: true,
+          readAt: serverTimestamp()
+        });
+
+        const target = allDocs.find(d => d.id === notificationId);
+        if (target) {
+          target.isRead = true;
+        }
+      } catch {}
     }
+
+    async function markAllAsRead() {
+      if (!currentUser) return;
+
+      const unreadItems = allDocs.filter(isUnread);
+      if (!unreadItems.length) {
+        setMessage("Everything is already read.", "ok");
+        return;
+      }
+
+      markAllBtn.disabled = true;
+      setMessage("");
+
+      try {
+        await Promise.all(
+          unreadItems.map(item =>
+            updateDoc(doc(db, "notifications", currentUser.uid, "items", item.id), {
+              isRead: true,
+              readAt: serverTimestamp()
+            }).catch(() => {})
+          )
+        );
+
+        unreadItems.forEach(item => {
+          item.isRead = true;
+        });
+
+        updateCounts(allDocs);
+        renderItems(filterItems());
+        setMessage("All notifications marked as read.", "ok");
+      } catch {
+        setMessage("Could not mark all notifications as read.", "err");
+      }
+
+      markAllBtn.disabled = false;
+    }
+
+    function renderFromState() {
+      updateCounts(allDocs);
+      renderItems(filterItems());
+      loading.classList.add("hidden");
+    }
+
+    function setActiveTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      renderFromState();
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setActiveTab(btn.dataset.tab);
+      });
+    });
+
+    searchInput.addEventListener("input", () => {
+      clearSearchBtn.classList.toggle("hidden", !searchInput.value.trim());
+      renderFromState();
+    });
+
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearchBtn.classList.add("hidden");
+      renderFromState();
+      searchInput.focus();
+    });
+
+    markAllBtn.addEventListener("click", markAllAsRead);
+
+    function subscribeNotifications(user) {
+      if (unsubscribeNotifications) unsubscribeNotifications();
+
+      const q = query(
+        collection(db, "notifications", user.uid, "items"),
+        orderBy("createdAt", "desc")
+      );
+
+      unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+        allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderFromState();
+      }, () => {
+        loading.textContent = "Could not load notifications.";
+      });
+    }
+
+    refreshBtn.addEventListener("click", () => {
+      if (!currentUser) return;
+      loading.classList.remove("hidden");
+      list.classList.add("hidden");
+      emptyBox.classList.add("hidden");
+      subscribeNotifications(currentUser);
+      setMessage("Notifications refreshed.", "ok");
+    });
 
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -227,19 +802,8 @@
         return;
       }
 
-      const q = query(
-        collection(db, "notifications", user.uid, "items"),
-        orderBy("createdAt", "desc")
-      );
-
-      onSnapshot(q, async (snapshot) => {
-        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        loading.classList.add("hidden");
-        renderItems(items);
-        await markAllAsRead(user.uid, snapshot.docs);
-      }, () => {
-        loading.textContent = "Could not load notifications.";
-      });
+      currentUser = user;
+      subscribeNotifications(user);
     });
   </script>
 </body>
