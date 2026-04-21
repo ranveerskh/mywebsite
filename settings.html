@@ -125,34 +125,72 @@
       font-weight:800;
       margin-bottom:10px;
     }
-    .menu-grid{
+
+    .accordion-list{
       display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
       gap:10px;
     }
-    .menu-btn{
-      border:none;
+
+    .accordion-item{
       background:var(--surface-2);
-      color:var(--text);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px 12px;
+      border-radius:18px;
+      overflow:hidden;
+      transition:.2s ease;
+    }
+    .accordion-item.active{
+      border-color:rgba(76,201,255,.20);
+      background:rgba(76,201,255,.08);
+    }
+
+    .accordion-head{
+      width:100%;
+      border:none;
+      background:transparent;
+      color:var(--text);
+      padding:16px 14px;
       text-align:left;
       cursor:pointer;
-      font-weight:800;
-      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
     }
-    .menu-btn span{
+    .accordion-copy{
+      min-width:0;
+    }
+    .accordion-copy strong{
+      display:block;
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:5px;
+    }
+    .accordion-copy span{
       display:block;
       color:var(--muted);
       font-size:12px;
       font-weight:700;
-      margin-top:4px;
       line-height:1.45;
     }
-    .menu-btn.active{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+
+    .accordion-arrow{
+      flex-shrink:0;
+      font-size:20px;
+      line-height:1;
+      color:var(--muted);
+      transition:transform .2s ease;
+    }
+    .accordion-item.active .accordion-arrow{
+      transform:rotate(180deg);
+      color:var(--text);
+    }
+
+    .accordion-body{
+      display:none;
+      padding:0 12px 12px;
+    }
+    .accordion-item.active .accordion-body{
+      display:block;
     }
     /* =========================================================
        SETTINGS_MENU_CSS_END
@@ -162,16 +200,14 @@
     /* =========================================================
        SETTINGS_CARD_CSS_START
        ========================================================= */
-    .panel{
-      background:var(--surface);
+    .inline-section{
+      background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:12px;
-      box-shadow:var(--shadow);
+      border-radius:16px;
+      padding:14px;
     }
     .section-heading{
-      font-size:19px;
+      font-size:18px;
       font-weight:800;
       margin-bottom:6px;
     }
@@ -184,7 +220,7 @@
     .setting-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:18px;
+      border-radius:16px;
       padding:14px;
       margin-bottom:12px;
     }
@@ -211,7 +247,7 @@
       gap:12px;
     }
     .info-box{
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       padding:14px;
@@ -248,7 +284,7 @@
       height:76px;
       border-radius:50%;
       object-fit:cover;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
     }
     .avatar-placeholder{
@@ -260,7 +296,7 @@
       justify-content:center;
       text-align:center;
       padding:8px;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       color:var(--muted);
       font-size:12px;
@@ -317,7 +353,7 @@
       font-weight:800;
     }
     .status-not-requested{
-      background:var(--surface-3);
+      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
     }
@@ -373,7 +409,7 @@
       align-items:flex-start;
       gap:10px;
       padding:12px;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       cursor:pointer;
@@ -398,7 +434,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px 14px;
@@ -453,12 +489,6 @@
       transform:translateX(24px);
     }
 
-    .save-note{
-      color:var(--muted);
-      font-size:12px;
-      margin-top:10px;
-    }
-
     .ghost-btn{
       border:none;
       background:var(--surface-2);
@@ -498,7 +528,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
@@ -551,7 +581,7 @@
       text-align:center;
       padding:24px 12px;
       color:var(--muted);
-      background:var(--surface-3);
+      background:var(--surface-2);
       border-radius:18px;
       border:1px dashed var(--line);
     }
@@ -570,7 +600,7 @@
     }
     .quick-link{
       text-decoration:none;
-      background:var(--surface-3);
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       padding:14px;
@@ -653,11 +683,11 @@
     @media (max-width:700px){
       body{padding:10px 10px 110px}
       .brand{font-size:18px}
-      .menu-grid{grid-template-columns:1fr}
       .info-grid{grid-template-columns:1fr}
       .quick-links{grid-template-columns:1fr}
       .profile-mini{grid-template-columns:64px 1fr}
       .avatar,.avatar-placeholder{width:64px;height:64px}
+      .accordion-head{padding:15px 13px}
     }
   </style>
 </head>
@@ -696,375 +726,382 @@
          ========================================================= -->
     <div class="menu-shell">
       <div class="menu-title">Quick sections</div>
-      <div class="menu-grid">
-        <button class="menu-btn active" type="button" data-section="overviewSection">
-          Overview
-          <span>Account summary, badges and account info</span>
-        </button>
 
-        <button class="menu-btn" type="button" data-section="appearanceSection">
-          Appearance
-          <span>Dark, light or system theme</span>
-        </button>
+      <div class="accordion-list">
+        <!-- OVERVIEW -->
+        <div class="accordion-item active" data-section="overviewSection">
+          <button class="accordion-head" type="button" data-section="overviewSection">
+            <div class="accordion-copy">
+              <strong>Overview</strong>
+              <span>Account summary, badges and account info</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
 
-        <button class="menu-btn" type="button" data-section="privacySection">
-          Privacy
-          <span>Private account, city and gender visibility</span>
-        </button>
+          <div class="accordion-body">
+            <section id="overviewSection" class="inline-section">
+              <div id="loading" class="muted" style="padding:8px 0 12px;">Loading settings...</div>
 
-        <button class="menu-btn" type="button" data-section="locationSection">
-          Nearby & Location
-          <span>Nearby visibility and location detail level</span>
-        </button>
+              <div id="overviewContent" class="hidden">
+                <div class="profile-mini">
+                  <img id="avatar" class="avatar hidden" alt="Profile Photo" />
+                  <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-        <button class="menu-btn" type="button" data-section="blockedSection">
-          Blocked Accounts
-          <span>Review and unblock accounts</span>
-        </button>
+                  <div>
+                    <div class="mini-name">
+                      <span id="displayName">Member</span>
+                      <span id="verifiedDot" class="verified-dot hidden">✓</span>
+                    </div>
+                    <div id="usernameText" class="mini-username hidden">@username</div>
+                    <div id="bioText" class="mini-bio">No bio added yet.</div>
 
-        <button class="menu-btn" type="button" data-section="moreSection">
-          More
-          <span>Verification, quick links and logout</span>
-        </button>
+                    <div class="badge-row">
+                      <span id="profileTypeBadge" class="status-badge status-public">Public</span>
+                      <span id="adminBadge" class="status-badge status-admin hidden">Admin</span>
+                      <span id="moderationBadge" class="status-badge status-danger hidden">Restricted</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-heading">Account Info</div>
+                <div class="section-sub">Your core account details and current profile status.</div>
+
+                <div class="info-grid">
+                  <div class="info-box">
+                    <small>Email</small>
+                    <span id="email">-</span>
+                  </div>
+
+                  <div class="info-box">
+                    <small>User ID</small>
+                    <span id="uid">-</span>
+                  </div>
+
+                  <div class="info-box">
+                    <small>Verified Status</small>
+                    <span id="verified">No</span>
+                  </div>
+
+                  <div class="info-box">
+                    <small>Account Created</small>
+                    <span id="createdAt">-</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- APPEARANCE -->
+        <div class="accordion-item" data-section="appearanceSection">
+          <button class="accordion-head" type="button" data-section="appearanceSection">
+            <div class="accordion-copy">
+              <strong>Appearance</strong>
+              <span>Dark, light or system theme</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
+
+          <div class="accordion-body">
+            <section id="appearanceSection" class="inline-section">
+              <div class="section-heading">Appearance</div>
+              <div class="section-sub">
+                Choose how BareWorld looks on your device.
+              </div>
+
+              <div class="setting-card">
+                <div class="setting-title">Theme</div>
+                <div class="setting-desc">
+                  This applies instantly and is also saved to your account.
+                </div>
+
+                <div class="option-list">
+                  <label class="option">
+                    <input type="radio" name="themePreference" value="dark" />
+                    <div class="option-text">
+                      <strong>Dark</strong>
+                      <span>Best for the current BareWorld look and low-light use.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="themePreference" value="light" />
+                    <div class="option-text">
+                      <strong>Light</strong>
+                      <span>Bright and clean interface for daytime use.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="themePreference" value="system" />
+                    <div class="option-text">
+                      <strong>System</strong>
+                      <span>Automatically follow your device theme.</span>
+                    </div>
+                  </label>
+                </div>
+
+                <div id="themeStatus" class="status-message"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="accordion-item" data-section="privacySection">
+          <button class="accordion-head" type="button" data-section="privacySection">
+            <div class="accordion-copy">
+              <strong>Privacy</strong>
+              <span>Private account, city and gender visibility</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
+
+          <div class="accordion-body">
+            <section id="privacySection" class="inline-section">
+              <div class="section-heading">Privacy</div>
+              <div class="section-sub">
+                Control who can see your account and profile details.
+              </div>
+
+              <div class="setting-card">
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <strong>Private account</strong>
+                    <span>Only approved followers can view your profile and posts.</span>
+                  </div>
+
+                  <label class="switch">
+                    <input type="checkbox" id="privateAccountToggle" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <strong>Show city on profile</strong>
+                    <span>Let other members see your city if you added one.</span>
+                  </div>
+
+                  <label class="switch">
+                    <input type="checkbox" id="cityVisibleToggle" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <strong>Show gender on profile</strong>
+                    <span>Let other members see your gender if you added one.</span>
+                  </div>
+
+                  <label class="switch">
+                    <input type="checkbox" id="genderVisibleToggle" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div id="privacyStatus" class="status-message"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- LOCATION -->
+        <div class="accordion-item" data-section="locationSection">
+          <button class="accordion-head" type="button" data-section="locationSection">
+            <div class="accordion-copy">
+              <strong>Nearby & Location</strong>
+              <span>Nearby visibility and location detail level</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
+
+          <div class="accordion-body">
+            <section id="locationSection" class="inline-section">
+              <div class="section-heading">Nearby & Location</div>
+              <div class="section-sub">
+                Decide whether people can discover you in Nearby and how much location detail is shown.
+              </div>
+
+              <div class="setting-card">
+                <div class="toggle-row">
+                  <div class="toggle-copy">
+                    <strong>Show me in Nearby</strong>
+                    <span>Allow your profile to appear in nearby discovery features.</span>
+                  </div>
+
+                  <label class="switch">
+                    <input type="checkbox" id="showInNearbyToggle" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="setting-title">Location visibility</div>
+                <div class="setting-desc">
+                  Pick how much location detail others can see when Nearby is enabled.
+                </div>
+
+                <div class="option-list">
+                  <label class="option">
+                    <input type="radio" name="locationVisibility" value="hidden" />
+                    <div class="option-text">
+                      <strong>Hidden</strong>
+                      <span>Use location only for your own browsing, not for showing you to others.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="locationVisibility" value="approximate" />
+                    <div class="option-text">
+                      <strong>Approximate</strong>
+                      <span>Show only rough distance or general nearby area.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="locationVisibility" value="city" />
+                    <div class="option-text">
+                      <strong>City + approximate distance</strong>
+                      <span>Show your city and rough distance, but not exact address.</span>
+                    </div>
+                  </label>
+                </div>
+
+                <div id="locationStatus" class="status-message"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- BLOCKED -->
+        <div class="accordion-item" data-section="blockedSection">
+          <button class="accordion-head" type="button" data-section="blockedSection">
+            <div class="accordion-copy">
+              <strong>Blocked Accounts</strong>
+              <span>Review and unblock accounts</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
+
+          <div class="accordion-body">
+            <section id="blockedSection" class="inline-section">
+              <div class="section-heading">Blocked Accounts</div>
+              <div class="section-sub">
+                Accounts you block should stay out of your feed, profile flow and nearby discovery. You can unblock them here.
+              </div>
+
+              <div class="setting-card">
+                <div id="blockedLoading" class="muted">Loading blocked accounts...</div>
+                <div id="blockedList" class="blocked-list hidden"></div>
+                <div id="blockedEmpty" class="empty-box hidden">You have not blocked anyone yet.</div>
+                <div id="blockedStatus" class="status-message"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- MORE -->
+        <div class="accordion-item" data-section="moreSection">
+          <button class="accordion-head" type="button" data-section="moreSection">
+            <div class="accordion-copy">
+              <strong>More</strong>
+              <span>Verification, quick links and logout</span>
+            </div>
+            <span class="accordion-arrow">⌄</span>
+          </button>
+
+          <div class="accordion-body">
+            <section id="moreSection" class="inline-section">
+              <div class="section-heading">Verification</div>
+              <div class="section-sub">Manage your verification request on a separate page.</div>
+
+              <div class="setting-card">
+                <a href="verification.html" class="quick-link">
+                  <strong>Verification Page</strong>
+                  <span>Open verification request form and track status.</span>
+                  <div class="badge-row" style="margin-top:10px;">
+                    <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
+                  </div>
+                </a>
+              </div>
+
+              <div class="section-heading" style="margin-top:14px;">Quick Links</div>
+              <div class="section-sub">Useful shortcuts for the rest of the app.</div>
+
+              <div class="quick-links">
+                <a href="feed.html" class="quick-link">
+                  <strong>Feed</strong>
+                  <span>See member updates and post something new.</span>
+                </a>
+
+                <a href="profile.html" class="quick-link">
+                  <strong>My Profile</strong>
+                  <span>View your profile, posts, and network.</span>
+                </a>
+
+                <a href="edit-profile.html" class="quick-link">
+                  <strong>Edit Profile</strong>
+                  <span>Change bio, username, city, gender, photo link, and privacy options.</span>
+                </a>
+
+                <a href="search.html" class="quick-link">
+                  <strong>Search Members</strong>
+                  <span>Find people by username or display name.</span>
+                </a>
+
+                <a href="events.html" class="quick-link">
+                  <strong>Events</strong>
+                  <span>See events you can join or leave.</span>
+                </a>
+
+                <a href="create-event.html" class="quick-link">
+                  <strong>Create Event</strong>
+                  <span>Create a new event from the event section.</span>
+                </a>
+
+                <a href="notifications.html" class="quick-link">
+                  <strong>Notifications</strong>
+                  <span>Check likes, comments, follows, and requests.</span>
+                </a>
+
+                <a href="follow-requests.html" class="quick-link">
+                  <strong>Follow Requests</strong>
+                  <span>Approve or decline private account requests.</span>
+                </a>
+
+                <a id="reportsAdminLink" href="reports-admin.html" class="quick-link hidden">
+                  <strong>Reports Admin</strong>
+                  <span>Review user reports and take moderation actions.</span>
+                </a>
+              </div>
+
+              <div class="section-heading" style="margin-top:14px;">Account Actions</div>
+              <div class="section-sub">Sign out from your account on this device.</div>
+
+              <div class="danger-box">
+                <h3>Logout</h3>
+                <p>Sign out from your current account on this device.</p>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+                <div id="message" class="status-message"></div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
 
       <div id="pageStatus" class="status-message"></div>
     </div>
     <!-- =========================================================
          SETTINGS_MENU_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_OVERVIEW_HTML_START
-         ========================================================= -->
-    <section id="overviewSection" class="panel">
-      <div id="loading" class="muted" style="padding:8px 0 12px;">Loading settings...</div>
-
-      <div id="overviewContent" class="hidden">
-        <div class="profile-mini">
-          <img id="avatar" class="avatar hidden" alt="Profile Photo" />
-          <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
-
-          <div>
-            <div class="mini-name">
-              <span id="displayName">Member</span>
-              <span id="verifiedDot" class="verified-dot hidden">✓</span>
-            </div>
-            <div id="usernameText" class="mini-username hidden">@username</div>
-            <div id="bioText" class="mini-bio">No bio added yet.</div>
-
-            <div class="badge-row">
-              <span id="profileTypeBadge" class="status-badge status-public">Public</span>
-              <span id="adminBadge" class="status-badge status-admin hidden">Admin</span>
-              <span id="moderationBadge" class="status-badge status-danger hidden">Restricted</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="section-heading">Account Info</div>
-        <div class="section-sub">Your core account details and current profile status.</div>
-
-        <div class="info-grid">
-          <div class="info-box">
-            <small>Email</small>
-            <span id="email">-</span>
-          </div>
-
-          <div class="info-box">
-            <small>User ID</small>
-            <span id="uid">-</span>
-          </div>
-
-          <div class="info-box">
-            <small>Verified Status</small>
-            <span id="verified">No</span>
-          </div>
-
-          <div class="info-box">
-            <small>Account Created</small>
-            <span id="createdAt">-</span>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_OVERVIEW_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_THEME_HTML_START
-         ========================================================= -->
-    <section id="appearanceSection" class="panel hidden">
-      <div class="section-heading">Appearance</div>
-      <div class="section-sub">
-        Choose how BareWorld looks on your device.
-      </div>
-
-      <div class="setting-card">
-        <div class="setting-title">Theme</div>
-        <div class="setting-desc">
-          This applies instantly and is also saved to your account.
-        </div>
-
-        <div class="option-list">
-          <label class="option">
-            <input type="radio" name="themePreference" value="dark" />
-            <div class="option-text">
-              <strong>Dark</strong>
-              <span>Best for the current BareWorld look and low-light use.</span>
-            </div>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="themePreference" value="light" />
-            <div class="option-text">
-              <strong>Light</strong>
-              <span>Bright and clean interface for daytime use.</span>
-            </div>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="themePreference" value="system" />
-            <div class="option-text">
-              <strong>System</strong>
-              <span>Automatically follow your device theme.</span>
-            </div>
-          </label>
-        </div>
-
-        <div id="themeStatus" class="status-message"></div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_THEME_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_PRIVACY_HTML_START
-         ========================================================= -->
-    <section id="privacySection" class="panel hidden">
-      <div class="section-heading">Privacy</div>
-      <div class="section-sub">
-        Control who can see your account and profile details.
-      </div>
-
-      <div class="setting-card">
-        <div class="toggle-row">
-          <div class="toggle-copy">
-            <strong>Private account</strong>
-            <span>Only approved followers can view your profile and posts.</span>
-          </div>
-
-          <label class="switch">
-            <input type="checkbox" id="privateAccountToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="toggle-row">
-          <div class="toggle-copy">
-            <strong>Show city on profile</strong>
-            <span>Let other members see your city if you added one.</span>
-          </div>
-
-          <label class="switch">
-            <input type="checkbox" id="cityVisibleToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="toggle-row">
-          <div class="toggle-copy">
-            <strong>Show gender on profile</strong>
-            <span>Let other members see your gender if you added one.</span>
-          </div>
-
-          <label class="switch">
-            <input type="checkbox" id="genderVisibleToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div id="privacyStatus" class="status-message"></div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_PRIVACY_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_LOCATION_HTML_START
-         ========================================================= -->
-    <section id="locationSection" class="panel hidden">
-      <div class="section-heading">Nearby & Location</div>
-      <div class="section-sub">
-        Decide whether people can discover you in Nearby and how much location detail is shown.
-      </div>
-
-      <div class="setting-card">
-        <div class="toggle-row">
-          <div class="toggle-copy">
-            <strong>Show me in Nearby</strong>
-            <span>Allow your profile to appear in nearby discovery features.</span>
-          </div>
-
-          <label class="switch">
-            <input type="checkbox" id="showInNearbyToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="setting-title">Location visibility</div>
-        <div class="setting-desc">
-          Pick how much location detail others can see when Nearby is enabled.
-        </div>
-
-        <div class="option-list">
-          <label class="option">
-            <input type="radio" name="locationVisibility" value="hidden" />
-            <div class="option-text">
-              <strong>Hidden</strong>
-              <span>Use location only for your own browsing, not for showing you to others.</span>
-            </div>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="locationVisibility" value="approximate" />
-            <div class="option-text">
-              <strong>Approximate</strong>
-              <span>Show only rough distance or general nearby area.</span>
-            </div>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="locationVisibility" value="city" />
-            <div class="option-text">
-              <strong>City + approximate distance</strong>
-              <span>Show your city and rough distance, but not exact address.</span>
-            </div>
-          </label>
-        </div>
-
-        <div id="locationStatus" class="status-message"></div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_LOCATION_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_BLOCKED_HTML_START
-         ========================================================= -->
-    <section id="blockedSection" class="panel hidden">
-      <div class="section-heading">Blocked Accounts</div>
-      <div class="section-sub">
-        Accounts you block should stay out of your feed, profile flow and nearby discovery. You can unblock them here.
-      </div>
-
-      <div class="setting-card">
-        <div id="blockedLoading" class="muted">Loading blocked accounts...</div>
-        <div id="blockedList" class="blocked-list hidden"></div>
-        <div id="blockedEmpty" class="empty-box hidden">You have not blocked anyone yet.</div>
-        <div id="blockedStatus" class="status-message"></div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_BLOCKED_HTML_END
-         ========================================================= -->
-
-
-    <!-- =========================================================
-         SETTINGS_MORE_HTML_START
-         ========================================================= -->
-    <section id="moreSection" class="panel hidden">
-      <div class="section-heading">Verification</div>
-      <div class="section-sub">Manage your verification request on a separate page.</div>
-
-      <div class="setting-card">
-        <a href="verification.html" class="quick-link">
-          <strong>Verification Page</strong>
-          <span>Open verification request form and track status.</span>
-          <div class="badge-row" style="margin-top:10px;">
-            <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
-          </div>
-        </a>
-      </div>
-
-      <div class="section-heading" style="margin-top:14px;">Quick Links</div>
-      <div class="section-sub">Useful shortcuts for the rest of the app.</div>
-
-      <div class="quick-links">
-        <a href="feed.html" class="quick-link">
-          <strong>Feed</strong>
-          <span>See member updates and post something new.</span>
-        </a>
-
-        <a href="profile.html" class="quick-link">
-          <strong>My Profile</strong>
-          <span>View your profile, posts, and network.</span>
-        </a>
-
-        <a href="edit-profile.html" class="quick-link">
-          <strong>Edit Profile</strong>
-          <span>Change bio, username, city, gender, photo link, and privacy options.</span>
-        </a>
-
-        <a href="search.html" class="quick-link">
-          <strong>Search Members</strong>
-          <span>Find people by username or display name.</span>
-        </a>
-
-        <a href="events.html" class="quick-link">
-          <strong>Events</strong>
-          <span>See events you can join or leave.</span>
-        </a>
-
-        <a href="create-event.html" class="quick-link">
-          <strong>Create Event</strong>
-          <span>Create a new event from the event section.</span>
-        </a>
-
-        <a href="notifications.html" class="quick-link">
-          <strong>Notifications</strong>
-          <span>Check likes, comments, follows, and requests.</span>
-        </a>
-
-        <a href="follow-requests.html" class="quick-link">
-          <strong>Follow Requests</strong>
-          <span>Approve or decline private account requests.</span>
-        </a>
-
-        <a id="reportsAdminLink" href="reports-admin.html" class="quick-link hidden">
-          <strong>Reports Admin</strong>
-          <span>Review user reports and take moderation actions.</span>
-        </a>
-      </div>
-
-      <div class="section-heading" style="margin-top:14px;">Account Actions</div>
-      <div class="section-sub">Sign out from your account on this device.</div>
-
-      <div class="danger-box">
-        <h3>Logout</h3>
-        <p>Sign out from your current account on this device.</p>
-        <button id="logoutBtn" class="logout-btn">Logout</button>
-        <div id="message" class="status-message"></div>
-      </div>
-    </section>
-    <!-- =========================================================
-         SETTINGS_MORE_HTML_END
          ========================================================= -->
 
   </div>
@@ -1117,15 +1154,14 @@
     let currentPublicData = {};
     let currentBlockedUsers = [];
 
-
     /* =========================================================
        SETTINGS_ELEMENT_CACHE_JS_START
        ========================================================= */
     const backBtn = document.getElementById("backBtn");
     const pageStatus = document.getElementById("pageStatus");
 
-    const menuButtons = document.querySelectorAll(".menu-btn");
-    const sections = document.querySelectorAll("section.panel");
+    const accordionButtons = document.querySelectorAll(".accordion-head");
+    const accordionItems = document.querySelectorAll(".accordion-item");
 
     const loading = document.getElementById("loading");
     const overviewContent = document.getElementById("overviewContent");
@@ -1323,19 +1359,23 @@
     /* =========================================================
        SETTINGS_VIEW_SWITCH_JS_START
        ========================================================= */
-    function showSection(sectionId) {
-      sections.forEach(section => {
-        section.classList.toggle("hidden", section.id !== sectionId);
-      });
-
-      menuButtons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.section === sectionId);
+    function openAccordion(sectionId) {
+      accordionItems.forEach(item => {
+        item.classList.toggle("active", item.dataset.section === sectionId);
       });
     }
 
-    menuButtons.forEach(btn => {
+    accordionButtons.forEach(btn => {
       btn.addEventListener("click", () => {
-        showSection(btn.dataset.section);
+        const sectionId = btn.dataset.section;
+        openAccordion(sectionId);
+
+        const item = btn.closest(".accordion-item");
+        if (item) {
+          setTimeout(() => {
+            item.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 80);
+        }
       });
     });
     /* =========================================================
@@ -1633,9 +1673,13 @@
         currentUserData = userSnap.exists() ? userSnap.data() : {};
         currentPublicData = publicSnap.exists() ? publicSnap.data() : {};
 
-        const merged = mergeProfiles(publicSnap.exists() ? publicSnap.data() : {}, userSnap.exists() ? userSnap.data() : {}, user.uid);
-        const isAdmin = adminSnap.exists() || currentUserData.isAdmin === true || currentUserData.role === "admin";
+        const merged = mergeProfiles(
+          publicSnap.exists() ? publicSnap.data() : {},
+          userSnap.exists() ? userSnap.data() : {},
+          user.uid
+        );
 
+        const isAdmin = adminSnap.exists() || currentUserData.isAdmin === true || currentUserData.role === "admin";
         currentBlockedUsers = Array.isArray(merged.blockedUsers) ? merged.blockedUsers : [];
 
         applyProfileHeader(merged, isAdmin);
@@ -1669,6 +1713,7 @@
 
         loading.classList.add("hidden");
         overviewContent.classList.remove("hidden");
+        openAccordion("overviewSection");
       } catch (error) {
         console.error(error);
         loading.textContent = "Could not load settings.";
