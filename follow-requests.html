@@ -1,109 +1,419 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Follow Requests</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --red:#ff5d73;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --nav-bg:rgba(9,15,31,.98);
+      --topbar-bg:rgba(9,15,31,.92);
+      --shadow:0 18px 36px rgba(0,0,0,.18);
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --red:#e74c66;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --nav-bg:rgba(255,255,255,.98);
+      --topbar-bg:rgba(255,255,255,.94);
+      --shadow:0 16px 28px rgba(20,33,61,.08);
+    }
+
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
-      color:var(--text);min-height:100vh;padding:14px 14px 92px;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar{
-      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
-      border-radius:18px;padding:12px 14px;margin-bottom:14px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
+      align-items:center;
+      gap:8px;
+      box-shadow:var(--shadow);
     }
-    .left-wrap{display:flex;align-items:center;gap:10px;min-width:0}
-    .back-btn,.chip-btn{
-      border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;
-      font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line);text-decoration:none;display:inline-block;
+    .top-icon-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
     }
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .top-icon-btn svg{width:18px;height:18px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:18px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
     .panel{
-      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;
-      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:13px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
     }
-    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
-    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:6px}
-    .loading{text-align:center;color:var(--muted);padding:28px 10px}
-    .list{display:grid;gap:12px}
-    .card{
-      background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;
+
+    .compact-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
     }
-    .card-top{display:flex;gap:12px;align-items:flex-start}
-    .avatar{
-      width:64px;height:64px;border-radius:18px;object-fit:cover;border:1px solid rgba(255,255,255,.10);
-      background:#1b2445;flex-shrink:0;
+    .compact-title{
+      font-size:17px;
+      font-weight:800;
+      line-height:1.25;
+      margin-bottom:4px;
     }
-    .avatar-placeholder{
-      width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
-      text-align:center;padding:8px;background:#1b2445;border:1px solid rgba(255,255,255,.10);
-      color:var(--muted);font-size:11px;line-height:1.3;flex-shrink:0;
+    .compact-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
     }
-    .body{flex:1;min-width:0}
-    .name{font-size:17px;font-weight:800;line-height:1.3;margin-bottom:4px}
-    .name a{color:#fff;text-decoration:none}
-    .name a:hover{text-decoration:underline}
-    .username{color:#8fdfff;font-size:13px;font-weight:700;margin-bottom:6px}
-    .meta{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:8px}
-    .bio{color:#e8eeff;line-height:1.6;font-size:14px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
-    .actions{display:flex;gap:8px;flex-wrap:wrap}
-    .accept-btn,.decline-btn,.view-btn{
-      border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block;
+
+    .chip-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:10px;
     }
-    .accept-btn{background:rgba(61,220,132,.14);color:#c9f7dd;border:1px solid rgba(61,220,132,.20)}
-    .decline-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
-    .view-btn{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
-    .message{min-height:20px;font-size:14px;margin-top:10px}
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+
+    .quick-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .quick-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .quick-btn.primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .loading,
+    .empty-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+    }
     .success{color:#9cf0bf}
     .error{color:#ffb3bd}
-    .empty-box{
-      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
+
+    .list{display:grid;gap:10px}
+
+    .card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
     }
-    .hidden{display:none!important}
+    .card-top{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .avatar,
+    .avatar-placeholder{
+      width:58px;
+      height:58px;
+      border-radius:16px;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .avatar{object-fit:cover}
+    .avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.3;
+    }
+
+    .body{flex:1;min-width:0}
+    .name-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:2px;
+    }
+    .name{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .name a{color:var(--text);text-decoration:none}
+    .name a:hover{text-decoration:underline}
+
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .username{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:700;
+      margin-bottom:6px;
+      word-break:break-word;
+    }
+
+    .meta-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+    .meta-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+    }
+    .meta-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .meta-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+
+    .bio{
+      color:var(--text);
+      line-height:1.55;
+      font-size:13px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-bottom:10px;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .accept-btn,.decline-btn,.view-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+    }
+    .accept-btn{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .decline-btn{
+      background:rgba(255,93,115,.14);
+      color:var(--text);
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .view-btn{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+
     .bottom-nav{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
-      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
     }
     .nav-link{
-      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 108px}
+      .brand{font-size:18px}
+      .quick-actions .quick-btn,
+      .actions > *{flex:1}
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Follow requests</div>
-        </div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">BareWorld</div>
+        <div class="brand-sub">Follow requests</div>
       </div>
 
-      <div class="top-actions">
-        <a href="profile.html" class="chip-btn">Profile</a>
-      </div>
+      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
     </div>
 
     <div class="panel">
-      <div class="section-title">Pending Follow Requests</div>
-      <div class="section-note">Accept or decline people who want to follow your private profile.</div>
+      <div class="compact-head">
+        <div>
+          <div class="compact-title">Pending Follow Requests</div>
+          <div class="compact-sub">Accept or decline people who want to follow your private profile.</div>
+        </div>
+      </div>
+
+      <div class="chip-row">
+        <span class="chip chip-blue">Private profile access</span>
+        <span class="chip chip-green">Approve instantly</span>
+        <span class="chip chip-purple">Live updates</span>
+      </div>
+
+      <div class="quick-actions">
+        <a href="profile.html" class="quick-btn">My Profile</a>
+        <a href="settings.html" class="quick-btn">Settings</a>
+        <a href="feed.html" class="quick-btn primary">Feed</a>
+      </div>
+
       <div id="pageMessage" class="message"></div>
     </div>
 
@@ -127,11 +437,11 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+    <a href="search.html" class="nav-link">
+      <span class="icon">⌕</span>
+      <span>Search</span>
     </a>
-    <a href="profile.html" class="nav-link">
+    <a href="profile.html" class="nav-link active">
       <span class="icon">◉</span>
       <span>Profile</span>
     </a>
@@ -145,8 +455,9 @@
       query,
       where,
       getDocs,
-      doc,
       getDoc,
+      onSnapshot,
+      doc,
       setDoc,
       deleteDoc,
       addDoc,
@@ -162,6 +473,35 @@
 
     let currentUser = null;
     let myName = "Someone";
+    let unsubscribeRequests = null;
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme() {
+      document.documentElement.setAttribute("data-theme", resolveTheme(getStoredTheme()));
+    }
+
+    applyTheme();
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme();
+      });
+    }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme();
+    });
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -183,6 +523,35 @@
       if (!ts) return "Just now";
       try { return ts.toDate().toLocaleString(); }
       catch { return "Just now"; }
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || "",
+        verified: !!(d.verified || d.isVerified)
+      };
+    }
+
+    async function loadMergedProfile(uid) {
+      try {
+        const [publicSnap, userSnap] = await Promise.all([
+          getDoc(doc(db, "publicProfiles", uid)),
+          getDoc(doc(db, "users", uid))
+        ]);
+
+        return normalizeProfile({
+          ...(publicSnap.exists() ? publicSnap.data() : {}),
+          ...(userSnap.exists() ? userSnap.data() : {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
     }
 
     async function sendNotificationSafe(toUserId, payload) {
@@ -245,47 +614,38 @@
       await deleteAllMatchingRequests(data.requesterId, data.targetId);
     }
 
-    async function loadRequests() {
-      const q = query(
-        collection(db, "follow_requests"),
-        where("targetId", "==", currentUser.uid)
-      );
+    async function renderRequests(snapshot) {
+      loading.classList.add("hidden");
+      list.innerHTML = "";
 
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        loading.classList.add("hidden");
+      if (snapshot.empty) {
         list.classList.add("hidden");
         emptyBox.classList.remove("hidden");
         return;
       }
 
-      const requesterIds = [...new Set(snap.docs.map(d => d.data().requesterId))];
+      const requesterIds = [...new Set(snapshot.docs.map(d => d.data().requesterId).filter(Boolean))];
 
       const profileEntries = await Promise.all(
         requesterIds.map(async (uid) => {
-          try {
-            const p = await getDoc(doc(db, "publicProfiles", uid));
-            if (p.exists()) return [uid, p.data()];
-          } catch {}
-          return [uid, null];
+          const profile = await loadMergedProfile(uid);
+          return [uid, profile];
         })
       );
 
       const profilesMap = new Map(profileEntries);
 
-      loading.classList.add("hidden");
       emptyBox.classList.add("hidden");
       list.classList.remove("hidden");
-      list.innerHTML = "";
 
-      snap.docs.forEach((requestDoc) => {
+      snapshot.docs.forEach((requestDoc) => {
         const data = requestDoc.data();
         const profile = profilesMap.get(data.requesterId) || {};
-        const displayName = profile?.displayName || "Member";
-        const username = profile?.username || "";
-        const bio = profile?.bio?.trim() ? profile.bio : "No bio added yet.";
-        const photoURL = profile?.photoURL || "";
+        const displayName = profile.displayName || "Member";
+        const username = profile.username || "";
+        const bio = profile.bio?.trim() ? profile.bio : "No bio added yet.";
+        const photoURL = profile.photoURL || "";
+        const verified = !!profile.verified;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -298,13 +658,20 @@
           <div class="card-top">
             ${avatarHtml}
             <div class="body">
-              <div class="name">
-                <a href="member.html?uid=${encodeURIComponent(data.requesterId)}">
-                  ${escapeHtml(displayName)}
-                </a>
+              <div class="name-row">
+                <div class="name">
+                  <a href="member.html?uid=${encodeURIComponent(data.requesterId)}">${escapeHtml(displayName)}</a>
+                </div>
+                ${verified ? `<span class="verified-dot">✓</span>` : ""}
               </div>
+
               ${username ? `<div class="username">@${escapeHtml(username)}</div>` : ""}
-              <div class="meta">Requested: ${escapeHtml(formatDate(data.createdAt))}</div>
+
+              <div class="meta-row">
+                <span class="meta-badge meta-purple">Requested</span>
+                <span class="meta-badge meta-blue">${escapeHtml(formatDate(data.createdAt))}</span>
+              </div>
+
               <div class="bio">${escapeHtml(bio)}</div>
 
               <div class="actions">
@@ -333,13 +700,7 @@
 
           try {
             await acceptRequest(requestDoc);
-            card.remove();
             setMessage("Follow request accepted.", "success");
-
-            if (!list.children.length) {
-              list.classList.add("hidden");
-              emptyBox.classList.remove("hidden");
-            }
           } catch (err) {
             console.error("Accept failed:", err);
             setMessage(err?.message || "Could not accept request.", "error");
@@ -355,13 +716,7 @@
 
           try {
             await declineRequest(requestDoc);
-            card.remove();
             setMessage("Follow request declined.", "success");
-
-            if (!list.children.length) {
-              list.classList.add("hidden");
-              emptyBox.classList.remove("hidden");
-            }
           } catch (err) {
             console.error("Decline failed:", err);
             setMessage(err?.message || "Could not decline request.", "error");
@@ -374,6 +729,33 @@
       });
     }
 
+    function startRequestsListener() {
+      if (unsubscribeRequests) unsubscribeRequests();
+
+      const q = query(
+        collection(db, "follow_requests"),
+        where("targetId", "==", currentUser.uid)
+      );
+
+      unsubscribeRequests = onSnapshot(q, async (snapshot) => {
+        try {
+          await renderRequests(snapshot);
+        } catch (err) {
+          console.error("Render requests failed:", err);
+          loading.classList.add("hidden");
+          list.classList.add("hidden");
+          emptyBox.classList.remove("hidden");
+          emptyBox.textContent = "Could not load follow requests.";
+        }
+      }, (err) => {
+        console.error("Follow requests listener failed:", err);
+        loading.classList.add("hidden");
+        list.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        emptyBox.textContent = "Could not load follow requests.";
+      });
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -383,12 +765,9 @@
       currentUser = user;
 
       try {
-        const myPublic = await getDoc(doc(db, "publicProfiles", user.uid));
-        myName = myPublic.exists()
-          ? (myPublic.data().displayName || "Someone")
-          : (user.displayName || "Someone");
-
-        await loadRequests();
+        const myProfile = await loadMergedProfile(user.uid);
+        myName = myProfile.displayName || user.displayName || "Someone";
+        startRequestsListener();
       } catch (err) {
         console.error("Follow requests load failed:", err);
         loading.textContent = "Could not load follow requests.";
