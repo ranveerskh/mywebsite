@@ -359,31 +359,41 @@
 
     .post-top-actions{
       display:flex;
-      gap:6px;
+      gap:5px;
       flex-wrap:wrap;
       align-items:center;
       justify-content:flex-end;
       flex-shrink:0;
     }
 
-    .follow-top-btn,.delete-post-btn{
+    .follow-top-btn,
+    .delete-post-btn{
+      width:34px;
+      height:34px;
+      min-width:34px;
       border:none;
       border-radius:10px;
-      padding:7px 9px;
-      font-size:11px;
+      padding:0;
+      font-size:0;
       font-weight:800;
       cursor:pointer;
       flex-shrink:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
+
+    .follow-top-btn svg,
+    .delete-post-btn svg{
+      width:16px;
+      height:16px;
+      display:block;
+    }
+
     .follow-top-btn.follow{
       background:rgba(76,201,255,.14);
       color:var(--text);
       border:1px solid rgba(76,201,255,.20);
-    }
-    .follow-top-btn.unfollow{
-      background:rgba(255,93,115,.14);
-      color:var(--text);
-      border:1px solid rgba(255,93,115,.20);
     }
     .follow-top-btn.request{
       background:rgba(167,139,250,.14);
@@ -427,7 +437,7 @@
 
     .post-actions{
       display:flex;
-      gap:8px;
+      gap:6px;
       flex-wrap:wrap;
       align-items:center;
       margin-top:10px;
@@ -436,20 +446,20 @@
       border:none;
       cursor:pointer;
       font-weight:800;
-      border-radius:12px;
-      padding:9px 11px;
-      font-size:12px;
+      border-radius:10px;
+      padding:7px 9px;
+      font-size:11px;
       display:inline-flex;
       align-items:center;
-      gap:8px;
+      gap:6px;
       text-decoration:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
     }
     .icon-action-btn svg,.icon-report-link svg{
-      width:17px;
-      height:17px;
+      width:15px;
+      height:15px;
       display:block;
       flex-shrink:0
     }
@@ -1184,10 +1194,8 @@
 
       try {
         if (relation === "following") {
-          const followDocId = await findFollowDocId(currentUser.uid, authorId);
-          if (followDocId) {
-            await deleteDoc(doc(db, "follows", followDocId));
-          }
+          relationBtn.disabled = false;
+          return;
         } else if (relation === "requested") {
           const requestDocId = await findRequestDocId(currentUser.uid, authorId);
           if (requestDocId) {
@@ -1377,19 +1385,44 @@
       if (relation === "self") return "";
 
       if (relation === "following") {
-        return `<button class="follow-top-btn unfollow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Unfollow</button>`;
+        return "";
       }
 
       if (relation === "requested") {
-        return `<button class="follow-top-btn requested" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Requested</button>`;
+        return `
+          <button class="follow-top-btn requested" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Requested" aria-label="Requested">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 8v4l2.5 2.5"></path>
+              <circle cx="12" cy="12" r="8"></circle>
+            </svg>
+          </button>
+        `;
       }
 
       const author = getAuthorProfile(authorId);
       if (author?.isPrivate) {
-        return `<button class="follow-top-btn request" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Request</button>`;
+        return `
+          <button class="follow-top-btn request" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Request follow" aria-label="Request follow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9.5" cy="7" r="3.5"></circle>
+              <path d="M19 8v6"></path>
+              <path d="M16 11h6"></path>
+            </svg>
+          </button>
+        `;
       }
 
-      return `<button class="follow-top-btn follow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}">Follow</button>`;
+      return `
+        <button class="follow-top-btn follow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Follow" aria-label="Follow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9.5" cy="7" r="3.5"></circle>
+            <path d="M19 8v6"></path>
+            <path d="M16 11h6"></path>
+          </svg>
+        </button>
+      `;
     }
 
     async function renderPosts() {
@@ -1437,7 +1470,17 @@
           : "";
 
         const deleteButton = currentUser && ownerId === currentUser.uid
-          ? `<button data-id="${postId}" class="delete-post-btn">Delete</button>`
+          ? `
+            <button data-id="${postId}" class="delete-post-btn" title="Delete post" aria-label="Delete post">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+            </button>
+          `
           : "";
 
         const relationButton = buildRelationButton(ownerId, postId);
