@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Nearby</title>
+  <title>BareWorld - Nearby People</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -121,7 +121,7 @@
     .hero-sub{
       color:var(--muted);
       font-size:12px;
-      line-height:1.6;
+      line-height:1.55;
     }
 
     .info-box{
@@ -143,13 +143,13 @@
       white-space:pre-line;
     }
 
-    .stats-row{
+    .chip-row{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       margin-top:10px;
     }
-    .stat-chip{
+    .chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -161,26 +161,34 @@
       background:var(--surface-2);
       color:var(--text);
     }
-    .blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
-    .quick-links{
+    .status-text{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .status-ok{color:#86efac}
+    .status-err{color:#fda4af}
+
+    .tabs{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:8px;
       margin-bottom:10px;
     }
-    .quick-link{
+    .tab-link{
       text-decoration:none;
       color:var(--text);
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:16px;
-      min-height:58px;
-      padding:12px 10px;
+      border-radius:14px;
+      padding:11px 8px;
+      min-height:44px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -188,85 +196,181 @@
       font-size:13px;
       font-weight:800;
     }
-    .quick-link.active{
+    .tab-link.active{
       background:rgba(76,201,255,.14);
       border-color:rgba(76,201,255,.20);
     }
 
-    .cards{
+    .search-wrap{
+      position:relative;
+      margin-bottom:10px;
+    }
+    .search-box{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 44px 13px 14px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+    .search-box::placeholder{color:var(--muted)}
+    .clear-btn{
+      position:absolute;
+      right:8px;
+      top:50%;
+      transform:translateY(-50%);
+      width:30px;
+      height:30px;
+      border:none;
+      border-radius:10px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .list{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
       gap:10px;
     }
-    .hub-card{
+
+    .loading-box,
+    .empty-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.55;
+    }
+
+    .card{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
-      padding:13px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:220px;
+      padding:12px;
     }
-    .hub-card-top{
+
+    .person-card{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .person-avatar,.person-avatar-placeholder{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .person-avatar{object-fit:cover}
+    .person-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+
+    .person-body{
+      min-width:0;
+      flex:1;
+    }
+    .person-head{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      gap:10px;
+      gap:8px;
     }
-    .hub-card-title{
-      font-size:17px;
+    .person-main{
+      min-width:0;
+      flex:1;
+    }
+    .person-name{
+      font-size:15px;
       font-weight:800;
-      line-height:1.3;
-      margin-bottom:4px;
-    }
-    .hub-card-sub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
-    }
-    .hub-count{
-      min-width:54px;
-      height:54px;
-      border-radius:16px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
+      line-height:1.25;
       display:flex;
       align-items:center;
-      justify-content:center;
-      font-size:19px;
-      font-weight:900;
-      flex-shrink:0;
-    }
-
-    .badge-row{
-      display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
     }
-    .mini-badge{
+    .person-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .person-name a:hover{text-decoration:underline}
+    .verified-dot{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:6px 10px;
+      width:18px;
+      height:18px;
       border-radius:999px;
-      font-size:11px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:10px;
+      font-weight:900;
+    }
+    .person-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:2px;
+      word-break:break-word;
+    }
+    .person-meta{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .small-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
+      border-radius:999px;
+      font-size:10px;
       font-weight:800;
       border:1px solid var(--line);
       background:var(--surface-3);
       color:var(--text);
+      flex-shrink:0;
     }
+    .pill-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .pill-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
 
     .card-actions{
-      margin-top:auto;
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      margin-top:10px;
     }
     .action-btn{
       border:none;
       border-radius:12px;
-      padding:10px 12px;
+      padding:9px 12px;
       font-size:12px;
       font-weight:800;
       text-decoration:none;
@@ -274,11 +378,10 @@
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      min-height:40px;
-      background:var(--surface-2);
+      min-height:38px;
+      background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
-      flex:1;
     }
     .btn-primary{
       background:rgba(76,201,255,.14);
@@ -292,14 +395,14 @@
       background:rgba(167,139,250,.14);
       border-color:rgba(167,139,250,.20);
     }
-
-    .status-text{
-      min-height:18px;
-      font-size:13px;
-      margin-top:8px;
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
     }
-    .status-ok{color:#86efac}
-    .status-err{color:#fda4af}
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
+    }
 
     .bottom-nav{
       position:fixed;
@@ -374,9 +477,9 @@
     @media (max-width:700px){
       body{padding:10px 10px 108px}
       .brand{font-size:18px}
-      .quick-links{grid-template-columns:1fr}
-      .cards{grid-template-columns:1fr}
-      .hub-card{min-height:auto}
+      .tabs{grid-template-columns:repeat(3,1fr)}
+      .tab-link{font-size:12px;padding:10px 4px}
+      .person-meta{white-space:normal;overflow:visible;text-overflow:clip}
     }
   </style>
 </head>
@@ -395,7 +498,7 @@
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
-        <div class="brand-sub">Nearby hub</div>
+        <div class="brand-sub">Nearby people</div>
       </div>
 
       <button id="infoBtn" class="top-icon-btn" type="button" aria-label="Nearby info">
@@ -409,87 +512,41 @@
 
     <div class="panel">
       <div class="hero-title">Nearby</div>
-      <div class="hero-sub">Lightweight hub for people, events and places. Each section opens on its own page so this page stays clean and fast.</div>
+      <div class="hero-sub">People near your city and optional GPS area. Events and Places open in the same style on separate pages.</div>
 
       <div id="infoBox" class="info-box hidden">
-        <div class="info-box-title">Nearby guide</div>
-        <div class="info-box-text">Use the left location button if you want better distance-based sorting on supported pages.
-People, Events, and Places now open separately, so the hub stays lighter and easier to manage.
-This also makes future updates cleaner and reduces page load issues.</div>
+        <div class="info-box-title">How Nearby works</div>
+        <div class="info-box-text">Base matching uses city + province/state + country.
+If GPS is available for both people, distance sorting becomes better.
+No map is required, but location data is required.
+Hidden users or banned users are not shown here.</div>
       </div>
 
-      <div class="stats-row">
-        <span id="cityChip" class="stat-chip blue">City: -</span>
-        <span id="modeChip" class="stat-chip purple">Mode: -</span>
-        <span id="browserChip" class="stat-chip yellow">Browser location off</span>
-        <span id="summaryChip" class="stat-chip green">Hub ready</span>
+      <div class="chip-row">
+        <span id="locationChip" class="chip chip-blue">Location: -</span>
+        <span id="modeChip" class="chip chip-purple">Mode: -</span>
+        <span id="browserChip" class="chip chip-yellow">Browser GPS off</span>
+        <span id="countChip" class="chip chip-green">People: 0</span>
       </div>
 
       <div id="pageStatus" class="status-text"></div>
     </div>
 
     <div class="panel">
-      <div class="quick-links">
-        <a href="nearby-people.html" class="quick-link active">People</a>
-        <a href="nearby-events.html" class="quick-link">Events</a>
-        <a href="nearby-places.html" class="quick-link">Locations</a>
+      <div class="tabs">
+        <a href="nearby.html" class="tab-link active">People</a>
+        <a href="nearby-events.html" class="tab-link">Events</a>
+        <a href="nearby-places.html" class="tab-link">Places</a>
       </div>
 
-      <div class="cards">
-        <div class="hub-card">
-          <div class="hub-card-top">
-            <div>
-              <div class="hub-card-title">People</div>
-              <div class="hub-card-sub">Discover nearby members, view profiles, and manage follows.</div>
-            </div>
-            <div id="peopleCount" class="hub-count">-</div>
-          </div>
-
-          <div class="badge-row">
-            <span id="peopleHint" class="mini-badge">Loading...</span>
-          </div>
-
-          <div class="card-actions">
-            <a href="nearby-people.html" class="action-btn btn-primary">Open People</a>
-          </div>
-        </div>
-
-        <div class="hub-card">
-          <div class="hub-card-top">
-            <div>
-              <div class="hub-card-title">Events</div>
-              <div class="hub-card-sub">Browse public events, joined events, and your own event posts.</div>
-            </div>
-            <div id="eventsCount" class="hub-count">-</div>
-          </div>
-
-          <div class="badge-row">
-            <span id="eventsHint" class="mini-badge">Loading...</span>
-          </div>
-
-          <div class="card-actions">
-            <a href="nearby-events.html" class="action-btn btn-green">Open Events</a>
-          </div>
-        </div>
-
-        <div class="hub-card">
-          <div class="hub-card-top">
-            <div>
-              <div class="hub-card-title">Locations</div>
-              <div class="hub-card-sub">Explore approved places, pending submissions, and your own added spots.</div>
-            </div>
-            <div id="placesCount" class="hub-count">-</div>
-          </div>
-
-          <div class="badge-row">
-            <span id="placesHint" class="mini-badge">Loading...</span>
-          </div>
-
-          <div class="card-actions">
-            <a href="nearby-places.html" class="action-btn btn-purple">Open Locations</a>
-          </div>
-        </div>
+      <div class="search-wrap">
+        <input id="searchInput" class="search-box" type="text" placeholder="Search nearby people..." />
+        <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
       </div>
+
+      <div id="listLoading" class="loading-box">Loading nearby people...</div>
+      <div id="listWrap" class="list hidden"></div>
+      <div id="emptyBox" class="empty-box hidden">No nearby people found.</div>
     </div>
   </div>
 
@@ -553,32 +610,37 @@ This also makes future updates cleaner and reduces page load issues.</div>
       doc,
       getDoc,
       getDocs,
-      collection
+      setDoc,
+      deleteDoc,
+      addDoc,
+      collection,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const cityChip = document.getElementById("cityChip");
+    const locationChip = document.getElementById("locationChip");
     const modeChip = document.getElementById("modeChip");
     const browserChip = document.getElementById("browserChip");
-    const summaryChip = document.getElementById("summaryChip");
-
-    const peopleCount = document.getElementById("peopleCount");
-    const eventsCount = document.getElementById("eventsCount");
-    const placesCount = document.getElementById("placesCount");
-
-    const peopleHint = document.getElementById("peopleHint");
-    const eventsHint = document.getElementById("eventsHint");
-    const placesHint = document.getElementById("placesHint");
+    const countChip = document.getElementById("countChip");
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const infoBtn = document.getElementById("infoBtn");
     const infoBox = document.getElementById("infoBox");
     const pageStatus = document.getElementById("pageStatus");
 
+    const searchInput = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearBtn");
+    const listLoading = document.getElementById("listLoading");
+    const listWrap = document.getElementById("listWrap");
+    const emptyBox = document.getElementById("emptyBox");
+
     let currentUser = null;
     let viewerProfile = null;
+    let viewerBlockedUsers = [];
     let browserCoords = null;
 
-    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+    let peopleData = [];
+    let followMap = new Map();
+    let requestMap = new Map();
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -613,53 +675,124 @@ This also makes future updates cleaner and reduces page load issues.</div>
       pageStatus.className = `status-text ${type}`;
     }
 
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleText(value) {
+      return String(value || "").trim();
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function readLat(obj) {
+      return num(
+        obj?.lat ??
+        obj?.latitude ??
+        obj?.location?.lat ??
+        obj?.location?.latitude ??
+        obj?.coords?.lat ??
+        obj?.coords?.latitude
+      );
+    }
+
+    function readLng(obj) {
+      return num(
+        obj?.lng ??
+        obj?.lon ??
+        obj?.long ??
+        obj?.longitude ??
+        obj?.location?.lng ??
+        obj?.location?.lon ??
+        obj?.location?.long ??
+        obj?.location?.longitude ??
+        obj?.coords?.lng ??
+        obj?.coords?.longitude
+      );
+    }
+
+    function kmDistance(lat1, lng1, lat2, lng2) {
+      if ([lat1, lng1, lat2, lng2].some(v => v === null || v === undefined)) return null;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function formatDistance(distanceKm) {
+      if (distanceKm === null || distanceKm === undefined) return "";
+      if (distanceKm < 1) return "Under 1 km";
+      if (distanceKm < 10) return `${distanceKm.toFixed(1)} km away`;
+      return `${Math.round(distanceKm)} km away`;
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        city: d.city || d.locationCity || d.currentCity || "",
-        showInNearby: d.showInNearby !== false,
-        locationVisibility: d.locationVisibility || "city",
+        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
+        username: d.username || d.handle || d.userName || "",
+        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
+        bio: d.bio || d.about || d.description || "",
+        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
+        verified: !!(d.verified || d.isVerified),
         moderationStatus: d.moderationStatus || d.status || "",
         isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted
+        softDeleted: !!d.softDeleted,
+        showInNearby: d.showInNearby !== false,
+        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
+        city: d.city || d.locationCity || d.currentCity || "",
+        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
+        country: d.country || d.locationCountry || d.currentCountry || "",
+        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        lat: readLat(d),
+        lng: readLng(d)
       };
     }
 
-    function normalizeEvent(raw, fallbackId = "") {
-      const d = raw || {};
-      return {
-        id: d.id || fallbackId || "",
-        visibility: d.visibility || "public",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted
-      };
-    }
+    function renderViewerLocation() {
+      if (!viewerProfile) return;
 
-    function normalizePlace(raw, fallbackId = "", sourceName = "") {
-      const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
-      const approved = d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status);
-      const rejected = status === "rejected" || d.rejected === true;
+      const city = titleText(viewerProfile.city);
+      const province = titleText(viewerProfile.province);
+      const country = titleText(viewerProfile.country);
 
-      return {
-        id: d.id || fallbackId || "",
-        source: sourceName,
-        approved,
-        rejected,
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted
-      };
+      const parts = [city, province, country].filter(Boolean);
+      locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
+      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
+      countChip.textContent = "People: 0";
+
+      if (!browserCoords) {
+        browserChip.textContent = "Browser GPS off";
+        browserChip.className = "chip chip-yellow";
+      }
     }
 
     async function requestBrowserLocation() {
       if (!navigator.geolocation) {
         browserCoords = null;
-        browserChip.textContent = "Browser location unsupported";
-        browserChip.className = "stat-chip red";
+        browserChip.textContent = "Browser GPS unsupported";
+        browserChip.className = "chip chip-red";
+        renderPeople();
         return;
       }
 
-      browserChip.textContent = "Checking browser location...";
-      browserChip.className = "stat-chip yellow";
+      browserChip.textContent = "Checking browser GPS...";
+      browserChip.className = "chip chip-yellow";
 
       await new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
@@ -668,38 +801,316 @@ This also makes future updates cleaner and reduces page load issues.</div>
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
-            browserChip.textContent = "Browser location on";
-            browserChip.className = "stat-chip green";
-            setPageStatus("Browser location enabled.", "status-ok");
+            browserChip.textContent = "Browser GPS on";
+            browserChip.className = "chip chip-green";
+            setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
             resolve();
           },
           () => {
             browserCoords = null;
-            browserChip.textContent = "Browser location off";
-            browserChip.className = "stat-chip yellow";
-            setPageStatus("Could not use browser location.", "status-err");
+            browserChip.textContent = "Browser GPS off";
+            browserChip.className = "chip chip-yellow";
+            setPageStatus("Could not use browser GPS. Using saved city data instead.", "status-err");
             resolve();
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
         );
       });
+
+      renderPeople();
     }
 
-    function renderViewerStatus() {
-      if (!viewerProfile) return;
+    function openLoading() {
+      listLoading.classList.remove("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.add("hidden");
+      listWrap.innerHTML = "";
+    }
 
-      cityChip.textContent = `City: ${viewerProfile.city || "Not added"}`;
-      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
-      summaryChip.textContent = "Hub ready";
+    function showEmpty(text) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.remove("hidden");
+      emptyBox.textContent = text;
+      countChip.textContent = "People: 0";
+    }
 
-      cityChip.className = "stat-chip blue";
-      modeChip.className = "stat-chip purple";
-      summaryChip.className = "stat-chip green";
+    function showList(count) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.remove("hidden");
+      emptyBox.classList.add("hidden");
+      countChip.textContent = `People: ${count}`;
+    }
 
-      if (!browserCoords) {
-        browserChip.textContent = "Browser location off";
-        browserChip.className = "stat-chip yellow";
+    function canUseProfile(profile) {
+      if (!profile) return false;
+      if (profile.uid === currentUser.uid) return false;
+      if (!profile.showInNearby) return false;
+      if (profile.softDeleted || profile.isHiddenByAdmin || profile.moderationStatus === "banned") return false;
+      if (viewerBlockedUsers.includes(profile.uid)) return false;
+      return true;
+    }
+
+    function findRelation(profileUid) {
+      if (followMap.has(profileUid)) return "following";
+      if (requestMap.has(profileUid)) return "requested";
+
+      const profile = peopleData.find(p => p.uid === profileUid);
+      if (profile?.isPrivate) return "request";
+      return "follow";
+    }
+
+    function getViewerCoords() {
+      return {
+        lat: browserCoords?.lat ?? viewerProfile?.lat ?? null,
+        lng: browserCoords?.lng ?? viewerProfile?.lng ?? null
+      };
+    }
+
+    function buildNearbyRows() {
+      const q = normalizeText(searchInput.value);
+      const viewerCity = normalizeText(viewerProfile?.city);
+      const viewerProvince = normalizeText(viewerProfile?.province);
+      const viewerCountry = normalizeText(viewerProfile?.country);
+      const viewerCoords = getViewerCoords();
+
+      return peopleData
+        .filter(canUseProfile)
+        .map(profile => {
+          const city = normalizeText(profile.city);
+          const province = normalizeText(profile.province);
+          const country = normalizeText(profile.country);
+
+          const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
+          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
+          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
+
+          let distanceKm = null;
+          if (sameCountry && viewerCoords.lat !== null && viewerCoords.lng !== null && profile.lat !== null && profile.lng !== null) {
+            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, profile.lat, profile.lng);
+          }
+
+          const withinGpsRange = distanceKm !== null && distanceKm <= 100;
+          const matchesNearby = sameCity || withinGpsRange;
+
+          const relation = findRelation(profile.uid);
+
+          const searchable = [
+            profile.displayName,
+            profile.username,
+            profile.bio,
+            profile.city,
+            profile.province,
+            profile.country
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          let placeLabel = [titleText(profile.city), titleText(profile.province), titleText(profile.country)]
+            .filter(Boolean)
+            .join(", ");
+
+          let distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : "";
+
+          return {
+            ...profile,
+            sameCountry,
+            sameProvince,
+            sameCity,
+            distanceKm,
+            withinGpsRange,
+            matchesNearby,
+            relation,
+            searchable,
+            placeLabel,
+            distanceLabel
+          };
+        })
+        .filter(row => row.matchesNearby)
+        .filter(row => !q || row.searchable.includes(q))
+        .sort((a, b) => {
+          if (a.sameCity && !b.sameCity) return -1;
+          if (b.sameCity && !a.sameCity) return 1;
+
+          const aHasDistance = a.distanceKm !== null;
+          const bHasDistance = b.distanceKm !== null;
+          if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
+          if (aHasDistance && !bHasDistance) return -1;
+          if (bHasDistance && !aHasDistance) return 1;
+
+          if (followMap.has(a.uid) && !followMap.has(b.uid)) return -1;
+          if (followMap.has(b.uid) && !followMap.has(a.uid)) return 1;
+
+          if (a.verified && !b.verified) return -1;
+          if (b.verified && !a.verified) return 1;
+
+          return a.displayName.localeCompare(b.displayName);
+        });
+    }
+
+    function buildRelationButton(row) {
+      if (row.relation === "following") {
+        return `<button class="action-btn btn-red relation-btn" data-action="unfollow" data-uid="${escapeHtml(row.uid)}" type="button">Unfollow</button>`;
       }
+      if (row.relation === "requested") {
+        return `<button class="action-btn btn-yellow relation-btn" data-action="cancel" data-uid="${escapeHtml(row.uid)}" type="button">Requested</button>`;
+      }
+      if (row.relation === "request") {
+        return `<button class="action-btn btn-purple relation-btn" data-action="request" data-uid="${escapeHtml(row.uid)}" type="button">Request</button>`;
+      }
+      return `<button class="action-btn btn-green relation-btn" data-action="follow" data-uid="${escapeHtml(row.uid)}" type="button">Follow</button>`;
+    }
+
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
+    }
+
+    async function followPerson(row) {
+      await setDoc(doc(db, "follows", `${currentUser.uid}__${row.uid}`), {
+        followerId: currentUser.uid,
+        followingId: row.uid,
+        createdAt: serverTimestamp()
+      });
+
+      await createNotificationSafe(row.uid, {
+        type: "follow",
+        title: "New follower",
+        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
+        fromUserId: currentUser.uid,
+        toUserId: row.uid,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+    }
+
+    async function unfollowPerson(row) {
+      const docId = followMap.get(row.uid) || `${currentUser.uid}__${row.uid}`;
+      await deleteDoc(doc(db, "follows", docId));
+    }
+
+    async function requestFollow(row) {
+      await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${row.uid}`), {
+        requesterId: currentUser.uid,
+        targetId: row.uid,
+        createdAt: serverTimestamp()
+      });
+
+      await createNotificationSafe(row.uid, {
+        type: "follow_request",
+        title: "Follow request",
+        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
+        fromUserId: currentUser.uid,
+        toUserId: row.uid,
+        createdAt: serverTimestamp(),
+        isRead: false
+      });
+    }
+
+    async function cancelRequest(row) {
+      const docId = requestMap.get(row.uid) || `${currentUser.uid}__${row.uid}`;
+      await deleteDoc(doc(db, "follow_requests", docId));
+    }
+
+    function renderPeople() {
+      openLoading();
+
+      const rows = buildNearbyRows();
+
+      if (!rows.length) {
+        showEmpty("No nearby people found for your current location settings.");
+        return;
+      }
+
+      listWrap.innerHTML = "";
+
+      rows.forEach(row => {
+        const avatarHtml = row.photoURL
+          ? `<img class="person-avatar" src="${escapeHtml(row.photoURL)}" alt="Profile photo">`
+          : `<div class="person-avatar-placeholder">No photo</div>`;
+
+        const metaParts = [];
+        if (row.placeLabel) metaParts.push(row.placeLabel);
+        if (row.distanceLabel) metaParts.push(row.distanceLabel);
+        else if (row.sameCity) metaParts.push("Same city");
+
+        let topPill = "";
+        if (followMap.has(row.uid)) topPill = `<span class="small-pill pill-blue">Following</span>`;
+        else if (row.verified) topPill = `<span class="small-pill pill-green">Verified</span>`;
+        else if (row.isPrivate) topPill = `<span class="small-pill pill-yellow">Private</span>`;
+        else if (row.distanceLabel) topPill = `<span class="small-pill pill-purple">${escapeHtml(row.distanceLabel)}</span>`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="person-card">
+            ${avatarHtml}
+            <div class="person-body">
+              <div class="person-head">
+                <div class="person-main">
+                  <div class="person-name">
+                    <a href="member.html?uid=${encodeURIComponent(row.uid)}">${escapeHtml(row.displayName)}</a>
+                    ${row.verified ? `<span class="verified-dot">✓</span>` : ""}
+                  </div>
+                  ${row.username ? `<div class="person-username">@${escapeHtml(row.username)}</div>` : ""}
+                  <div class="person-meta">${escapeHtml(metaParts.join(" • ") || "Nearby member")}</div>
+                </div>
+                ${topPill}
+              </div>
+
+              <div class="card-actions">
+                <a href="member.html?uid=${encodeURIComponent(row.uid)}" class="action-btn btn-primary">Open</a>
+                ${buildRelationButton(row)}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        listWrap.appendChild(card);
+      });
+
+      listWrap.querySelectorAll(".relation-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.getAttribute("data-uid");
+          const action = btn.getAttribute("data-action");
+          const row = rows.find(r => r.uid === uid);
+          if (!row) return;
+
+          btn.disabled = true;
+          setPageStatus("");
+
+          try {
+            if (action === "follow") await followPerson(row);
+            else if (action === "unfollow") await unfollowPerson(row);
+            else if (action === "request") await requestFollow(row);
+            else if (action === "cancel") await cancelRequest(row);
+
+            await loadRelations();
+            renderPeople();
+
+            const messages = {
+              follow: "Now following member.",
+              unfollow: "Unfollowed member.",
+              request: "Follow request sent.",
+              cancel: "Follow request cancelled."
+            };
+            setPageStatus(messages[action] || "Updated.", "status-ok");
+          } catch (err) {
+            console.error(err);
+            setPageStatus("Could not update follow state.", "status-err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      showList(rows.length);
     }
 
     async function loadViewer(uid) {
@@ -714,81 +1125,60 @@ This also makes future updates cleaner and reduces page load issues.</div>
         uid
       }, uid);
 
-      renderViewerStatus();
+      viewerBlockedUsers = viewerProfile.blockedUsers || [];
+      renderViewerLocation();
     }
 
-    async function loadPeopleCount() {
+    async function loadPeople() {
       const snap = await getDocs(collection(db, "publicProfiles"));
-      const rows = snap.docs
-        .map(d => normalizeProfile({ id: d.id, ...d.data() }, d.id))
-        .filter(p => p.uid !== currentUser.uid)
-        .filter(p => p.showInNearby)
-        .filter(p => !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned");
-
-      peopleCount.textContent = String(rows.length);
-      peopleHint.textContent = rows.length
-        ? `${rows.length} discoverable members`
-        : "No visible members yet";
+      peopleData = snap.docs.map(d => normalizeProfile({ id: d.id, ...d.data() }, d.id));
     }
 
-    async function loadEventsCount() {
-      const snap = await getDocs(collection(db, "events"));
-      const rows = snap.docs
-        .map(d => normalizeEvent({ id: d.id, ...d.data() }, d.id))
-        .filter(e => !e.hidden);
+    async function loadRelations() {
+      followMap = new Map();
+      requestMap = new Map();
 
-      eventsCount.textContent = String(rows.length);
-      eventsHint.textContent = rows.length
-        ? `${rows.length} events available`
-        : "No events yet";
-    }
+      const [followsSnap, requestsSnap] = await Promise.all([
+        getDocs(collection(db, "follows")),
+        getDocs(collection(db, "follow_requests"))
+      ]);
 
-    async function loadPlacesCount() {
-      const merged = [];
-
-      const snapshots = await Promise.all(
-        PLACE_SOURCES.map(source =>
-          getDocs(collection(db, source)).catch(() => ({ docs: [] }))
-        )
-      );
-
-      snapshots.forEach((snap, index) => {
-        const source = PLACE_SOURCES[index];
-        snap.docs.forEach(d => {
-          merged.push(normalizePlace({ id: d.id, ...d.data() }, d.id, source));
-        });
+      followsSnap.forEach(d => {
+        const data = d.data();
+        if (data.followerId === currentUser.uid && data.followingId) {
+          followMap.set(data.followingId, d.id);
+        }
       });
 
-      const visible = merged.filter(place => !place.hidden && !place.rejected);
-      placesCount.textContent = String(visible.length);
-      placesHint.textContent = visible.length
-        ? `${visible.length} visible locations`
-        : "No places yet";
+      requestsSnap.forEach(d => {
+        const data = d.data();
+        if (data.requesterId === currentUser.uid && data.targetId) {
+          requestMap.set(data.targetId, d.id);
+        }
+      });
     }
 
-    async function loadHubData() {
-      peopleCount.textContent = "-";
-      eventsCount.textContent = "-";
-      placesCount.textContent = "-";
-
-      peopleHint.textContent = "Loading...";
-      eventsHint.textContent = "Loading...";
-      placesHint.textContent = "Loading...";
-
-      try {
-        await Promise.all([
-          loadPeopleCount(),
-          loadEventsCount(),
-          loadPlacesCount()
-        ]);
-      } catch (err) {
-        console.error(err);
-        peopleHint.textContent = "Could not load";
-        eventsHint.textContent = "Could not load";
-        placesHint.textContent = "Could not load";
-        setPageStatus("Could not load nearby hub data.", "status-err");
-      }
+    async function refreshAll() {
+      openLoading();
+      await Promise.all([
+        loadPeople(),
+        loadRelations()
+      ]);
+      renderViewerLocation();
+      renderPeople();
     }
+
+    searchInput.addEventListener("input", () => {
+      clearBtn.classList.toggle("hidden", !searchInput.value.trim());
+      renderPeople();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearBtn.classList.add("hidden");
+      searchInput.focus();
+      renderPeople();
+    });
 
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
 
@@ -806,10 +1196,10 @@ This also makes future updates cleaner and reduces page load issues.</div>
 
       try {
         await loadViewer(user.uid);
-        await loadHubData();
+        await refreshAll();
       } catch (err) {
         console.error(err);
-        setPageStatus("Could not load nearby hub.", "status-err");
+        showEmpty("Could not load nearby people.");
       }
     });
   </script>
