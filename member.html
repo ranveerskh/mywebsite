@@ -327,6 +327,11 @@
       color:var(--text);
       border:1px solid var(--line);
     }
+    .message-btn{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
     .self-btn{
       background:var(--surface-2);
       color:var(--text);
@@ -542,9 +547,21 @@
       background:transparent;
       cursor:pointer;
     }
-    .nav-link .icon{
-      font-size:18px;
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       line-height:1;
+    }
+    .icon-svg svg{
+      width:20px;
+      height:20px;
       display:block;
     }
 
@@ -670,23 +687,52 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 9.5V21h14V9.5"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
+          <circle cx="12" cy="10" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
-    </a>
+
     <a href="search.html" class="nav-link">
-      <span class="icon">⌕</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
       <span>Search</span>
     </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16v12H4z"></path>
+          <path d="M4 7l8 6 8-6"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+    </a>
+
     <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -991,20 +1037,38 @@
       let requestDocId = null;
 
       try {
-        const followSnap = await getDocs(
-          query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(100))
-        );
-        const found = followSnap.docs.find(d => d.data().followingId === memberUid);
-        if (found) followDocId = found.id;
+        const directFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+        if (directFollow.exists()) {
+          followDocId = directFollow.id;
+        }
       } catch {}
 
+      if (!followDocId) {
+        try {
+          const followSnap = await getDocs(
+            query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(100))
+          );
+          const found = followSnap.docs.find(d => d.data().followingId === memberUid);
+          if (found) followDocId = found.id;
+        } catch {}
+      }
+
       try {
-        const reqSnap = await getDocs(
-          query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
-        );
-        const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
-        if (found) requestDocId = found.id;
+        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+        if (directReq.exists()) {
+          requestDocId = directReq.id;
+        }
       } catch {}
+
+      if (!requestDocId) {
+        try {
+          const reqSnap = await getDocs(
+            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
+          );
+          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+          if (found) requestDocId = found.id;
+        } catch {}
+      }
 
       let relationship = "none";
       if (followDocId) relationship = "following";
@@ -1233,7 +1297,15 @@
       headActions.appendChild(blockBtn);
     }
 
-    async function renderActions(viewerUid, memberUid, actorName, isPrivate, relationship, isBlockedByViewer) {
+    function createMessageButton(memberUid) {
+      const link = document.createElement("a");
+      link.className = "action-btn message-btn";
+      link.href = `chat.html?uid=${encodeURIComponent(memberUid)}`;
+      link.textContent = "Message";
+      return link;
+    }
+
+    async function renderActions(viewerUid, memberUid, actorName, isPrivate, relationship, isBlockedByViewer, isBanned) {
       followArea.innerHTML = "";
       setActionMessage("");
 
@@ -1246,7 +1318,7 @@
         return;
       }
 
-      if (isBlockedByViewer) return;
+      if (isBlockedByViewer || isBanned) return;
 
       if (relationship === "following") {
         const btn = document.createElement("button");
@@ -1259,6 +1331,8 @@
           try {
             if (relationshipInfo.followDocId) {
               await deleteDoc(doc(db, "follows", relationshipInfo.followDocId));
+            } else {
+              await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
             }
             window.location.reload();
           } catch (err) {
@@ -1268,6 +1342,7 @@
           }
         });
         followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
         return;
       }
 
@@ -1293,6 +1368,7 @@
           }
         });
         followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
         return;
       }
 
@@ -1335,6 +1411,7 @@
         });
 
         followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
         return;
       }
 
@@ -1347,21 +1424,13 @@
         setActionMessage("");
 
         try {
-          const existingFollowSnap = await getDocs(
-            query(
-              collection(db, "follows"),
-              where("followerId", "==", viewerUid),
-              where("followingId", "==", memberUid),
-              limit(1)
-            )
-          );
-
-          if (!existingFollowSnap.empty) {
+          const existingFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+          if (existingFollow.exists()) {
             window.location.reload();
             return;
           }
 
-          await addDoc(collection(db, "follows"), {
+          await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
             followerId: viewerUid,
             followingId: memberUid,
             createdAt: serverTimestamp()
@@ -1386,6 +1455,7 @@
       });
 
       followArea.appendChild(btn);
+      followArea.appendChild(createMessageButton(memberUid));
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -1478,7 +1548,8 @@
           getActorName(currentViewerPublicProfile, user),
           isPrivate,
           relationship.relationship,
-          isBlockedByViewer
+          isBlockedByViewer,
+          isBanned
         );
 
         followersCountEl.textContent = String(network.followers.filter(uid => !currentViewerBlockedUsers.includes(uid)).length);
