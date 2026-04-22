@@ -154,7 +154,17 @@
       font-weight:800;
       cursor:pointer;
       min-height:38px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
     }
+    .write-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
     .filter-tabs{
       display:flex;
       gap:8px;
@@ -578,11 +588,41 @@
       border:none;
       background:transparent;
       cursor:pointer;
+      position:relative;
     }
-    .nav-link .icon{font-size:18px;line-height:1}
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
+    }
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
     }
 
     @media (max-width:700px){
@@ -594,7 +634,7 @@
       .close-compose-btn{width:100%}
       .feed-item{padding:11px}
       .feed-head-top{align-items:stretch}
-      .write-btn{width:100%}
+      .write-btn{width:100%;justify-content:center}
     }
   </style>
 </head>
@@ -626,7 +666,14 @@
       <div class="feed-head">
         <div class="feed-head-top">
           <div class="section-title">Feed</div>
-          <button id="openComposerBtn" class="write-btn" type="button">Write something</button>
+          <button id="openComposerBtn" class="write-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <circle cx="8.5" cy="10" r="1.5"></circle>
+              <path d="M21 15l-5-5L5 21"></path>
+            </svg>
+            <span>Share a Post</span>
+          </button>
         </div>
 
         <div class="filter-tabs">
@@ -644,7 +691,7 @@
             <div>
               <h3 id="myName">Loading...</h3>
               <div id="myUsername" class="composer-username hidden">@username</div>
-              <div class="muted">Post a new update or photo</div>
+              <div class="muted">Write something or add a photo link</div>
             </div>
           </div>
 
@@ -675,27 +722,53 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link active">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 9.5V21h14V9.5"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
 
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
+          <circle cx="12" cy="10" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
 
-    <button id="navCreateBtn" type="button" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
-    </button>
-
     <a href="search.html" class="nav-link">
-      <span class="icon">⌕</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
       <span>Search</span>
     </a>
 
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16v12H4z"></path>
+          <path d="M4 7l8 6 8-6"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
     <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -740,9 +813,9 @@
 
     const notifyBtn = document.getElementById("notifyBtn");
     const notifyCount = document.getElementById("notifyCount");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     const composerPanel = document.getElementById("composerPanel");
-    const navCreateBtn = document.getElementById("navCreateBtn");
     const openComposerBtn = document.getElementById("openComposerBtn");
     const closeComposerBtn = document.getElementById("closeComposerBtn");
 
@@ -789,7 +862,7 @@
     }
 
     function showComposer() {
-      if (navCreateBtn.disabled) return;
+      if (openComposerBtn.disabled) return;
       composerPanel.classList.remove("hidden");
       composerPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
       setTimeout(() => captionInput.focus(), 180);
@@ -799,7 +872,6 @@
       composerPanel.classList.add("hidden");
     }
 
-    navCreateBtn.addEventListener("click", showComposer);
     openComposerBtn.addEventListener("click", showComposer);
     closeComposerBtn.addEventListener("click", hideComposer);
 
@@ -942,11 +1014,17 @@
 
       if (!count) {
         notifyCount.classList.add("hidden");
-        return;
+      } else {
+        notifyCount.textContent = formatBadgeCount(count);
+        notifyCount.classList.remove("hidden");
       }
 
-      notifyCount.textContent = formatBadgeCount(count);
-      notifyCount.classList.remove("hidden");
+      if (!count) {
+        inboxBadge.classList.add("hidden");
+      } else {
+        inboxBadge.textContent = formatBadgeCount(count);
+        inboxBadge.classList.remove("hidden");
+      }
     }
 
     function authorHidden(author) {
@@ -1561,12 +1639,10 @@
 
         if (status === "banned") {
           hideComposer();
-          navCreateBtn.disabled = true;
           openComposerBtn.disabled = true;
           setFormMessage("Your account is banned. Posting is disabled.", "error");
         } else if (status === "suspended" && suspensionUntil && Date.now() < suspensionUntil) {
           hideComposer();
-          navCreateBtn.disabled = true;
           openComposerBtn.disabled = true;
           setFormMessage("Your account is suspended. Posting is disabled for now.", "error");
         }
