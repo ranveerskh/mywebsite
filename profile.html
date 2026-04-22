@@ -217,6 +217,34 @@
       word-break:break-word;
     }
 
+    .profile-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .meta-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1.3;
+    }
+    .meta-chip.location{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .meta-chip.gender{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+
     .links-wrap{
       display:grid;
       gap:8px;
@@ -767,6 +795,11 @@
               <div id="usernameText" class="username hidden">@username</div>
               <div class="bio" id="bio">No bio added yet.</div>
 
+              <div id="profileMeta" class="profile-meta hidden">
+                <span id="locationChip" class="meta-chip location hidden"></span>
+                <span id="genderChip" class="meta-chip gender hidden"></span>
+              </div>
+
               <div id="linksWrap" class="links-wrap hidden"></div>
 
               <div class="stats">
@@ -948,6 +981,10 @@
     const linksWrap = document.getElementById("linksWrap");
     const privacyToggleBtn = document.getElementById("privacyToggleBtn");
 
+    const profileMeta = document.getElementById("profileMeta");
+    const locationChip = document.getElementById("locationChip");
+    const genderChip = document.getElementById("genderChip");
+
     const postsCountEl = document.getElementById("postsCount");
     const followersCountEl = document.getElementById("followersCount");
     const followingCountEl = document.getElementById("followingCount");
@@ -1084,6 +1121,13 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const city = d.city || d.locationCity || d.currentCity || "";
+      const province = d.province || d.state || d.region || d.locationProvince || d.currentProvince || "";
+      const country = d.country || d.locationCountry || d.currentCountry || "";
+      const genderValue = d.gender === "self_describe"
+        ? (d.genderCustom || "")
+        : (d.gender || "");
+
       return {
         uid: d.uid || d.id || fallbackUid || "",
         displayName: d.displayName || d.name || d.fullName || d.username || "Member",
@@ -1097,7 +1141,13 @@
         isHiddenByAdmin: !!d.isHiddenByAdmin,
         softDeleted: !!d.softDeleted,
         blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
-        links: extractProfileLinks(d)
+        links: extractProfileLinks(d),
+        city,
+        province,
+        country,
+        cityVisible: !!d.cityVisible,
+        gender: genderValue,
+        genderVisible: !!d.genderVisible
       };
     }
 
@@ -1212,6 +1262,31 @@
       });
 
       linksWrap.classList.remove("hidden");
+    }
+
+    function renderProfileMeta(profile) {
+      let hasMeta = false;
+
+      const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
+      if (profile.cityVisible && locationParts.length) {
+        locationChip.textContent = locationParts.join(", ");
+        locationChip.classList.remove("hidden");
+        hasMeta = true;
+      } else {
+        locationChip.classList.add("hidden");
+        locationChip.textContent = "";
+      }
+
+      if (profile.genderVisible && String(profile.gender || "").trim()) {
+        genderChip.textContent = profile.gender;
+        genderChip.classList.remove("hidden");
+        hasMeta = true;
+      } else {
+        genderChip.classList.add("hidden");
+        genderChip.textContent = "";
+      }
+
+      profileMeta.classList.toggle("hidden", !hasMeta);
     }
 
     function setPrivacyButton(isPrivate) {
@@ -1651,6 +1726,7 @@
       }
 
       bioEl.textContent = mergedProfile.bio?.trim() ? mergedProfile.bio : "No bio added yet.";
+      renderProfileMeta(mergedProfile);
       renderLinks(mergedProfile.links || []);
       showAvatar(mergedProfile.photoURL || "");
       applyModerationBadge(mergedProfile.moderationStatus, mergedProfile.warningUntil);
