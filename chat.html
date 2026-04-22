@@ -975,6 +975,25 @@
       }
     }
 
+    async function ensureStableFollowDocForChat(viewerUid, targetUid) {
+      if (!viewerUid || !targetUid) return false;
+
+      const alreadyFollowing = await checkFollowing(viewerUid, targetUid);
+      if (!alreadyFollowing) return false;
+
+      await setDoc(
+        doc(db, "follows", `${viewerUid}__${targetUid}`),
+        {
+          followerId: viewerUid,
+          followingId: targetUid,
+          createdAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      return true;
+    }
+
     async function findExistingThreadByUsers(uidA, uidB) {
       const threadId = makeThreadId(uidA, uidB);
       const snap = await getDoc(doc(db, "chat_threads", threadId));
@@ -1088,6 +1107,13 @@
     }
 
     async function sendDirectMessage(text) {
+      if (currentMode === "direct_new") {
+        const ensured = await ensureStableFollowDocForChat(currentUser.uid, currentTargetUid);
+        if (!ensured) {
+          throw new Error("You must follow this member before starting a direct chat.");
+        }
+      }
+
       const threadId = makeThreadId(currentUser.uid, currentTargetUid);
       const threadRef = doc(db, "chat_threads", threadId);
       const threadSnap = await getDoc(threadRef);
