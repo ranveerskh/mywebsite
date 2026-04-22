@@ -976,23 +976,26 @@
     }
 
     async function ensureStableFollowDocForChat(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return false;
+  if (!viewerUid || !targetUid) return false;
 
-      const alreadyFollowing = await checkFollowing(viewerUid, targetUid);
-      if (!alreadyFollowing) return false;
+  const alreadyFollowing = await checkFollowing(viewerUid, targetUid);
+  if (!alreadyFollowing) return false;
 
-      await setDoc(
-        doc(db, "follows", `${viewerUid}__${targetUid}`),
-        {
-          followerId: viewerUid,
-          followingId: targetUid,
-          createdAt: serverTimestamp()
-        },
-        { merge: true }
-      );
+  const stableRef = doc(db, "follows", `${viewerUid}__${targetUid}`);
+  const stableSnap = await getDoc(stableRef);
 
-      return true;
-    }
+  if (stableSnap.exists()) {
+    return true;
+  }
+
+  await setDoc(stableRef, {
+    followerId: viewerUid,
+    followingId: targetUid,
+    createdAt: serverTimestamp()
+  });
+
+  return true;
+}
 
     async function findExistingThreadByUsers(uidA, uidB) {
       const threadId = makeThreadId(uidA, uidB);
