@@ -103,10 +103,6 @@
       color:var(--muted);
       margin-top:2px;
     }
-    .top-spacer{
-      width:44px;
-      height:44px;
-    }
 
     .panel{
       background:var(--surface);
@@ -140,42 +136,47 @@
     .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
-    .location-editor{
-      display:grid;
-      grid-template-columns:1fr auto;
+    .top-actions{
+      display:flex;
       gap:8px;
+      flex-wrap:wrap;
       margin-top:10px;
     }
-    .location-input{
-      width:100%;
-      border:none;
-      outline:none;
-      padding:13px 14px;
-      border-radius:15px;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-size:14px;
-    }
-    .location-input::placeholder{color:var(--muted)}
-    .save-btn{
+    .action-btn{
       border:none;
       border-radius:12px;
-      padding:10px 14px;
+      padding:9px 12px;
       font-size:12px;
       font-weight:800;
-      min-height:44px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       cursor:pointer;
+      min-height:38px;
+      background:var(--surface-3);
       color:var(--text);
-      background:rgba(76,201,255,.14);
-      border:1px solid rgba(76,201,255,.20);
-      white-space:nowrap;
+      border:1px solid var(--line);
     }
-    .tiny-note{
-      margin-top:8px;
-      color:var(--muted);
-      font-size:11px;
-      line-height:1.55;
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.20);
+    }
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
+    }
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
     }
 
     .status-text{
@@ -378,42 +379,6 @@
       flex-wrap:wrap;
       margin-top:10px;
     }
-    .action-btn{
-      border:none;
-      border-radius:12px;
-      padding:9px 12px;
-      font-size:12px;
-      font-weight:800;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      min-height:38px;
-      background:var(--surface-3);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-    .btn-primary{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
-    }
-    .btn-green{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.20);
-    }
-    .btn-purple{
-      background:rgba(167,139,250,.14);
-      border-color:rgba(167,139,250,.20);
-    }
-    .btn-yellow{
-      background:rgba(245,185,66,.14);
-      border-color:rgba(245,185,66,.20);
-    }
-    .btn-red{
-      background:rgba(255,93,115,.14);
-      border-color:rgba(255,93,115,.20);
-    }
 
     .bottom-nav{
       position:fixed;
@@ -491,8 +456,6 @@
       .tabs{grid-template-columns:repeat(3,1fr)}
       .tab-link{font-size:12px;padding:10px 4px}
       .person-meta{white-space:normal;overflow:visible;text-overflow:clip}
-      .location-editor{grid-template-columns:1fr}
-      .save-btn{width:100%}
     }
   </style>
 </head>
@@ -514,7 +477,12 @@
         <div class="brand-sub">Nearby people</div>
       </div>
 
-      <div class="top-spacer"></div>
+      <a href="edit-profile.html#location" class="top-icon-btn" aria-label="Location settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
+          <circle cx="12" cy="10" r="2.5"></circle>
+        </svg>
+      </a>
     </div>
 
     <div class="panel">
@@ -525,12 +493,11 @@
         <span id="countChip" class="chip chip-green">People: 0</span>
       </div>
 
-      <div class="location-editor">
-        <input id="manualLocationInput" class="location-input" type="text" placeholder="Enter City, Province, Country" />
-        <button id="saveLocationBtn" class="save-btn" type="button">Save Location</button>
+      <div class="top-actions">
+        <a href="edit-profile.html#location" class="action-btn btn-primary">Location Settings</a>
+        <button id="gpsBtn2" class="action-btn btn-green" type="button">Use GPS</button>
       </div>
 
-      <div class="tiny-note">Example: London, Ontario, Canada</div>
       <div id="pageStatus" class="status-text"></div>
     </div>
 
@@ -542,7 +509,7 @@
       </div>
 
       <div class="search-wrap">
-        <input id="searchInput" class="search-box" type="text" placeholder="Search nearby people..." />
+        <input id="searchInput" class="search-box" type="text" placeholder="Search people, city, province, country..." />
         <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
       </div>
 
@@ -624,9 +591,8 @@
     const browserChip = document.getElementById("browserChip");
     const countChip = document.getElementById("countChip");
 
-    const manualLocationInput = document.getElementById("manualLocationInput");
-    const saveLocationBtn = document.getElementById("saveLocationBtn");
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
+    const gpsBtn2 = document.getElementById("gpsBtn2");
     const pageStatus = document.getElementById("pageStatus");
 
     const searchInput = document.getElementById("searchInput");
@@ -722,6 +688,34 @@
       );
     }
 
+    function countryAliases(country) {
+      const c = normalizeText(country);
+      if (!c) return "";
+      const aliases = [c];
+
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "canada") aliases.push("ca");
+
+      return aliases.join(" ");
+    }
+
+    function buildLocationSearch(d) {
+      const existing = titleText(d.locationSearch);
+      const city = titleText(d.city || d.locationCity || d.currentCity || "");
+      const province = titleText(d.province || d.state || d.region || d.locationProvince || d.currentProvince || "");
+      const country = titleText(d.country || d.locationCountry || d.currentCountry || "");
+      const pieces = [
+        existing,
+        city,
+        province,
+        country,
+        countryAliases(country)
+      ].filter(Boolean);
+
+      return pieces.join(" ").trim().toLowerCase();
+    }
+
     function kmDistance(lat1, lng1, lat2, lng2) {
       if ([lat1, lng1, lat2, lng2].some(v => v === null || v === undefined)) return null;
       const R = 6371;
@@ -760,6 +754,7 @@
         city: d.city || d.locationCity || d.currentCity || "",
         province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
         country: d.country || d.locationCountry || d.currentCountry || "",
+        locationSearch: buildLocationSearch(d),
         blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
         lat: readLat(d),
         lng: readLng(d)
@@ -778,85 +773,10 @@
       modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
       countChip.textContent = "People: 0";
 
-      manualLocationInput.value = parts.join(", ");
-
       if (!browserCoords) {
         browserChip.textContent = "Browser GPS off";
         browserChip.className = "chip chip-yellow";
       }
-    }
-
-    function parseManualLocation(text) {
-      const parts = String(text || "")
-        .split(",")
-        .map(v => v.trim())
-        .filter(Boolean);
-
-      if (parts.length < 3) return null;
-
-      return {
-        city: parts[0],
-        country: parts[parts.length - 1],
-        province: parts.slice(1, -1).join(", ")
-      };
-    }
-
-    async function saveManualLocation() {
-      const parsed = parseManualLocation(manualLocationInput.value);
-
-      if (!parsed) {
-        setPageStatus("Enter location like: City, Province, Country", "status-err");
-        return;
-      }
-
-      saveLocationBtn.disabled = true;
-      saveLocationBtn.textContent = "Saving...";
-
-      const locationSearch = `${parsed.city} ${parsed.province} ${parsed.country}`.trim();
-
-      try {
-        await Promise.all([
-          setDoc(doc(db, "users", currentUser.uid), {
-            city: parsed.city,
-            province: parsed.province,
-            country: parsed.country,
-            locationSearch,
-            locationVisibility: "city",
-            nearbyMode: "city",
-            showInNearby: true,
-            lat: null,
-            lng: null
-          }, { merge: true }),
-          setDoc(doc(db, "publicProfiles", currentUser.uid), {
-            city: parsed.city,
-            province: parsed.province,
-            country: parsed.country,
-            locationSearch,
-            locationVisibility: "city",
-            nearbyMode: "city",
-            showInNearby: true,
-            lat: null,
-            lng: null
-          }, { merge: true })
-        ]);
-
-        viewerProfile.city = parsed.city;
-        viewerProfile.province = parsed.province;
-        viewerProfile.country = parsed.country;
-        viewerProfile.locationVisibility = "city";
-        viewerProfile.lat = null;
-        viewerProfile.lng = null;
-
-        renderViewerLocation();
-        await refreshAll();
-        setPageStatus("Location updated.", "status-ok");
-      } catch (err) {
-        console.error(err);
-        setPageStatus("Could not save location.", "status-err");
-      }
-
-      saveLocationBtn.disabled = false;
-      saveLocationBtn.textContent = "Save Location";
     }
 
     async function requestBrowserLocation() {
@@ -873,21 +793,49 @@
 
       await new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             browserCoords = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
+
             browserChip.textContent = "Browser GPS on";
             browserChip.className = "chip chip-green";
-            setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
+
+            try {
+              await Promise.all([
+                setDoc(doc(db, "users", currentUser.uid), {
+                  lat: browserCoords.lat,
+                  lng: browserCoords.lng,
+                  locationVisibility: "gps",
+                  nearbyMode: "gps",
+                  showInNearby: true
+                }, { merge: true }),
+                setDoc(doc(db, "publicProfiles", currentUser.uid), {
+                  lat: browserCoords.lat,
+                  lng: browserCoords.lng,
+                  locationVisibility: "gps",
+                  nearbyMode: "gps",
+                  showInNearby: true
+                }, { merge: true })
+              ]);
+
+              viewerProfile.lat = browserCoords.lat;
+              viewerProfile.lng = browserCoords.lng;
+              viewerProfile.locationVisibility = "gps";
+              renderViewerLocation();
+              setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
+            } catch (err) {
+              console.error(err);
+            }
+
             resolve();
           },
           () => {
             browserCoords = null;
             browserChip.textContent = "Browser GPS off";
             browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved city data instead.", "status-err");
+            setPageStatus("Could not use browser GPS. Using saved location instead.", "status-err");
             resolve();
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
@@ -949,6 +897,7 @@
       const viewerCity = normalizeText(viewerProfile?.city);
       const viewerProvince = normalizeText(viewerProfile?.province);
       const viewerCountry = normalizeText(viewerProfile?.country);
+      const viewerHasSavedLocation = !!viewerCity && !!viewerProvince && !!viewerCountry;
       const viewerCoords = getViewerCoords();
 
       return peopleData
@@ -963,22 +912,19 @@
           const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
 
           let distanceKm = null;
-          if (sameCountry && viewerCoords.lat !== null && viewerCoords.lng !== null && profile.lat !== null && profile.lng !== null) {
+          if (viewerCoords.lat !== null && viewerCoords.lng !== null && profile.lat !== null && profile.lng !== null) {
             distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, profile.lat, profile.lng);
           }
 
           const withinGpsRange = distanceKm !== null && distanceKm <= 100;
-          const matchesNearby = sameCity || withinGpsRange;
-
+          const matchesNearby = (viewerHasSavedLocation && sameCity) || withinGpsRange;
           const relation = findRelation(profile.uid);
 
           const searchable = [
             profile.displayName,
             profile.username,
             profile.bio,
-            profile.city,
-            profile.province,
-            profile.country
+            profile.locationSearch
           ].filter(Boolean).join(" ").toLowerCase();
 
           const placeLabel = [titleText(profile.city), titleText(profile.province), titleText(profile.country)]
@@ -989,8 +935,6 @@
 
           return {
             ...profile,
-            sameCountry,
-            sameProvince,
             sameCity,
             distanceKm,
             withinGpsRange,
@@ -1092,10 +1036,20 @@
     function renderPeople() {
       openLoading();
 
+      const viewerHasLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
       const rows = buildNearbyRows();
 
+      if (!viewerHasLocation && !browserCoords) {
+        showEmpty("Set your location in profile or use GPS to see nearby people.");
+        return;
+      }
+
       if (!rows.length) {
-        showEmpty("No nearby people found for your current location settings.");
+        showEmpty("No nearby people found for your current location.");
         return;
       }
 
@@ -1257,8 +1211,8 @@
       renderPeople();
     });
 
-    saveLocationBtn.addEventListener("click", saveManualLocation);
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
+    gpsBtn2.addEventListener("click", requestBrowserLocation);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
