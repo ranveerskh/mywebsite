@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Edit Profile</title>
+  <title>BareWorld - Member</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -18,13 +18,13 @@
       --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
-      --green:#22c55e;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
+      --green:#3ddc84;
       --red:#ff5d73;
+      --purple:#a78bfa;
+      --yellow:#f5b942;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 18px 36px rgba(0,0,0,.18);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
 
     html[data-theme="light"]{
@@ -37,13 +37,13 @@
       --text:#14213d;
       --muted:#6b7893;
       --blue:#1f8fff;
-      --green:#16a34a;
-      --yellow:#d59617;
-      --purple:#7f63ff;
+      --green:#22b36c;
       --red:#e74c66;
+      --purple:#7f63ff;
+      --yellow:#d59617;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 28px rgba(20,33,61,.08);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
     body{
@@ -64,21 +64,21 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:7px 9px;
+      padding:8px 10px;
       margin-bottom:10px;
       display:grid;
-      grid-template-columns:42px 1fr 42px;
+      grid-template-columns:44px 1fr 44px;
       align-items:center;
-      gap:8px;
+      gap:10px;
       box-shadow:var(--shadow);
     }
     .top-icon-btn{
-      width:42px;
-      height:42px;
+      width:44px;
+      height:44px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:13px;
+      border-radius:14px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -86,54 +86,177 @@
       justify-content:center;
       text-decoration:none;
     }
-    .top-icon-btn svg{width:18px;height:18px;display:block}
+    .top-icon-btn svg{width:19px;height:19px;display:block}
     .top-center{text-align:center;min-width:0}
     .brand{font-size:18px;font-weight:800;line-height:1.05}
     .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
 
-    .panel{
+    .shell{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:13px;
-      margin-bottom:10px;
+      border-radius:22px;
+      overflow:hidden;
       box-shadow:var(--shadow);
+      margin-bottom:12px;
     }
+    .section{
+      padding:14px;
+      border-bottom:1px solid var(--line-soft);
+    }
+    .section:last-child{border-bottom:none}
 
     .loading{
       text-align:center;
       color:var(--muted);
-      padding:28px 10px;
+      padding:24px 10px;
       font-size:14px;
     }
 
-    .head{
+    .profile-head{
+      display:grid;
+      grid-template-columns:76px 1fr;
+      gap:12px;
+      align-items:start;
+    }
+    .avatar{
+      width:76px;
+      height:76px;
+      border-radius:50%;
+      object-fit:cover;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+    .avatar-placeholder{
+      width:76px;
+      height:76px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.3;
+    }
+
+    .name-row{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:10px;
-      margin-bottom:10px;
+      margin-bottom:2px;
+    }
+    .name-left{
+      min-width:0;
+      flex:1;
+    }
+    .name-inline{
+      display:flex;
+      align-items:center;
+      gap:8px;
       flex-wrap:wrap;
+      min-width:0;
     }
-    .head-title{
-      font-size:18px;
+    .display-name{
+      font-size:22px;
       font-weight:800;
-      line-height:1.25;
-      margin-bottom:4px;
-    }
-    .head-sub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
+      line-height:1.1;
+      word-break:break-word;
     }
 
-    .chip-row{
-      display:flex;
-      gap:7px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
+    .verified-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:20px;
+      height:20px;
+      border-radius:999px;
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+      font-size:11px;
+      font-weight:900;
+      flex-shrink:0;
     }
-    .chip{
+
+    .moderation-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      flex-shrink:0;
+    }
+    .moderation-warn{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .moderation-ban{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+
+    .mini-top-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      flex-shrink:0;
+    }
+    .mini-icon-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:10px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      min-height:30px;
+      height:30px;
+      padding:0 9px;
+      font-size:11px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .mini-icon-btn.report{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
+    }
+    .mini-icon-btn.block{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
+    }
+    .mini-icon-btn.unblock{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.20);
+    }
+
+    .username{
+      color:var(--blue);
+      font-size:13px;
+      font-weight:700;
+      margin-top:2px;
+      word-break:break-word;
+    }
+
+    .verify-row{
+      margin-top:7px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .verify-status{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -144,257 +267,522 @@
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
+      line-height:1.2;
     }
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .verify-status.verified{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.20);
+      color:#d9ffe8;
+    }
+    .verify-status.not-verified{
+      background:rgba(255,255,255,.05);
+      border-color:var(--line);
+      color:var(--muted);
+    }
 
-    .quick-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-    .quick-btn{
-      border:none;
-      border-radius:12px;
-      padding:10px 12px;
+    .info-label{
       font-size:12px;
       font-weight:800;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      min-height:40px;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-    .quick-btn.primary{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+      color:var(--muted);
+      margin-top:10px;
+      margin-bottom:6px;
+      letter-spacing:.1px;
     }
 
-    .meta-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .meta-item{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-    }
-    .meta-item small{
-      display:block;
-      color:var(--muted);
-      margin-bottom:6px;
-      font-size:11px;
-    }
-    .meta-item span{
-      font-weight:800;
+    .bio{
+      color:var(--text);
+      line-height:1.58;
       font-size:14px;
-      line-height:1.5;
+      white-space:pre-wrap;
       word-break:break-word;
     }
 
-    .section{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
-      margin-top:12px;
-    }
-    .section-title{
-      font-size:15px;
-      font-weight:800;
-      margin-bottom:4px;
-    }
-    .section-sub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-      margin-bottom:10px;
-    }
-
-    .profile-strip{
+    .links-wrap{
       display:grid;
-      grid-template-columns:110px 1fr;
-      gap:12px;
-      align-items:start;
+      gap:8px;
+      margin-top:8px;
     }
-    .photo-preview{
-      width:110px;
-      height:110px;
-      border-radius:18px;
-      object-fit:cover;
-      background:var(--surface-3);
-      border:1px solid var(--line);
-    }
-    .photo-placeholder{
-      width:110px;
-      height:110px;
-      border-radius:18px;
+    .profile-link{
       display:flex;
       align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:10px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-    }
-
-    .form{
-      display:grid;
-      gap:11px;
-    }
-    .field{
-      display:grid;
-      gap:6px;
-    }
-    .label{
-      font-size:12px;
-      font-weight:800;
-      color:var(--text);
-    }
-    .input,
-    .textarea,
-    .select{
-      width:100%;
-      border:none;
-      outline:none;
-      padding:12px 13px;
-      border-radius:15px;
-      background:var(--surface-3);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-size:14px;
-    }
-    .textarea{
-      min-height:100px;
-      resize:vertical;
-      line-height:1.55;
-    }
-    .input::placeholder,
-    .textarea::placeholder{
-      color:var(--muted);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:11px;
-    }
-    .grid-3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:11px;
-    }
-
-    .small-note,
-    .note,
-    .username-note{
-      color:var(--muted);
-      line-height:1.45;
-      font-size:11px;
-    }
-    .small-note,.username-note{margin-top:2px}
-    .note{margin-top:10px}
-
-    .username-status{
-      margin-top:6px;
-      font-size:12px;
-      font-weight:700;
-      min-height:18px;
-    }
-    .username-ok{color:#86efac}
-    .username-bad{color:#fda4af}
-
-    .toggle-list{
-      display:grid;
       gap:8px;
-    }
-    .check-row{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-      padding:11px 12px;
-      border-radius:14px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
-    }
-    .check-row input{
-      width:auto;
-      transform:scale(1.05);
-      accent-color:var(--blue);
-      margin-top:2px;
-    }
-    .check-row label{
-      margin:0;
-      font-size:13px;
-      line-height:1.45;
+      min-width:0;
+      text-decoration:none;
       color:var(--text);
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .profile-link svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+      color:var(--blue);
+    }
+    .profile-link span{
+      min-width:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .row-actions{
+    .meta-row{
       display:flex;
+      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      margin-top:10px;
+      padding-bottom:2px;
+      scrollbar-width:none;
+    }
+    .meta-row::-webkit-scrollbar{display:none}
+    .meta-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1.2;
+      flex-shrink:0;
+    }
+    .meta-public{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .meta-private{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
+    }
+    .meta-location{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .meta-gender{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+    .meta-blocked{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
+    }
+
+    .action-row{
+      display:flex;
+      align-items:center;
       gap:8px;
       flex-wrap:wrap;
+      margin-top:12px;
     }
-    .btn{
+    .action-btn{
       border:none;
       border-radius:12px;
       padding:10px 13px;
-      cursor:pointer;
+      font-size:13px;
       font-weight:800;
+      cursor:pointer;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       min-height:40px;
-      font-size:12px;
     }
-    .btn-preview{
-      background:var(--surface-3);
+    .follow-btn{
+      background:rgba(76,201,255,.14);
       color:var(--text);
-      border:1px solid var(--line);
+      border:1px solid rgba(76,201,255,.20);
     }
-    .btn-save{
-      background:rgba(34,197,94,.14);
-      color:var(--text);
-      border:1px solid rgba(34,197,94,.20);
-      width:100%;
-      font-size:14px;
-      min-height:44px;
-    }
-    .btn-muted{
-      background:var(--surface-3);
-      color:var(--muted);
-      border:1px solid var(--line);
-      cursor:not-allowed;
-      opacity:.85;
-    }
-    .btn-logout{
+    .unfollow-btn{
       background:rgba(255,93,115,.14);
       color:var(--text);
       border:1px solid rgba(255,93,115,.20);
     }
-
-    .message{
-      margin-top:2px;
+    .request-btn{
+      background:rgba(167,139,250,.14);
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .cancel-btn{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .message-btn{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .self-btn{
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:not-allowed;
+    }
+    .action-message{
       min-height:18px;
       font-size:13px;
-      text-align:left;
+      margin-top:10px;
     }
-    .success{color:#86efac}
-    .error{color:#fda4af}
+    .action-message.ok{color:#86efac}
+    .action-message.err{color:#fda4af}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:14px;
+    }
+    .stat{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 8px;
+      text-align:center;
+      cursor:pointer;
+    }
+    .stat-value{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:3px;
+      line-height:1.1;
+    }
+    .stat-label{
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.25;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+    }
+    .tab-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 8px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .tab-btn.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .empty-box{
+      text-align:center;
+      padding:22px 10px;
+      color:var(--muted);
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .dashboard-list{
+      display:grid;
+      gap:12px;
+    }
+    .dashboard-card{
+      display:block;
+      text-decoration:none;
+      color:inherit;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .dashboard-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .dashboard-label{
+      font-size:12px;
+      font-weight:800;
+      color:var(--blue);
+    }
+    .dashboard-time{
+      font-size:11px;
+      color:var(--muted);
+      flex-shrink:0;
+    }
+    .dashboard-text{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.58;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-bottom:10px;
+    }
+    .dashboard-image{
+      width:100%;
+      max-height:340px;
+      object-fit:cover;
+      border-radius:14px;
+      display:block;
+      background:var(--surface-3);
+      border:1px solid var(--line-soft);
+    }
+    .show-more-wrap{
+      margin-top:14px;
+      display:flex;
+      justify-content:center;
+    }
+    .show-more-btn{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      min-height:40px;
+    }
+
+    .photos-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+    }
+    .photo-tile{
+      aspect-ratio:1/1;
+      border-radius:16px;
+      overflow:hidden;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      display:block;
+      text-decoration:none;
+    }
+    .photo-tile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .events-grid,.places-grid{
+      display:grid;
+      gap:12px;
+    }
+    .event-card,.place-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .event-title,.place-title{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:10px;
+      line-height:1.4;
+    }
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .badge-private{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .badge-created{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .badge-joined{
+      background:rgba(167,139,250,.14);
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .badge-visited{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .badge-explored{
+      background:rgba(245,185,66,.14);
+      color:var(--text);
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .badge-added{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .event-meta,.place-meta{
+      display:grid;
+      gap:6px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:10px;
+    }
+    .event-desc,.place-desc{
+      color:var(--text);
+      line-height:1.58;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .network-shell{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      margin-bottom:12px;
+    }
+    .network-head{
+      padding:14px;
+      border-bottom:1px solid var(--line-soft);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .network-head-title{
+      font-size:17px;
+      font-weight:800;
+    }
+    .network-close{
+      width:36px;
+      height:36px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:11px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+    .network-close svg{
+      width:16px;
+      height:16px;
+      display:block;
+    }
+    .network-body{
+      padding:14px;
+      display:grid;
+      gap:18px;
+    }
+    .network-section:last-child{margin-bottom:0}
+    .network-title{
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .network-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .person-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .person-avatar,.person-avatar-placeholder{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+    .person-avatar{object-fit:cover}
+    .person-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:10px;
+      text-align:center;
+      padding:6px;
+    }
+    .person-body{
+      min-width:0;
+      flex:1;
+    }
+    .person-name{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .person-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+    .person-name a:hover{text-decoration:underline}
+    .person-username{
+      font-size:12px;
+      color:var(--blue);
+      font-weight:700;
+      margin-top:3px;
+    }
+    .person-sub{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .lock-box{
+      text-align:center;
+      padding:24px 14px;
+      background:var(--surface-2);
+      border-radius:18px;
+      border:1px dashed var(--line);
+    }
+    .lock-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .lock-text{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.65;
+    }
 
     .bottom-nav{
       position:fixed;
@@ -450,18 +838,30 @@
     }
 
     @media (max-width:700px){
-      .meta-grid,.grid,.grid-3{grid-template-columns:1fr}
-      .profile-strip{grid-template-columns:1fr}
-      .photo-preview,.photo-placeholder{width:100%;max-width:120px}
-      .quick-actions .quick-btn,
-      .row-actions .btn{flex:1}
+      body{padding:10px 10px 108px}
+      .brand{font-size:18px}
+      .profile-head{grid-template-columns:72px 1fr}
+      .avatar,.avatar-placeholder{width:72px;height:72px}
+      .display-name{font-size:20px}
+      .photos-grid{grid-template-columns:repeat(3,1fr)}
+      .tabs{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media (max-width:420px){
+      .display-name{font-size:19px}
+      .photos-grid{grid-template-columns:repeat(3,1fr)}
+      .stats{gap:6px}
+      .stat{padding:9px 6px}
+      .stat-value{font-size:15px}
+      .stat-label{font-size:10px}
+      .tab-btn{font-size:11px;padding:10px 4px}
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="profile.html" class="top-icon-btn" aria-label="Back">
+      <a href="feed.html" class="top-icon-btn" aria-label="Back to feed">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
@@ -469,216 +869,159 @@
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
-        <div class="brand-sub">Edit profile</div>
+        <div class="brand-sub">Member profile</div>
       </div>
 
-      <a href="settings.html" class="top-icon-btn" aria-label="Settings">
+      <a href="profile.html" class="top-icon-btn" aria-label="My profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-.33-1 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.33H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 .33 1 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.27.3.46.65.6 1 .14.33.21.68.21 1.03s-.07.7-.21 1.03c-.14.35-.33.7-.6.97z"></path>
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </a>
     </div>
 
-    <div class="panel">
-      <div id="loading" class="loading">Loading profile...</div>
+    <div class="shell">
+      <div class="section">
+        <div id="loading" class="loading">Loading member profile...</div>
 
-      <div id="profileContent" class="hidden">
-        <div class="head">
-          <div>
-            <div class="head-title">Edit Your Profile</div>
-            <div class="head-sub">Update your public info, links, location and nearby visibility from one place.</div>
-          </div>
-        </div>
+        <div id="content" class="hidden">
+          <div class="profile-head">
+            <img id="avatar" class="avatar hidden" alt="Profile Photo" />
+            <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-        <div class="chip-row">
-          <span class="chip chip-blue">Public profile sync</span>
-          <span class="chip chip-green">Location search ready</span>
-          <span class="chip chip-purple">2 profile links</span>
-          <span class="chip chip-yellow">Nearby support</span>
-        </div>
+            <div>
+              <div class="name-row">
+                <div class="name-left">
+                  <div class="name-inline">
+                    <div class="display-name" id="displayName">Member</div>
+                    <span id="verifiedDot" class="verified-dot hidden">✓</span>
+                    <span id="moderationBadge" class="moderation-badge hidden">!</span>
+                  </div>
+                  <div id="usernameText" class="username hidden">@username</div>
+                </div>
 
-        <div class="quick-actions">
-          <a href="profile.html" class="quick-btn">My Profile</a>
-          <a href="nearby.html" class="quick-btn">Nearby</a>
-          <a href="settings.html" class="quick-btn primary">Settings</a>
-        </div>
-
-        <div class="meta-grid">
-          <div class="meta-item">
-            <small>Email</small>
-            <span id="emailText">-</span>
-          </div>
-          <div class="meta-item">
-            <small>Verified Status</small>
-            <span id="verifiedText">No</span>
-          </div>
-          <div class="meta-item">
-            <small>Current Nearby Status</small>
-            <span id="nearbyStatusText">Visible</span>
-          </div>
-        </div>
-
-        <form id="profileForm" class="form">
-          <div class="section">
-            <div class="section-title">Basic Info</div>
-            <div class="section-sub">This is what people mainly see first.</div>
-
-            <div class="profile-strip">
-              <div>
-                <img id="photoPreview" class="photo-preview hidden" alt="Profile Preview" />
-                <div id="photoPlaceholder" class="photo-placeholder">No profile photo yet</div>
+                <div id="miniTopActions" class="mini-top-actions"></div>
               </div>
 
-              <div class="field">
-                <label class="label" for="photoURL">Profile Photo Link</label>
-                <input type="text" id="photoURL" class="input" placeholder="Paste direct image link (jpg, png, webp)" />
-                <div class="small-note">Example: https://example.com/photo.jpg</div>
+              <div class="verify-row">
+                <span id="verifiedStatusText" class="verify-status not-verified">Not Verified</span>
+              </div>
 
-                <div class="row-actions" style="margin-top:8px;">
-                  <button type="button" id="previewBtn" class="btn btn-preview">Preview Link</button>
-                  <button type="button" class="btn btn-muted" disabled>Upload Coming Soon</button>
+              <div class="info-label">Description</div>
+              <div class="bio" id="bio">No bio added yet.</div>
+
+              <div id="linksWrap" class="links-wrap hidden"></div>
+
+              <div id="profileMetaRow" class="meta-row"></div>
+
+              <div class="action-row" id="followArea"></div>
+              <div id="actionMessage" class="action-message"></div>
+
+              <div class="stats" id="statsBlock">
+                <div class="stat" id="postsStat">
+                  <div class="stat-value" id="postsCount">0</div>
+                  <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat" id="followersStat">
+                  <div class="stat-value" id="followersCount">0</div>
+                  <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat" id="followingStat">
+                  <div class="stat-value" id="followingCount">0</div>
+                  <div class="stat-label">Following</div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="field">
-              <label class="label" for="displayName">Display Name</label>
-              <input type="text" id="displayName" class="input" placeholder="Your public profile name" required />
-            </div>
+      <div id="lockedWrap" class="section hidden">
+        <div class="lock-box">
+          <div class="lock-title" id="lockedTitle">Private Profile</div>
+          <div class="lock-text" id="lockedText">
+            Follow this member to see their posts and connections.
+          </div>
+        </div>
+      </div>
 
-            <div class="field">
-              <label class="label" for="username">Username</label>
-              <input type="text" id="username" class="input" placeholder="Choose a unique username" required />
-              <div class="username-note">
-                3–20 characters. Use only letters, numbers, dot and underscore. Example: ranveer_94
-              </div>
-              <div id="usernameStatus" class="username-status"></div>
-            </div>
+      <div id="tabsWrap" class="section">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="dashboardTab">Dashboard</button>
+          <button class="tab-btn" data-tab="photosTab">Photos</button>
+          <button class="tab-btn" data-tab="eventsTab">Events</button>
+          <button class="tab-btn" data-tab="placesTab">Places</button>
+        </div>
+      </div>
 
-            <div class="field">
-              <label class="label" for="bio">Bio</label>
-              <textarea id="bio" class="textarea" placeholder="Write a short bio..."></textarea>
-            </div>
+      <div id="dashboardTab" class="section">
+        <div id="dashboardList" class="dashboard-list hidden"></div>
+        <div id="dashboardEmpty" class="empty-box hidden">No posts yet.</div>
+        <div id="showMoreWrap" class="show-more-wrap hidden">
+          <button id="showMoreBtn" class="show-more-btn" type="button">Show More</button>
+        </div>
+      </div>
+
+      <div id="photosTab" class="section hidden">
+        <div id="photosGrid" class="photos-grid hidden"></div>
+        <div id="photosEmpty" class="empty-box hidden">No photo posts yet.</div>
+      </div>
+
+      <div id="eventsTab" class="section hidden">
+        <div style="display:grid;gap:18px;">
+          <div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Created Events</div>
+            <div id="createdEventsGrid" class="events-grid hidden"></div>
+            <div id="createdEmpty" class="empty-box hidden">No created events yet.</div>
           </div>
 
-          <div class="section" id="location">
-            <div class="section-title">Location</div>
-            <div class="section-sub">Used by Nearby and Search. Save this in full format so people can find you by city, province/state or country.</div>
+          <div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Joined Events</div>
+            <div id="joinedEventsGrid" class="events-grid hidden"></div>
+            <div id="joinedEmpty" class="empty-box hidden">No joined events yet.</div>
+          </div>
+        </div>
+      </div>
 
-            <div class="grid-3">
-              <div class="field">
-                <label class="label" for="city">City</label>
-                <input type="text" id="city" class="input" placeholder="London" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="province">Province / State</label>
-                <input type="text" id="province" class="input" placeholder="Ontario" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="country">Country</label>
-                <input type="text" id="country" class="input" placeholder="Canada" />
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="label" for="locationVisibility">Nearby Mode</label>
-              <select id="locationVisibility" class="select">
-                <option value="city">Use city match</option>
-                <option value="gps">Use GPS when available</option>
-                <option value="hidden">Hide me from Nearby</option>
-              </select>
-            </div>
-
-            <div class="small-note">Search examples that should work later: London, Ont, Ontario, Can, Canada, England, UK.</div>
-
-            <div class="toggle-list" style="margin-top:10px;">
-              <div class="check-row">
-                <input type="checkbox" id="cityVisible" />
-                <label for="cityVisible">Show my city on profile</label>
-              </div>
-            </div>
+      <div id="placesTab" class="section hidden">
+        <div style="display:grid;gap:18px;">
+          <div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Added Places</div>
+            <div id="addedPlacesGrid" class="places-grid hidden"></div>
+            <div id="addedPlacesEmpty" class="empty-box hidden">No added places yet.</div>
           </div>
 
-          <div class="section">
-            <div class="section-title">Links</div>
-            <div class="section-sub">Add up to 2 links. They only show on profile if a URL is added.</div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="link1Label">Link 1 Label</label>
-                <input type="text" id="link1Label" class="input" placeholder="Instagram" />
-              </div>
-              <div class="field">
-                <label class="label" for="link1">Link 1 URL</label>
-                <input type="text" id="link1" class="input" placeholder="instagram.com/yourname" />
-              </div>
-            </div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="link2Label">Link 2 Label</label>
-                <input type="text" id="link2Label" class="input" placeholder="Website" />
-              </div>
-              <div class="field">
-                <label class="label" for="link2">Link 2 URL</label>
-                <input type="text" id="link2" class="input" placeholder="yourwebsite.com" />
-              </div>
-            </div>
+          <div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Visited Places</div>
+            <div id="visitedPlacesGrid" class="places-grid hidden"></div>
+            <div id="visitedPlacesEmpty" class="empty-box hidden">No visited places yet.</div>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <div class="section">
-            <div class="section-title">More Info</div>
-            <div class="section-sub">Optional details and visibility controls.</div>
+    <div id="networkShell" class="network-shell hidden">
+      <div class="network-head">
+        <div class="network-head-title">Network</div>
+        <button id="closeNetworkBtn" class="network-close" type="button" aria-label="Close network">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
 
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="gender">Gender</label>
-                <select id="gender" class="select">
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="non_binary">Non-binary</option>
-                  <option value="trans_man">Trans Man</option>
-                  <option value="trans_woman">Trans Woman</option>
-                  <option value="genderqueer">Genderqueer</option>
-                  <option value="agender">Agender</option>
-                  <option value="prefer_not_to_say">Prefer not to say</option>
-                  <option value="self_describe">Self-describe</option>
-                </select>
-              </div>
-
-              <div class="field hidden" id="genderCustomWrap">
-                <label class="label" for="genderCustom">Describe Your Gender</label>
-                <input type="text" id="genderCustom" class="input" placeholder="Write your gender" />
-              </div>
-            </div>
-
-            <div class="toggle-list">
-              <div class="check-row">
-                <input type="checkbox" id="genderVisible" />
-                <label for="genderVisible">Show my gender on profile</label>
-              </div>
-
-              <div class="check-row">
-                <input type="checkbox" id="isPrivate" />
-                <label for="isPrivate">Make my profile private</label>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-save" id="saveBtn">Save Profile</button>
-          <div id="message" class="message"></div>
-        </form>
-
-        <div class="note">
-          When you change city / province / country, the searchable location is updated automatically. GPS coordinates can still be refreshed later from Nearby.
+      <div class="network-body">
+        <div class="network-section" id="followersSection">
+          <div class="network-title">Followers</div>
+          <div id="followersList" class="network-list hidden"></div>
+          <div id="followersEmpty" class="empty-box hidden">No followers yet.</div>
         </div>
 
-        <div class="row-actions" style="margin-top:12px;">
-          <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        <div class="network-section" id="followingSection">
+          <div class="network-title">Following</div>
+          <div id="followingList" class="network-list hidden"></div>
+          <div id="followingEmpty" class="empty-box hidden">Not following anyone yet.</div>
         </div>
       </div>
     </div>
@@ -705,16 +1048,6 @@
       <span>Nearby</span>
     </a>
 
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
-        </svg>
-      </span>
-      <span>Create</span>
-    </a>
-
     <a href="search.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -725,7 +1058,17 @@
       <span>Search</span>
     </a>
 
-    <a href="profile.html" class="nav-link active">
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16v12H4z"></path>
+          <path d="M4 7l8 6 8-6"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+    </a>
+
+    <a href="profile.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="4"></circle>
@@ -738,59 +1081,93 @@
 
   <script type="module">
     import { auth, db } from "./firebase.js";
-    import {
-      onAuthStateChanged,
-      signOut,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       doc,
       getDoc,
+      collection,
+      getDocs,
       setDoc,
-      writeBatch,
-      serverTimestamp
+      deleteDoc,
+      addDoc,
+      serverTimestamp,
+      query,
+      where,
+      limit,
+      arrayUnion,
+      arrayRemove
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const loading = document.getElementById("loading");
-    const profileContent = document.getElementById("profileContent");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const profileForm = document.getElementById("profileForm");
-    const saveBtn = document.getElementById("saveBtn");
-    const previewBtn = document.getElementById("previewBtn");
-    const message = document.getElementById("message");
+    const content = document.getElementById("content");
+    const avatar = document.getElementById("avatar");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+    const displayNameEl = document.getElementById("displayName");
+    const verifiedDot = document.getElementById("verifiedDot");
+    const verifiedStatusText = document.getElementById("verifiedStatusText");
+    const usernameText = document.getElementById("usernameText");
+    const bioEl = document.getElementById("bio");
+    const followArea = document.getElementById("followArea");
+    const miniTopActions = document.getElementById("miniTopActions");
+    const profileMetaRow = document.getElementById("profileMetaRow");
+    const moderationBadge = document.getElementById("moderationBadge");
+    const actionMessage = document.getElementById("actionMessage");
+    const linksWrap = document.getElementById("linksWrap");
 
-    const emailText = document.getElementById("emailText");
-    const verifiedText = document.getElementById("verifiedText");
-    const nearbyStatusText = document.getElementById("nearbyStatusText");
+    const statsBlock = document.getElementById("statsBlock");
+    const tabsWrap = document.getElementById("tabsWrap");
+    const lockedWrap = document.getElementById("lockedWrap");
+    const lockedTitle = document.getElementById("lockedTitle");
+    const lockedText = document.getElementById("lockedText");
 
-    const displayNameInput = document.getElementById("displayName");
-    const usernameInput = document.getElementById("username");
-    const usernameStatus = document.getElementById("usernameStatus");
-    const cityInput = document.getElementById("city");
-    const provinceInput = document.getElementById("province");
-    const countryInput = document.getElementById("country");
-    const locationVisibilityInput = document.getElementById("locationVisibility");
-    const bioInput = document.getElementById("bio");
-    const cityVisibleInput = document.getElementById("cityVisible");
-    const isPrivateInput = document.getElementById("isPrivate");
-    const photoURLInput = document.getElementById("photoURL");
-    const genderInput = document.getElementById("gender");
-    const genderCustomInput = document.getElementById("genderCustom");
-    const genderCustomWrap = document.getElementById("genderCustomWrap");
-    const genderVisibleInput = document.getElementById("genderVisible");
+    const postsCountEl = document.getElementById("postsCount");
+    const followersCountEl = document.getElementById("followersCount");
+    const followingCountEl = document.getElementById("followingCount");
 
-    const link1LabelInput = document.getElementById("link1Label");
-    const link1Input = document.getElementById("link1");
-    const link2LabelInput = document.getElementById("link2Label");
-    const link2Input = document.getElementById("link2");
+    const dashboardList = document.getElementById("dashboardList");
+    const dashboardEmpty = document.getElementById("dashboardEmpty");
+    const showMoreWrap = document.getElementById("showMoreWrap");
+    const showMoreBtn = document.getElementById("showMoreBtn");
 
-    const photoPreview = document.getElementById("photoPreview");
-    const photoPlaceholder = document.getElementById("photoPlaceholder");
+    const photosGrid = document.getElementById("photosGrid");
+    const photosEmpty = document.getElementById("photosEmpty");
 
-    let currentUser = null;
-    let verifiedStatus = false;
-    let originalUsernameLower = "";
-    let originalLocationKey = "";
+    const createdEventsGrid = document.getElementById("createdEventsGrid");
+    const createdEmpty = document.getElementById("createdEmpty");
+    const joinedEventsGrid = document.getElementById("joinedEventsGrid");
+    const joinedEmpty = document.getElementById("joinedEmpty");
+
+    const followersList = document.getElementById("followersList");
+    const followersEmpty = document.getElementById("followersEmpty");
+    const followingList = document.getElementById("followingList");
+    const followingEmpty = document.getElementById("followingEmpty");
+
+    const addedPlacesGrid = document.getElementById("addedPlacesGrid");
+    const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
+    const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
+    const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
+
+    const postsStat = document.getElementById("postsStat");
+    const followersStat = document.getElementById("followersStat");
+    const followingStat = document.getElementById("followingStat");
+    const networkShell = document.getElementById("networkShell");
+    const closeNetworkBtn = document.getElementById("closeNetworkBtn");
+
+    const POST_OWNER_FIELDS = ["userId", "authorId", "uid", "ownerId"];
+
+    let relationshipInfo = {
+      relationship: "none",
+      followDocId: null,
+      requestDocId: null
+    };
+
+    let currentViewerBlockedUsers = [];
+    let currentMemberUid = "";
+    let currentMemberProfile = null;
+    let currentViewerPublicProfile = null;
+
+    let dashboardPosts = [];
+    let dashboardVisibleCount = 10;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -820,219 +1197,1036 @@
       });
     }
 
-    function showMessage(text, type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    function setActionMessage(text = "", type = "") {
+      actionMessage.textContent = text;
+      actionMessage.className = `action-message ${type}`;
     }
 
-    function normalizeUsername(value) {
-      return String(value || "").trim().toLowerCase();
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
     }
 
-    function normalizeText(value) {
-      return String(value || "").trim().toLowerCase();
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
-    function titleText(value) {
-      return String(value || "").trim();
-    }
-
-    function isValidUsername(username) {
-      return /^[a-z0-9._]{3,20}$/.test(username);
-    }
-
-    function setUsernameStatus(text = "", ok = false) {
-      usernameStatus.textContent = text;
-      usernameStatus.className = `username-status ${text ? (ok ? "username-ok" : "username-bad") : ""}`;
-    }
-
-    function showPreview(url) {
-      const cleanUrl = (url || "").trim();
-
-      if (!cleanUrl) {
-        photoPreview.classList.add("hidden");
-        photoPreview.removeAttribute("src");
-        photoPlaceholder.classList.remove("hidden");
-        photoPlaceholder.textContent = "No profile photo yet";
-        return;
-      }
-
-      photoPreview.src = cleanUrl;
-      photoPreview.classList.remove("hidden");
-      photoPlaceholder.classList.add("hidden");
-    }
-
-    function toggleGenderCustom() {
-      if (genderInput.value === "self_describe") {
-        genderCustomWrap.classList.remove("hidden");
-      } else {
-        genderCustomWrap.classList.add("hidden");
-        genderCustomInput.value = "";
-      }
-    }
-
-    function locationKey(city, province, country) {
-      return [normalizeText(city), normalizeText(province), normalizeText(country)].join("|");
-    }
-
-    function countryAliases(country) {
-      const c = normalizeText(country);
-      if (!c) return "";
-      const aliases = [c];
-
-      if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
-      if (c === "canada") aliases.push("ca");
-
-      return aliases.join(" ");
-    }
-
-    function buildLocationSearch(city, province, country) {
-      return [
-        titleText(city),
-        titleText(province),
-        titleText(country),
-        countryAliases(country)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
-    }
-
-    function firstFilled(values) {
-      for (const value of values) {
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
         if (value != null && String(value).trim()) return String(value).trim();
       }
       return "";
     }
 
-    function extractLinksToLoad(raw) {
-      let link1 = firstFilled([raw.link1, raw.url1, raw.website1, raw.site1, raw.social1]);
-      let link1Label = firstFilled([raw.link1Label, raw.url1Label, raw.website1Label, raw.site1Label, raw.social1Label, raw.link1Title]);
+    function extractProfileLinks(raw) {
+      const found = [];
 
-      let link2 = firstFilled([raw.link2, raw.url2, raw.website2, raw.site2, raw.social2]);
-      let link2Label = firstFilled([raw.link2Label, raw.url2Label, raw.website2Label, raw.site2Label, raw.social2Label, raw.link2Title]);
+      const addLink = (url, label) => {
+        const clean = String(url || "").trim();
+        if (!clean) return;
+        found.push({
+          url: clean,
+          href: normalizeHref(clean),
+          label: String(label || clean).trim()
+        });
+      };
 
-      if ((!link1 || !link2) && Array.isArray(raw.links)) {
-        const arr = raw.links.slice(0, 2);
+      addLink(
+        getField(raw, ["link1", "url1", "website1", "site1", "social1"]),
+        getField(raw, ["link1Label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
+      );
 
-        if (!link1 && arr[0]) {
-          if (typeof arr[0] === "string") {
-            link1 = arr[0];
-            link1Label = arr[0];
-          } else {
-            link1 = arr[0].url || arr[0].href || arr[0].link || "";
-            link1Label = arr[0].label || arr[0].title || arr[0].name || link1;
+      addLink(
+        getField(raw, ["link2", "url2", "website2", "site2", "social2"]),
+        getField(raw, ["link2Label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
+      );
+
+      const maybeArray = raw?.links;
+      if (Array.isArray(maybeArray)) {
+        maybeArray.slice(0, 2).forEach(entry => {
+          if (typeof entry === "string") {
+            addLink(entry, entry);
+          } else if (entry && typeof entry === "object") {
+            addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
           }
-        }
+        });
+      }
 
-        if (!link2 && arr[1]) {
-          if (typeof arr[1] === "string") {
-            link2 = arr[1];
-            link2Label = arr[1];
-          } else {
-            link2 = arr[1].url || arr[1].href || arr[1].link || "";
-            link2Label = arr[1].label || arr[1].title || arr[1].name || link2;
-          }
+      const unique = [];
+      const seen = new Set();
+      for (const item of found) {
+        const key = item.href.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
         }
       }
 
+      return unique.slice(0, 2);
+    }
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
       return {
-        link1,
-        link1Label,
-        link2,
-        link2Label
+        uid: (params.get("uid") || "").trim(),
+        memberId: (params.get("memberId") || "").trim(),
+        id: (params.get("id") || "").trim(),
+        userId: (params.get("userId") || "").trim(),
+        username: (params.get("username") || "").trim()
       };
     }
 
-    async function checkUsernameAvailability(rawValue) {
-      const username = normalizeUsername(rawValue);
+    function getMemberKey() {
+      const p = getParams();
+      return p.uid || p.memberId || p.id || p.userId || p.username || "";
+    }
 
-      if (!username) {
-        setUsernameStatus("Username is required.", false);
-        return { ok: false, reason: "empty", username: "" };
+    function normalizeProfile(raw, fallbackUid = "") {
+      const data = raw || {};
+      const city = data.city || data.locationCity || data.currentCity || "";
+      const province = data.province || data.state || data.region || data.locationProvince || data.currentProvince || "";
+      const country = data.country || data.locationCountry || data.currentCountry || "";
+      const genderValue = data.gender === "self_describe"
+        ? (data.genderCustom || "")
+        : (data.gender || "");
+
+      return {
+        uid: data.uid || data.id || fallbackUid || "",
+        displayName: data.displayName || data.name || data.fullName || data.username || "Member",
+        bio: data.bio || data.about || data.description || "",
+        photoURL: data.photoURL || data.avatar || data.avatarUrl || data.userPhotoURL || "",
+        isPrivate: !!(data.isPrivate || data.privateProfile || data.private || data.accountPrivate),
+        moderationStatus: data.moderationStatus || data.status || "",
+        warningUntil: data.warningUntil || null,
+        isHiddenByAdmin: !!data.isHiddenByAdmin,
+        softDeleted: !!data.softDeleted,
+        verified: !!(data.verified || data.isVerified),
+        username: data.username || data.handle || data.userName || "",
+        city,
+        province,
+        country,
+        cityVisible: !!data.cityVisible,
+        gender: genderValue,
+        genderVisible: !!data.genderVisible,
+        links: extractProfileLinks(data)
+      };
+    }
+
+    function normalizePlace(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        name: d.name || d.title || "Untitled Place",
+        category: d.category || "General",
+        city: d.city || "",
+        description: d.description || d.desc || "",
+        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted || d.status === "deleted",
+        creatorId: d.creatorId || d.createdBy || d.userId || d.ownerId || ""
+      };
+    }
+
+    function applyModerationBadge(status, warningUntil) {
+      moderationBadge.className = "moderation-badge hidden";
+      moderationBadge.textContent = "!";
+
+      if (status === "banned") {
+        moderationBadge.className = "moderation-badge moderation-ban";
+        return;
       }
 
-      if (!isValidUsername(username)) {
-        setUsernameStatus("Invalid username format.", false);
-        return { ok: false, reason: "invalid", username };
-      }
+      if (status === "warned" && warningUntil) {
+        const untilMs = warningUntil?.toDate
+          ? warningUntil.toDate().getTime()
+          : new Date(warningUntil).getTime();
 
-      try {
-        const usernameSnap = await getDoc(doc(db, "usernames", username));
-
-        if (!usernameSnap.exists()) {
-          setUsernameStatus("Username available.", true);
-          return { ok: true, reason: "available", username };
+        if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
+          moderationBadge.className = "moderation-badge moderation-warn";
         }
-
-        const ownerUid = usernameSnap.data()?.uid || "";
-        if (ownerUid === auth.currentUser?.uid) {
-          setUsernameStatus("This is your current username.", true);
-          return { ok: true, reason: "own", username };
-        }
-
-        setUsernameStatus("Username already taken.", false);
-        return { ok: false, reason: "taken", username };
-      } catch (err) {
-        console.error("Username check failed:", err);
-        setUsernameStatus("Could not verify username.", false);
-        return { ok: false, reason: "error", username };
       }
     }
 
-    genderInput.addEventListener("change", toggleGenderCustom);
-
-    usernameInput.addEventListener("input", () => {
-      const normalized = normalizeUsername(usernameInput.value);
-      if (usernameInput.value !== normalized) {
-        usernameInput.value = normalized;
+    function showAvatar(url) {
+      const cleanUrl = (url || "").trim();
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatar.removeAttribute("src");
+        avatarPlaceholder.classList.remove("hidden");
+        return;
       }
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
+    }
 
-      if (!normalized) {
-        setUsernameStatus("");
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    function renderVerification(profile) {
+      if (profile.verified) {
+        verifiedDot.classList.remove("hidden");
+        verifiedStatusText.textContent = "Verified";
+        verifiedStatusText.className = "verify-status verified";
+      } else {
+        verifiedDot.classList.add("hidden");
+        verifiedStatusText.textContent = "Not Verified";
+        verifiedStatusText.className = "verify-status not-verified";
+      }
+    }
+
+    function renderLinks(links, canShow) {
+      linksWrap.innerHTML = "";
+
+      if (!canShow || !Array.isArray(links) || !links.length) {
+        linksWrap.classList.add("hidden");
         return;
       }
 
-      setUsernameStatus("");
+      links.forEach(item => {
+        const a = document.createElement("a");
+        a.className = "profile-link";
+        a.href = item.href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
+            <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
+          </svg>
+          <span>${escapeHtml(item.label)}</span>
+        `;
+        linksWrap.appendChild(a);
+      });
+
+      linksWrap.classList.remove("hidden");
+    }
+
+    function formatLocation(profile) {
+      return [profile.city, profile.province, profile.country].filter(Boolean).join(", ");
+    }
+
+    function renderProfileMetaRow(profile, canShowExtendedProfileInfo, isBlockedByViewer) {
+      const parts = [];
+
+      parts.push(`
+        <span class="meta-chip ${profile.isPrivate ? "meta-private" : "meta-public"}">
+          ${profile.isPrivate ? "Private" : "Public"}
+        </span>
+      `);
+
+      if (canShowExtendedProfileInfo && profile.cityVisible) {
+        const location = formatLocation(profile);
+        if (location) {
+          parts.push(`<span class="meta-chip meta-location">${escapeHtml(location)}</span>`);
+        }
+      }
+
+      if (canShowExtendedProfileInfo && profile.genderVisible && String(profile.gender || "").trim()) {
+        parts.push(`<span class="meta-chip meta-gender">${escapeHtml(profile.gender)}</span>`);
+      }
+
+      if (isBlockedByViewer) {
+        parts.push(`<span class="meta-chip meta-blocked">Blocked</span>`);
+      }
+
+      profileMetaRow.innerHTML = parts.join("");
+    }
+
+    function openTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
+
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      if (btn) btn.classList.add("active");
+
+      const panel = document.getElementById(tabId);
+      if (panel) panel.classList.remove("hidden");
+    }
+
+    function openNetwork(sectionId) {
+      networkShell.classList.remove("hidden");
+      setTimeout(() => {
+        const target = document.getElementById(sectionId);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
+    }
+
+    function closeNetwork() {
+      networkShell.classList.add("hidden");
+    }
+
+    closeNetworkBtn.addEventListener("click", closeNetwork);
+
+    postsStat.addEventListener("click", () => openTab("dashboardTab"));
+    followersStat.addEventListener("click", () => openNetwork("followersSection"));
+    followingStat.addEventListener("click", () => openNetwork("followingSection"));
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => openTab(btn.dataset.tab));
     });
 
-    usernameInput.addEventListener("blur", async () => {
-      const normalized = normalizeUsername(usernameInput.value);
-      usernameInput.value = normalized;
+    function setVisibilityMode(mode) {
+      const showContent = mode === "full";
 
-      if (!normalized) {
-        setUsernameStatus("Username is required.", false);
+      statsBlock.classList.toggle("hidden", !showContent);
+      tabsWrap.classList.toggle("hidden", !showContent);
+      lockedWrap.classList.toggle("hidden", showContent);
+
+      if (!showContent) {
+        document.getElementById("dashboardTab").classList.add("hidden");
+        document.getElementById("photosTab").classList.add("hidden");
+        document.getElementById("eventsTab").classList.add("hidden");
+        document.getElementById("placesTab").classList.add("hidden");
+        networkShell.classList.add("hidden");
+      }
+    }
+
+    async function getProfileFromPublicProfilesByKey(key) {
+      if (!key) return null;
+
+      try {
+        const direct = await getDoc(doc(db, "publicProfiles", key));
+        if (direct.exists()) {
+          return normalizeProfile({ id: direct.id, ...direct.data() }, direct.id);
+        }
+      } catch {}
+
+      const fields = ["uid", "username", "handle", "userName"];
+      for (const field of fields) {
+        try {
+          const snap = await getDocs(query(collection(db, "publicProfiles"), where(field, "==", key), limit(1)));
+          if (!snap.empty) {
+            const d = snap.docs[0];
+            return normalizeProfile({ id: d.id, ...d.data() }, d.id);
+          }
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function getProfileLite(uid) {
+      if (!uid) return null;
+      try {
+        const snap = await getDoc(doc(db, "publicProfiles", uid));
+        if (snap.exists()) {
+          return normalizeProfile({ id: snap.id, ...snap.data() }, snap.id);
+        }
+      } catch {}
+      return normalizeProfile({ uid, displayName: "Member" }, uid);
+    }
+
+    function getCreatedMs(obj) {
+      const value = obj?.createdAt || obj?.timestamp || null;
+      if (!value) return 0;
+      if (value?.toDate) return value.toDate().getTime();
+      const ms = new Date(value).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    async function getPostsForMember(memberUid) {
+      const map = new Map();
+
+      for (const field of POST_OWNER_FIELDS) {
+        try {
+          const snap = await getDocs(query(collection(db, "posts"), where(field, "==", memberUid)));
+          snap.forEach(d => {
+            const data = { id: d.id, ...d.data() };
+            if (!data.hidden && !data.hiddenByAdmin && !data.softDeleted) {
+              map.set(d.id, data);
+            }
+          });
+        } catch {}
+      }
+
+      return Array.from(map.values()).sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+    }
+
+    async function getRelationship(viewerUid, memberUid) {
+      let followDocId = null;
+      let requestDocId = null;
+
+      try {
+        const directFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+        if (directFollow.exists()) followDocId = directFollow.id;
+      } catch {}
+
+      if (!followDocId) {
+        try {
+          const followSnap = await getDocs(
+            query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(100))
+          );
+          const found = followSnap.docs.find(d => d.data().followingId === memberUid);
+          if (found) followDocId = found.id;
+        } catch {}
+      }
+
+      try {
+        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+        if (directReq.exists()) requestDocId = directReq.id;
+      } catch {}
+
+      if (!requestDocId) {
+        try {
+          const reqSnap = await getDocs(
+            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
+          );
+          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
+          if (found) requestDocId = found.id;
+        } catch {}
+      }
+
+      let relationship = "none";
+      if (followDocId) relationship = "following";
+      else if (requestDocId) relationship = "requested";
+
+      return { relationship, followDocId, requestDocId };
+    }
+
+    async function getFollowersAndFollowing(memberUid) {
+      let followers = [];
+      let following = [];
+
+      try {
+        const [followersSnap, followingSnap] = await Promise.all([
+          getDocs(query(collection(db, "follows"), where("followingId", "==", memberUid))),
+          getDocs(query(collection(db, "follows"), where("followerId", "==", memberUid)))
+        ]);
+
+        followers = followersSnap.docs.map(d => d.data().followerId).filter(Boolean);
+        following = followingSnap.docs.map(d => d.data().followingId).filter(Boolean);
+      } catch {}
+
+      return { followers, following };
+    }
+
+    async function removeExistingRelations(viewerUid, memberUid) {
+      try {
+        const [myFollowingSnap, myFollowerSnap, myOutgoingReqSnap, myIncomingReqSnap] = await Promise.all([
+          getDocs(query(collection(db, "follows"), where("followerId", "==", viewerUid))),
+          getDocs(query(collection(db, "follows"), where("followingId", "==", viewerUid))),
+          getDocs(query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid))),
+          getDocs(query(collection(db, "follow_requests"), where("targetId", "==", viewerUid)))
+        ]);
+
+        const deletePromises = [];
+
+        myFollowingSnap.docs.forEach(d => {
+          const data = d.data();
+          if (data.followingId === memberUid) deletePromises.push(deleteDoc(d.ref));
+        });
+
+        myFollowerSnap.docs.forEach(d => {
+          const data = d.data();
+          if (data.followerId === memberUid) deletePromises.push(deleteDoc(d.ref));
+        });
+
+        myOutgoingReqSnap.docs.forEach(d => {
+          const data = d.data();
+          if (data.targetId === memberUid) deletePromises.push(deleteDoc(d.ref));
+        });
+
+        myIncomingReqSnap.docs.forEach(d => {
+          const data = d.data();
+          if (data.requesterId === memberUid) deletePromises.push(deleteDoc(d.ref));
+        });
+
+        await Promise.all(deletePromises);
+      } catch (err) {
+        console.warn("Relation cleanup failed:", err);
+      }
+    }
+
+    function renderDashboardPosts() {
+      dashboardList.innerHTML = "";
+
+      if (!dashboardPosts.length) {
+        dashboardList.classList.add("hidden");
+        dashboardEmpty.classList.remove("hidden");
+        showMoreWrap.classList.add("hidden");
         return;
       }
 
-      await checkUsernameAvailability(normalized);
+      dashboardEmpty.classList.add("hidden");
+      dashboardList.classList.remove("hidden");
+
+      const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
+
+      visiblePosts.forEach(post => {
+        const card = document.createElement("a");
+        card.className = "dashboard-card";
+        card.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+
+        const caption = post.caption || post.text || post.content || "";
+        const imageUrl = post.imageURL || post.imageUrl || post.photoURL || post.mediaUrl || "";
+
+        card.innerHTML = `
+          <div class="dashboard-top">
+            <div class="dashboard-label">Recent Post</div>
+            <div class="dashboard-time">${escapeHtml(post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : "Just now")}</div>
+          </div>
+          ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
+          ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
+        `;
+
+        const img = card.querySelector(".dashboard-image");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+        }
+
+        dashboardList.appendChild(card);
+      });
+
+      if (dashboardPosts.length > dashboardVisibleCount) {
+        showMoreWrap.classList.remove("hidden");
+      } else {
+        showMoreWrap.classList.add("hidden");
+      }
+    }
+
+    showMoreBtn.addEventListener("click", () => {
+      dashboardVisibleCount += 10;
+      renderDashboardPosts();
     });
 
-    photoPreview.addEventListener("error", () => {
-      photoPreview.classList.add("hidden");
-      photoPlaceholder.classList.remove("hidden");
-      photoPlaceholder.textContent = "Image could not be loaded";
-    });
+    function renderPhotos(posts) {
+      photosGrid.innerHTML = "";
 
-    photoPreview.addEventListener("load", () => {
-      photoPreview.classList.remove("hidden");
-      photoPlaceholder.classList.add("hidden");
-    });
-
-    previewBtn.addEventListener("click", () => {
-      const url = photoURLInput.value.trim();
-
-      if (!url) {
-        showMessage("Paste a photo link first.", "error");
-        showPreview("");
+      if (!posts.length) {
+        photosGrid.classList.add("hidden");
+        photosEmpty.classList.remove("hidden");
         return;
       }
 
-      showPreview(url);
-      showMessage("Preview updated.", "success");
-    });
+      photosEmpty.classList.add("hidden");
+      photosGrid.classList.remove("hidden");
+
+      posts.forEach(post => {
+        const imageUrl = post.imageURL || post.imageUrl || post.photoURL || post.mediaUrl || "";
+        if (!imageUrl) return;
+
+        const tile = document.createElement("a");
+        tile.className = "photo-tile";
+        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+        tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
+
+        const img = tile.querySelector("img");
+        img.addEventListener("error", () => {
+          tile.remove();
+          if (!photosGrid.children.length) {
+            photosGrid.classList.add("hidden");
+            photosEmpty.classList.remove("hidden");
+          }
+        });
+
+        photosGrid.appendChild(tile);
+      });
+
+      if (!photosGrid.children.length) {
+        photosGrid.classList.add("hidden");
+        photosEmpty.classList.remove("hidden");
+      }
+    }
+
+    function renderEvents(list, container, emptyEl, typeLabel) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(event => {
+        const card = document.createElement("div");
+        card.className = "event-card";
+
+        card.innerHTML = `
+          <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
+
+          <div class="badge-row">
+            ${event.visibility === "private" ? `<span class="badge badge-private">Private</span>` : ``}
+            <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
+          </div>
+
+          <div class="event-meta">
+            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
+            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
+          </div>
+
+          <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function getPlaceStatusFromDoc(place, uid) {
+      const arrayVisitedFields = ["visitedBy", "visitedUsers", "visitors"];
+      const arrayExploredFields = ["exploredBy", "exploredUsers", "explorers"];
+
+      for (const key of arrayVisitedFields) {
+        if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
+      }
+      for (const key of arrayExploredFields) {
+        if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
+      }
+
+      if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
+        return String(place.userStatuses[uid]).toLowerCase();
+      }
+
+      if (place.peopleStatus && typeof place.peopleStatus === "object" && place.peopleStatus[uid]) {
+        return String(place.peopleStatus[uid]).toLowerCase();
+      }
+
+      return "";
+    }
+
+    function getVisitedPlaces(uid, placesSnap, placeVisitsSnap) {
+      const map = new Map();
+
+      if (placeVisitsSnap && placeVisitsSnap.docs) {
+        placeVisitsSnap.docs.forEach(d => {
+          const raw = d.data() || {};
+          const userId = raw.userId || raw.uid || raw.memberId || "";
+          const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || raw.id || "";
+          const statusRaw = String(raw.status || raw.type || "").toLowerCase();
+
+          if (userId !== uid || !placeId) return;
+
+          let status = "";
+          if (statusRaw.includes("visited")) status = "visited";
+          else if (statusRaw.includes("explored")) status = "explored";
+          else if (raw.visited === true) status = "visited";
+          else if (raw.explored === true) status = "explored";
+          else status = "visited";
+
+          map.set(placeId, {
+            placeId,
+            userStatus: status
+          });
+        });
+      }
+
+      if (placesSnap && placesSnap.docs) {
+        placesSnap.docs.forEach(d => {
+          const place = d.data() || {};
+          if (place.hidden || place.hiddenByAdmin || place.softDeleted) return;
+
+          const detectedStatus = getPlaceStatusFromDoc(place, uid);
+          if (!detectedStatus && !map.has(d.id)) return;
+
+          const base = normalizePlace({ id: d.id, ...place }, d.id);
+          if (base.hidden) return;
+
+          const previous = map.get(d.id) || {};
+          map.set(d.id, {
+            ...base,
+            ...previous,
+            userStatus: detectedStatus || previous.userStatus || "visited"
+          });
+        });
+      }
+
+      return Array.from(map.values()).filter(Boolean);
+    }
+
+    function renderPlaces(list, container, emptyEl, type) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(place => {
+        const card = document.createElement("div");
+        card.className = "place-card";
+
+        const statusBadge = type === "added"
+          ? `<span class="badge badge-added">Added</span>`
+          : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
+
+        card.innerHTML = `
+          <div class="place-title">${escapeHtml(place.name || "Untitled Place")}</div>
+
+          <div class="badge-row">
+            ${statusBadge}
+            ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
+          </div>
+
+          <div class="place-meta">
+            <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
+          </div>
+
+          <div class="place-desc">${escapeHtml(place.description || "No description added.")}</div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    async function renderPeople(ids, listEl, emptyEl, emptyText) {
+      listEl.innerHTML = "";
+
+      const uniqueIds = [...new Set(ids.filter(Boolean))]
+        .filter(uid => !currentViewerBlockedUsers.includes(uid));
+
+      if (!uniqueIds.length) {
+        emptyEl.textContent = emptyText;
+        listEl.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      const profiles = await Promise.all(uniqueIds.map(uid => getProfileLite(uid)));
+
+      emptyEl.classList.add("hidden");
+      listEl.classList.remove("hidden");
+
+      profiles.forEach((p, index) => {
+        const uid = uniqueIds[index];
+        if (!p || p.softDeleted || p.isHiddenByAdmin || p.moderationStatus === "banned") return;
+
+        const card = document.createElement("div");
+        card.className = "person-card";
+
+        const avatarHtml = p?.photoURL
+          ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
+          : `<div class="person-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="person-body">
+            <div class="person-name">
+              <a href="member.html?uid=${encodeURIComponent(uid)}">
+                ${escapeHtml(p?.displayName || "Member")}
+              </a>
+            </div>
+            ${p?.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
+            ${p?.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
+          </div>
+        `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        listEl.appendChild(card);
+      });
+
+      if (!listEl.children.length) {
+        listEl.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        emptyEl.textContent = emptyText;
+      }
+    }
+
+    function getActorName(profileData, authUser) {
+      return profileData?.displayName || authUser?.displayName || authUser?.email || "Someone";
+    }
+
+    async function createNotificationSafe(memberUid, payload) {
+      try {
+        await addDoc(collection(db, "notifications", memberUid, "items"), payload);
+      } catch {}
+    }
+
+    async function blockUser(viewerUid, memberUid) {
+      await setDoc(doc(db, "users", viewerUid), {
+        uid: viewerUid,
+        blockedUsers: arrayUnion(memberUid),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      currentViewerBlockedUsers = [...new Set([...currentViewerBlockedUsers, memberUid])];
+      await removeExistingRelations(viewerUid, memberUid);
+    }
+
+    async function unblockUser(viewerUid, memberUid) {
+      await setDoc(doc(db, "users", viewerUid), {
+        uid: viewerUid,
+        blockedUsers: arrayRemove(memberUid),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      currentViewerBlockedUsers = currentViewerBlockedUsers.filter(uid => uid !== memberUid);
+    }
+
+    function renderTopActions(viewerUid, memberUid, isBlockedByViewer) {
+      miniTopActions.innerHTML = "";
+
+      if (viewerUid === memberUid) return;
+
+      const reportBtn = document.createElement("a");
+      reportBtn.href = `report.html?type=profile&targetId=${encodeURIComponent(memberUid)}&targetUserId=${encodeURIComponent(memberUid)}`;
+      reportBtn.className = "mini-icon-btn report";
+      reportBtn.textContent = "Report";
+      miniTopActions.appendChild(reportBtn);
+
+      const blockBtn = document.createElement("button");
+      blockBtn.className = `mini-icon-btn ${isBlockedByViewer ? "unblock" : "block"}`;
+      blockBtn.textContent = isBlockedByViewer ? "Unblock" : "Block";
+
+      blockBtn.addEventListener("click", async () => {
+        blockBtn.disabled = true;
+        setActionMessage("");
+
+        try {
+          if (isBlockedByViewer) {
+            await unblockUser(viewerUid, memberUid);
+          } else {
+            const ok = confirm("Block this member? They will disappear from your feed, nearby and profile flow.");
+            if (!ok) {
+              blockBtn.disabled = false;
+              return;
+            }
+            await blockUser(viewerUid, memberUid);
+          }
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          setActionMessage(err?.message || `Could not ${isBlockedByViewer ? "unblock" : "block"} this member.`, "err");
+          blockBtn.disabled = false;
+        }
+      });
+
+      miniTopActions.appendChild(blockBtn);
+    }
+
+    function createMessageButton(memberUid) {
+      const link = document.createElement("a");
+      link.className = "action-btn message-btn";
+      link.href = `chat.html?uid=${encodeURIComponent(memberUid)}`;
+      link.textContent = "Message";
+      return link;
+    }
+
+    async function renderFollowActions(viewerUid, memberUid, actorName, isPrivate, relationship, isBlockedByViewer, isBanned) {
+      followArea.innerHTML = "";
+      setActionMessage("");
+
+      if (viewerUid === memberUid) {
+        const selfBtn = document.createElement("button");
+        selfBtn.className = "action-btn self-btn";
+        selfBtn.disabled = true;
+        selfBtn.textContent = "This is you";
+        followArea.appendChild(selfBtn);
+        return;
+      }
+
+      if (isBlockedByViewer || isBanned) return;
+
+      if (relationship === "following") {
+        const btn = document.createElement("button");
+        btn.className = "action-btn unfollow-btn";
+        btn.textContent = "Unfollow";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          setActionMessage("");
+
+          try {
+            if (relationshipInfo.followDocId) {
+              await deleteDoc(doc(db, "follows", relationshipInfo.followDocId));
+            } else {
+              await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+            }
+            window.location.reload();
+          } catch (err) {
+            console.error(err);
+            setActionMessage(err?.message || "Could not unfollow.", "err");
+            btn.disabled = false;
+          }
+        });
+        followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
+        return;
+      }
+
+      if (isPrivate && relationship === "requested") {
+        const btn = document.createElement("button");
+        btn.className = "action-btn cancel-btn";
+        btn.textContent = "Requested";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          setActionMessage("");
+
+          try {
+            if (relationshipInfo.requestDocId) {
+              await deleteDoc(doc(db, "follow_requests", relationshipInfo.requestDocId));
+            } else {
+              await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
+            }
+            window.location.reload();
+          } catch (err) {
+            console.error(err);
+            setActionMessage(err?.message || "Could not cancel request.", "err");
+            btn.disabled = false;
+          }
+        });
+        followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
+        return;
+      }
+
+      if (isPrivate) {
+        const btn = document.createElement("button");
+        btn.className = "action-btn request-btn";
+        btn.textContent = "Follow";
+
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          setActionMessage("");
+
+          try {
+            await setDoc(
+              doc(db, "follow_requests", `${viewerUid}__${memberUid}`),
+              {
+                requesterId: viewerUid,
+                targetId: memberUid,
+                createdAt: serverTimestamp()
+              },
+              { merge: true }
+            );
+
+            await createNotificationSafe(memberUid, {
+              type: "follow_request",
+              title: "Follow request",
+              text: `${actorName} sent you a follow request.`,
+              fromUserId: viewerUid,
+              toUserId: memberUid,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+
+            window.location.reload();
+          } catch (err) {
+            console.error(err);
+            setActionMessage(err?.message || "Could not send follow request.", "err");
+            btn.disabled = false;
+          }
+        });
+
+        followArea.appendChild(btn);
+        followArea.appendChild(createMessageButton(memberUid));
+        return;
+      }
+
+      const btn = document.createElement("button");
+      btn.className = "action-btn follow-btn";
+      btn.textContent = "Follow";
+
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        setActionMessage("");
+
+        try {
+          const existingFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
+          if (existingFollow.exists()) {
+            window.location.reload();
+            return;
+          }
+
+          await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
+            followerId: viewerUid,
+            followingId: memberUid,
+            createdAt: serverTimestamp()
+          });
+
+          await createNotificationSafe(memberUid, {
+            type: "follow",
+            title: "New follower",
+            text: `${actorName} started following you.`,
+            fromUserId: viewerUid,
+            toUserId: memberUid,
+            createdAt: serverTimestamp(),
+            isRead: false
+          });
+
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          setActionMessage(err?.message || "Could not follow this member.", "err");
+          btn.disabled = false;
+        }
+      });
+
+      followArea.appendChild(btn);
+      followArea.appendChild(createMessageButton(memberUid));
+    }
+
+    async function loadMemberEvents(memberUid) {
+      const eventsSnap = await getDocs(collection(db, "events"));
+      const allEvents = eventsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(e => !e.hidden && !e.hiddenByAdmin && !e.softDeleted);
+
+      const createdEvents = allEvents.filter(e => e.creatorId === memberUid);
+
+      const joinedChecks = await Promise.all(
+        allEvents.map(async (event) => {
+          if (event.creatorId === memberUid) return null;
+          try {
+            const joinSnap = await getDoc(doc(db, "events", event.id, "members", memberUid));
+            return joinSnap.exists() ? event : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      return {
+        createdEvents,
+        joinedEvents: joinedChecks.filter(Boolean)
+      };
+    }
+
+    async function loadMemberPlaces(memberUid) {
+      const [placesSnap, placeVisitsSnap] = await Promise.all([
+        getDocs(collection(db, "nearby_places")),
+        getDocs(query(collection(db, "place_visits"), where("userId", "==", memberUid)))
+      ]);
+
+      const allPlaces = placesSnap.docs
+        .map(d => normalizePlace({ id: d.id, ...d.data() }, d.id))
+        .filter(place => !place.hidden);
+
+      const addedPlaces = allPlaces
+        .filter(place => place.creatorId === memberUid)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      const visitedPlaces = getVisitedPlaces(memberUid, placesSnap, placeVisitsSnap)
+        .filter(place => place.creatorId !== memberUid || place.userStatus)
+        .sort((a, b) => {
+          if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
+          if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
+          return (a.name || "").localeCompare(b.name || "");
+        });
+
+      return { addedPlaces, visitedPlaces };
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -1040,259 +2234,166 @@
         return;
       }
 
-      currentUser = user;
-      emailText.textContent = user.email || "-";
+      const memberKey = getMemberKey();
+      if (!memberKey) {
+        loading.textContent = "No member selected.";
+        return;
+      }
 
       try {
-        const userRef = doc(db, "users", user.uid);
-        const publicRef = doc(db, "publicProfiles", user.uid);
-
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(userRef),
-          getDoc(publicRef)
+        const [profile, myPublicSnap, myUserSnap] = await Promise.all([
+          getProfileFromPublicProfilesByKey(memberKey),
+          getDoc(doc(db, "publicProfiles", user.uid)),
+          getDoc(doc(db, "users", user.uid))
         ]);
 
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        const publicData = publicSnap.exists() ? publicSnap.data() : {};
-        const merged = { ...publicData, ...userData };
-
-        const links = extractLinksToLoad(merged);
-
-        const city = merged.city || merged.locationCity || merged.currentCity || "";
-        const province = merged.province || merged.state || merged.region || merged.locationProvince || merged.currentProvince || "";
-        const country = merged.country || merged.locationCountry || merged.currentCountry || "";
-        const locationVisibility =
-          merged.locationVisibility ||
-          merged.nearbyMode ||
-          (merged.showInNearby === false ? "hidden" : "city");
-
-        displayNameInput.value = merged.displayName || user.displayName || "";
-        usernameInput.value = normalizeUsername(merged.username || merged.handle || merged.userName || "");
-        cityInput.value = city;
-        provinceInput.value = province;
-        countryInput.value = country;
-        locationVisibilityInput.value = locationVisibility;
-        bioInput.value = merged.bio || "";
-        cityVisibleInput.checked = !!merged.cityVisible;
-        isPrivateInput.checked = !!(merged.isPrivate || merged.privateProfile || merged.private || merged.accountPrivate);
-        photoURLInput.value = merged.photoURL || merged.userPhotoURL || "";
-        genderInput.value = merged.gender || "";
-        genderCustomInput.value = merged.genderCustom || "";
-        genderVisibleInput.checked = !!merged.genderVisible;
-
-        link1Input.value = links.link1 || "";
-        link1LabelInput.value = links.link1Label || "";
-        link2Input.value = links.link2 || "";
-        link2LabelInput.value = links.link2Label || "";
-
-        verifiedStatus = !!(merged.isVerified || merged.verified);
-        verifiedText.textContent = verifiedStatus ? "Yes" : "No";
-        nearbyStatusText.textContent = locationVisibility === "hidden" ? "Hidden" : "Visible";
-
-        originalUsernameLower = normalizeUsername(merged.username || "");
-        originalLocationKey = locationKey(city, province, country);
-
-        toggleGenderCustom();
-        showPreview(photoURLInput.value);
-
-        if (usernameInput.value) {
-          await checkUsernameAvailability(usernameInput.value);
-        }
-
-        loading.classList.add("hidden");
-        profileContent.classList.remove("hidden");
-      } catch (error) {
-        console.error(error);
-        loading.textContent = "Error loading profile.";
-      }
-    });
-
-    profileForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!currentUser) return;
-
-      const displayName = displayNameInput.value.trim();
-      const username = normalizeUsername(usernameInput.value);
-      const city = cityInput.value.trim();
-      const province = provinceInput.value.trim();
-      const country = countryInput.value.trim();
-      const locationVisibility = locationVisibilityInput.value || "city";
-      const showInNearby = locationVisibility !== "hidden";
-      const bio = bioInput.value.trim();
-      const cityVisible = cityVisibleInput.checked;
-      const isPrivate = isPrivateInput.checked;
-      const photoURL = photoURLInput.value.trim();
-      const gender = genderInput.value;
-      const genderCustom = gender === "self_describe" ? genderCustomInput.value.trim() : "";
-      const genderVisible = genderVisibleInput.checked;
-
-      let link1 = link1Input.value.trim();
-      let link1Label = link1LabelInput.value.trim();
-      let link2 = link2Input.value.trim();
-      let link2Label = link2LabelInput.value.trim();
-
-      if (link1 && !link1Label) link1Label = link1;
-      if (link2 && !link2Label) link2Label = link2;
-
-      if (!link1) link1Label = "";
-      if (!link2) link2Label = "";
-
-      if (!displayName) {
-        showMessage("Display name is required.", "error");
-        return;
-      }
-
-      if (!username) {
-        showMessage("Username is required.", "error");
-        setUsernameStatus("Username is required.", false);
-        return;
-      }
-
-      if (!isValidUsername(username)) {
-        showMessage("Username must be 3-20 characters and only use letters, numbers, dot or underscore.", "error");
-        setUsernameStatus("Invalid username format.", false);
-        return;
-      }
-
-      if (gender === "self_describe" && !genderCustom) {
-        showMessage("Please describe your gender.", "error");
-        return;
-      }
-
-      const hasAnyLocation = !!(city || province || country);
-
-      if (hasAnyLocation && !(city && province && country)) {
-        showMessage("Complete your full location: city, province/state and country.", "error");
-        return;
-      }
-
-      if (locationVisibility !== "hidden" && !(city && province && country)) {
-        showMessage("Add city, province/state and country, or set Nearby Mode to hidden.", "error");
-        return;
-      }
-
-      const locationSearch = city && province && country
-        ? buildLocationSearch(city, province, country)
-        : "";
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
-
-      try {
-        const availability = await checkUsernameAvailability(username);
-        if (!availability.ok && availability.reason !== "own") {
-          showMessage("Please choose a different username.", "error");
-          saveBtn.disabled = false;
-          saveBtn.textContent = "Save Profile";
+        if (!profile || !profile.uid) {
+          loading.textContent = "Member profile not found.";
           return;
         }
 
-        const batch = writeBatch(db);
+        currentMemberUid = profile.uid;
+        currentMemberProfile = profile;
+        currentViewerPublicProfile = myPublicSnap.exists() ? myPublicSnap.data() : null;
+        currentViewerBlockedUsers = Array.isArray(myUserSnap.exists() ? myUserSnap.data().blockedUsers : [])
+          ? myUserSnap.data().blockedUsers
+          : [];
 
-        if (originalUsernameLower && originalUsernameLower !== username) {
-          batch.delete(doc(db, "usernames", originalUsernameLower));
+        const memberUid = profile.uid;
+        const isSelf = user.uid === memberUid;
+        const isPrivate = !!profile.isPrivate;
+        const isBanned = profile.moderationStatus === "banned" || profile.isHiddenByAdmin || profile.softDeleted;
+        const isBlockedByViewer = currentViewerBlockedUsers.includes(memberUid);
+
+        const [relationship, network, memberPosts] = await Promise.all([
+          getRelationship(user.uid, memberUid),
+          getFollowersAndFollowing(memberUid),
+          getPostsForMember(memberUid)
+        ]);
+
+        relationshipInfo = relationship;
+
+        const alreadyFollowing = relationship.relationship === "following";
+        const canViewFull = !isBanned && !isBlockedByViewer && (isSelf || !isPrivate || alreadyFollowing);
+        const canShowBasicInfo = !isBanned && !isBlockedByViewer;
+
+        displayNameEl.textContent = profile.displayName || "Member";
+
+        if (profile.username) {
+          usernameText.textContent = "@" + profile.username;
+          usernameText.classList.remove("hidden");
+        } else {
+          usernameText.classList.add("hidden");
         }
 
-        batch.set(doc(db, "usernames", username), {
-          uid: currentUser.uid,
-          username,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        showAvatar(profile.photoURL || "");
+        renderVerification(profile);
+        applyModerationBadge(profile.moderationStatus, profile.warningUntil);
 
-        const userRef = doc(db, "users", currentUser.uid);
-        const publicProfileRef = doc(db, "publicProfiles", currentUser.uid);
-
-        const locationPayload = {
-          city,
-          locationCity: city,
-          currentCity: city,
-          province,
-          state: province,
-          region: province,
-          locationProvince: province,
-          currentProvince: province,
-          country,
-          locationCountry: country,
-          currentCountry: country,
-          locationSearch,
-          showInNearby,
-          locationVisibility,
-          nearbyMode: locationVisibility
-        };
-
-        if (locationKey(city, province, country) !== originalLocationKey) {
-          locationPayload.lat = null;
-          locationPayload.lng = null;
+        if (isBanned) {
+          bioEl.textContent = "This account was removed for policy violation.";
+          lockedTitle.textContent = "Account Removed";
+          lockedText.textContent = "This account was removed for policy violation.";
+        } else if (isBlockedByViewer) {
+          bioEl.textContent = "You blocked this member.";
+          lockedTitle.textContent = "Blocked Member";
+          lockedText.textContent = "Unblock this member to view their posts, followers and following again.";
+        } else {
+          bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
+          if (!canViewFull && isPrivate) {
+            lockedTitle.textContent = "Private Profile";
+            lockedText.textContent = relationship.relationship === "requested"
+              ? "Your follow request is pending approval."
+              : "Follow this member to see their posts and connections.";
+          }
         }
 
-        const commonPayload = {
-          uid: currentUser.uid,
-          email: currentUser.email || "",
-          displayName,
-          displayNameLower: displayName.toLowerCase(),
-          username,
-          usernameLower: username,
-          bio,
-          cityVisible,
+        renderLinks(profile.links || [], canShowBasicInfo);
+        renderProfileMetaRow(profile, canShowBasicInfo, isBlockedByViewer);
+        renderTopActions(user.uid, memberUid, isBlockedByViewer);
+
+        await renderFollowActions(
+          user.uid,
+          memberUid,
+          getActorName(currentViewerPublicProfile, user),
           isPrivate,
-          private: isPrivate,
-          privateProfile: isPrivate,
-          accountPrivate: isPrivate,
-          isVerified: verifiedStatus,
-          verified: verifiedStatus,
-          photoURL,
-          userPhotoURL: photoURL,
-          gender,
-          genderCustom,
-          genderVisible,
-          link1,
-          link1Label,
-          link2,
-          link2Label,
-          updatedAt: serverTimestamp()
-        };
+          relationship.relationship,
+          isBlockedByViewer,
+          isBanned
+        );
 
-        batch.set(userRef, {
-          ...commonPayload,
-          ...locationPayload
-        }, { merge: true });
+        followersCountEl.textContent = String(network.followers.filter(uid => !currentViewerBlockedUsers.includes(uid)).length);
+        followingCountEl.textContent = String(network.following.filter(uid => !currentViewerBlockedUsers.includes(uid)).length);
 
-        batch.set(publicProfileRef, {
-          ...commonPayload,
-          ...locationPayload
-        }, { merge: true });
+        if (canViewFull) {
+          setVisibilityMode("full");
 
-        await batch.commit();
+          dashboardPosts = memberPosts;
+          dashboardVisibleCount = 10;
+          postsCountEl.textContent = String(dashboardPosts.length);
+          renderDashboardPosts();
 
-        await updateProfile(currentUser, {
-          displayName,
-          photoURL
-        });
+          const photoPosts = dashboardPosts.filter(p => String(p.imageURL || p.imageUrl || p.photoURL || p.mediaUrl || "").trim());
+          renderPhotos(photoPosts);
 
-        originalUsernameLower = username;
-        originalLocationKey = locationKey(city, province, country);
+          const [{ createdEvents, joinedEvents }, { addedPlaces, visitedPlaces }] = await Promise.all([
+            loadMemberEvents(memberUid),
+            loadMemberPlaces(memberUid)
+          ]);
 
-        nearbyStatusText.textContent = locationVisibility === "hidden" ? "Hidden" : "Visible";
-        showPreview(photoURL);
-        setUsernameStatus("Username saved.", true);
-        showMessage("Profile updated successfully.", "success");
-      } catch (error) {
-        console.error(error);
-        showMessage("Could not save profile.", "error");
-      }
+          renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
+          renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
 
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Save Profile";
-    });
+          renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
+          renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
 
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "login.html";
-      } catch (error) {
-        console.error(error);
-        showMessage("Logout failed.", "error");
+          await Promise.all([
+            renderPeople(network.followers, followersList, followersEmpty, "No followers yet."),
+            renderPeople(network.following, followingList, followingEmpty, "Not following anyone yet.")
+          ]);
+
+          openTab("dashboardTab");
+          closeNetwork();
+        } else {
+          dashboardPosts = memberPosts;
+          postsCountEl.textContent = String(dashboardPosts.length || 0);
+
+          dashboardList.innerHTML = "";
+          photosGrid.innerHTML = "";
+          createdEventsGrid.innerHTML = "";
+          joinedEventsGrid.innerHTML = "";
+          addedPlacesGrid.innerHTML = "";
+          visitedPlacesGrid.innerHTML = "";
+          followersList.innerHTML = "";
+          followingList.innerHTML = "";
+
+          dashboardList.classList.add("hidden");
+          photosGrid.classList.add("hidden");
+          createdEventsGrid.classList.add("hidden");
+          joinedEventsGrid.classList.add("hidden");
+          addedPlacesGrid.classList.add("hidden");
+          visitedPlacesGrid.classList.add("hidden");
+          followersList.classList.add("hidden");
+          followingList.classList.add("hidden");
+
+          dashboardEmpty.classList.add("hidden");
+          photosEmpty.classList.add("hidden");
+          createdEmpty.classList.add("hidden");
+          joinedEmpty.classList.add("hidden");
+          addedPlacesEmpty.classList.add("hidden");
+          visitedPlacesEmpty.classList.add("hidden");
+          followersEmpty.classList.add("hidden");
+          followingEmpty.classList.add("hidden");
+
+          setVisibilityMode("locked");
+          closeNetwork();
+        }
+
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
+      } catch (err) {
+        console.error("Member page load failed:", err);
+        loading.textContent = "Could not load member profile.";
       }
     });
   </script>
