@@ -444,6 +444,7 @@
       <div class="top-actions">
         <a href="edit-profile.html#location" class="action-btn btn-primary">Location Settings</a>
         <button id="gpsBtn2" class="action-btn btn-green" type="button">Use GPS</button>
+        <button id="refreshBtn" class="action-btn btn-yellow" type="button">Refresh</button>
         <a href="add-place.html" class="action-btn btn-purple">Add Place</a>
       </div>
 
@@ -529,7 +530,9 @@
       getDoc,
       getDocs,
       setDoc,
-      collection
+      deleteDoc,
+      collection,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const locationChip = document.getElementById("locationChip");
@@ -539,6 +542,7 @@
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
+    const refreshBtn = document.getElementById("refreshBtn");
     const pageStatus = document.getElementById("pageStatus");
 
     const searchInput = document.getElementById("searchInput");
@@ -551,6 +555,7 @@
     let viewerProfile = null;
     let browserCoords = null;
     let allPlaces = [];
+    let visitStats = new Map();
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
 
@@ -634,24 +639,40 @@
 
     function countryAliases(country) {
       const c = normalizeText(country);
-      if (!c) return "";
+      if (!c) return [];
       const aliases = [c];
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
       if (c === "canada") aliases.push("ca");
-      return aliases.join(" ");
+      return aliases;
+    }
+
+    function buildLocationParts(city, province, country) {
+      return [titleText(city), titleText(province), titleText(country)].filter(Boolean);
     }
 
     function buildLocationSearch(d) {
-      const existing = titleText(d.locationSearch);
       const city = titleText(d.city || d.locationCity || "");
       const province = titleText(d.province || d.state || d.region || "");
       const country = titleText(d.country || d.locationCountry || "");
-      return [existing, city, province, country, countryAliases(country)]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
+      const existing = titleText(d.locationSearch || "");
+      return [
+        existing,
+        city,
+        province,
+        country,
+        ...countryAliases(country)
+      ].filter(Boolean).join(" ").trim().toLowerCase();
+    }
+
+    function textMatchesQuery(text, query) {
+      const q = normalizeText(query);
+      if (!q) return true;
+      const base = normalizeText(text);
+      if (!base) return false;
+      if (base.includes(q)) return true;
+      const tokens = q.split(/[\s,]+/).filter(Boolean);
+      return tokens.every(token => base.includes(token));
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -723,13 +744,19 @@
       };
     }
 
+    function placeKey(source, id) {
+      return `${source || "nearby_places"}::${id || ""}`;
+    }
+
+    function getVisitInfo(model) {
+      return visitStats.get(placeKey(model.source, model.id)) || { count: 0, visitedByMe: false };
+    }
+
     function renderViewerLocation() {
       if (!viewerProfile) return;
-      const parts = [viewerProfile.city, viewerProfile.province, viewerProfile.country].filter(Boolean);
+      const parts = buildLocationParts(viewerProfile.city, viewerProfile.province, viewerProfile.country);
       locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
       modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
-      countChip.textContent = "Places: 0";
-
       if (!browserCoords) {
         browserChip.textContent = "Browser GPS off";
         browserChip.className = "chip chip-yellow";
@@ -809,19 +836,19 @@
       listWrap.innerHTML = "";
     }
 
-    function showEmpty(text) {
+    function showEmpty(text, countLabel = "Places: 0") {
       listLoading.classList.add("hidden");
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
-      countChip.textContent = "Places: 0";
+      countChip.textContent = countLabel;
     }
 
-    function showList(count) {
+    function showList(count, prefix = "Places") {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
-      countChip.textContent = `Places: ${count}`;
+      countChip.textContent = `${prefix}: ${count}`;
     }
 
     function getViewerCoords() {
@@ -831,32 +858,51 @@
       };
     }
 
-    function buildNearbyPlaces() {
-      const q = normalizeText(searchInput.value);
+    function placeMatchesSavedLocation(model) {
       const viewerCity = normalizeText(viewerProfile?.city);
       const viewerProvince = normalizeText(viewerProfile?.province);
       const viewerCountry = normalizeText(viewerProfile?.country);
-      const viewerHasSavedLocation = !!viewerCity && !!viewerProvince && !!viewerCountry;
+
+      const city = normalizeText(model.city);
+      const province = normalizeText(model.province);
+      const country = normalizeText(model.country);
+
+      const countryOk = !viewerCountry || !country || viewerCountry === country || countryAliases(country).includes(viewerCountry);
+      const provinceOk = !viewerProvince || !province || viewerProvince === province;
+
+      const exactCity = !!viewerCity && !!city && viewerCity === city && provinceOk && countryOk;
+      if (exactCity) return { ok: true, rank: 1 };
+
+      if (!viewerCity && viewerProvince && province && viewerProvince === province && countryOk) {
+        return { ok: true, rank: 2 };
+      }
+
+      if (!viewerCity && !viewerProvince && viewerCountry && country && countryOk) {
+        return { ok: true, rank: 3 };
+      }
+
+      return { ok: false, rank: 99 };
+    }
+
+    function buildAllRows() {
       const viewerCoords = getViewerCoords();
 
       return allPlaces
-        .filter(model => !model.hidden && !model.rejected && model.approved)
+        .filter(model => !model.hidden && !model.rejected)
+        .filter(model => model.approved || model.createdBy === currentUser.uid)
         .map(model => {
-          const city = normalizeText(model.city);
-          const province = normalizeText(model.province);
-          const country = normalizeText(model.country);
+          const nearbyMatch = placeMatchesSavedLocation(model);
 
-          const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
-          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
-          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
+          const distanceKm =
+            viewerCoords.lat !== null &&
+            viewerCoords.lng !== null &&
+            model.lat !== null &&
+            model.lng !== null
+              ? kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng)
+              : null;
 
-          let distanceKm = null;
-          if (viewerCoords.lat !== null && viewerCoords.lng !== null && model.lat !== null && model.lng !== null) {
-            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng);
-          }
-
-          const withinGpsRange = distanceKm !== null && distanceKm <= 100;
-          const matchesNearby = (viewerHasSavedLocation && sameCity) || withinGpsRange;
+          const gpsNearby = distanceKm !== null && distanceKm <= 100;
+          const visitInfo = getVisitInfo(model);
 
           const searchable = [
             model.name,
@@ -871,20 +917,60 @@
 
           return {
             ...model,
-            sameCity,
             distanceKm,
-            withinGpsRange,
-            matchesNearby,
-            distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
-            placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
-            searchable
+            distanceLabel: formatDistance(distanceKm),
+            nearbySaved: nearbyMatch.ok,
+            nearbyRank: nearbyMatch.rank,
+            nearbyGps: gpsNearby,
+            searchable,
+            visitedByMe: visitInfo.visitedByMe,
+            visitCount: visitInfo.count,
+            placeLabel: buildLocationParts(model.city, model.province, model.country).join(", ")
           };
-        })
-        .filter(row => row.matchesNearby)
-        .filter(row => !q || row.searchable.includes(q))
+        });
+    }
+
+    function buildVisibleRows() {
+      const q = normalizeText(searchInput.value);
+      const rows = buildAllRows();
+
+      if (q) {
+        return rows
+          .filter(row => textMatchesQuery(row.searchable, q))
+          .sort((a, b) => {
+            const aTitleStarts = normalizeText(a.name).startsWith(q) ? 1 : 0;
+            const bTitleStarts = normalizeText(b.name).startsWith(q) ? 1 : 0;
+            if (aTitleStarts !== bTitleStarts) return bTitleStarts - aTitleStarts;
+
+            const aLocationStarts = normalizeText(a.placeLabel).startsWith(q) ? 1 : 0;
+            const bLocationStarts = normalizeText(b.placeLabel).startsWith(q) ? 1 : 0;
+            if (aLocationStarts !== bLocationStarts) return bLocationStarts - aLocationStarts;
+
+            const aApproved = a.approved ? 1 : 0;
+            const bApproved = b.approved ? 1 : 0;
+            if (aApproved !== bApproved) return bApproved - aApproved;
+
+            const aHasDistance = a.distanceKm !== null;
+            const bHasDistance = b.distanceKm !== null;
+            if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
+            if (aHasDistance && !bHasDistance) return -1;
+            if (bHasDistance && !aHasDistance) return 1;
+
+            return a.name.localeCompare(b.name);
+          });
+      }
+
+      return rows
+        .filter(row => row.nearbySaved || row.nearbyGps || row.createdBy === currentUser.uid)
         .sort((a, b) => {
-          if (a.sameCity && !b.sameCity) return -1;
-          if (b.sameCity && !a.sameCity) return 1;
+          const aMine = a.createdBy === currentUser.uid ? 1 : 0;
+          const bMine = b.createdBy === currentUser.uid ? 1 : 0;
+          if (aMine !== bMine) return bMine - aMine;
+
+          if (a.nearbySaved && !b.nearbySaved) return -1;
+          if (b.nearbySaved && !a.nearbySaved) return 1;
+
+          if (a.nearbyRank !== b.nearbyRank) return a.nearbyRank - b.nearbyRank;
 
           const aHasDistance = a.distanceKm !== null;
           const bHasDistance = b.distanceKm !== null;
@@ -892,27 +978,78 @@
           if (aHasDistance && !bHasDistance) return -1;
           if (bHasDistance && !aHasDistance) return 1;
 
+          const aApproved = a.approved ? 1 : 0;
+          const bApproved = b.approved ? 1 : 0;
+          if (aApproved !== bApproved) return bApproved - aApproved;
+
           return a.name.localeCompare(b.name);
         });
+    }
+
+    async function markBeenThere(model, btn) {
+      btn.disabled = true;
+      setPageStatus("");
+
+      const visitDocId = `${model.source}__${model.id}__${currentUser.uid}`;
+
+      try {
+        await setDoc(doc(db, "place_visits", visitDocId), {
+          source: model.source,
+          placeId: model.id,
+          userId: currentUser.uid,
+          status: "visited",
+          placeName: model.name || "",
+          city: model.city || "",
+          province: model.province || "",
+          country: model.country || "",
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }, { merge: true });
+
+        await refreshAll();
+        setPageStatus("Marked as been there.", "status-ok");
+      } catch (err) {
+        console.error(err);
+        setPageStatus("Could not update place.", "status-err");
+        btn.disabled = false;
+      }
+    }
+
+    async function unmarkBeenThere(model, btn) {
+      btn.disabled = true;
+      setPageStatus("");
+
+      const visitDocId = `${model.source}__${model.id}__${currentUser.uid}`;
+
+      try {
+        await deleteDoc(doc(db, "place_visits", visitDocId));
+        await refreshAll();
+        setPageStatus("Removed been there.", "status-ok");
+      } catch (err) {
+        console.error(err);
+        setPageStatus("Could not update place.", "status-err");
+        btn.disabled = false;
+      }
     }
 
     function renderPlaces() {
       openLoading();
 
-      const viewerHasLocation =
-        !!normalizeText(viewerProfile?.city) &&
-        !!normalizeText(viewerProfile?.province) &&
+      const q = normalizeText(searchInput.value);
+      const viewerHasSavedLocation =
+        !!normalizeText(viewerProfile?.city) ||
+        !!normalizeText(viewerProfile?.province) ||
         !!normalizeText(viewerProfile?.country);
 
-      const rows = buildNearbyPlaces();
+      const rows = buildVisibleRows();
 
-      if (!viewerHasLocation && !browserCoords) {
-        showEmpty("Set your location in profile or use GPS to see nearby places.");
+      if (!q && !viewerHasSavedLocation && !browserCoords) {
+        showEmpty("Set your location in profile, use GPS, or type a city/province/country to search places.", "Places: 0");
         return;
       }
 
       if (!rows.length) {
-        showEmpty("No nearby places found for your current location.");
+        showEmpty(q ? "No matching places found." : "No nearby places found for your current location.", q ? "Results: 0" : "Places: 0");
         return;
       }
 
@@ -924,10 +1061,12 @@
           : "";
 
         const badges = [];
-        badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+        badges.push(`<span class="mini-badge ${model.approved ? "mini-green" : "mini-yellow"}">${model.approved ? "Verified" : "Pending"}</span>`);
         badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "General")}</span>`);
         if (model.distanceLabel) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
         if (model.source) badges.push(`<span class="mini-badge mini-yellow">${escapeHtml(model.source)}</span>`);
+        if (model.createdBy === currentUser.uid) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
+        badges.push(`<span class="mini-badge mini-green">${model.visitCount} been there</span>`);
 
         const websiteHref = normalizeHref(model.website);
 
@@ -945,7 +1084,18 @@
           <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
           <div class="top-actions" style="margin-top:0;">
             <a class="action-btn btn-primary" href="place.html?placeId=${encodeURIComponent(model.id)}&source=${encodeURIComponent(model.source)}">Open</a>
-            ${websiteHref ? `<a class="action-btn btn-green" href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer">Open Link</a>` : ""}
+            ${
+              model.visitedByMe
+                ? `<button class="action-btn btn-red been-there-off-btn" type="button">Undo Been There</button>`
+                : `<button class="action-btn btn-green been-there-on-btn" type="button">Been There</button>`
+            }
+            ${
+              model.createdBy === currentUser.uid
+                ? `<a class="action-btn btn-purple" href="place.html?placeId=${encodeURIComponent(model.id)}&source=${encodeURIComponent(model.source)}">Manage</a>`
+                : websiteHref
+                ? `<a class="action-btn btn-yellow" href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer">Open Link</a>`
+                : ``
+            }
           </div>
         `;
 
@@ -956,10 +1106,24 @@
           });
         }
 
+        const onBtn = card.querySelector(".been-there-on-btn");
+        if (onBtn) {
+          onBtn.addEventListener("click", async () => {
+            await markBeenThere(model, onBtn);
+          });
+        }
+
+        const offBtn = card.querySelector(".been-there-off-btn");
+        if (offBtn) {
+          offBtn.addEventListener("click", async () => {
+            await unmarkBeenThere(model, offBtn);
+          });
+        }
+
         listWrap.appendChild(card);
       });
 
-      showList(rows.length);
+      showList(rows.length, q ? "Results" : "Places");
     }
 
     async function loadViewer(uid) {
@@ -995,9 +1159,48 @@
       allPlaces = merged;
     }
 
+    async function loadVisitStats() {
+      const temp = new Map();
+
+      try {
+        const snap = await getDocs(collection(db, "place_visits"));
+
+        snap.docs.forEach(d => {
+          const raw = d.data() || {};
+          const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || raw.id || "";
+          const source = raw.source || raw.placeSource || raw.collection || "nearby_places";
+          const userId = raw.userId || raw.uid || raw.memberId || "";
+
+          if (!placeId || !userId) return;
+
+          const key = placeKey(source, placeId);
+          if (!temp.has(key)) {
+            temp.set(key, { users: new Set(), visitedByMe: false });
+          }
+
+          const row = temp.get(key);
+          row.users.add(userId);
+          if (userId === currentUser.uid) row.visitedByMe = true;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+
+      visitStats = new Map(
+        Array.from(temp.entries()).map(([key, value]) => [
+          key,
+          {
+            count: value.users.size,
+            visitedByMe: value.visitedByMe
+          }
+        ])
+      );
+    }
+
     async function refreshAll() {
       openLoading();
       await loadPlaces();
+      await loadVisitStats();
       renderViewerLocation();
       renderPlaces();
     }
@@ -1016,6 +1219,7 @@
 
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
+    refreshBtn.addEventListener("click", refreshAll);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
