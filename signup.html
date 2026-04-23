@@ -399,24 +399,13 @@
       </div>
 
       <div class="note">
-        We create both your private account document and public profile document here, so your other pages connect properly right away.
+        This version writes auth + users + public_profiles + usernames in Supabase.
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import {
-      createUserWithEmailAndPassword,
-      updateProfile,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      setDoc,
-      getDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const signupForm = document.getElementById("signupForm");
     const signupBtn = document.getElementById("signupBtn");
@@ -457,6 +446,10 @@
       message.className = `message ${type}`;
     }
 
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
     function normalizeUsername(value) {
       return String(value || "")
         .trim()
@@ -486,12 +479,15 @@
         .padStart(length, "0");
     }
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     async function reserveUsername(uid, requestedUsername, displayName) {
       const requested = normalizeUsername(requestedUsername);
       const base = isValidUsername(requested) ? requested : buildBaseUsername(displayName);
 
-      const candidates = [];
-      candidates.push(base);
+      const candidates = [base];
 
       for (let i = 0; i < 25; i++) {
         const suffix = randomDigits(3);
@@ -502,45 +498,123 @@
       for (const candidate of candidates) {
         if (!isValidUsername(candidate)) continue;
 
-        const usernameRef = doc(db, "usernames", candidate);
-        const usernameSnap = await getDoc(usernameRef);
-
-        if (!usernameSnap.exists()) {
-          await setDoc(usernameRef, {
-            uid,
+        const { error } = await supabase
+          .from("usernames")
+          .insert({
             username: candidate,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          }, { merge: true });
+            uid,
+            created_at: nowIso(),
+            updated_at: nowIso()
+          });
 
+        if (!error) {
           return {
             username: candidate,
             usedFallback: candidate !== requested
           };
         }
 
-        if (usernameSnap.data()?.uid === uid) {
-          await setDoc(usernameRef, {
-            uid,
-            username: candidate,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-
-          return {
-            username: candidate,
-            usedFallback: candidate !== requested
-          };
+        const msg = String(error.message || "").toLowerCase();
+        if (error.code === "23505" || msg.includes("duplicate")) {
+          continue;
         }
+
+        throw error;
       }
 
       throw new Error("username-reservation-failed");
     }
 
-    onAuthStateChanged(auth, (user) => {
-      if (user && !isSubmitting) {
+    async function writeProfileRows(payload) {
+      const userRow = {
+        uid: payload.uid,
+        email: payload.email,
+        display_name: payload.displayName,
+        display_name_lower: normalizeText(payload.displayName),
+        username: payload.username,
+        username_lower: normalizeText(payload.username),
+        real_name: payload.realName,
+        city: payload.city,
+        city_lower: normalizeText(payload.city),
+        city_visible: payload.cityVisible,
+        is_private: payload.isPrivate,
+        is_verified: false,
+        is_adult: true,
+        bio: "",
+        photo_url: "",
+        show_in_nearby: payload.showInNearby,
+        location_visibility: payload.locationVisibility,
+        blocked_users: [],
+        gender: "",
+        gender_custom: "",
+        gender_visible: false,
+        moderation_status: "",
+        warning_until: null,
+        lat: null,
+        lng: null,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      const publicRow = {
+        uid: payload.uid,
+        display_name: payload.displayName,
+        display_name_lower: normalizeText(payload.displayName),
+        username: payload.username,
+        username_lower: normalizeText(payload.username),
+        city: payload.city,
+        city_lower: normalizeText(payload.city),
+        city_visible: payload.cityVisible,
+        is_private: payload.isPrivate,
+        is_verified: false,
+        bio: "",
+        photo_url: "",
+        show_in_nearby: payload.showInNearby,
+        location_visibility: payload.locationVisibility,
+        gender: "",
+        gender_custom: "",
+        gender_visible: false,
+        moderation_status: "",
+        warning_until: null,
+        lat: null,
+        lng: null,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      const { error: userError } = await supabase
+        .from("users")
+        .upsert(userRow, { onConflict: "uid" });
+
+      if (userError) throw userError;
+
+      const { error: publicError } = await supabase
+        .from("public_profiles")
+        .upsert(publicRow, { onConflict: "uid" });
+
+      if (publicError) throw publicError;
+    }
+
+    async function redirectIfLoggedIn() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        if (data?.session?.user && !isSubmitting) {
+          window.location.href = "feed.html";
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+      }
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user && !isSubmitting) {
         window.location.href = "feed.html";
       }
     });
+
+    redirectIfLoggedIn();
 
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -583,101 +657,73 @@
       signupBtn.disabled = true;
       signupBtn.textContent = "Creating...";
       isSubmitting = true;
+      setMessage("");
 
       try {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name: displayName
+            }
+          }
+        });
 
-        const reserved = await reserveUsername(user.uid, normalizedRequested, displayName);
+        if (error) throw error;
+
+        const user = data?.user;
+        const session = data?.session || null;
+
+        if (!user?.id) {
+          throw new Error("signup-user-missing");
+        }
+
+        if (!session) {
+          setMessage("Account created. Confirm your email first, then login.", "success");
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1400);
+          return;
+        }
+
+        const reserved = await reserveUsername(user.id, normalizedRequested, displayName);
         const finalUsername = reserved.username;
         const finalIsPrivate = profileType === "private";
 
-        await updateProfile(user, {
-          displayName
+        await writeProfileRows({
+          uid: user.id,
+          email,
+          displayName,
+          username: finalUsername,
+          realName,
+          city,
+          cityVisible,
+          isPrivate: finalIsPrivate,
+          showInNearby,
+          locationVisibility
         });
 
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          displayName,
-          displayNameLower: displayName.toLowerCase(),
-          username: finalUsername,
-          usernameLower: finalUsername,
-          realName,
-          email,
-          city,
-          cityLower: city.toLowerCase(),
-          cityVisible,
-          isPrivate: finalIsPrivate,
-          privateProfile: finalIsPrivate,
-          private: finalIsPrivate,
-          accountPrivate: finalIsPrivate,
-          isVerified: false,
-          verified: false,
-          isAdult: true,
-          bio: "",
-          photoURL: "",
-          showInNearby,
-          locationVisibility,
-          blockedUsers: [],
-          gender: "",
-          genderCustom: "",
-          genderVisible: false,
-          moderationStatus: "",
-          warningUntil: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-
-        await setDoc(doc(db, "publicProfiles", user.uid), {
-          uid: user.uid,
-          displayName,
-          displayNameLower: displayName.toLowerCase(),
-          username: finalUsername,
-          usernameLower: finalUsername,
-          city,
-          cityLower: city.toLowerCase(),
-          cityVisible,
-          isPrivate: finalIsPrivate,
-          privateProfile: finalIsPrivate,
-          private: finalIsPrivate,
-          accountPrivate: finalIsPrivate,
-          isVerified: false,
-          verified: false,
-          bio: "",
-          photoURL: "",
-          showInNearby,
-          locationVisibility,
-          gender: "",
-          genderCustom: "",
-          genderVisible: false,
-          moderationStatus: "",
-          warningUntil: null,
-          lat: null,
-          lng: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-
         if (reserved.usedFallback) {
-          setMessage(`Account created. Your username was set to @${finalUsername}. You can change it later in Edit Profile.`, "success");
+          setMessage(`Account created. Your username was set to @${finalUsername}. Redirecting...`, "success");
         } else {
           setMessage("Account created successfully. Redirecting...", "success");
         }
 
         setTimeout(() => {
           window.location.href = "feed.html";
-        }, 1100);
-
+        }, 900);
       } catch (error) {
         console.error(error);
 
         let msg = "Could not create account.";
+        const errMsg = String(error?.message || "").toLowerCase();
 
-        if (error.code === "auth/email-already-in-use") {
+        if (errMsg.includes("user already registered") || errMsg.includes("already been registered")) {
           msg = "This email is already in use.";
-        } else if (error.code === "auth/invalid-email") {
+        } else if (errMsg.includes("invalid email")) {
           msg = "Invalid email address.";
-        } else if (error.code === "auth/weak-password") {
+        } else if (errMsg.includes("password")) {
           msg = "Password is too weak.";
         } else if (error.message === "username-reservation-failed") {
           msg = "Could not reserve a username right now. Try again.";
