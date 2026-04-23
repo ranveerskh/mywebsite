@@ -957,878 +957,1022 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      collection,
-      getDocs,
-      query,
-      where,
-      setDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { supabase } from "./supabase.js";
 
-    const loading = document.getElementById("loading");
-    const content = document.getElementById("content");
-    const avatar = document.getElementById("avatar");
-    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
-    const displayNameEl = document.getElementById("displayName");
-    const verifiedDot = document.getElementById("verifiedDot");
-    const usernameText = document.getElementById("usernameText");
-    const bioEl = document.getElementById("bio");
-    const moderationBadge = document.getElementById("moderationBadge");
-    const linksWrap = document.getElementById("linksWrap");
-    const privacyToggleBtn = document.getElementById("privacyToggleBtn");
+  const loading = document.getElementById("loading");
+  const content = document.getElementById("content");
+  const avatar = document.getElementById("avatar");
+  const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+  const displayNameEl = document.getElementById("displayName");
+  const verifiedDot = document.getElementById("verifiedDot");
+  const usernameText = document.getElementById("usernameText");
+  const bioEl = document.getElementById("bio");
+  const moderationBadge = document.getElementById("moderationBadge");
+  const linksWrap = document.getElementById("linksWrap");
+  const privacyToggleBtn = document.getElementById("privacyToggleBtn");
 
-    const profileMeta = document.getElementById("profileMeta");
-    const locationChip = document.getElementById("locationChip");
-    const genderChip = document.getElementById("genderChip");
+  const profileMeta = document.getElementById("profileMeta");
+  const locationChip = document.getElementById("locationChip");
+  const genderChip = document.getElementById("genderChip");
 
-    const postsCountEl = document.getElementById("postsCount");
-    const followersCountEl = document.getElementById("followersCount");
-    const followingCountEl = document.getElementById("followingCount");
+  const postsCountEl = document.getElementById("postsCount");
+  const followersCountEl = document.getElementById("followersCount");
+  const followingCountEl = document.getElementById("followingCount");
 
-    const dashboardList = document.getElementById("dashboardList");
-    const dashboardEmpty = document.getElementById("dashboardEmpty");
-    const showMoreWrap = document.getElementById("showMoreWrap");
-    const showMoreBtn = document.getElementById("showMoreBtn");
+  const dashboardList = document.getElementById("dashboardList");
+  const dashboardEmpty = document.getElementById("dashboardEmpty");
+  const showMoreWrap = document.getElementById("showMoreWrap");
+  const showMoreBtn = document.getElementById("showMoreBtn");
 
-    const photosGrid = document.getElementById("photosGrid");
-    const photosEmpty = document.getElementById("photosEmpty");
+  const photosGrid = document.getElementById("photosGrid");
+  const photosEmpty = document.getElementById("photosEmpty");
 
-    const createdEventsGrid = document.getElementById("createdEventsGrid");
-    const createdEmpty = document.getElementById("createdEmpty");
-    const joinedEventsGrid = document.getElementById("joinedEventsGrid");
-    const joinedEmpty = document.getElementById("joinedEmpty");
+  const createdEventsGrid = document.getElementById("createdEventsGrid");
+  const createdEmpty = document.getElementById("createdEmpty");
+  const joinedEventsGrid = document.getElementById("joinedEventsGrid");
+  const joinedEmpty = document.getElementById("joinedEmpty");
 
-    const followersList = document.getElementById("followersList");
-    const followersEmpty = document.getElementById("followersEmpty");
-    const followingList = document.getElementById("followingList");
-    const followingEmpty = document.getElementById("followingEmpty");
+  const followersList = document.getElementById("followersList");
+  const followersEmpty = document.getElementById("followersEmpty");
+  const followingList = document.getElementById("followingList");
+  const followingEmpty = document.getElementById("followingEmpty");
 
-    const addedPlacesGrid = document.getElementById("addedPlacesGrid");
-    const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
-    const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
-    const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
+  const addedPlacesGrid = document.getElementById("addedPlacesGrid");
+  const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
+  const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
+  const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
 
-    const postsStat = document.getElementById("postsStat");
-    const followersStat = document.getElementById("followersStat");
-    const followingStat = document.getElementById("followingStat");
-    const networkShell = document.getElementById("networkShell");
-    const closeNetworkBtn = document.getElementById("closeNetworkBtn");
+  const postsStat = document.getElementById("postsStat");
+  const followersStat = document.getElementById("followersStat");
+  const followingStat = document.getElementById("followingStat");
+  const networkShell = document.getElementById("networkShell");
+  const closeNetworkBtn = document.getElementById("closeNetworkBtn");
 
-    let currentUserId = "";
-    let currentProfile = null;
-    let dashboardPosts = [];
-    let dashboardVisibleCount = 10;
+  let currentUserId = "";
+  let currentProfile = null;
+  let dashboardPosts = [];
+  let dashboardVisibleCount = 10;
 
-    function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+  const PROFILE_TABLES = {
+    users: ["users"],
+    publicProfiles: ["public_profiles", "publicProfiles"]
+  };
+
+  const POSTS_TABLES = ["posts"];
+  const EVENTS_TABLES = ["events"];
+  const EVENT_MEMBERS_TABLES = ["event_members", "events_members", "eventMembers"];
+  const FOLLOWS_TABLES = ["follows"];
+  const PLACES_TABLES = ["places", "nearby_places", "nudist_places"];
+  const PLACE_VISITS_TABLES = ["place_visits", "placeVisits"];
+
+  function getStoredTheme() {
+    return localStorage.getItem("bwTheme") || "dark";
+  }
+
+  function resolveTheme(themeValue) {
+    if (themeValue === "system") {
+      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
     }
+    return themeValue === "light" ? "light" : "dark";
+  }
 
-    function resolveTheme(themeValue) {
-      if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-      }
-      return themeValue === "light" ? "light" : "dark";
-    }
+  function applyTheme(themeValue) {
+    document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+  }
 
-    function applyTheme(themeValue) {
-      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-    }
+  applyTheme(getStoredTheme());
 
-    applyTheme(getStoredTheme());
+  window.addEventListener("storage", (e) => {
+    if (e.key === "bwTheme") applyTheme(getStoredTheme());
+  });
 
-    window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
     });
+  }
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", () => {
-        if (getStoredTheme() === "system") applyTheme("system");
-      });
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text || "";
+    return div.innerHTML;
+  }
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function normalizeHref(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    return "https://" + value;
+  }
+
+  function getField(raw, names) {
+    for (const name of names) {
+      const value = raw?.[name];
+      if (value != null && String(value).trim()) return String(value).trim();
     }
+    return "";
+  }
 
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.textContent = text || "";
-      return div.innerHTML;
+  function getBool(raw, names) {
+    for (const name of names) {
+      if (raw?.[name] != null) return !!raw[name];
     }
+    return false;
+  }
 
-    function normalizeHref(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
-    }
+  function isMissingTableError(error) {
+    const msg = String(error?.message || "").toLowerCase();
+    return (
+      msg.includes("does not exist") ||
+      msg.includes("relation") && msg.includes("does not exist") ||
+      msg.includes("could not find the table") ||
+      msg.includes("not found in the schema cache")
+    );
+  }
 
-    function getField(raw, names) {
-      for (const name of names) {
-        const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
-      }
-      return "";
-    }
+  async function selectFirstAvailable(tableNames, buildQuery = null) {
+    for (const table of tableNames) {
+      try {
+        let q = supabase.from(table).select("*");
+        if (buildQuery) q = buildQuery(q, table);
+        const { data, error } = await q;
 
-    function extractProfileLinks(raw) {
-      const found = [];
-
-      const addLink = (url, label) => {
-        const clean = String(url || "").trim();
-        if (!clean) return;
-        found.push({
-          url: clean,
-          href: normalizeHref(clean),
-          label: String(label || clean).trim()
-        });
-      };
-
-      addLink(
-        getField(raw, ["link1", "url1", "website1", "site1", "social1"]),
-        getField(raw, ["link1Label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
-      );
-
-      addLink(
-        getField(raw, ["link2", "url2", "website2", "site2", "social2"]),
-        getField(raw, ["link2Label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
-      );
-
-      const maybeArray = raw?.links;
-      if (Array.isArray(maybeArray)) {
-        maybeArray.slice(0, 2).forEach(entry => {
-          if (typeof entry === "string") {
-            addLink(entry, entry);
-          } else if (entry && typeof entry === "object") {
-            addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
-          }
-        });
-      }
-
-      const unique = [];
-      const seen = new Set();
-      for (const item of found) {
-        const key = item.href.toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(item);
+        if (error) {
+          if (isMissingTableError(error)) continue;
+          console.error(`Query error on ${table}:`, error);
+          return { table, data: [], error };
         }
-      }
 
-      return unique.slice(0, 2);
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-      const city = d.city || d.locationCity || d.currentCity || "";
-      const province = d.province || d.state || d.region || d.locationProvince || d.currentProvince || "";
-      const country = d.country || d.locationCountry || d.currentCountry || "";
-      const genderValue = d.gender === "self_describe"
-        ? (d.genderCustom || "")
-        : (d.gender || "");
-
-      return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        bio: d.bio || d.about || d.description || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        moderationStatus: d.moderationStatus || d.status || "",
-        warningUntil: d.warningUntil || null,
-        verified: !!(d.verified || d.isVerified),
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
-        links: extractProfileLinks(d),
-        city,
-        province,
-        country,
-        cityVisible: !!d.cityVisible,
-        gender: genderValue,
-        genderVisible: !!d.genderVisible
-      };
-    }
-
-    function normalizePlace(raw, fallbackId = "") {
-      const d = raw || {};
-      return {
-        id: d.id || fallbackId || "",
-        name: d.name || d.title || "Untitled Place",
-        category: d.category || "General",
-        city: d.city || "",
-        description: d.description || d.desc || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted || d.status === "deleted",
-        creatorId: d.creatorId || d.createdBy || d.userId || d.ownerId || ""
-      };
-    }
-
-    function mergeProfiles(a, b, uid = "") {
-      return normalizeProfile(
-        { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
-        uid || b?.uid || a?.uid || ""
-      );
-    }
-
-    async function safeGetDoc(ref) {
-      try {
-        return await getDoc(ref);
-      } catch {
-        return null;
-      }
-    }
-
-    async function safeGetDocs(ref) {
-      try {
-        return await getDocs(ref);
-      } catch {
-        return null;
-      }
-    }
-
-    function formatDate(value) {
-      if (!value) return "Just now";
-      try {
-        if (value?.toDate) return value.toDate().toLocaleString();
-        const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-      } catch {
-        return "Just now";
-      }
-    }
-
-    function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
-      if (!cleanUrl) {
-        avatar.classList.add("hidden");
-        avatar.removeAttribute("src");
-        avatarPlaceholder.classList.remove("hidden");
-        return;
-      }
-      avatar.src = cleanUrl;
-      avatar.classList.remove("hidden");
-      avatarPlaceholder.classList.add("hidden");
-    }
-
-    avatar.addEventListener("error", () => {
-      avatar.classList.add("hidden");
-      avatarPlaceholder.classList.remove("hidden");
-    });
-
-    function applyModerationBadge(status, warningUntil) {
-      moderationBadge.className = "moderation-badge hidden";
-      moderationBadge.textContent = "!";
-
-      if (status === "banned") {
-        moderationBadge.className = "moderation-badge moderation-ban";
-        return;
-      }
-
-      if (status === "warned" && warningUntil) {
-        const untilMs = warningUntil?.toDate
-          ? warningUntil.toDate().getTime()
-          : new Date(warningUntil).getTime();
-
-        if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
-          moderationBadge.className = "moderation-badge moderation-warn";
-        }
-      }
-    }
-
-    function renderLinks(links) {
-      linksWrap.innerHTML = "";
-
-      if (!Array.isArray(links) || !links.length) {
-        linksWrap.classList.add("hidden");
-        return;
-      }
-
-      links.forEach(item => {
-        const a = document.createElement("a");
-        a.className = "profile-link";
-        a.href = item.href;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
-            <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
-          </svg>
-          <span>${escapeHtml(item.label)}</span>
-        `;
-        linksWrap.appendChild(a);
-      });
-
-      linksWrap.classList.remove("hidden");
-    }
-
-    function renderProfileMeta(profile) {
-      let hasMeta = false;
-
-      const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
-      if (profile.cityVisible && locationParts.length) {
-        locationChip.textContent = locationParts.join(", ");
-        locationChip.classList.remove("hidden");
-        hasMeta = true;
-      } else {
-        locationChip.classList.add("hidden");
-        locationChip.textContent = "";
-      }
-
-      if (profile.genderVisible && String(profile.gender || "").trim()) {
-        genderChip.textContent = profile.gender;
-        genderChip.classList.remove("hidden");
-        hasMeta = true;
-      } else {
-        genderChip.classList.add("hidden");
-        genderChip.textContent = "";
-      }
-
-      profileMeta.classList.toggle("hidden", !hasMeta);
-    }
-
-    function setPrivacyButton(isPrivate) {
-      privacyToggleBtn.textContent = isPrivate ? "Private" : "Public";
-      privacyToggleBtn.className = `tiny-state-btn ${isPrivate ? "private" : "public"}`;
-    }
-
-    async function togglePrivacy() {
-      if (!currentUserId || !currentProfile) return;
-
-      const nextValue = !currentProfile.isPrivate;
-      privacyToggleBtn.disabled = true;
-
-      try {
-        await Promise.all([
-          setDoc(doc(db, "users", currentUserId), {
-            isPrivate: nextValue,
-            privateProfile: nextValue,
-            accountPrivate: nextValue
-          }, { merge: true }),
-          setDoc(doc(db, "publicProfiles", currentUserId), {
-            isPrivate: nextValue,
-            privateProfile: nextValue,
-            accountPrivate: nextValue
-          }, { merge: true })
-        ]);
-
-        currentProfile.isPrivate = nextValue;
-        setPrivacyButton(nextValue);
+        return { table, data: Array.isArray(data) ? data : [], error: null };
       } catch (err) {
-        console.error("Privacy update error:", err);
+        console.error(`Query failed on ${table}:`, err);
       }
-
-      privacyToggleBtn.disabled = false;
     }
+    return { table: null, data: [], error: null };
+  }
 
-    privacyToggleBtn.addEventListener("click", togglePrivacy);
+  async function selectAllAvailable(tableNames, buildQuery = null) {
+    const merged = [];
+    const usedTables = [];
 
-    function openTab(tabId) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
+    for (const table of tableNames) {
+      try {
+        let q = supabase.from(table).select("*");
+        if (buildQuery) q = buildQuery(q, table);
+        const { data, error } = await q;
 
-      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-      if (btn) btn.classList.add("active");
-
-      const panel = document.getElementById(tabId);
-      if (panel) panel.classList.remove("hidden");
-    }
-
-    function openNetwork(sectionId) {
-      networkShell.classList.remove("hidden");
-      setTimeout(() => {
-        const target = document.getElementById(sectionId);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 60);
-    }
-
-    function closeNetwork() {
-      networkShell.classList.add("hidden");
-    }
-
-    closeNetworkBtn.addEventListener("click", closeNetwork);
-
-    postsStat.addEventListener("click", () => openTab("dashboardTab"));
-    followersStat.addEventListener("click", () => openNetwork("followersSection"));
-    followingStat.addEventListener("click", () => openNetwork("followingSection"));
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => openTab(btn.dataset.tab));
-    });
-
-    function getCreatedMs(obj) {
-      const value = obj?.createdAt || obj?.timestamp || null;
-      if (!value) return 0;
-      if (value?.toDate) return value.toDate().getTime();
-      const ms = new Date(value).getTime();
-      return Number.isNaN(ms) ? 0 : ms;
-    }
-
-    function getPostOwnerId(post) {
-      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
-    }
-
-    function getPostImage(post) {
-      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
-    }
-
-    function getPostCaption(post) {
-      return post?.caption || post?.text || post?.content || "";
-    }
-
-    function renderDashboardPosts() {
-      dashboardList.innerHTML = "";
-
-      if (!dashboardPosts.length) {
-        dashboardList.classList.add("hidden");
-        dashboardEmpty.classList.remove("hidden");
-        showMoreWrap.classList.add("hidden");
-        return;
-      }
-
-      dashboardEmpty.classList.add("hidden");
-      dashboardList.classList.remove("hidden");
-
-      const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
-
-      visiblePosts.forEach(post => {
-        const card = document.createElement("a");
-        card.className = "dashboard-card";
-        card.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
-
-        const caption = getPostCaption(post);
-        const imageUrl = getPostImage(post);
-
-        card.innerHTML = `
-          <div class="dashboard-top">
-            <div class="dashboard-label">Recent Post</div>
-            <div class="dashboard-time">${escapeHtml(formatDate(post.createdAt))}</div>
-          </div>
-          ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
-          ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
-        `;
-
-        const img = card.querySelector(".dashboard-image");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.style.display = "none";
-          });
+        if (error) {
+          if (isMissingTableError(error)) continue;
+          console.error(`Query error on ${table}:`, error);
+          continue;
         }
 
-        dashboardList.appendChild(card);
-      });
-
-      if (dashboardPosts.length > dashboardVisibleCount) {
-        showMoreWrap.classList.remove("hidden");
-      } else {
-        showMoreWrap.classList.add("hidden");
+        usedTables.push(table);
+        (data || []).forEach(row => merged.push({ ...row, __table: table }));
+      } catch (err) {
+        console.error(`Query failed on ${table}:`, err);
       }
     }
 
-    showMoreBtn.addEventListener("click", () => {
-      dashboardVisibleCount += 10;
-      renderDashboardPosts();
+    return { tables: usedTables, data: merged };
+  }
+
+  async function fetchSingleByUid(tableNames, uid) {
+    const result = await selectFirstAvailable(tableNames, (q) => q.eq("uid", uid).limit(1));
+    return result.data?.[0] || null;
+  }
+
+  function extractProfileLinks(raw) {
+    const found = [];
+
+    const addLink = (url, label) => {
+      const clean = String(url || "").trim();
+      if (!clean) return;
+      found.push({
+        url: clean,
+        href: normalizeHref(clean),
+        label: String(label || clean).trim()
+      });
+    };
+
+    addLink(
+      getField(raw, ["link1", "link_1", "url1", "website1", "site1", "social1"]),
+      getField(raw, ["link1Label", "link_1_label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
+    );
+
+    addLink(
+      getField(raw, ["link2", "link_2", "url2", "website2", "site2", "social2"]),
+      getField(raw, ["link2Label", "link_2_label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
+    );
+
+    const maybeArray = raw?.links;
+    if (Array.isArray(maybeArray)) {
+      maybeArray.slice(0, 2).forEach(entry => {
+        if (typeof entry === "string") {
+          addLink(entry, entry);
+        } else if (entry && typeof entry === "object") {
+          addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
+        }
+      });
+    }
+
+    const unique = [];
+    const seen = new Set();
+    for (const item of found) {
+      const key = item.href.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(item);
+      }
+    }
+
+    return unique.slice(0, 2);
+  }
+
+  function normalizeProfile(raw, fallbackUid = "") {
+    const d = raw || {};
+    const city = d.city || d.location_city || d.locationCity || d.current_city || d.currentCity || "";
+    const province = d.province || d.state || d.region || d.location_province || d.locationProvince || d.current_province || d.currentProvince || "";
+    const country = d.country || d.location_country || d.locationCountry || d.current_country || d.currentCountry || "";
+
+    const rawGender = d.gender === "self_describe"
+      ? (d.gender_custom || d.genderCustom || "")
+      : (d.gender || "");
+
+    return {
+      uid: d.uid || d.id || fallbackUid || "",
+      displayName: d.display_name || d.displayName || d.name || d.fullName || d.full_name || d.username || "Member",
+      username: d.username || d.handle || d.userName || d.user_name || "",
+      bio: d.bio || d.about || d.description || "",
+      photoURL: d.photo_url || d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || d.user_photo_url || "",
+      isPrivate: getBool(d, ["is_private", "isPrivate", "privateProfile", "private_profile", "private", "accountPrivate", "account_private"]),
+      moderationStatus: d.moderation_status || d.moderationStatus || d.status || "",
+      warningUntil: d.warning_until || d.warningUntil || null,
+      verified: getBool(d, ["verified", "is_verified", "isVerified"]),
+      isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"]),
+      softDeleted: getBool(d, ["soft_deleted", "softDeleted"]),
+      blockedUsers: Array.isArray(d.blocked_users) ? d.blocked_users : (Array.isArray(d.blockedUsers) ? d.blockedUsers : []),
+      links: extractProfileLinks(d),
+      city,
+      province,
+      country,
+      cityVisible: getBool(d, ["city_visible", "cityVisible"]),
+      gender: rawGender,
+      genderVisible: getBool(d, ["gender_visible", "genderVisible"])
+    };
+  }
+
+  function normalizeEvent(raw, fallbackId = "") {
+    const d = raw || {};
+    return {
+      id: d.id || fallbackId || "",
+      title: d.title || d.name || "Untitled Event",
+      description: d.description || d.desc || "",
+      city: d.city || d.location_city || d.locationCity || "",
+      date: d.date || "",
+      time: d.time || "",
+      visibility: d.visibility || d.event_visibility || d.eventVisibility || "public",
+      creatorId: d.creator_id || d.creatorId || d.user_id || d.userId || d.uid || "",
+      creatorName: d.creator_name || d.creatorName || d.display_name || d.displayName || d.host_name || d.hostName || "Member",
+      hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted"
+    };
+  }
+
+  function normalizePlace(raw, fallbackId = "") {
+    const d = raw || {};
+    return {
+      id: d.id || fallbackId || "",
+      source: d.source || d.place_source || d.placeSource || d.__table || "",
+      name: d.name || d.title || d.place_name || d.placeName || "Untitled Place",
+      category: d.category || d.topic || "General",
+      city: d.city || d.location_city || d.locationCity || "",
+      description: d.description || d.desc || "",
+      imageURL: d.image_url || d.imageURL || d.imageUrl || d.photo_url || d.photoURL || d.media_url || d.mediaUrl || "",
+      hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
+      creatorId: d.creator_id || d.creatorId || d.created_by || d.createdBy || d.user_id || d.userId || d.owner_id || d.ownerId || ""
+    };
+  }
+
+  function mergeProfiles(a, b, uid = "") {
+    return normalizeProfile(
+      { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
+      uid || b?.uid || a?.uid || ""
+    );
+  }
+
+  function formatDate(value) {
+    if (!value) return "Just now";
+    try {
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+    } catch {
+      return "Just now";
+    }
+  }
+
+  function showAvatar(url) {
+    const cleanUrl = (url || "").trim();
+    if (!cleanUrl) {
+      avatar.classList.add("hidden");
+      avatar.removeAttribute("src");
+      avatarPlaceholder.classList.remove("hidden");
+      return;
+    }
+    avatar.src = cleanUrl;
+    avatar.classList.remove("hidden");
+    avatarPlaceholder.classList.add("hidden");
+  }
+
+  avatar.addEventListener("error", () => {
+    avatar.classList.add("hidden");
+    avatarPlaceholder.classList.remove("hidden");
+  });
+
+  function applyModerationBadge(status, warningUntil) {
+    moderationBadge.className = "moderation-badge hidden";
+    moderationBadge.textContent = "!";
+
+    if (status === "banned") {
+      moderationBadge.className = "moderation-badge moderation-ban";
+      return;
+    }
+
+    if (status === "warned" && warningUntil) {
+      const untilMs = new Date(warningUntil).getTime();
+      if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
+        moderationBadge.className = "moderation-badge moderation-warn";
+      }
+    }
+  }
+
+  function renderLinks(links) {
+    linksWrap.innerHTML = "";
+
+    if (!Array.isArray(links) || !links.length) {
+      linksWrap.classList.add("hidden");
+      return;
+    }
+
+    links.forEach(item => {
+      const a = document.createElement("a");
+      a.className = "profile-link";
+      a.href = item.href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
+          <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
+        </svg>
+        <span>${escapeHtml(item.label)}</span>
+      `;
+      linksWrap.appendChild(a);
     });
 
-    function renderPhotos(posts) {
-      photosGrid.innerHTML = "";
+    linksWrap.classList.remove("hidden");
+  }
 
-      if (!posts.length) {
-        photosGrid.classList.add("hidden");
-        photosEmpty.classList.remove("hidden");
-        return;
-      }
+  function renderProfileMeta(profile) {
+    let hasMeta = false;
 
-      photosEmpty.classList.add("hidden");
-      photosGrid.classList.remove("hidden");
-
-      posts.forEach(post => {
-        const imageUrl = getPostImage(post);
-        if (!imageUrl) return;
-
-        const tile = document.createElement("a");
-        tile.className = "photo-tile";
-        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
-        tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
-
-        const img = tile.querySelector("img");
-        img.addEventListener("error", () => {
-          tile.remove();
-          if (!photosGrid.children.length) {
-            photosGrid.classList.add("hidden");
-            photosEmpty.classList.remove("hidden");
-          }
-        });
-
-        photosGrid.appendChild(tile);
-      });
-
-      if (!photosGrid.children.length) {
-        photosGrid.classList.add("hidden");
-        photosEmpty.classList.remove("hidden");
-      }
+    const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
+    if (profile.cityVisible && locationParts.length) {
+      locationChip.textContent = locationParts.join(", ");
+      locationChip.classList.remove("hidden");
+      hasMeta = true;
+    } else {
+      locationChip.classList.add("hidden");
+      locationChip.textContent = "";
     }
 
-    function renderEvents(list, container, emptyEl, typeLabel) {
-      container.innerHTML = "";
-
-      if (!list.length) {
-        container.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      container.classList.remove("hidden");
-
-      list.forEach(event => {
-        const card = document.createElement("div");
-        card.className = "event-card";
-
-        card.innerHTML = `
-          <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
-
-          <div class="badge-row">
-            ${event.visibility === "private"
-              ? `<span class="badge badge-private">Private</span>`
-              : ``}
-            <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
-          </div>
-
-          <div class="event-meta">
-            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
-            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
-            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
-            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
-          </div>
-
-          <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
-        `;
-
-        container.appendChild(card);
-      });
+    if (profile.genderVisible && String(profile.gender || "").trim()) {
+      genderChip.textContent = profile.gender;
+      genderChip.classList.remove("hidden");
+      hasMeta = true;
+    } else {
+      genderChip.classList.add("hidden");
+      genderChip.textContent = "";
     }
 
-    function renderPeople(ids, profilesMap, blockedUsers, listEl, emptyEl, emptyText) {
-      listEl.innerHTML = "";
+    profileMeta.classList.toggle("hidden", !hasMeta);
+  }
 
-      const uniqueIds = [...new Set(ids.filter(Boolean))]
-        .filter(uid => !blockedUsers.includes(uid));
+  function setPrivacyButton(isPrivate) {
+    privacyToggleBtn.textContent = isPrivate ? "Private" : "Public";
+    privacyToggleBtn.className = `tiny-state-btn ${isPrivate ? "private" : "public"}`;
+  }
 
-      if (!uniqueIds.length) {
-        emptyEl.textContent = emptyText;
-        listEl.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
+  async function togglePrivacy() {
+    if (!currentUserId || !currentProfile) return;
 
-      const usable = uniqueIds.filter(uid => {
-        const p = profilesMap.get(uid) || {};
-        return !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned";
-      });
+    const nextValue = !currentProfile.isPrivate;
+    privacyToggleBtn.disabled = true;
 
-      if (!usable.length) {
-        emptyEl.textContent = emptyText;
-        listEl.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
+    try {
+      const usersRes = await selectFirstAvailable(PROFILE_TABLES.users);
+      const usersTable = usersRes.table || "users";
 
-      emptyEl.classList.add("hidden");
-      listEl.classList.remove("hidden");
+      const publicRes = await selectFirstAvailable(PROFILE_TABLES.publicProfiles);
+      const publicTable = publicRes.table || "public_profiles";
 
-      usable.forEach(uid => {
-        const p = profilesMap.get(uid) || {};
-        const card = document.createElement("div");
-        card.className = "person-card";
+      const payload = {
+        uid: currentUserId,
+        is_private: nextValue,
+        updated_at: nowIso()
+      };
 
-        const avatarHtml = p.photoURL
-          ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
-          : `<div class="person-avatar-placeholder">No photo</div>`;
-
-        card.innerHTML = `
-          ${avatarHtml}
-          <div class="person-body">
-            <div class="person-name">
-              <a href="member.html?uid=${encodeURIComponent(uid)}">
-                ${escapeHtml(p.displayName || "Member")}
-              </a>
-            </div>
-            ${p.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
-            ${p.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
-          </div>
-        `;
-
-        const img = card.querySelector(".person-avatar");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
-          });
-        }
-
-        listEl.appendChild(card);
-      });
-    }
-
-    function getPlaceStatusFromDoc(place, uid) {
-      const arrayVisitedFields = ["visitedBy", "visitedUsers", "visitors"];
-      const arrayExploredFields = ["exploredBy", "exploredUsers", "explorers"];
-
-      for (const key of arrayVisitedFields) {
-        if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
-      }
-      for (const key of arrayExploredFields) {
-        if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
-      }
-
-      if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
-        return String(place.userStatuses[uid]).toLowerCase();
-      }
-
-      if (place.peopleStatus && typeof place.peopleStatus === "object" && place.peopleStatus[uid]) {
-        return String(place.peopleStatus[uid]).toLowerCase();
-      }
-
-      return "";
-    }
-
-    function getVisitedPlaces(uid, placesSnap, placeVisitsSnap) {
-      const map = new Map();
-
-      if (placeVisitsSnap && placeVisitsSnap.docs) {
-        placeVisitsSnap.docs.forEach(d => {
-          const raw = d.data() || {};
-          const userId = raw.userId || raw.uid || raw.memberId || "";
-          const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || raw.id || "";
-          const statusRaw = String(raw.status || raw.type || "").toLowerCase();
-
-          if (userId !== uid || !placeId) return;
-
-          let status = "";
-          if (statusRaw.includes("visited")) status = "visited";
-          else if (statusRaw.includes("explored")) status = "explored";
-          else if (raw.visited === true) status = "visited";
-          else if (raw.explored === true) status = "explored";
-          else status = "visited";
-
-          map.set(placeId, {
-            placeId,
-            userStatus: status
-          });
-        });
-      }
-
-      if (placesSnap && placesSnap.docs) {
-        placesSnap.docs.forEach(d => {
-          const place = d.data() || {};
-          if (place.hidden || place.hiddenByAdmin || place.softDeleted) return;
-
-          const detectedStatus = getPlaceStatusFromDoc(place, uid);
-          if (!detectedStatus && !map.has(d.id)) return;
-
-          const base = normalizePlace({ id: d.id, ...place }, d.id);
-          if (base.hidden) return;
-
-          const previous = map.get(d.id) || {};
-          map.set(d.id, {
-            ...base,
-            ...previous,
-            userStatus: detectedStatus || previous.userStatus || "visited"
-          });
-        });
-      }
-
-      return Array.from(map.values()).filter(Boolean);
-    }
-
-    function renderPlaces(list, container, emptyEl, type) {
-      container.innerHTML = "";
-
-      if (!list.length) {
-        container.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      container.classList.remove("hidden");
-
-      list.forEach(place => {
-        const card = document.createElement("div");
-        card.className = "place-card";
-
-        const statusBadge = type === "added"
-          ? `<span class="badge badge-added">Added</span>`
-          : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
-
-        card.innerHTML = `
-          <div class="place-title">${escapeHtml(place.name || "Untitled Place")}</div>
-
-          <div class="badge-row">
-            ${statusBadge}
-            ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
-          </div>
-
-          <div class="place-meta">
-            <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
-          </div>
-
-          <div class="place-desc">${escapeHtml(place.description || "No description added.")}</div>
-        `;
-
-        container.appendChild(card);
-      });
-    }
-
-    async function loadEverything(uid) {
-      const [
-        userSnap,
-        publicSnap,
-        postsSnap,
-        eventsSnap,
-        followsSnap,
-        publicProfilesSnap,
-        placesSnap,
-        placeVisitsSnap
-      ] = await Promise.all([
-        safeGetDoc(doc(db, "users", uid)),
-        safeGetDoc(doc(db, "publicProfiles", uid)),
-        safeGetDocs(collection(db, "posts")),
-        safeGetDocs(collection(db, "events")),
-        safeGetDocs(collection(db, "follows")),
-        safeGetDocs(collection(db, "publicProfiles")),
-        safeGetDocs(collection(db, "nearby_places")),
-        safeGetDocs(query(collection(db, "place_visits"), where("userId", "==", uid)))
+      await Promise.all([
+        supabase.from(usersTable).upsert(payload, { onConflict: "uid" }),
+        supabase.from(publicTable).upsert(payload, { onConflict: "uid" })
       ]);
 
-      const mergedProfile = mergeProfiles(
-        publicSnap?.exists() ? normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, publicSnap.id) : null,
-        userSnap?.exists() ? normalizeProfile({ id: userSnap.id, ...userSnap.data() }, userSnap.id) : null,
-        uid
-      );
-
-      currentProfile = mergedProfile;
-      displayNameEl.textContent = mergedProfile.displayName || "Member";
-
-      if (mergedProfile.verified) {
-        verifiedDot.classList.remove("hidden");
-      } else {
-        verifiedDot.classList.add("hidden");
-      }
-
-      if (mergedProfile.username) {
-        usernameText.textContent = "@" + mergedProfile.username;
-        usernameText.classList.remove("hidden");
-      } else {
-        usernameText.classList.add("hidden");
-      }
-
-      bioEl.textContent = mergedProfile.bio?.trim() ? mergedProfile.bio : "No bio added yet.";
-      renderProfileMeta(mergedProfile);
-      renderLinks(mergedProfile.links || []);
-      showAvatar(mergedProfile.photoURL || "");
-      applyModerationBadge(mergedProfile.moderationStatus, mergedProfile.warningUntil);
-      setPrivacyButton(mergedProfile.isPrivate);
-
-      const blockedUsers = Array.isArray(mergedProfile.blockedUsers) ? mergedProfile.blockedUsers : [];
-
-      dashboardPosts = (postsSnap?.docs || [])
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => {
-          const ownerId = getPostOwnerId(p);
-          return ownerId === uid && !p.hidden && !p.hiddenByAdmin && !p.softDeleted;
-        })
-        .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
-
-      dashboardVisibleCount = 10;
-      postsCountEl.textContent = String(dashboardPosts.length);
-      renderDashboardPosts();
-
-      const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
-      renderPhotos(photoPosts);
-
-      const allEvents = (eventsSnap?.docs || [])
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(e => !e.hidden && !e.hiddenByAdmin && !e.softDeleted);
-
-      const createdEvents = allEvents.filter(e => e.creatorId === uid);
-
-      const joinedChecks = await Promise.all(
-        allEvents.map(async (event) => {
-          if (event.creatorId === uid) return null;
-          try {
-            const joinSnap = await getDoc(doc(db, "events", event.id, "members", uid));
-            return joinSnap.exists() ? event : null;
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      const joinedEvents = joinedChecks.filter(Boolean);
-
-      renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
-      renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
-
-      const follows = (followsSnap?.docs || []).map(d => d.data());
-      const followers = follows.filter(f => f.followingId === uid).map(f => f.followerId);
-      const following = follows.filter(f => f.followerId === uid).map(f => f.followingId);
-
-      followersCountEl.textContent = String(followers.filter(id => !blockedUsers.includes(id)).length);
-      followingCountEl.textContent = String(following.filter(id => !blockedUsers.includes(id)).length);
-
-      const profilesMap = new Map();
-      (publicProfilesSnap?.docs || []).forEach(docSnap => {
-        const data = normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id);
-        const key = data.uid || docSnap.id;
-        profilesMap.set(key, data);
-      });
-
-      renderPeople(followers, profilesMap, blockedUsers, followersList, followersEmpty, "No followers yet.");
-      renderPeople(following, profilesMap, blockedUsers, followingList, followingEmpty, "Not following anyone yet.");
-
-      const allPlaces = (placesSnap?.docs || [])
-        .map(d => normalizePlace({ id: d.id, ...d.data() }, d.id))
-        .filter(place => !place.hidden);
-
-      const addedPlaces = allPlaces
-        .filter(place => place.creatorId === uid)
-        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-      const visitedPlaces = getVisitedPlaces(uid, placesSnap, placeVisitsSnap)
-        .filter(place => place.creatorId !== uid || place.userStatus)
-        .sort((a, b) => {
-          if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
-          if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
-          return (a.name || "").localeCompare(b.name || "");
-        });
-
-      renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
-      renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
-
-      loading.classList.add("hidden");
-      content.classList.remove("hidden");
-      openTab("dashboardTab");
-      closeNetwork();
+      currentProfile.isPrivate = nextValue;
+      setPrivacyButton(nextValue);
+    } catch (err) {
+      console.error("Privacy update error:", err);
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    privacyToggleBtn.disabled = false;
+  }
+
+  privacyToggleBtn.addEventListener("click", togglePrivacy);
+
+  function openTab(tabId) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
+
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (btn) btn.classList.add("active");
+
+    const panel = document.getElementById(tabId);
+    if (panel) panel.classList.remove("hidden");
+  }
+
+  function openNetwork(sectionId) {
+    networkShell.classList.remove("hidden");
+    setTimeout(() => {
+      const target = document.getElementById(sectionId);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  }
+
+  function closeNetwork() {
+    networkShell.classList.add("hidden");
+  }
+
+  closeNetworkBtn.addEventListener("click", closeNetwork);
+
+  postsStat.addEventListener("click", () => openTab("dashboardTab"));
+  followersStat.addEventListener("click", () => openNetwork("followersSection"));
+  followingStat.addEventListener("click", () => openNetwork("followingSection"));
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => openTab(btn.dataset.tab));
+  });
+
+  function getCreatedMs(obj) {
+    const value = obj?.created_at || obj?.createdAt || obj?.timestamp || null;
+    if (!value) return 0;
+    const ms = new Date(value).getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+  }
+
+  function getPostOwnerId(post) {
+    return post?.user_id || post?.userId || post?.author_id || post?.authorId || post?.owner_id || post?.ownerId || post?.uid || "";
+  }
+
+  function getPostImage(post) {
+    return post?.image_url || post?.imageURL || post?.imageUrl || post?.photo_url || post?.photoURL || post?.media_url || post?.mediaUrl || "";
+  }
+
+  function getPostCaption(post) {
+    return post?.caption || post?.text || post?.content || "";
+  }
+
+  function isHiddenRow(row) {
+    return !!(
+      row?.hidden ||
+      row?.hidden_by_admin ||
+      row?.hiddenByAdmin ||
+      row?.soft_deleted ||
+      row?.softDeleted
+    ) || String(row?.status || "").toLowerCase() === "deleted";
+  }
+
+  function renderDashboardPosts() {
+    dashboardList.innerHTML = "";
+
+    if (!dashboardPosts.length) {
+      dashboardList.classList.add("hidden");
+      dashboardEmpty.classList.remove("hidden");
+      showMoreWrap.classList.add("hidden");
+      return;
+    }
+
+    dashboardEmpty.classList.add("hidden");
+    dashboardList.classList.remove("hidden");
+
+    const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
+
+    visiblePosts.forEach(post => {
+      const card = document.createElement("a");
+      card.className = "dashboard-card";
+      card.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+
+      const caption = getPostCaption(post);
+      const imageUrl = getPostImage(post);
+
+      card.innerHTML = `
+        <div class="dashboard-top">
+          <div class="dashboard-label">Recent Post</div>
+          <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
+        </div>
+        ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
+        ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
+      `;
+
+      const img = card.querySelector(".dashboard-image");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+        });
+      }
+
+      dashboardList.appendChild(card);
+    });
+
+    if (dashboardPosts.length > dashboardVisibleCount) {
+      showMoreWrap.classList.remove("hidden");
+    } else {
+      showMoreWrap.classList.add("hidden");
+    }
+  }
+
+  showMoreBtn.addEventListener("click", () => {
+    dashboardVisibleCount += 10;
+    renderDashboardPosts();
+  });
+
+  function renderPhotos(posts) {
+    photosGrid.innerHTML = "";
+
+    if (!posts.length) {
+      photosGrid.classList.add("hidden");
+      photosEmpty.classList.remove("hidden");
+      return;
+    }
+
+    photosEmpty.classList.add("hidden");
+    photosGrid.classList.remove("hidden");
+
+    posts.forEach(post => {
+      const imageUrl = getPostImage(post);
+      if (!imageUrl) return;
+
+      const tile = document.createElement("a");
+      tile.className = "photo-tile";
+      tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+      tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
+
+      const img = tile.querySelector("img");
+      img.addEventListener("error", () => {
+        tile.remove();
+        if (!photosGrid.children.length) {
+          photosGrid.classList.add("hidden");
+          photosEmpty.classList.remove("hidden");
+        }
+      });
+
+      photosGrid.appendChild(tile);
+    });
+
+    if (!photosGrid.children.length) {
+      photosGrid.classList.add("hidden");
+      photosEmpty.classList.remove("hidden");
+    }
+  }
+
+  function renderEvents(list, container, emptyEl, typeLabel) {
+    container.innerHTML = "";
+
+    if (!list.length) {
+      container.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    container.classList.remove("hidden");
+
+    list.forEach(event => {
+      const card = document.createElement("div");
+      card.className = "event-card";
+
+      card.innerHTML = `
+        <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
+
+        <div class="badge-row">
+          ${event.visibility === "private"
+            ? `<span class="badge badge-private">Private</span>`
+            : ``}
+          <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
+        </div>
+
+        <div class="event-meta">
+          <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+          <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
+          <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+          <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
+        </div>
+
+        <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  function renderPeople(ids, profilesMap, blockedUsers, listEl, emptyEl, emptyText) {
+    listEl.innerHTML = "";
+
+    const uniqueIds = [...new Set(ids.filter(Boolean))]
+      .filter(uid => !blockedUsers.includes(uid));
+
+    if (!uniqueIds.length) {
+      emptyEl.textContent = emptyText;
+      listEl.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+
+    const usable = uniqueIds.filter(uid => {
+      const p = profilesMap.get(uid) || {};
+      return !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned";
+    });
+
+    if (!usable.length) {
+      emptyEl.textContent = emptyText;
+      listEl.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    listEl.classList.remove("hidden");
+
+    usable.forEach(uid => {
+      const p = profilesMap.get(uid) || {};
+      const card = document.createElement("div");
+      card.className = "person-card";
+
+      const avatarHtml = p.photoURL
+        ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
+        : `<div class="person-avatar-placeholder">No photo</div>`;
+
+      card.innerHTML = `
+        ${avatarHtml}
+        <div class="person-body">
+          <div class="person-name">
+            <a href="member.html?uid=${encodeURIComponent(uid)}">
+              ${escapeHtml(p.displayName || "Member")}
+            </a>
+          </div>
+          ${p.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
+          ${p.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
+        </div>
+      `;
+
+      const img = card.querySelector(".person-avatar");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+        });
+      }
+
+      listEl.appendChild(card);
+    });
+  }
+
+  function buildPlaceKey(source, placeId) {
+    return `${String(source || "").trim()}__${String(placeId || "").trim()}`;
+  }
+
+  function getPlaceStatusFromDoc(place, uid) {
+    const arrayVisitedFields = ["visitedBy", "visited_users", "visitedUsers", "visitors"];
+    const arrayExploredFields = ["exploredBy", "explored_users", "exploredUsers", "explorers"];
+
+    for (const key of arrayVisitedFields) {
+      if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
+    }
+    for (const key of arrayExploredFields) {
+      if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
+    }
+
+    if (place.user_statuses && typeof place.user_statuses === "object" && place.user_statuses[uid]) {
+      return String(place.user_statuses[uid]).toLowerCase();
+    }
+    if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
+      return String(place.userStatuses[uid]).toLowerCase();
+    }
+
+    return "";
+  }
+
+  function getVisitedPlaces(uid, allPlacesRows, placeVisitsRows) {
+    const placeMapExact = new Map();
+    const placeMapLoose = new Map();
+
+    allPlacesRows.forEach(row => {
+      const base = normalizePlace(row, row.id || "");
+      if (base.hidden) return;
+
+      const exactKey = buildPlaceKey(base.source, base.id);
+      placeMapExact.set(exactKey, base);
+      placeMapLoose.set(base.id, base);
+    });
+
+    const visitMapExact = new Map();
+    const visitMapLoose = new Map();
+
+    (placeVisitsRows || []).forEach(raw => {
+      const userId = raw.user_id || raw.userId || raw.uid || raw.member_id || raw.memberId || "";
+      if (userId !== uid) return;
+
+      const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || raw.id || "";
+      const source = raw.source || raw.place_source || raw.placeSource || "";
+      const statusRaw = String(raw.status || raw.type || "").toLowerCase();
+
+      if (!placeId) return;
+
+      let status = "";
+      if (statusRaw.includes("visited")) status = "visited";
+      else if (statusRaw.includes("explored")) status = "explored";
+      else if (raw.visited === true) status = "visited";
+      else if (raw.explored === true) status = "explored";
+      else status = "visited";
+
+      const record = { placeId, source, userStatus: status };
+
+      if (source) visitMapExact.set(buildPlaceKey(source, placeId), record);
+      visitMapLoose.set(placeId, record);
+    });
+
+    allPlacesRows.forEach(raw => {
+      const detectedStatus = getPlaceStatusFromDoc(raw, uid);
+      if (!detectedStatus) return;
+
+      const base = normalizePlace(raw, raw.id || "");
+      if (base.hidden) return;
+
+      const record = {
+        placeId: base.id,
+        source: base.source,
+        userStatus: detectedStatus
+      };
+
+      if (base.source) visitMapExact.set(buildPlaceKey(base.source, base.id), record);
+      visitMapLoose.set(base.id, record);
+    });
+
+    const finalMap = new Map();
+
+    visitMapExact.forEach((visit, exactKey) => {
+      const base = placeMapExact.get(exactKey);
+      if (base) finalMap.set(exactKey, { ...base, userStatus: visit.userStatus });
+    });
+
+    visitMapLoose.forEach((visit, placeId) => {
+      const existingExact = Array.from(finalMap.values()).find(v => v.id === placeId);
+      if (existingExact) return;
+
+      const base = placeMapLoose.get(placeId);
+      if (base) {
+        finalMap.set(`loose__${placeId}`, { ...base, userStatus: visit.userStatus });
+      }
+    });
+
+    return Array.from(finalMap.values());
+  }
+
+  function renderPlaces(list, container, emptyEl, type) {
+    container.innerHTML = "";
+
+    if (!list.length) {
+      container.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    container.classList.remove("hidden");
+
+    list.forEach(place => {
+      const card = document.createElement("div");
+      card.className = "place-card";
+
+      const statusBadge = type === "added"
+        ? `<span class="badge badge-added">Added</span>`
+        : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
+
+      card.innerHTML = `
+        <div class="place-title">${escapeHtml(place.name || "Untitled Place")}</div>
+
+        <div class="badge-row">
+          ${statusBadge}
+          ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
+        </div>
+
+        <div class="place-meta">
+          <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
+        </div>
+
+        <div class="place-desc">${escapeHtml(place.description || "No description added.")}</div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  async function loadEverything(uid) {
+    const [
+      userRow,
+      publicRow,
+      postsRes,
+      eventsRes,
+      eventMembersRes,
+      followsRes,
+      publicProfilesRes,
+      usersRes,
+      placesRes,
+      placeVisitsRes
+    ] = await Promise.all([
+      fetchSingleByUid(PROFILE_TABLES.users, uid),
+      fetchSingleByUid(PROFILE_TABLES.publicProfiles, uid),
+      selectAllAvailable(POSTS_TABLES),
+      selectAllAvailable(EVENTS_TABLES),
+      selectAllAvailable(EVENT_MEMBERS_TABLES),
+      selectAllAvailable(FOLLOWS_TABLES),
+      selectAllAvailable(PROFILE_TABLES.publicProfiles),
+      selectAllAvailable(PROFILE_TABLES.users),
+      selectAllAvailable(PLACES_TABLES),
+      selectAllAvailable(PLACE_VISITS_TABLES)
+    ]);
+
+    const mergedProfile = mergeProfiles(
+      publicRow ? normalizeProfile(publicRow, uid) : null,
+      userRow ? normalizeProfile(userRow, uid) : null,
+      uid
+    );
+
+    currentProfile = mergedProfile;
+
+    displayNameEl.textContent = mergedProfile.displayName || "Member";
+    verifiedDot.classList.toggle("hidden", !mergedProfile.verified);
+
+    if (mergedProfile.username) {
+      usernameText.textContent = "@" + mergedProfile.username;
+      usernameText.classList.remove("hidden");
+    } else {
+      usernameText.classList.add("hidden");
+    }
+
+    bioEl.textContent = mergedProfile.bio?.trim() ? mergedProfile.bio : "No bio added yet.";
+    renderProfileMeta(mergedProfile);
+    renderLinks(mergedProfile.links || []);
+    showAvatar(mergedProfile.photoURL || "");
+    applyModerationBadge(mergedProfile.moderationStatus, mergedProfile.warningUntil);
+    setPrivacyButton(mergedProfile.isPrivate);
+
+    const blockedUsers = Array.isArray(mergedProfile.blockedUsers) ? mergedProfile.blockedUsers : [];
+
+    dashboardPosts = (postsRes.data || [])
+      .filter(p => getPostOwnerId(p) === uid && !isHiddenRow(p))
+      .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+
+    dashboardVisibleCount = 10;
+    postsCountEl.textContent = String(dashboardPosts.length);
+    renderDashboardPosts();
+
+    const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
+    renderPhotos(photoPosts);
+
+    const allEvents = (eventsRes.data || [])
+      .map(d => normalizeEvent(d, d.id || ""))
+      .filter(e => !e.hidden);
+
+    const createdEvents = allEvents.filter(e => e.creatorId === uid);
+
+    const eventMembers = (eventMembersRes.data || []);
+    const joinedEventIds = new Set(
+      eventMembers
+        .filter(row => {
+          const memberUid = row.user_id || row.userId || row.uid || row.member_id || row.memberId || "";
+          return memberUid === uid;
+        })
+        .map(row => row.event_id || row.eventId || "")
+        .filter(Boolean)
+    );
+
+    const joinedEvents = allEvents.filter(e => joinedEventIds.has(e.id) && e.creatorId !== uid);
+
+    renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
+    renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
+
+    const follows = (followsRes.data || []);
+    const followers = follows
+      .filter(f => (f.following_id || f.followingId) === uid)
+      .map(f => f.follower_id || f.followerId)
+      .filter(Boolean);
+
+    const following = follows
+      .filter(f => (f.follower_id || f.followerId) === uid)
+      .map(f => f.following_id || f.followingId)
+      .filter(Boolean);
+
+    followersCountEl.textContent = String(followers.filter(id => !blockedUsers.includes(id)).length);
+    followingCountEl.textContent = String(following.filter(id => !blockedUsers.includes(id)).length);
+
+    const profilesMap = new Map();
+
+    (usersRes.data || []).forEach(row => {
+      const p = normalizeProfile(row, row.uid || row.id || "");
+      const key = p.uid || row.uid || row.id || "";
+      if (key) profilesMap.set(key, p);
+    });
+
+    (publicProfilesRes.data || []).forEach(row => {
+      const p = normalizeProfile(row, row.uid || row.id || "");
+      const key = p.uid || row.uid || row.id || "";
+      if (!key) return;
+
+      if (profilesMap.has(key)) {
+        profilesMap.set(key, mergeProfiles(profilesMap.get(key), p, key));
+      } else {
+        profilesMap.set(key, p);
+      }
+    });
+
+    renderPeople(followers, profilesMap, blockedUsers, followersList, followersEmpty, "No followers yet.");
+    renderPeople(following, profilesMap, blockedUsers, followingList, followingEmpty, "Not following anyone yet.");
+
+    const allPlaces = (placesRes.data || [])
+      .map(d => normalizePlace(d, d.id || ""))
+      .filter(place => !place.hidden);
+
+    const addedPlaces = allPlaces
+      .filter(place => place.creatorId === uid)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+    const visitedPlaces = getVisitedPlaces(uid, placesRes.data || [], placeVisitsRes.data || [])
+      .filter(place => place.creatorId !== uid || place.userStatus)
+      .sort((a, b) => {
+        if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
+        if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+
+    renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
+    renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
+
+    loading.classList.add("hidden");
+    content.classList.remove("hidden");
+    openTab("dashboardTab");
+    closeNetwork();
+  }
+
+  async function initProfilePage() {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      const uid = data?.session?.user?.id || "";
+      if (!uid) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUserId = user.uid;
+      currentUserId = uid;
+      await loadEverything(uid);
+    } catch (err) {
+      console.error("Profile load error:", err);
+      loading.textContent = "Error loading profile.";
+    }
+  }
 
-      try {
-        await loadEverything(user.uid);
-      } catch (err) {
-        console.error("Profile load error:", err);
-        loading.textContent = "Error loading profile.";
-      }
-    });
-  </script>
-</body>
-</html>
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT" || !session?.user) {
+      window.location.href = "login.html";
+    }
+  });
+
+  initProfilePage();
+</script>
