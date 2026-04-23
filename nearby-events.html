@@ -436,7 +436,7 @@
     <div class="panel">
       <div class="chip-row">
         <span id="locationChip" class="chip chip-blue">Location: -</span>
-        <span id="modeChip" class="chip chip-purple">Mode: -</span>
+        <span id="modeChip" class="chip chip-purple">Mode: Same city</span>
         <span id="browserChip" class="chip chip-yellow">Browser GPS off</span>
         <span id="countChip" class="chip chip-green">Events: 0</span>
       </div>
@@ -444,7 +444,6 @@
       <div class="top-actions">
         <a href="edit-profile.html#location" class="action-btn btn-primary">Location Settings</a>
         <button id="gpsBtn2" class="action-btn btn-green" type="button">Use GPS</button>
-        <button id="refreshBtn" class="action-btn btn-yellow" type="button">Refresh</button>
         <a href="create-event.html" class="action-btn btn-purple">Create Event</a>
       </div>
 
@@ -531,6 +530,7 @@
       getDocs,
       setDoc,
       deleteDoc,
+      addDoc,
       collection,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -542,7 +542,6 @@
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
-    const refreshBtn = document.getElementById("refreshBtn");
     const pageStatus = document.getElementById("pageStatus");
 
     const searchInput = document.getElementById("searchInput");
@@ -555,7 +554,7 @@
     let viewerProfile = null;
     let browserCoords = null;
     let eventsData = [];
-    let memberStats = new Map();
+    let memberMap = new Map();
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -637,40 +636,24 @@
 
     function countryAliases(country) {
       const c = normalizeText(country);
-      if (!c) return [];
+      if (!c) return "";
       const aliases = [c];
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain", "england");
+      if (c === "united kingdom") aliases.push("uk", "britain");
       if (c === "canada") aliases.push("ca");
-      return aliases;
+      return aliases.join(" ");
     }
 
-    function buildLocationParts(city, province, country) {
-      return [titleText(city), titleText(province), titleText(country)].filter(Boolean);
-    }
-
-    function buildLocationSearch(raw) {
-      const city = titleText(raw.city || raw.locationCity || "");
-      const province = titleText(raw.province || raw.state || raw.region || raw.locationProvince || "");
-      const country = titleText(raw.country || raw.locationCountry || "");
-      const saved = titleText(raw.locationSearch || "");
-      return [
-        saved,
-        city,
-        province,
-        country,
-        ...countryAliases(country)
-      ].filter(Boolean).join(" ").trim().toLowerCase();
-    }
-
-    function textMatchesQuery(text, query) {
-      const q = normalizeText(query);
-      if (!q) return true;
-      const base = normalizeText(text);
-      if (!base) return false;
-      if (base.includes(q)) return true;
-      const tokens = q.split(/[\s,]+/).filter(Boolean);
-      return tokens.every(token => base.includes(token));
+    function buildLocationSearch(d) {
+      const existing = titleText(d.locationSearch);
+      const city = titleText(d.city || d.locationCity || "");
+      const province = titleText(d.province || d.state || d.region || "");
+      const country = titleText(d.country || d.locationCountry || "");
+      return [existing, city, province, country, countryAliases(country)]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -693,13 +676,77 @@
       return `${Math.round(distanceKm)} km away`;
     }
 
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: d.uid || d.id || fallbackUid || "",
+        city: d.city || d.locationCity || d.currentCity || "",
+        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
+        country: d.country || d.locationCountry || d.currentCountry || "",
+        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
+        lat: readLat(d),
+        lng: readLng(d)
+      };
+    }
+
+    function normalizeEvent(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        title: d.title || d.name || "Untitled Event",
+        description: d.description || d.desc || "",
+        city: d.city || d.locationCity || "",
+        province: d.province || d.state || d.region || "",
+        country: d.country || d.locationCountry || "",
+        locationSearch: buildLocationSearch(d),
+        venue: d.venue || d.spot || "",
+        address: d.address || "",
+        date: d.date || "",
+        time: d.time || "",
+        visibility: d.visibility || d.eventVisibility || "public",
+        creatorId: d.creatorId || d.userId || d.uid || "",
+        creatorName: d.creatorName || d.displayName || "Member",
+        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        lat: readLat(d),
+        lng: readLng(d)
+      };
+    }
+
+    function renderViewerLocation() {
+      if (!viewerProfile) return;
+      const parts = [viewerProfile.city, viewerProfile.province, viewerProfile.country].filter(Boolean);
+      locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
+
+      if (!browserCoords) {
+        browserChip.textContent = "Browser GPS off";
+        browserChip.className = "chip chip-yellow";
+      }
+
+      updateModeChip();
+    }
+
+    function updateModeChip() {
+      const q = searchInput.value.trim();
+      const hasCity = !!normalizeText(viewerProfile?.city);
+
+      if (q) {
+        modeChip.textContent = "Mode: Search all";
+      } else if (hasCity) {
+        modeChip.textContent = "Mode: Same city";
+      } else if (browserCoords) {
+        modeChip.textContent = "Mode: GPS fallback";
+      } else {
+        modeChip.textContent = "Mode: No location";
+      }
+    }
+
     function parseEventDateTime(dateStr, timeStr) {
       const dateRaw = String(dateStr || "").trim();
       if (!dateRaw) return null;
 
       let year, month, day;
       const iso = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-
       if (iso) {
         year = Number(iso[1]);
         month = Number(iso[2]) - 1;
@@ -746,52 +793,11 @@
       return dt ? Date.now() > dt.getTime() : false;
     }
 
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-      return {
-        uid: d.uid || d.id || fallbackUid || "",
-        city: d.city || d.locationCity || d.currentCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
-        country: d.country || d.locationCountry || d.currentCountry || "",
-        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
-        lat: readLat(d),
-        lng: readLng(d)
-      };
-    }
-
-    function normalizeEvent(raw, fallbackId = "") {
-      const d = raw || {};
-      return {
-        id: d.id || fallbackId || "",
-        title: d.title || d.name || "Untitled Event",
-        description: d.description || d.desc || "",
-        city: d.city || d.locationCity || "",
-        province: d.province || d.state || d.region || "",
-        country: d.country || d.locationCountry || "",
-        locationSearch: buildLocationSearch(d),
-        venue: d.venue || d.spot || "",
-        address: d.address || "",
-        date: d.date || "",
-        time: d.time || "",
-        visibility: d.visibility || d.eventVisibility || "public",
-        creatorId: d.creatorId || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || "Member",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
-        lat: readLat(d),
-        lng: readLng(d)
-      };
-    }
-
-    function renderViewerLocation() {
-      if (!viewerProfile) return;
-      const parts = buildLocationParts(viewerProfile.city, viewerProfile.province, viewerProfile.country);
-      locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
-      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
-      if (!browserCoords) {
-        browserChip.textContent = "Browser GPS off";
-        browserChip.className = "chip chip-yellow";
-      }
+    async function createNotificationSafe(targetUid, payload) {
+      if (!targetUid || targetUid === currentUser.uid) return;
+      try {
+        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+      } catch {}
     }
 
     async function requestBrowserLocation() {
@@ -839,7 +845,7 @@
               viewerProfile.lng = browserCoords.lng;
               viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
-              setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
+              setPageStatus("Browser GPS enabled. Same-city events still stay first.", "status-ok");
             } catch (err) {
               console.error(err);
             }
@@ -850,7 +856,7 @@
             browserCoords = null;
             browserChip.textContent = "Browser GPS off";
             browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved location instead.", "status-err");
+            setPageStatus("Could not use browser GPS. Using saved city instead.", "status-err");
             resolve();
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
@@ -867,32 +873,23 @@
       listWrap.innerHTML = "";
     }
 
-    function showEmpty(text, countLabel = "Events: 0") {
+    function showEmpty(text) {
       listLoading.classList.add("hidden");
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
-      countChip.textContent = countLabel;
+      countChip.textContent = "Events: 0";
     }
 
-    function showList(count, labelPrefix = "Events") {
+    function showList(count) {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
-      countChip.textContent = `${labelPrefix}: ${count}`;
-    }
-
-    function getMemberStat(eventId) {
-      return memberStats.get(eventId) || { joined: false, count: 0 };
+      countChip.textContent = `Events: ${count}`;
     }
 
     function isJoined(eventId) {
-      return getMemberStat(eventId).joined === true;
-    }
-
-    function getDisplayMemberCount(model) {
-      const raw = getMemberStat(model.id).count || 0;
-      return Math.max(raw, model.creatorId ? 1 : 0);
+      return memberMap.has(eventId) && memberMap.get(eventId) === true;
     }
 
     function getViewerCoords() {
@@ -902,50 +899,22 @@
       };
     }
 
-    function eventMatchesSavedLocation(model) {
+    function buildNearbyEvents() {
+      const q = normalizeText(searchInput.value);
       const viewerCity = normalizeText(viewerProfile?.city);
-      const viewerProvince = normalizeText(viewerProfile?.province);
-      const viewerCountry = normalizeText(viewerProfile?.country);
-
-      const city = normalizeText(model.city);
-      const province = normalizeText(model.province);
-      const country = normalizeText(model.country);
-
-      const countryOk = !viewerCountry || !country || viewerCountry === country || countryAliases(country).includes(viewerCountry);
-      const provinceOk = !viewerProvince || !province || viewerProvince === province;
-
-      const exactCity = !!viewerCity && !!city && viewerCity === city && provinceOk && countryOk;
-
-      if (exactCity) return { ok: true, rank: 1 };
-
-      if (!viewerCity && viewerProvince && province && viewerProvince === province && countryOk) {
-        return { ok: true, rank: 2 };
-      }
-
-      if (!viewerCity && !viewerProvince && viewerCountry && country && countryOk) {
-        return { ok: true, rank: 3 };
-      }
-
-      return { ok: false, rank: 99 };
-    }
-
-    function buildAllRows() {
       const viewerCoords = getViewerCoords();
 
       return eventsData
         .filter(model => !model.hidden)
         .filter(model => model.visibility !== "private" || model.creatorId === currentUser.uid || isJoined(model.id))
         .map(model => {
-          const nearbyMatch = eventMatchesSavedLocation(model);
-          const distanceKm =
-            viewerCoords.lat !== null &&
-            viewerCoords.lng !== null &&
-            model.lat !== null &&
-            model.lng !== null
-              ? kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng)
-              : null;
+          const city = normalizeText(model.city);
+          const sameCity = !!viewerCity && !!city && viewerCity === city;
 
-          const gpsNearby = distanceKm !== null && distanceKm <= 100;
+          let distanceKm = null;
+          if (viewerCoords.lat !== null && viewerCoords.lng !== null && model.lat !== null && model.lng !== null) {
+            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng);
+          }
 
           const searchable = [
             model.title,
@@ -956,67 +925,43 @@
             model.locationSearch
           ].filter(Boolean).join(" ").toLowerCase();
 
+          const mine = model.creatorId === currentUser.uid;
+
           return {
             ...model,
-            joined: isJoined(model.id),
-            memberCount: getDisplayMemberCount(model),
-            expired: isExpired(model),
+            sameCity,
             distanceKm,
-            distanceLabel: formatDistance(distanceKm),
-            nearbySaved: nearbyMatch.ok,
-            nearbyRank: nearbyMatch.rank,
-            nearbyGps: gpsNearby,
-            searchable,
-            placeLabel: buildLocationParts(model.city, model.province, model.country).join(", ")
+            mine,
+            joined: isJoined(model.id),
+            expired: isExpired(model),
+            distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
+            placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
+            searchable
           };
-        });
-    }
+        })
+        .filter(row => {
+          if (q) return row.searchable.includes(q);
 
-    function buildVisibleRows() {
-      const q = normalizeText(searchInput.value);
-      const allRows = buildAllRows();
+          if (row.mine) return true;
+          if (viewerCity && row.sameCity) return true;
+          if (!viewerCity && browserCoords && row.distanceKm !== null && row.distanceKm <= 25) return true;
 
-      if (q) {
-        return allRows
-          .filter(row => textMatchesQuery(row.searchable, q))
-          .sort((a, b) => {
-            const aTitleStarts = normalizeText(a.title).startsWith(q) ? 1 : 0;
-            const bTitleStarts = normalizeText(b.title).startsWith(q) ? 1 : 0;
-            if (aTitleStarts !== bTitleStarts) return bTitleStarts - aTitleStarts;
-
-            const aLocationStarts = normalizeText(a.placeLabel).startsWith(q) ? 1 : 0;
-            const bLocationStarts = normalizeText(b.placeLabel).startsWith(q) ? 1 : 0;
-            if (aLocationStarts !== bLocationStarts) return bLocationStarts - aLocationStarts;
-
-            if (a.expired !== b.expired) return a.expired ? 1 : -1;
-
-            const aHasDistance = a.distanceKm !== null;
-            const bHasDistance = b.distanceKm !== null;
-            if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
-            if (aHasDistance && !bHasDistance) return -1;
-            if (bHasDistance && !aHasDistance) return 1;
-
-            const aTime = parseEventDateTime(a.date, a.time)?.getTime() || 0;
-            const bTime = parseEventDateTime(b.date, b.time)?.getTime() || 0;
-            return aTime - bTime;
-          });
-      }
-
-      return allRows
-        .filter(row => row.nearbySaved || row.nearbyGps)
+          return false;
+        })
         .sort((a, b) => {
-          if (a.nearbySaved && !b.nearbySaved) return -1;
-          if (b.nearbySaved && !a.nearbySaved) return 1;
+          if (a.mine && !b.mine) return -1;
+          if (b.mine && !a.mine) return 1;
 
-          if (a.nearbyRank !== b.nearbyRank) return a.nearbyRank - b.nearbyRank;
+          if (a.sameCity && !b.sameCity) return -1;
+          if (b.sameCity && !a.sameCity) return 1;
+
+          if (a.expired !== b.expired) return a.expired ? 1 : -1;
 
           const aHasDistance = a.distanceKm !== null;
           const bHasDistance = b.distanceKm !== null;
           if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
           if (aHasDistance && !bHasDistance) return -1;
           if (bHasDistance && !aHasDistance) return 1;
-
-          if (a.expired !== b.expired) return a.expired ? 1 : -1;
 
           const aTime = parseEventDateTime(a.date, a.time)?.getTime() || 0;
           const bTime = parseEventDateTime(b.date, b.time)?.getTime() || 0;
@@ -1031,13 +976,22 @@
       try {
         await setDoc(doc(db, "events", model.id, "members", currentUser.uid), {
           userId: currentUser.uid,
+          displayName: viewerProfile?.displayName || currentUser.displayName || "Member",
+          username: viewerProfile?.username || "",
           joinedAt: serverTimestamp()
         }, { merge: true });
 
-        const current = getMemberStat(model.id);
-        memberStats.set(model.id, {
-          joined: true,
-          count: Math.max((current.count || 0) + 1, 1)
+        memberMap.set(model.id, true);
+
+        await createNotificationSafe(model.creatorId, {
+          type: "event_join",
+          title: "Event joined",
+          text: `${currentUser.displayName || "Someone"} joined your event.`,
+          fromUserId: currentUser.uid,
+          toUserId: model.creatorId,
+          eventId: model.id,
+          createdAt: serverTimestamp(),
+          isRead: false
         });
 
         renderEvents();
@@ -1055,13 +1009,7 @@
 
       try {
         await deleteDoc(doc(db, "events", model.id, "members", currentUser.uid));
-
-        const current = getMemberStat(model.id);
-        memberStats.set(model.id, {
-          joined: false,
-          count: Math.max((current.count || 1) - 1, model.creatorId ? 1 : 0)
-        });
-
+        memberMap.set(model.id, false);
         renderEvents();
         setPageStatus("Left event.", "status-ok");
       } catch (err) {
@@ -1073,22 +1021,23 @@
 
     function renderEvents() {
       openLoading();
+      updateModeChip();
 
-      const q = normalizeText(searchInput.value);
-      const viewerHasSavedLocation =
-        !!normalizeText(viewerProfile?.city) ||
-        !!normalizeText(viewerProfile?.province) ||
-        !!normalizeText(viewerProfile?.country);
+      const viewerHasCity = !!normalizeText(viewerProfile?.city);
+      const q = searchInput.value.trim();
+      const rows = buildNearbyEvents();
 
-      const rows = buildVisibleRows();
-
-      if (!q && !viewerHasSavedLocation && !browserCoords) {
-        showEmpty("Set your location in profile, use GPS, or type a city/province/country to search events.", "Events: 0");
+      if (!viewerHasCity && !browserCoords && !q) {
+        showEmpty("Set your city in profile or use GPS to see nearby events. Your own created events will still appear once available.");
         return;
       }
 
       if (!rows.length) {
-        showEmpty(q ? "No matching events found." : "No nearby events found for your current location.", q ? "Results: 0" : "Events: 0");
+        if (q) {
+          showEmpty("No events matched your search.");
+        } else {
+          showEmpty("No events found in your city yet. Search can still find events from other cities.");
+        }
         return;
       }
 
@@ -1100,13 +1049,17 @@
           : "";
 
         const badges = [];
+        if (model.mine) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
         badges.push(`<span class="mini-badge ${model.visibility === "private" ? "mini-yellow" : "mini-blue"}">${model.visibility === "private" ? "Private" : "Public"}</span>`);
         if (model.joined) badges.push(`<span class="mini-badge mini-green">Joined</span>`);
-        if (model.creatorId === currentUser.uid) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
         if (model.expired) badges.push(`<span class="mini-badge mini-red">Expired</span>`);
         else badges.push(`<span class="mini-badge mini-green">Upcoming</span>`);
-        if (model.distanceLabel) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
-        badges.push(`<span class="mini-badge mini-blue">${model.memberCount} going</span>`);
+
+        if (model.sameCity) {
+          badges.push(`<span class="mini-badge mini-purple">Same city</span>`);
+        } else if (model.distanceLabel) {
+          badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
+        }
 
         const venueText = [model.venue, model.address].filter(Boolean).join(" • ") || "Not added";
 
@@ -1117,7 +1070,7 @@
           <div class="card-title">${escapeHtml(model.title)}</div>
           <div class="badge-row">${badges.join("")}</div>
           <div class="meta-grid">
-            <div><strong>Location:</strong> ${escapeHtml(model.placeLabel || model.city || "Not added")}</div>
+            <div><strong>Location:</strong> ${escapeHtml(model.placeLabel || "Not added")}</div>
             <div><strong>Date:</strong> ${escapeHtml(model.date || "-")}</div>
             <div><strong>Time:</strong> ${escapeHtml(model.time || "-")}</div>
             <div><strong>Venue:</strong> ${escapeHtml(venueText)}</div>
@@ -1127,13 +1080,13 @@
           <div class="top-actions" style="margin-top:0;">
             <a class="action-btn btn-primary" href="event.html?eventId=${encodeURIComponent(model.id)}">Open</a>
             ${
-              model.creatorId === currentUser.uid
+              model.mine
                 ? `<a class="action-btn btn-purple" href="event.html?eventId=${encodeURIComponent(model.id)}">Manage</a>`
                 : model.expired
                 ? `<button class="action-btn btn-red" type="button" disabled>Expired</button>`
                 : model.joined
-                ? `<button class="action-btn btn-red leave-btn" data-id="${escapeHtml(model.id)}" type="button">Leave</button>`
-                : `<button class="action-btn btn-green join-btn" data-id="${escapeHtml(model.id)}" type="button">Join</button>`
+                ? `<button class="action-btn btn-red leave-btn" type="button">Leave</button>`
+                : `<button class="action-btn btn-green join-btn" type="button">Join</button>`
             }
           </div>
         `;
@@ -1162,7 +1115,7 @@
         listWrap.appendChild(card);
       });
 
-      showList(rows.length, q ? "Results" : "Events");
+      showList(rows.length);
     }
 
     async function loadViewer(uid) {
@@ -1185,34 +1138,23 @@
       eventsData = snap.docs.map(d => normalizeEvent({ id: d.id, ...d.data() }, d.id));
     }
 
-    async function loadMembershipStats(events) {
-      const results = await Promise.all(
-        events.map(async model => {
-          try {
-            const membersSnap = await getDocs(collection(db, "events", model.id, "members"));
-            const joined = membersSnap.docs.some(d => d.id === currentUser.uid);
-            return {
-              eventId: model.id,
-              joined,
-              count: membersSnap.size
-            };
-          } catch {
-            return {
-              eventId: model.id,
-              joined: false,
-              count: 0
-            };
-          }
-        })
-      );
+    async function loadJoinedState(events) {
+      const results = await Promise.all(events.map(async model => {
+        try {
+          const memberSnap = await getDoc(doc(db, "events", model.id, "members", currentUser.uid));
+          return { eventId: model.id, joined: memberSnap.exists() };
+        } catch {
+          return { eventId: model.id, joined: false };
+        }
+      }));
 
-      memberStats = new Map(results.map(x => [x.eventId, { joined: x.joined, count: x.count }]));
+      memberMap = new Map(results.map(x => [x.eventId, x.joined]));
     }
 
     async function refreshAll() {
       openLoading();
       await loadEvents();
-      await loadMembershipStats(eventsData);
+      await loadJoinedState(eventsData);
       renderViewerLocation();
       renderEvents();
     }
@@ -1231,7 +1173,6 @@
 
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
-    refreshBtn.addEventListener("click", refreshAll);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
