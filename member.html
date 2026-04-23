@@ -288,6 +288,67 @@
       border:1px solid rgba(255,93,115,.20);
     }
 
+    .profile-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .meta-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1.3;
+    }
+    .meta-chip.location{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+    .meta-chip.gender{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+
+    .links-wrap{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    .profile-link{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+      text-decoration:none;
+      color:var(--text);
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .profile-link svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+      color:var(--blue);
+    }
+    .profile-link span{
+      min-width:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
     .action-row{
       display:flex;
       gap:8px;
@@ -625,7 +686,15 @@
 
               <div class="bio" id="bio">No bio added yet.</div>
 
-              <div class="meta-row" id="metaRow"></div>
+              <div id="metaRow" class="meta-row"></div>
+
+              <div id="profileMeta" class="profile-meta hidden">
+                <span id="locationChip" class="meta-chip location hidden"></span>
+                <span id="genderChip" class="meta-chip gender hidden"></span>
+              </div>
+
+              <div id="linksWrap" class="links-wrap hidden"></div>
+
               <div class="action-row" id="followArea"></div>
               <div id="actionMessage" class="action-message"></div>
 
@@ -770,6 +839,11 @@
     const moderationBadge = document.getElementById("moderationBadge");
     const actionMessage = document.getElementById("actionMessage");
 
+    const profileMeta = document.getElementById("profileMeta");
+    const locationChip = document.getElementById("locationChip");
+    const genderChip = document.getElementById("genderChip");
+    const linksWrap = document.getElementById("linksWrap");
+
     const statsBlock = document.getElementById("statsBlock");
     const tabsWrap = document.getElementById("tabsWrap");
     const lockedWrap = document.getElementById("lockedWrap");
@@ -843,6 +917,68 @@
       return div.innerHTML;
     }
 
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function extractProfileLinks(raw) {
+      const found = [];
+
+      const addLink = (url, label) => {
+        const clean = String(url || "").trim();
+        if (!clean) return;
+        found.push({
+          url: clean,
+          href: normalizeHref(clean),
+          label: String(label || clean).trim()
+        });
+      };
+
+      addLink(
+        getField(raw, ["link1", "url1", "website1", "site1", "social1"]),
+        getField(raw, ["link1Label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
+      );
+
+      addLink(
+        getField(raw, ["link2", "url2", "website2", "site2", "social2"]),
+        getField(raw, ["link2Label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
+      );
+
+      const maybeArray = raw?.links;
+      if (Array.isArray(maybeArray)) {
+        maybeArray.slice(0, 2).forEach(entry => {
+          if (typeof entry === "string") {
+            addLink(entry, entry);
+          } else if (entry && typeof entry === "object") {
+            addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
+          }
+        });
+      }
+
+      const unique = [];
+      const seen = new Set();
+      for (const item of found) {
+        const key = item.href.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
+        }
+      }
+
+      return unique.slice(0, 2);
+    }
+
     function getParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -861,6 +997,13 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const data = raw || {};
+      const city = data.city || data.locationCity || data.currentCity || "";
+      const province = data.province || data.state || data.region || data.locationProvince || data.currentProvince || "";
+      const country = data.country || data.locationCountry || data.currentCountry || "";
+      const genderValue = data.gender === "self_describe"
+        ? (data.genderCustom || "")
+        : (data.gender || "");
+
       return {
         uid: data.uid || data.id || fallbackUid || "",
         displayName: data.displayName || data.name || data.fullName || data.username || "Member",
@@ -872,7 +1015,14 @@
         isHiddenByAdmin: !!data.isHiddenByAdmin,
         softDeleted: !!data.softDeleted,
         verified: !!(data.verified || data.isVerified),
-        username: data.username || data.handle || data.userName || ""
+        username: data.username || data.handle || data.userName || "",
+        city,
+        province,
+        country,
+        cityVisible: !!data.cityVisible,
+        gender: genderValue,
+        genderVisible: !!data.genderVisible,
+        links: extractProfileLinks(data)
       };
     }
 
@@ -914,6 +1064,65 @@
       avatarPlaceholder.classList.remove("hidden");
     });
 
+    function renderLinks(links, canShow) {
+      linksWrap.innerHTML = "";
+
+      if (!canShow || !Array.isArray(links) || !links.length) {
+        linksWrap.classList.add("hidden");
+        return;
+      }
+
+      links.forEach(item => {
+        const a = document.createElement("a");
+        a.className = "profile-link";
+        a.href = item.href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
+            <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
+          </svg>
+          <span>${escapeHtml(item.label)}</span>
+        `;
+        linksWrap.appendChild(a);
+      });
+
+      linksWrap.classList.remove("hidden");
+    }
+
+    function renderProfileMeta(profile, canShow) {
+      let hasMeta = false;
+
+      if (canShow) {
+        const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
+        if (profile.cityVisible && locationParts.length) {
+          locationChip.textContent = locationParts.join(", ");
+          locationChip.classList.remove("hidden");
+          hasMeta = true;
+        } else {
+          locationChip.classList.add("hidden");
+          locationChip.textContent = "";
+        }
+
+        if (profile.genderVisible && String(profile.gender || "").trim()) {
+          genderChip.textContent = profile.gender;
+          genderChip.classList.remove("hidden");
+          hasMeta = true;
+        } else {
+          genderChip.classList.add("hidden");
+          genderChip.textContent = "";
+        }
+      } else {
+        locationChip.classList.add("hidden");
+        genderChip.classList.add("hidden");
+        locationChip.textContent = "";
+        genderChip.textContent = "";
+      }
+
+      profileMeta.classList.toggle("hidden", !hasMeta);
+    }
+
     function openTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll("#postsTab, #followersTab, #followingTab").forEach(el => el.classList.add("hidden"));
@@ -947,7 +1156,7 @@
       }
     }
 
-    function renderMeta(profile, canViewFull, relationship, isBlockedByViewer) {
+    function renderStatusBadges(profile, canViewFull, relationship, isBlockedByViewer) {
       const parts = [];
 
       if (!profile.isPrivate) {
@@ -1505,6 +1714,7 @@
 
         const alreadyFollowing = relationship.relationship === "following";
         const canViewFull = !isBanned && !isBlockedByViewer && (isSelf || !isPrivate || alreadyFollowing);
+        const canShowExtendedProfileInfo = !isBanned && !isBlockedByViewer && (canViewFull || !isPrivate);
 
         displayNameEl.textContent = profile.displayName || "Member";
 
@@ -1539,7 +1749,9 @@
             : "Follow this member to see their posts and connections.";
         }
 
-        renderMeta(profile, canViewFull, relationship.relationship, isBlockedByViewer);
+        renderStatusBadges(profile, canViewFull, relationship.relationship, isBlockedByViewer);
+        renderProfileMeta(profile, canShowExtendedProfileInfo);
+        renderLinks(profile.links || [], canShowExtendedProfileInfo);
         renderHeadActions(user.uid, memberUid, isBlockedByViewer);
 
         await renderActions(
