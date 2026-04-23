@@ -774,11 +774,11 @@
       if (q) {
         modeChip.textContent = "Mode: Search all";
       } else if (hasCity) {
-        modeChip.textContent = "Mode: Same city";
+        modeChip.textContent = "Mode: Same city + mine";
       } else if (browserCoords) {
-        modeChip.textContent = "Mode: GPS fallback";
+        modeChip.textContent = "Mode: GPS fallback + mine";
       } else {
-        modeChip.textContent = "Mode: No location";
+        modeChip.textContent = "Mode: Mine only";
       }
     }
 
@@ -827,7 +827,7 @@
               viewerProfile.lng = browserCoords.lng;
               viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
-              setPageStatus("Browser GPS enabled. Your city list still stays first, and distance labels improve.", "status-ok");
+              setPageStatus("Browser GPS enabled. Your city list stays first, and distance labels improve.", "status-ok");
             } catch (err) {
               console.error(err);
             }
@@ -1093,13 +1093,10 @@
       const q = searchInput.value.trim();
       const rows = buildNearbyPlaces();
 
-      if (!viewerHasCity && !browserCoords && !q) {
-        showEmpty("Set your city in profile or use GPS to see nearby places. Your own created places will still appear once available.");
-        return;
-      }
-
       if (!rows.length) {
-        if (q) {
+        if (!viewerHasCity && !browserCoords && !q) {
+          showEmpty("Set your city in profile or use GPS to see nearby places. Your own created places will still show here once you add them.");
+        } else if (q) {
           showEmpty("No places matched your search.");
         } else {
           showEmpty("No places found in your city yet. Search can still find places from other cities.");
