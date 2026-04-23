@@ -428,7 +428,7 @@
       <div class="hero-head">
         <div>
           <div class="hero-title">People Around You</div>
-          <div class="hero-sub">Discover members nearby, filter by following or verified, and open profiles fast.</div>
+          <div class="hero-sub">Default shows your own city. Search can find members from any city, province/state, or country.</div>
         </div>
 
         <div class="hero-actions">
@@ -437,7 +437,7 @@
       </div>
 
       <div class="stats-row">
-        <span class="stat-chip blue" id="cityChip">City: -</span>
+        <span class="stat-chip blue" id="cityChip">Location: -</span>
         <span class="stat-chip purple" id="modeChip">Mode: -</span>
         <span class="stat-chip yellow" id="browserChip">Browser location off</span>
         <span class="stat-chip green" id="countChip">People: 0</span>
@@ -445,7 +445,7 @@
 
       <div class="action-row" style="margin-top:10px;">
         <a href="search.html" class="action-btn btn-soft">Search Members</a>
-        <a href="settings.html" class="action-btn btn-purple">Nearby Settings</a>
+        <a href="edit-profile.html#location" class="action-btn btn-purple">Location Settings</a>
         <a href="nearby.html" class="action-btn btn-soft">Nearby Hub</a>
       </div>
 
@@ -461,7 +461,7 @@
         </div>
 
         <div class="search-wrap">
-          <input id="searchInput" class="search-box" type="text" placeholder="Search nearby people..." />
+          <input id="searchInput" class="search-box" type="text" placeholder="Search name, username, city, province, country..." />
           <button id="clearSearchBtn" class="clear-search-btn hidden" type="button">✕</button>
         </div>
 
@@ -573,6 +573,14 @@
       return div.innerHTML;
     }
 
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function safeText(value) {
+      return String(value || "").trim();
+    }
+
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
@@ -618,8 +626,10 @@
         isHiddenByAdmin: !!d.isHiddenByAdmin,
         softDeleted: !!d.softDeleted,
         showInNearby: d.showInNearby !== false,
-        locationVisibility: d.locationVisibility || "city",
+        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
         city: d.city || d.locationCity || d.currentCity || "",
+        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
+        country: d.country || d.locationCountry || d.currentCountry || "",
         blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
         lat: readLat(d),
         lng: readLng(d)
@@ -639,17 +649,26 @@
       return R * c;
     }
 
-    function sameCity(a, b) {
-      const aa = String(a || "").trim().toLowerCase();
-      const bb = String(b || "").trim().toLowerCase();
-      return !!aa && !!bb && aa === bb;
-    }
-
     function formatDistanceLabel(distanceKm) {
       if (distanceKm === null || distanceKm === undefined) return "";
       if (distanceKm < 1) return "Under 1 km";
       if (distanceKm < 10) return `${distanceKm.toFixed(1)} km away`;
       return `${Math.round(distanceKm)} km away`;
+    }
+
+    function sameLocationTriple(aCity, aProvince, aCountry, bCity, bProvince, bCountry) {
+      return (
+        normalizeText(aCity) &&
+        normalizeText(aProvince) &&
+        normalizeText(aCountry) &&
+        normalizeText(aCity) === normalizeText(bCity) &&
+        normalizeText(aProvince) === normalizeText(bProvince) &&
+        normalizeText(aCountry) === normalizeText(bCountry)
+      );
+    }
+
+    function buildLocationLabel(profile) {
+      return [profile.city, profile.province, profile.country].filter(Boolean).join(", ");
     }
 
     async function requestBrowserLocation() {
@@ -690,8 +709,7 @@
 
     function renderViewerChips() {
       if (!viewerProfile) return;
-
-      cityChip.textContent = `City: ${viewerProfile.city || "Not added"}`;
+      cityChip.textContent = `Location: ${buildLocationLabel(viewerProfile) || "Not added"}`;
       modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
 
       cityChip.className = "stat-chip blue";
@@ -737,57 +755,93 @@
       const viewerLng = browserCoords?.lng ?? viewerProfile?.lng ?? null;
 
       let distanceKm = null;
-      let score = 0;
-
       if (viewerLat !== null && viewerLng !== null && profile.lat !== null && profile.lng !== null) {
         distanceKm = kmDistance(viewerLat, viewerLng, profile.lat, profile.lng);
-        if (distanceKm !== null) score = Math.max(0, 500 - distanceKm);
-      } else if (sameCity(viewerProfile?.city, profile.city)) {
-        score = 250;
       }
 
-      let locationText = "";
-      const mode = profile.locationVisibility || "city";
+      const sameLocalArea = sameLocationTriple(
+        viewerProfile?.city,
+        viewerProfile?.province,
+        viewerProfile?.country,
+        profile.city,
+        profile.province,
+        profile.country
+      );
 
-      if (mode === "city" && profile.city) {
-        locationText = profile.city;
-      } else if ((mode === "approximate" || mode === "exact") && distanceKm !== null) {
-        locationText = formatDistanceLabel(distanceKm);
-      } else if (sameCity(viewerProfile?.city, profile.city)) {
-        locationText = "Same city";
-      }
-
-      return {
-        ...profile,
-        distanceKm,
-        score,
-        locationText,
-        relation: getRelation(profile)
-      };
-    }
-
-    function matchesSearch(profile, q) {
-      if (!q) return true;
-      const joined = [
+      const searchable = [
         profile.displayName,
         profile.username,
         profile.bio,
-        profile.city
+        profile.city,
+        profile.province,
+        profile.country
       ].filter(Boolean).join(" ").toLowerCase();
 
-      return joined.includes(q.toLowerCase());
+      return {
+        ...profile,
+        sameLocalArea,
+        distanceKm,
+        searchable,
+        relation: getRelation(profile),
+        fullLocation: buildLocationLabel(profile)
+      };
     }
 
-    function getFilteredPeople() {
+    function getSortScore(profile, hasSearch) {
+      let score = 0;
+
+      if (profile.relation === "following") score += 3000;
+      if (profile.verified) score += 1000;
+      if (profile.sameLocalArea) score += 2000;
+
+      if (hasSearch) {
+        const q = normalizeText(searchInput.value);
+        const dn = normalizeText(profile.displayName);
+        const un = normalizeText(profile.username);
+        const city = normalizeText(profile.city);
+        const province = normalizeText(profile.province);
+        const country = normalizeText(profile.country);
+
+        if (dn.startsWith(q)) score += 1200;
+        else if (dn.includes(q)) score += 900;
+
+        if (un.startsWith(q)) score += 1100;
+        else if (un.includes(q)) score += 800;
+
+        if (city.startsWith(q)) score += 700;
+        else if (city.includes(q)) score += 550;
+
+        if (province.startsWith(q)) score += 650;
+        else if (province.includes(q)) score += 500;
+
+        if (country.startsWith(q)) score += 600;
+        else if (country.includes(q)) score += 450;
+      }
+
+      if (profile.distanceKm !== null) {
+        score += Math.max(0, 500 - profile.distanceKm);
+      }
+
+      return score;
+    }
+
+    function getBaseRows() {
       const q = searchInput.value.trim();
+      const hasSearch = !!q;
 
       let rows = peopleData
         .filter(p => p.uid !== currentUser.uid)
         .filter(p => p.showInNearby)
         .filter(p => !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned")
         .filter(p => !viewerBlockedUsers.includes(p.uid))
-        .map(buildPersonViewModel)
-        .filter(p => matchesSearch(p, q));
+        .map(buildPersonViewModel);
+
+      if (!hasSearch) {
+        rows = rows.filter(p => p.sameLocalArea);
+      } else {
+        const qq = q.toLowerCase();
+        rows = rows.filter(p => p.searchable.includes(qq));
+      }
 
       if (currentTab === "following") {
         rows = rows.filter(p => p.relation === "following");
@@ -795,13 +849,19 @@
         rows = rows.filter(p => p.verified);
       }
 
-      return rows.sort((a, b) => {
-        if (a.relation === "following" && b.relation !== "following") return -1;
-        if (b.relation === "following" && a.relation !== "following") return 1;
-        if (a.verified && !b.verified) return -1;
-        if (b.verified && !a.verified) return 1;
-        return b.score - a.score || a.displayName.localeCompare(b.displayName);
-      });
+      return rows
+        .map(p => ({ ...p, sortScore: getSortScore(p, hasSearch) }))
+        .sort((a, b) => {
+          if (b.sortScore !== a.sortScore) return b.sortScore - a.sortScore;
+
+          const aHasDistance = a.distanceKm !== null;
+          const bHasDistance = b.distanceKm !== null;
+          if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
+          if (aHasDistance && !bHasDistance) return -1;
+          if (bHasDistance && !aHasDistance) return 1;
+
+          return a.displayName.localeCompare(b.displayName);
+        });
     }
 
     async function createNotificationSafe(targetUid, payload) {
@@ -873,14 +933,30 @@
     function renderPeople() {
       openLoading();
 
-      const rows = getFilteredPeople();
+      const hasSearch = !!searchInput.value.trim();
+      const viewerHasFullLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
+      if (!hasSearch && !viewerHasFullLocation) {
+        showEmpty("Add city, province/state and country in your profile to see nearby people. You can still search globally.");
+        return;
+      }
+
+      const rows = getBaseRows();
 
       if (!rows.length) {
-        const emptyText = currentTab === "following"
-          ? "No nearby people you follow right now."
-          : currentTab === "verified"
-          ? "No verified nearby people found."
-          : "No nearby people found.";
+        let emptyText = "No nearby people found.";
+
+        if (hasSearch) {
+          emptyText = "No people found for your search.";
+        } else if (currentTab === "following") {
+          emptyText = "No people you follow in your city right now.";
+        } else if (currentTab === "verified") {
+          emptyText = "No verified people found in your city.";
+        }
+
         showEmpty(emptyText);
         return;
       }
@@ -895,10 +971,14 @@
         const badges = [];
         badges.push(`<span class="mini-badge ${profile.isPrivate ? "mini-yellow" : "mini-blue"}">${profile.isPrivate ? "Private" : "Public"}</span>`);
         if (profile.verified) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
-        if (profile.locationText) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(profile.locationText)}</span>`);
-        if (profile.city && profile.locationVisibility !== "hidden" && !profile.locationText.includes(profile.city)) {
-          badges.push(`<span class="mini-badge">${escapeHtml(profile.city)}</span>`);
-        }
+        if (profile.fullLocation) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(profile.fullLocation)}</span>`);
+        if (profile.distanceKm !== null) badges.push(`<span class="mini-badge">${escapeHtml(formatDistanceLabel(profile.distanceKm))}</span>`);
+
+        const sideLabel = profile.distanceKm !== null
+          ? formatDistanceLabel(profile.distanceKm)
+          : profile.sameLocalArea
+          ? "Same city"
+          : profile.fullLocation || "";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -914,10 +994,10 @@
                   </div>
                   ${profile.username ? `<div class="person-username">@${escapeHtml(profile.username)}</div>` : ""}
                 </div>
-                ${profile.locationText ? `<div class="distance-label">${escapeHtml(profile.locationText)}</div>` : ""}
+                ${sideLabel ? `<div class="distance-label">${escapeHtml(sideLabel)}</div>` : ""}
               </div>
 
-              <div class="card-sub">${escapeHtml(profile.bio || "Nearby member")}</div>
+              <div class="card-sub">${escapeHtml(profile.bio || "Member profile")}</div>
 
               <div class="badge-row">
                 ${badges.join("")}
@@ -991,8 +1071,6 @@
       }, uid);
 
       viewerBlockedUsers = viewerProfile.blockedUsers || [];
-      cityChip.textContent = `City: ${viewerProfile.city || "Not added"}`;
-      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
     }
 
     async function loadPeople() {
@@ -1040,12 +1118,13 @@
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
 
-      searchInput.placeholder =
-        tab === "following"
-          ? "Search nearby people you follow..."
-          : tab === "verified"
-          ? "Search verified nearby people..."
-          : "Search nearby people...";
+      if (tab === "following") {
+        searchInput.placeholder = "Search people you follow...";
+      } else if (tab === "verified") {
+        searchInput.placeholder = "Search verified members...";
+      } else {
+        searchInput.placeholder = "Search name, username, city, province, country...";
+      }
 
       renderPeople();
     }
