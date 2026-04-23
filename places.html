@@ -155,6 +155,7 @@
 
     .meta-grid{
       display:grid;
+      grid-template-columns:1fr 1fr;
       gap:8px;
       margin-bottom:12px;
     }
@@ -190,7 +191,8 @@
       border-radius:18px;
       padding:12px;
     }
-    .submitter-avatar,.submitter-avatar-placeholder{
+    .submitter-avatar,.submitter-avatar-placeholder,
+    .comment-avatar,.comment-avatar-placeholder{
       width:56px;
       height:56px;
       border-radius:50%;
@@ -198,8 +200,8 @@
       border:1px solid var(--line);
       background:var(--surface-3);
     }
-    .submitter-avatar{object-fit:cover}
-    .submitter-avatar-placeholder{
+    .submitter-avatar,.comment-avatar{object-fit:cover}
+    .submitter-avatar-placeholder,.comment-avatar-placeholder{
       display:flex;
       align-items:center;
       justify-content:center;
@@ -208,8 +210,9 @@
       text-align:center;
       padding:6px;
     }
-    .submitter-body{min-width:0;flex:1}
-    .submitter-name{
+    .submitter-body,.comment-body{min-width:0;flex:1}
+    .submitter-name,
+    .comment-name{
       font-size:15px;
       font-weight:800;
       line-height:1.3;
@@ -236,7 +239,8 @@
       font-size:10px;
       font-weight:900;
     }
-    .submitter-username{
+    .submitter-username,
+    .comment-username{
       font-size:12px;
       color:var(--blue);
       font-weight:700;
@@ -315,7 +319,8 @@
     .message.ok{color:#86efac}
     .message.err{color:#fda4af}
 
-    .edit-form{
+    .edit-form,
+    .comment-form{
       display:grid;
       gap:12px;
     }
@@ -351,9 +356,68 @@
       resize:vertical;
       line-height:1.55;
     }
+    .comment-textarea{
+      min-height:92px;
+    }
     .input::placeholder,
     .textarea::placeholder{
       color:var(--muted);
+    }
+
+    .comments-list{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+    .comment-card{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .comment-top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .comment-time{
+      font-size:11px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .comment-text{
+      margin-top:6px;
+      color:var(--text);
+      line-height:1.6;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .comment-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .tiny-btn{
+      border:none;
+      border-radius:10px;
+      padding:7px 10px;
+      font-size:11px;
+      font-weight:800;
+      cursor:pointer;
+      color:var(--text);
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+    .tiny-btn.red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.20);
     }
 
     .bottom-nav{
@@ -402,8 +466,9 @@
     @media (max-width:700px){
       body{padding:10px 10px 110px}
       .brand{font-size:18px}
-      .grid-2{grid-template-columns:1fr}
+      .grid-2,.meta-grid{grid-template-columns:1fr}
       .place-title{font-size:20px}
+      .action-row .action-btn{flex:1}
     }
   </style>
 </head>
@@ -461,6 +526,14 @@
             <strong>Source</strong>
             <span id="sourceText">-</span>
           </div>
+          <div class="meta-item">
+            <strong>Visited</strong>
+            <span id="visitedCountText">0</span>
+          </div>
+          <div class="meta-item">
+            <strong>Comments</strong>
+            <span id="commentsCountText">0</span>
+          </div>
         </div>
 
         <div id="descText" class="desc">No description added.</div>
@@ -472,6 +545,26 @@
       <div class="panel">
         <div class="section-title">Submitted By</div>
         <div id="submitterCard" class="submitter-card"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Comments</div>
+
+        <form id="commentForm" class="comment-form">
+          <div class="field">
+            <label class="label" for="commentInput">Write a comment</label>
+            <textarea id="commentInput" class="textarea comment-textarea" placeholder="Share your experience about this place..."></textarea>
+          </div>
+
+          <div class="action-row">
+            <button id="commentSubmitBtn" type="submit" class="action-btn btn-primary">Post Comment</button>
+          </div>
+
+          <div id="commentMessage" class="message"></div>
+        </form>
+
+        <div id="commentsList" class="comments-list"></div>
+        <div id="commentsEmpty" class="empty-box hidden">No comments yet.</div>
       </div>
 
       <div id="editPanel" class="panel hidden">
@@ -579,11 +672,15 @@
     import {
       doc,
       getDoc,
+      getDocs,
       deleteDoc,
       addDoc,
       updateDoc,
+      setDoc,
       collection,
-      serverTimestamp
+      serverTimestamp,
+      query,
+      where
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const backBtn = document.getElementById("backBtn");
@@ -599,11 +696,20 @@
     const cityText = document.getElementById("cityText");
     const addressText = document.getElementById("addressText");
     const sourceText = document.getElementById("sourceText");
+    const visitedCountText = document.getElementById("visitedCountText");
+    const commentsCountText = document.getElementById("commentsCountText");
     const descText = document.getElementById("descText");
     const topActionRow = document.getElementById("topActionRow");
     const topMessage = document.getElementById("topMessage");
 
     const submitterCard = document.getElementById("submitterCard");
+
+    const commentForm = document.getElementById("commentForm");
+    const commentInput = document.getElementById("commentInput");
+    const commentSubmitBtn = document.getElementById("commentSubmitBtn");
+    const commentMessage = document.getElementById("commentMessage");
+    const commentsList = document.getElementById("commentsList");
+    const commentsEmpty = document.getElementById("commentsEmpty");
 
     const editPanel = document.getElementById("editPanel");
     const editForm = document.getElementById("editForm");
@@ -626,6 +732,10 @@
     let currentPlace = null;
     let currentSubmitterProfile = null;
     let isCreator = false;
+
+    let visitCount = 0;
+    let hasVisited = false;
+    let commentsRows = [];
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
 
@@ -650,9 +760,12 @@
       if (e.key === "bwTheme") applyTheme(getStoredTheme());
     });
 
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    if (mq.addEventListener) {
+      mq.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -669,6 +782,11 @@
       editMessage.className = `message ${type}`;
     }
 
+    function setCommentMessage(text = "", type = "") {
+      commentMessage.textContent = text;
+      commentMessage.className = `message ${type}`;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text || "";
@@ -678,6 +796,41 @@
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
+    }
+
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
+    function placeKey() {
+      return `${currentSource}:${currentPlaceId}`;
+    }
+
+    function visitDocId(uid) {
+      return `${currentSource}__${currentPlaceId}__${uid}`;
+    }
+
+    function buildMapsLink() {
+      if (currentPlace?.lat != null && currentPlace?.lng != null) {
+        return `https://www.google.com/maps?q=${encodeURIComponent(`${currentPlace.lat},${currentPlace.lng}`)}`;
+      }
+      const queryText = [currentPlace?.name, currentPlace?.address, currentPlace?.city].filter(Boolean).join(", ");
+      if (!queryText) return "";
+      return `https://www.google.com/maps?q=${encodeURIComponent(queryText)}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+      try {
+        if (value?.toDate) return value.toDate().toLocaleString();
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -722,7 +875,7 @@
     }
 
     async function createNotificationSafe(targetUid, payload) {
-      if (!targetUid || targetUid === currentUser.uid) return;
+      if (!targetUid || !currentUser || targetUid === currentUser.uid) return;
       try {
         await addDoc(collection(db, "notifications", targetUid, "items"), payload);
       } catch {}
@@ -768,11 +921,127 @@
       return null;
     }
 
+    async function loadVisitState() {
+      if (!currentUser) return;
+
+      try {
+        const [myVisitSnap, visitsSnap] = await Promise.all([
+          getDoc(doc(db, "place_visits", visitDocId(currentUser.uid))),
+          getDocs(query(collection(db, "place_visits"), where("placeKey", "==", placeKey())))
+        ]);
+
+        hasVisited = myVisitSnap.exists();
+        visitCount = visitsSnap.size;
+      } catch {
+        hasVisited = false;
+        visitCount = 0;
+      }
+
+      visitedCountText.textContent = String(visitCount);
+    }
+
+    async function loadComments() {
+      commentsRows = [];
+
+      try {
+        const snap = await getDocs(collection(db, currentSource, currentPlaceId, "comments"));
+        commentsRows = snap.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        })).sort((a, b) => {
+          const aMs = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const bMs = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return bMs - aMs;
+        });
+      } catch {
+        commentsRows = [];
+      }
+
+      commentsCountText.textContent = String(commentsRows.length);
+      renderComments();
+    }
+
+    function renderComments() {
+      commentsList.innerHTML = "";
+
+      if (!commentsRows.length) {
+        commentsEmpty.classList.remove("hidden");
+        return;
+      }
+
+      commentsEmpty.classList.add("hidden");
+
+      commentsRows.forEach(row => {
+        const isMine = currentUser && row.userId === currentUser.uid;
+        const canDelete = isMine || isCreator;
+
+        const card = document.createElement("div");
+        card.className = "comment-card";
+
+        const avatarHtml = row.photoURL
+          ? `<img class="comment-avatar" src="${escapeHtml(row.photoURL)}" alt="Commenter photo">`
+          : `<div class="comment-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="comment-body">
+            <div class="comment-top">
+              <div>
+                <div class="comment-name">
+                  <span>${escapeHtml(row.displayName || "Member")}</span>
+                  ${row.verified ? `<span class="verified-dot">✓</span>` : ""}
+                </div>
+                ${row.username ? `<div class="comment-username">@${escapeHtml(row.username)}</div>` : ""}
+              </div>
+              <div class="comment-time">${escapeHtml(formatDate(row.createdAt))}</div>
+            </div>
+
+            <div class="comment-text">${escapeHtml(row.text || "")}</div>
+
+            <div class="comment-actions">
+              ${canDelete ? `<button class="tiny-btn red delete-comment-btn" data-id="${escapeHtml(row.id)}" type="button">Delete</button>` : ``}
+            </div>
+          </div>
+        `;
+
+        const img = card.querySelector(".comment-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="comment-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        const deleteBtn = card.querySelector(".delete-comment-btn");
+        if (deleteBtn) {
+          deleteBtn.addEventListener("click", async () => {
+            const ok = confirm("Delete this comment?");
+            if (!ok) return;
+
+            deleteBtn.disabled = true;
+            setCommentMessage("");
+
+            try {
+              await deleteDoc(doc(db, currentSource, currentPlaceId, "comments", row.id));
+              await loadComments();
+              setCommentMessage("Comment deleted.", "ok");
+            } catch (err) {
+              console.error(err);
+              setCommentMessage("Could not delete comment.", "err");
+              deleteBtn.disabled = false;
+            }
+          });
+        }
+
+        commentsList.appendChild(card);
+      });
+    }
+
     function renderBadges() {
       const badges = [];
       badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.category || "General")}</span>`);
       badges.push(`<span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">${currentPlace.approved ? "Verified" : currentPlace.rejected ? "Rejected" : "Pending"}</span>`);
       if (isCreator) badges.push(`<span class="badge badge-purple">Your Place</span>`);
+      if (hasVisited) badges.push(`<span class="badge badge-green">Been There</span>`);
       if (currentPlace.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.city)}</span>`);
       badgeRow.innerHTML = badges.join("");
     }
@@ -818,8 +1087,19 @@
     function renderTopActions() {
       const buttons = [];
 
+      buttons.push(`
+        <button id="beenThereBtn" class="action-btn ${hasVisited ? "btn-red" : "btn-green"}" type="button">
+          ${hasVisited ? "Remove Visit" : "Been There"}
+        </button>
+      `);
+
+      const mapsHref = buildMapsLink();
+      if (mapsHref) {
+        buttons.push(`<a href="${escapeHtml(mapsHref)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Maps</a>`);
+      }
+
       if (currentPlace.website) {
-        buttons.push(`<a href="${escapeHtml(currentPlace.website)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-primary">Open Link</a>`);
+        buttons.push(`<a href="${escapeHtml(normalizeHref(currentPlace.website))}" target="_blank" rel="noopener noreferrer" class="action-btn btn-primary">Open Link</a>`);
       }
 
       if (currentPlace.createdBy) {
@@ -835,8 +1115,59 @@
 
       topActionRow.innerHTML = buttons.join("");
 
+      const beenThereBtn = document.getElementById("beenThereBtn");
       const toggleEditBtn = document.getElementById("toggleEditBtn");
       const deletePlaceBtn = document.getElementById("deletePlaceBtn");
+
+      if (beenThereBtn) {
+        beenThereBtn.addEventListener("click", async () => {
+          if (!currentUser) return;
+
+          beenThereBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            if (hasVisited) {
+              await deleteDoc(doc(db, "place_visits", visitDocId(currentUser.uid)));
+              hasVisited = false;
+            } else {
+              await setDoc(doc(db, "place_visits", visitDocId(currentUser.uid)), {
+                userId: currentUser.uid,
+                placeId: currentPlaceId,
+                placeKey: placeKey(),
+                source: currentSource,
+                placeName: currentPlace.name || "",
+                status: "visited",
+                visited: true,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              }, { merge: true });
+
+              hasVisited = true;
+
+              await createNotificationSafe(currentPlace.createdBy, {
+                type: "place_visit",
+                title: "Place visited",
+                text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} marked your place as visited.`,
+                fromUserId: currentUser.uid,
+                toUserId: currentPlace.createdBy,
+                placeId: currentPlaceId,
+                createdAt: serverTimestamp(),
+                isRead: false
+              });
+            }
+
+            await loadVisitState();
+            renderBadges();
+            renderTopActions();
+            setTopMessage(hasVisited ? "Marked as visited." : "Visit removed.", "ok");
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not update visit status.", "err");
+            beenThereBtn.disabled = false;
+          }
+        });
+      }
 
       if (toggleEditBtn) {
         toggleEditBtn.addEventListener("click", () => {
@@ -888,6 +1219,9 @@
         heroImage.classList.add("hidden");
       }
 
+      await loadVisitState();
+      await loadComments();
+
       renderBadges();
       renderSubmitter();
       renderTopActions();
@@ -901,6 +1235,56 @@
 
     heroImage.addEventListener("error", () => {
       heroImage.classList.add("hidden");
+    });
+
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || !currentPlace) return;
+
+      const text = commentInput.value.trim();
+      if (!text) {
+        setCommentMessage("Write a comment first.", "err");
+        return;
+      }
+      if (text.length > 1000) {
+        setCommentMessage("Comment is too long.", "err");
+        return;
+      }
+
+      commentSubmitBtn.disabled = true;
+      setCommentMessage("");
+
+      try {
+        await addDoc(collection(db, currentSource, currentPlaceId, "comments"), {
+          userId: currentUser.uid,
+          text,
+          displayName: currentUserProfile?.displayName || currentUser.displayName || "Member",
+          username: currentUserProfile?.username || "",
+          photoURL: currentUserProfile?.photoURL || currentUser.photoURL || "",
+          verified: !!currentUserProfile?.verified,
+          createdAt: serverTimestamp()
+        });
+
+        await createNotificationSafe(currentPlace.createdBy, {
+          type: "place_comment",
+          title: "New comment on place",
+          text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} commented on your place.`,
+          fromUserId: currentUser.uid,
+          toUserId: currentPlace.createdBy,
+          placeId: currentPlaceId,
+          createdAt: serverTimestamp(),
+          isRead: false
+        });
+
+        commentInput.value = "";
+        await loadComments();
+        setCommentMessage("Comment posted.", "ok");
+      } catch (err) {
+        console.error(err);
+        setCommentMessage("Could not post comment.", "err");
+      }
+
+      commentSubmitBtn.disabled = false;
     });
 
     editForm.addEventListener("submit", async (e) => {
