@@ -178,6 +178,10 @@
       background:rgba(255,93,115,.14);
       border-color:rgba(255,93,115,.20);
     }
+    .btn-soft{
+      background:var(--surface-3);
+      border-color:var(--line);
+    }
 
     .status-text{
       min-height:18px;
@@ -404,6 +408,7 @@
       .brand{font-size:18px}
       .tabs{grid-template-columns:repeat(3,1fr)}
       .tab-link{font-size:12px;padding:10px 4px}
+      .top-actions .action-btn{flex:1}
     }
   </style>
 </head>
@@ -436,7 +441,7 @@
     <div class="panel">
       <div class="chip-row">
         <span id="locationChip" class="chip chip-blue">Location: -</span>
-        <span id="modeChip" class="chip chip-purple">Mode: -</span>
+        <span id="modeChip" class="chip chip-purple">Mode: Same city</span>
         <span id="browserChip" class="chip chip-yellow">Browser GPS off</span>
         <span id="countChip" class="chip chip-green">Places: 0</span>
       </div>
@@ -444,8 +449,7 @@
       <div class="top-actions">
         <a href="edit-profile.html#location" class="action-btn btn-primary">Location Settings</a>
         <button id="gpsBtn2" class="action-btn btn-green" type="button">Use GPS</button>
-        <button id="refreshBtn" class="action-btn btn-yellow" type="button">Refresh</button>
-        <a href="add-places.html" class="action-btn btn-purple">Add Place</a>
+        <a href="add-place.html" class="action-btn btn-purple">Add Place</a>
       </div>
 
       <div id="pageStatus" class="status-text"></div>
@@ -532,6 +536,8 @@
       setDoc,
       deleteDoc,
       collection,
+      query,
+      where,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -542,7 +548,6 @@
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
-    const refreshBtn = document.getElementById("refreshBtn");
     const pageStatus = document.getElementById("pageStatus");
 
     const searchInput = document.getElementById("searchInput");
@@ -555,7 +560,11 @@
     let viewerProfile = null;
     let browserCoords = null;
     let allPlaces = [];
-    let visitStats = new Map();
+
+    let visitCountMap = new Map();
+    let visitCountLooseMap = new Map();
+    let userVisitExactMap = new Map();
+    let userVisitLooseMap = new Map();
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
 
@@ -637,42 +646,46 @@
       );
     }
 
-    function countryAliases(country) {
-      const c = normalizeText(country);
-      if (!c) return [];
-      const aliases = [c];
-      if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain", "england");
-      if (c === "canada") aliases.push("ca");
-      return aliases;
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
-    function buildLocationParts(city, province, country) {
-      return [titleText(city), titleText(province), titleText(country)].filter(Boolean);
+    function countryAliases(country) {
+      const c = normalizeText(country);
+      if (!c) return "";
+      const aliases = [c];
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "canada") aliases.push("ca");
+      return aliases.join(" ");
     }
 
     function buildLocationSearch(d) {
+      const existing = titleText(d.locationSearch);
       const city = titleText(d.city || d.locationCity || "");
       const province = titleText(d.province || d.state || d.region || "");
       const country = titleText(d.country || d.locationCountry || "");
-      const existing = titleText(d.locationSearch || "");
-      return [
-        existing,
-        city,
-        province,
-        country,
-        ...countryAliases(country)
-      ].filter(Boolean).join(" ").trim().toLowerCase();
+      return [existing, city, province, country, countryAliases(country)]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
-    function textMatchesQuery(text, query) {
-      const q = normalizeText(query);
-      if (!q) return true;
-      const base = normalizeText(text);
-      if (!base) return false;
-      if (base.includes(q)) return true;
-      const tokens = q.split(/[\s,]+/).filter(Boolean);
-      return tokens.every(token => base.includes(token));
+    function buildPlaceKey(source, placeId) {
+      return `${String(source || "").trim()}__${String(placeId || "").trim()}`;
+    }
+
+    function buildVisitDocId(userId, source, placeId) {
+      return `${userId}__${String(source || "").trim()}__${String(placeId || "").trim()}`;
+    }
+
+    function isVisitRecord(raw) {
+      const status = String(raw?.status || raw?.type || "").toLowerCase();
+      return raw?.visited === true || raw?.explored === true || status.includes("visited") || status.includes("explored");
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -708,13 +721,6 @@
       };
     }
 
-    function normalizeHref(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
-    }
-
     function normalizePlace(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
       const status = String(d.status || "").toLowerCase();
@@ -744,22 +750,35 @@
       };
     }
 
-    function placeKey(source, id) {
-      return `${source || "nearby_places"}::${id || ""}`;
-    }
-
-    function getVisitInfo(model) {
-      return visitStats.get(placeKey(model.source, model.id)) || { count: 0, visitedByMe: false };
-    }
-
     function renderViewerLocation() {
       if (!viewerProfile) return;
-      const parts = buildLocationParts(viewerProfile.city, viewerProfile.province, viewerProfile.country);
+
+      const parts = [viewerProfile.city, viewerProfile.province, viewerProfile.country].filter(Boolean);
       locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
-      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
+
       if (!browserCoords) {
         browserChip.textContent = "Browser GPS off";
         browserChip.className = "chip chip-yellow";
+      }
+
+      updateModeChip();
+    }
+
+    function updateModeChip() {
+      const q = searchInput.value.trim();
+      const hasSavedLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
+      if (q) {
+        modeChip.textContent = "Mode: Search all";
+      } else if (hasSavedLocation) {
+        modeChip.textContent = "Mode: Same city";
+      } else if (browserCoords) {
+        modeChip.textContent = "Mode: GPS fallback";
+      } else {
+        modeChip.textContent = "Mode: No location";
       }
     }
 
@@ -808,7 +827,7 @@
               viewerProfile.lng = browserCoords.lng;
               viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
-              setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
+              setPageStatus("Browser GPS enabled. City list still stays first, and distance labels are improved.", "status-ok");
             } catch (err) {
               console.error(err);
             }
@@ -819,7 +838,7 @@
             browserCoords = null;
             browserChip.textContent = "Browser GPS off";
             browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved location instead.", "status-err");
+            setPageStatus("Could not use browser GPS. Using saved city instead.", "status-err");
             resolve();
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
@@ -836,19 +855,19 @@
       listWrap.innerHTML = "";
     }
 
-    function showEmpty(text, countLabel = "Places: 0") {
+    function showEmpty(text) {
       listLoading.classList.add("hidden");
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
-      countChip.textContent = countLabel;
+      countChip.textContent = "Places: 0";
     }
 
-    function showList(count, prefix = "Places") {
+    function showList(count) {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
-      countChip.textContent = `${prefix}: ${count}`;
+      countChip.textContent = `Places: ${count}`;
     }
 
     function getViewerCoords() {
@@ -858,51 +877,43 @@
       };
     }
 
-    function placeMatchesSavedLocation(model) {
+    function getVisitCount(model) {
+      const exactKey = buildPlaceKey(model.source, model.id);
+      return visitCountMap.get(exactKey) || visitCountLooseMap.get(model.id) || 0;
+    }
+
+    function getUserVisitRecord(model) {
+      const exactKey = buildPlaceKey(model.source, model.id);
+      return userVisitExactMap.get(exactKey) || userVisitLooseMap.get(model.id) || null;
+    }
+
+    function hasVisited(model) {
+      return !!getUserVisitRecord(model);
+    }
+
+    function buildNearbyPlaces() {
+      const q = normalizeText(searchInput.value);
       const viewerCity = normalizeText(viewerProfile?.city);
       const viewerProvince = normalizeText(viewerProfile?.province);
       const viewerCountry = normalizeText(viewerProfile?.country);
-
-      const city = normalizeText(model.city);
-      const province = normalizeText(model.province);
-      const country = normalizeText(model.country);
-
-      const countryOk = !viewerCountry || !country || viewerCountry === country || countryAliases(country).includes(viewerCountry);
-      const provinceOk = !viewerProvince || !province || viewerProvince === province;
-
-      const exactCity = !!viewerCity && !!city && viewerCity === city && provinceOk && countryOk;
-      if (exactCity) return { ok: true, rank: 1 };
-
-      if (!viewerCity && viewerProvince && province && viewerProvince === province && countryOk) {
-        return { ok: true, rank: 2 };
-      }
-
-      if (!viewerCity && !viewerProvince && viewerCountry && country && countryOk) {
-        return { ok: true, rank: 3 };
-      }
-
-      return { ok: false, rank: 99 };
-    }
-
-    function buildAllRows() {
+      const viewerHasSavedLocation = !!viewerCity && !!viewerProvince && !!viewerCountry;
       const viewerCoords = getViewerCoords();
 
       return allPlaces
-        .filter(model => !model.hidden && !model.rejected)
-        .filter(model => model.approved || model.createdBy === currentUser.uid)
+        .filter(model => !model.hidden && !model.rejected && model.approved)
         .map(model => {
-          const nearbyMatch = placeMatchesSavedLocation(model);
+          const city = normalizeText(model.city);
+          const province = normalizeText(model.province);
+          const country = normalizeText(model.country);
 
-          const distanceKm =
-            viewerCoords.lat !== null &&
-            viewerCoords.lng !== null &&
-            model.lat !== null &&
-            model.lng !== null
-              ? kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng)
-              : null;
+          const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
+          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
+          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
 
-          const gpsNearby = distanceKm !== null && distanceKm <= 100;
-          const visitInfo = getVisitInfo(model);
+          let distanceKm = null;
+          if (viewerCoords.lat !== null && viewerCoords.lng !== null && model.lat !== null && model.lng !== null) {
+            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng);
+          }
 
           const searchable = [
             model.name,
@@ -915,62 +926,32 @@
             model.source
           ].filter(Boolean).join(" ").toLowerCase();
 
+          const visitCount = getVisitCount(model);
+          const visited = hasVisited(model);
+
           return {
             ...model,
+            sameCity,
             distanceKm,
-            distanceLabel: formatDistance(distanceKm),
-            nearbySaved: nearbyMatch.ok,
-            nearbyRank: nearbyMatch.rank,
-            nearbyGps: gpsNearby,
-            searchable,
-            visitedByMe: visitInfo.visitedByMe,
-            visitCount: visitInfo.count,
-            placeLabel: buildLocationParts(model.city, model.province, model.country).join(", ")
+            visitCount,
+            visited,
+            distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
+            placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
+            searchable
           };
-        });
-    }
+        })
+        .filter(row => {
+          if (q) return row.searchable.includes(q);
 
-    function buildVisibleRows() {
-      const q = normalizeText(searchInput.value);
-      const rows = buildAllRows();
+          if (viewerHasSavedLocation) return row.sameCity;
 
-      if (q) {
-        return rows
-          .filter(row => textMatchesQuery(row.searchable, q))
-          .sort((a, b) => {
-            const aTitleStarts = normalizeText(a.name).startsWith(q) ? 1 : 0;
-            const bTitleStarts = normalizeText(b.name).startsWith(q) ? 1 : 0;
-            if (aTitleStarts !== bTitleStarts) return bTitleStarts - aTitleStarts;
+          if (browserCoords && row.distanceKm !== null) return row.distanceKm <= 25;
 
-            const aLocationStarts = normalizeText(a.placeLabel).startsWith(q) ? 1 : 0;
-            const bLocationStarts = normalizeText(b.placeLabel).startsWith(q) ? 1 : 0;
-            if (aLocationStarts !== bLocationStarts) return bLocationStarts - aLocationStarts;
-
-            const aApproved = a.approved ? 1 : 0;
-            const bApproved = b.approved ? 1 : 0;
-            if (aApproved !== bApproved) return bApproved - aApproved;
-
-            const aHasDistance = a.distanceKm !== null;
-            const bHasDistance = b.distanceKm !== null;
-            if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
-            if (aHasDistance && !bHasDistance) return -1;
-            if (bHasDistance && !aHasDistance) return 1;
-
-            return a.name.localeCompare(b.name);
-          });
-      }
-
-      return rows
-        .filter(row => row.nearbySaved || row.nearbyGps || row.createdBy === currentUser.uid)
+          return false;
+        })
         .sort((a, b) => {
-          const aMine = a.createdBy === currentUser.uid ? 1 : 0;
-          const bMine = b.createdBy === currentUser.uid ? 1 : 0;
-          if (aMine !== bMine) return bMine - aMine;
-
-          if (a.nearbySaved && !b.nearbySaved) return -1;
-          if (b.nearbySaved && !a.nearbySaved) return 1;
-
-          if (a.nearbyRank !== b.nearbyRank) return a.nearbyRank - b.nearbyRank;
+          if (a.sameCity && !b.sameCity) return -1;
+          if (b.sameCity && !a.sameCity) return 1;
 
           const aHasDistance = a.distanceKm !== null;
           const bHasDistance = b.distanceKm !== null;
@@ -978,152 +959,10 @@
           if (aHasDistance && !bHasDistance) return -1;
           if (bHasDistance && !aHasDistance) return 1;
 
-          const aApproved = a.approved ? 1 : 0;
-          const bApproved = b.approved ? 1 : 0;
-          if (aApproved !== bApproved) return bApproved - aApproved;
+          if (b.visitCount !== a.visitCount) return b.visitCount - a.visitCount;
 
           return a.name.localeCompare(b.name);
         });
-    }
-
-    async function markBeenThere(model, btn) {
-      btn.disabled = true;
-      setPageStatus("");
-
-      const visitDocId = `${model.source}__${model.id}__${currentUser.uid}`;
-
-      try {
-        await setDoc(doc(db, "place_visits", visitDocId), {
-          source: model.source,
-          placeId: model.id,
-          userId: currentUser.uid,
-          status: "visited",
-          placeName: model.name || "",
-          city: model.city || "",
-          province: model.province || "",
-          country: model.country || "",
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
-        }, { merge: true });
-
-        await refreshAll();
-        setPageStatus("Marked as been there.", "status-ok");
-      } catch (err) {
-        console.error(err);
-        setPageStatus("Could not update place.", "status-err");
-        btn.disabled = false;
-      }
-    }
-
-    async function unmarkBeenThere(model, btn) {
-      btn.disabled = true;
-      setPageStatus("");
-
-      const visitDocId = `${model.source}__${model.id}__${currentUser.uid}`;
-
-      try {
-        await deleteDoc(doc(db, "place_visits", visitDocId));
-        await refreshAll();
-        setPageStatus("Removed been there.", "status-ok");
-      } catch (err) {
-        console.error(err);
-        setPageStatus("Could not update place.", "status-err");
-        btn.disabled = false;
-      }
-    }
-
-    function renderPlaces() {
-      openLoading();
-
-      const q = normalizeText(searchInput.value);
-      const viewerHasSavedLocation =
-        !!normalizeText(viewerProfile?.city) ||
-        !!normalizeText(viewerProfile?.province) ||
-        !!normalizeText(viewerProfile?.country);
-
-      const rows = buildVisibleRows();
-
-      if (!q && !viewerHasSavedLocation && !browserCoords) {
-        showEmpty("Set your location in profile, use GPS, or type a city/province/country to search places.", "Places: 0");
-        return;
-      }
-
-      if (!rows.length) {
-        showEmpty(q ? "No matching places found." : "No nearby places found for your current location.", q ? "Results: 0" : "Places: 0");
-        return;
-      }
-
-      listWrap.innerHTML = "";
-
-      rows.forEach(model => {
-        const imageHtml = model.imageURL
-          ? `<img class="cover" src="${escapeHtml(model.imageURL)}" alt="Place image">`
-          : "";
-
-        const badges = [];
-        badges.push(`<span class="mini-badge ${model.approved ? "mini-green" : "mini-yellow"}">${model.approved ? "Verified" : "Pending"}</span>`);
-        badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "General")}</span>`);
-        if (model.distanceLabel) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
-        if (model.source) badges.push(`<span class="mini-badge mini-yellow">${escapeHtml(model.source)}</span>`);
-        if (model.createdBy === currentUser.uid) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
-        badges.push(`<span class="mini-badge mini-green">${model.visitCount} been there</span>`);
-
-        const websiteHref = normalizeHref(model.website);
-
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          ${imageHtml}
-          <div class="card-title">${escapeHtml(model.name)}</div>
-          <div class="badge-row">${badges.join("")}</div>
-          <div class="meta-grid">
-            <div><strong>Location:</strong> ${escapeHtml(model.placeLabel || "Not added")}</div>
-            <div><strong>Address:</strong> ${escapeHtml(model.address || "Not added")}</div>
-            <div><strong>Submitted By:</strong> ${escapeHtml(model.creatorName || "Member")}</div>
-          </div>
-          <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
-          <div class="top-actions" style="margin-top:0;">
-            <a class="action-btn btn-primary" href="places.html?placeId=${encodeURIComponent(model.id)}&source=${encodeURIComponent(model.source)}">Open</a>
-            ${
-              model.visitedByMe
-                ? `<button class="action-btn btn-red been-there-off-btn" type="button">Undo Been There</button>`
-                : `<button class="action-btn btn-green been-there-on-btn" type="button">Been There</button>`
-            }
-            ${
-              model.createdBy === currentUser.uid
-                ? `<a class="action-btn btn-purple" href="places.html?placeId=${encodeURIComponent(model.id)}&source=${encodeURIComponent(model.source)}">Manage</a>`
-                : websiteHref
-                ? `<a class="action-btn btn-yellow" href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer">Open Link</a>`
-                : ``
-            }
-          </div>
-        `;
-
-        const cover = card.querySelector(".cover");
-        if (cover) {
-          cover.addEventListener("error", () => {
-            cover.style.display = "none";
-          });
-        }
-
-        const onBtn = card.querySelector(".been-there-on-btn");
-        if (onBtn) {
-          onBtn.addEventListener("click", async () => {
-            await markBeenThere(model, onBtn);
-          });
-        }
-
-        const offBtn = card.querySelector(".been-there-off-btn");
-        if (offBtn) {
-          offBtn.addEventListener("click", async () => {
-            await unmarkBeenThere(model, offBtn);
-          });
-        }
-
-        listWrap.appendChild(card);
-      });
-
-      showList(rows.length, q ? "Results" : "Places");
     }
 
     async function loadViewer(uid) {
@@ -1159,48 +998,190 @@
       allPlaces = merged;
     }
 
-    async function loadVisitStats() {
-      const temp = new Map();
+    async function loadVisits() {
+      visitCountMap = new Map();
+      visitCountLooseMap = new Map();
+      userVisitExactMap = new Map();
+      userVisitLooseMap = new Map();
+
+      const [allVisitsSnap, myVisitsSnap] = await Promise.all([
+        getDocs(collection(db, "place_visits")).catch(() => ({ docs: [] })),
+        getDocs(query(collection(db, "place_visits"), where("userId", "==", currentUser.uid))).catch(() => ({ docs: [] }))
+      ]);
+
+      (allVisitsSnap.docs || []).forEach(d => {
+        const raw = d.data() || {};
+        if (!isVisitRecord(raw)) return;
+
+        const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || "";
+        const source = raw.source || raw.placeSource || "";
+
+        if (placeId) {
+          visitCountLooseMap.set(placeId, (visitCountLooseMap.get(placeId) || 0) + 1);
+        }
+
+        if (placeId && source) {
+          const exactKey = buildPlaceKey(source, placeId);
+          visitCountMap.set(exactKey, (visitCountMap.get(exactKey) || 0) + 1);
+        }
+      });
+
+      (myVisitsSnap.docs || []).forEach(d => {
+        const raw = d.data() || {};
+        if (!isVisitRecord(raw)) return;
+
+        const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || "";
+        const source = raw.source || raw.placeSource || "";
+        const record = { ...raw, docId: d.id };
+
+        if (placeId) {
+          userVisitLooseMap.set(placeId, record);
+        }
+
+        if (placeId && source) {
+          const exactKey = buildPlaceKey(source, placeId);
+          userVisitExactMap.set(exactKey, record);
+        }
+      });
+    }
+
+    async function toggleVisited(model, btn) {
+      btn.disabled = true;
+      setPageStatus("");
 
       try {
-        const snap = await getDocs(collection(db, "place_visits"));
+        const existing = getUserVisitRecord(model);
 
-        snap.docs.forEach(d => {
-          const raw = d.data() || {};
-          const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || raw.id || "";
-          const source = raw.source || raw.placeSource || raw.collection || "nearby_places";
-          const userId = raw.userId || raw.uid || raw.memberId || "";
+        if (existing) {
+          await deleteDoc(doc(db, "place_visits", existing.docId));
+          setPageStatus("Removed from visited places.", "status-ok");
+        } else {
+          const visitDocId = buildVisitDocId(currentUser.uid, model.source, model.id);
 
-          if (!placeId || !userId) return;
+          await setDoc(doc(db, "place_visits", visitDocId), {
+            userId: currentUser.uid,
+            placeId: model.id,
+            source: model.source,
+            placeSource: model.source,
+            status: "visited",
+            visited: true,
+            explored: false,
+            placeName: model.name || "",
+            city: model.city || "",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
 
-          const key = placeKey(source, placeId);
-          if (!temp.has(key)) {
-            temp.set(key, { users: new Set(), visitedByMe: false });
-          }
+          setPageStatus("Marked as visited.", "status-ok");
+        }
 
-          const row = temp.get(key);
-          row.users.add(userId);
-          if (userId === currentUser.uid) row.visitedByMe = true;
-        });
+        await loadVisits();
+        renderPlaces();
       } catch (err) {
         console.error(err);
+        setPageStatus("Could not update visited state.", "status-err");
+        btn.disabled = false;
+      }
+    }
+
+    function renderPlaces() {
+      openLoading();
+      updateModeChip();
+
+      const viewerHasLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
+      const q = searchInput.value.trim();
+      const rows = buildNearbyPlaces();
+
+      if (!viewerHasLocation && !browserCoords && !q) {
+        showEmpty("Set your location in profile or use GPS to see nearby places.");
+        return;
       }
 
-      visitStats = new Map(
-        Array.from(temp.entries()).map(([key, value]) => [
-          key,
-          {
-            count: value.users.size,
-            visitedByMe: value.visitedByMe
-          }
-        ])
-      );
+      if (!rows.length) {
+        if (q) {
+          showEmpty("No places matched your search.");
+        } else {
+          showEmpty("No places found in your city yet. Try search to find other places too.");
+        }
+        return;
+      }
+
+      listWrap.innerHTML = "";
+
+      rows.forEach(model => {
+        const imageHtml = model.imageURL
+          ? `<img class="cover" src="${escapeHtml(model.imageURL)}" alt="Place image">`
+          : "";
+
+        const badges = [];
+        badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+        badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "General")}</span>`);
+
+        if (model.sameCity) {
+          badges.push(`<span class="mini-badge mini-purple">Same city</span>`);
+        } else if (model.distanceLabel) {
+          badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
+        }
+
+        badges.push(`<span class="mini-badge mini-yellow">${model.visitCount} visited</span>`);
+
+        const websiteHref = normalizeHref(model.website);
+        const openUrl = `places.html?placeId=${encodeURIComponent(model.id)}&source=${encodeURIComponent(model.source)}`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          ${imageHtml}
+          <div class="card-title">${escapeHtml(model.name)}</div>
+          <div class="badge-row">${badges.join("")}</div>
+          <div class="meta-grid">
+            <div><strong>Location:</strong> ${escapeHtml(model.placeLabel || "Not added")}</div>
+            <div><strong>Address:</strong> ${escapeHtml(model.address || "Not added")}</div>
+            <div><strong>Submitted By:</strong> ${escapeHtml(model.creatorName || "Member")}</div>
+            <div><strong>Source:</strong> ${escapeHtml(model.source || "-")}</div>
+          </div>
+          <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
+          <div class="top-actions" style="margin-top:0;">
+            <a class="action-btn btn-primary" href="${openUrl}">Open</a>
+            ${websiteHref ? `<a class="action-btn btn-green" href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer">Open Link</a>` : ``}
+            ${
+              model.createdBy === currentUser.uid
+                ? `<a class="action-btn btn-purple" href="${openUrl}">Manage</a>`
+                : `<button class="action-btn ${model.visited ? "btn-yellow" : "btn-soft"} visit-btn" data-id="${escapeHtml(model.id)}" data-source="${escapeHtml(model.source)}" type="button">${model.visited ? "Visited" : "Been There"}</button>`
+            }
+          </div>
+        `;
+
+        const cover = card.querySelector(".cover");
+        if (cover) {
+          cover.addEventListener("error", () => {
+            cover.style.display = "none";
+          });
+        }
+
+        const visitBtn = card.querySelector(".visit-btn");
+        if (visitBtn) {
+          visitBtn.addEventListener("click", async () => {
+            await toggleVisited(model, visitBtn);
+          });
+        }
+
+        listWrap.appendChild(card);
+      });
+
+      showList(rows.length);
     }
 
     async function refreshAll() {
       openLoading();
-      await loadPlaces();
-      await loadVisitStats();
+      await Promise.all([
+        loadPlaces(),
+        loadVisits()
+      ]);
       renderViewerLocation();
       renderPlaces();
     }
@@ -1219,7 +1200,6 @@
 
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
-    refreshBtn.addEventListener("click", refreshAll);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
