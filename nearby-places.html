@@ -724,7 +724,9 @@
     function normalizePlace(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
       const status = String(d.status || "").toLowerCase();
+
       const approved = d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status);
+      const pending = d.pending === true || status === "pending" || (!approved && !d.rejected && status !== "rejected");
       const rejected = status === "rejected" || d.rejected === true;
 
       return {
@@ -743,6 +745,7 @@
         createdBy: d.createdBy || d.userId || d.uid || "",
         creatorName: d.creatorName || d.displayName || "Member",
         approved,
+        pending,
         rejected,
         hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
         lat: readLat(d),
@@ -766,14 +769,11 @@
 
     function updateModeChip() {
       const q = searchInput.value.trim();
-      const hasSavedLocation =
-        !!normalizeText(viewerProfile?.city) &&
-        !!normalizeText(viewerProfile?.province) &&
-        !!normalizeText(viewerProfile?.country);
+      const hasCity = !!normalizeText(viewerProfile?.city);
 
       if (q) {
         modeChip.textContent = "Mode: Search all";
-      } else if (hasSavedLocation) {
+      } else if (hasCity) {
         modeChip.textContent = "Mode: Same city";
       } else if (browserCoords) {
         modeChip.textContent = "Mode: GPS fallback";
@@ -827,7 +827,7 @@
               viewerProfile.lng = browserCoords.lng;
               viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
-              setPageStatus("Browser GPS enabled. City list still stays first, and distance labels are improved.", "status-ok");
+              setPageStatus("Browser GPS enabled. Your city list still stays first, and distance labels improve.", "status-ok");
             } catch (err) {
               console.error(err);
             }
@@ -894,21 +894,14 @@
     function buildNearbyPlaces() {
       const q = normalizeText(searchInput.value);
       const viewerCity = normalizeText(viewerProfile?.city);
-      const viewerProvince = normalizeText(viewerProfile?.province);
-      const viewerCountry = normalizeText(viewerProfile?.country);
-      const viewerHasSavedLocation = !!viewerCity && !!viewerProvince && !!viewerCountry;
       const viewerCoords = getViewerCoords();
 
       return allPlaces
-        .filter(model => !model.hidden && !model.rejected && model.approved)
+        .filter(model => !model.hidden && !model.rejected)
+        .filter(model => model.approved || (model.createdBy === currentUser.uid && model.pending))
         .map(model => {
           const city = normalizeText(model.city);
-          const province = normalizeText(model.province);
-          const country = normalizeText(model.country);
-
-          const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
-          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
-          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
+          const sameCity = !!viewerCity && !!city && viewerCity === city;
 
           let distanceKm = null;
           if (viewerCoords.lat !== null && viewerCoords.lng !== null && model.lat !== null && model.lng !== null) {
@@ -928,6 +921,7 @@
 
           const visitCount = getVisitCount(model);
           const visited = hasVisited(model);
+          const mine = model.createdBy === currentUser.uid;
 
           return {
             ...model,
@@ -935,6 +929,7 @@
             distanceKm,
             visitCount,
             visited,
+            mine,
             distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
             placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
             searchable
@@ -943,15 +938,21 @@
         .filter(row => {
           if (q) return row.searchable.includes(q);
 
-          if (viewerHasSavedLocation) return row.sameCity;
-
-          if (browserCoords && row.distanceKm !== null) return row.distanceKm <= 25;
+          if (row.mine) return true;
+          if (viewerCity && row.sameCity) return true;
+          if (!viewerCity && browserCoords && row.distanceKm !== null && row.distanceKm <= 25) return true;
 
           return false;
         })
         .sort((a, b) => {
+          if (a.mine && !b.mine) return -1;
+          if (b.mine && !a.mine) return 1;
+
           if (a.sameCity && !b.sameCity) return -1;
           if (b.sameCity && !a.sameCity) return 1;
+
+          if (a.pending && !b.pending) return -1;
+          if (b.pending && !a.pending) return 1;
 
           const aHasDistance = a.distanceKm !== null;
           const bHasDistance = b.distanceKm !== null;
@@ -1088,16 +1089,12 @@
       openLoading();
       updateModeChip();
 
-      const viewerHasLocation =
-        !!normalizeText(viewerProfile?.city) &&
-        !!normalizeText(viewerProfile?.province) &&
-        !!normalizeText(viewerProfile?.country);
-
+      const viewerHasCity = !!normalizeText(viewerProfile?.city);
       const q = searchInput.value.trim();
       const rows = buildNearbyPlaces();
 
-      if (!viewerHasLocation && !browserCoords && !q) {
-        showEmpty("Set your location in profile or use GPS to see nearby places.");
+      if (!viewerHasCity && !browserCoords && !q) {
+        showEmpty("Set your city in profile or use GPS to see nearby places. Your own created places will still appear once available.");
         return;
       }
 
@@ -1105,7 +1102,7 @@
         if (q) {
           showEmpty("No places matched your search.");
         } else {
-          showEmpty("No places found in your city yet. Try search to find other places too.");
+          showEmpty("No places found in your city yet. Search can still find places from other cities.");
         }
         return;
       }
@@ -1118,8 +1115,9 @@
           : "";
 
         const badges = [];
-        badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+        if (model.mine) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
         badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "General")}</span>`);
+        badges.push(`<span class="mini-badge ${model.approved ? "mini-green" : "mini-yellow"}">${model.approved ? "Approved" : "Pending approval"}</span>`);
 
         if (model.sameCity) {
           badges.push(`<span class="mini-badge mini-purple">Same city</span>`);
@@ -1149,9 +1147,9 @@
             <a class="action-btn btn-primary" href="${openUrl}">Open</a>
             ${websiteHref ? `<a class="action-btn btn-green" href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer">Open Link</a>` : ``}
             ${
-              model.createdBy === currentUser.uid
+              model.mine
                 ? `<a class="action-btn btn-purple" href="${openUrl}">Manage</a>`
-                : `<button class="action-btn ${model.visited ? "btn-yellow" : "btn-soft"} visit-btn" data-id="${escapeHtml(model.id)}" data-source="${escapeHtml(model.source)}" type="button">${model.visited ? "Visited" : "Been There"}</button>`
+                : `<button class="action-btn ${model.visited ? "btn-yellow" : "btn-soft"} visit-btn" type="button">${model.visited ? "Visited" : "Been There"}</button>`
             }
           </div>
         `;
