@@ -714,26 +714,20 @@
           window.location.href = "feed.html";
         }, 900);
       } catch (error) {
-        console.error(error);
+  console.error("SIGNUP ERROR:", error);
 
-        let msg = "Could not create account.";
-        const errMsg = String(error?.message || "").toLowerCase();
+  const rawMsg =
+    error?.message ||
+    error?.error_description ||
+    error?.msg ||
+    JSON.stringify(error);
 
-        if (errMsg.includes("user already registered") || errMsg.includes("already been registered")) {
-          msg = "This email is already in use.";
-        } else if (errMsg.includes("invalid email")) {
-          msg = "Invalid email address.";
-        } else if (errMsg.includes("password")) {
-          msg = "Password is too weak.";
-        } else if (error.message === "username-reservation-failed") {
-          msg = "Could not reserve a username right now. Try again.";
-        }
+  setMessage(rawMsg, "error");
 
-        setMessage(msg, "error");
-        signupBtn.disabled = false;
-        signupBtn.textContent = "Create Account";
-        isSubmitting = false;
-      }
+  signupBtn.disabled = false;
+  signupBtn.textContent = "Create Account";
+  isSubmitting = false;
+}
     });
   </script>
 </body>
