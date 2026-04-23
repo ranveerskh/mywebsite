@@ -225,6 +225,8 @@
     .message{
       min-height:18px;
       font-size:13px;
+      line-height:1.45;
+      word-break:break-word;
     }
 
     .success{ color:#86efac; }
@@ -317,7 +319,7 @@
       <div class="chip-row">
         <span class="chip chip-blue">Username reserved at signup</span>
         <span class="chip chip-purple">Private + public profile setup</span>
-        <span class="chip chip-yellow">Theme-ready pages</span>
+        <span class="chip chip-yellow">Supabase auth ready</span>
       </div>
 
       <form id="signupForm" class="form">
@@ -357,7 +359,7 @@
             <label for="locationVisibility">Nearby Visibility</label>
             <select id="locationVisibility">
               <option value="city">Show city only</option>
-              <option value="approximate">Show approximate area</option>
+              <option value="gps">Use GPS later</option>
               <option value="hidden">Hide location</option>
             </select>
           </div>
@@ -399,7 +401,7 @@
       </div>
 
       <div class="note">
-        This version writes auth + users + public_profiles + usernames in Supabase.
+        For now this page redirects to <strong>profile.html</strong> after signup, not feed, because your feed page is still on Firebase.
       </div>
     </div>
   </div>
@@ -412,6 +414,7 @@
     const message = document.getElementById("message");
 
     let isSubmitting = false;
+    let hasRedirected = false;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -483,6 +486,23 @@
       return new Date().toISOString();
     }
 
+    async function redirectIfLoggedIn() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session check failed:", error);
+          return;
+        }
+
+        if (data?.session?.user && !isSubmitting && !hasRedirected) {
+          hasRedirected = true;
+          window.location.replace("profile.html");
+        }
+      } catch (err) {
+        console.error("Session check error:", err);
+      }
+    }
+
     async function reserveUsername(uid, requestedUsername, displayName) {
       const requested = normalizeUsername(requestedUsername);
       const base = isValidUsername(requested) ? requested : buildBaseUsername(displayName);
@@ -538,20 +558,12 @@
         city_lower: normalizeText(payload.city),
         city_visible: payload.cityVisible,
         is_private: payload.isPrivate,
-        is_verified: false,
-        is_adult: true,
         bio: "",
         photo_url: "",
         show_in_nearby: payload.showInNearby,
         location_visibility: payload.locationVisibility,
-        blocked_users: [],
-        gender: "",
-        gender_custom: "",
-        gender_visible: false,
+        is_verified: false,
         moderation_status: "",
-        warning_until: null,
-        lat: null,
-        lng: null,
         created_at: nowIso(),
         updated_at: nowIso()
       };
@@ -566,18 +578,12 @@
         city_lower: normalizeText(payload.city),
         city_visible: payload.cityVisible,
         is_private: payload.isPrivate,
-        is_verified: false,
         bio: "",
         photo_url: "",
         show_in_nearby: payload.showInNearby,
         location_visibility: payload.locationVisibility,
-        gender: "",
-        gender_custom: "",
-        gender_visible: false,
+        is_verified: false,
         moderation_status: "",
-        warning_until: null,
-        lat: null,
-        lng: null,
         created_at: nowIso(),
         updated_at: nowIso()
       };
@@ -595,26 +601,36 @@
       if (publicError) throw publicError;
     }
 
-    async function redirectIfLoggedIn() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
+    function makeFriendlyError(error) {
+      const msg = String(error?.message || "").toLowerCase();
 
-        if (data?.session?.user && !isSubmitting) {
-          window.location.href = "feed.html";
-        }
-      } catch (error) {
-        console.error("Session check failed:", error);
+      if (msg.includes("user already registered") || msg.includes("already been registered")) {
+        return "This email is already in use.";
       }
+      if (msg.includes("invalid email")) {
+        return "Invalid email address.";
+      }
+      if (msg.includes("password")) {
+        return "Password is too weak.";
+      }
+      if (msg.includes("row-level security") || msg.includes("permission denied")) {
+        return "Database permission issue. RLS or policy still needs fixing.";
+      }
+      if (msg.includes("public_profiles") && msg.includes("does not exist")) {
+        return "Table public_profiles is missing.";
+      }
+      if (msg.includes("users") && msg.includes("does not exist")) {
+        return "Table users is missing.";
+      }
+      if (msg.includes("usernames") && msg.includes("does not exist")) {
+        return "Table usernames is missing.";
+      }
+      if (error?.message === "username-reservation-failed") {
+        return "Could not reserve a username right now. Try again.";
+      }
+
+      return error?.message || "Could not create account.";
     }
-
-    supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user && !isSubmitting) {
-        window.location.href = "feed.html";
-      }
-    });
-
-    redirectIfLoggedIn();
 
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -672,18 +688,18 @@
 
         if (error) throw error;
 
-        const user = data?.user;
+        const user = data?.user || null;
         const session = data?.session || null;
 
         if (!user?.id) {
-          throw new Error("signup-user-missing");
+          throw new Error("Signup completed but no user ID was returned.");
         }
 
         if (!session) {
           setMessage("Account created. Confirm your email first, then login.", "success");
           setTimeout(() => {
-            window.location.href = "login.html";
-          }, 1400);
+            window.location.replace("login.html");
+          }, 1200);
           return;
         }
 
@@ -705,30 +721,25 @@
         });
 
         if (reserved.usedFallback) {
-          setMessage(`Account created. Your username was set to @${finalUsername}. Redirecting...`, "success");
+          setMessage(`Account created. Your username is @${finalUsername}. Redirecting...`, "success");
         } else {
           setMessage("Account created successfully. Redirecting...", "success");
         }
 
+        hasRedirected = true;
         setTimeout(() => {
-          window.location.href = "feed.html";
-        }, 900);
+          window.location.replace("profile.html");
+        }, 700);
       } catch (error) {
-  console.error("SIGNUP ERROR:", error);
-
-  const rawMsg =
-    error?.message ||
-    error?.error_description ||
-    error?.msg ||
-    JSON.stringify(error);
-
-  setMessage(rawMsg, "error");
-
-  signupBtn.disabled = false;
-  signupBtn.textContent = "Create Account";
-  isSubmitting = false;
-}
+        console.error("SIGNUP ERROR:", error);
+        setMessage(makeFriendlyError(error), "error");
+        signupBtn.disabled = false;
+        signupBtn.textContent = "Create Account";
+        isSubmitting = false;
+      }
     });
+
+    redirectIfLoggedIn();
   </script>
 </body>
 </html>
