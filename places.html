@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Place</title>
+  <title>BareWorld - Event</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -24,7 +24,7 @@
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
+      --shadow:0 18px 36px rgba(0,0,0,.18);
     }
 
     html[data-theme="light"]{
@@ -43,14 +43,14 @@
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --shadow:0 16px 28px rgba(20,33,61,.08);
     }
 
     body{
       background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:12px 12px 110px;
+      padding:10px 10px 108px;
     }
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
@@ -63,21 +63,21 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
-      margin-bottom:12px;
+      padding:7px 9px;
+      margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -85,25 +85,26 @@
       justify-content:center;
       text-decoration:none;
     }
-    .top-icon-btn svg{width:19px;height:19px;display:block}
+    .top-icon-btn svg{width:18px;height:18px;display:block}
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:20px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .brand{font-size:18px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:14px;
-      margin-bottom:12px;
+      border-radius:20px;
+      padding:13px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
     }
 
     .loading-box,
-    .empty-box{
+    .empty-box,
+    .locked-box{
       text-align:center;
       color:var(--muted);
-      padding:22px 12px;
+      padding:20px 12px;
       background:var(--surface-2);
       border-radius:16px;
       border:1px dashed var(--line);
@@ -113,27 +114,39 @@
 
     .hero-image{
       width:100%;
-      max-height:340px;
+      max-height:300px;
       object-fit:cover;
       display:block;
-      border-radius:18px;
+      border-radius:16px;
       background:var(--surface-3);
       border:1px solid var(--line);
       margin-bottom:12px;
     }
 
-    .place-title{
-      font-size:22px;
-      font-weight:900;
-      line-height:1.3;
+    .compact-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
       margin-bottom:10px;
+    }
+    .event-title{
+      font-size:20px;
+      font-weight:900;
+      line-height:1.28;
+      margin-bottom:4px;
+    }
+    .event-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
     }
 
     .badge-row{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
     .badge{
       display:inline-flex;
@@ -141,7 +154,7 @@
       justify-content:center;
       padding:6px 10px;
       border-radius:999px;
-      font-size:12px;
+      font-size:11px;
       font-weight:800;
       border:1px solid var(--line);
       background:var(--surface-2);
@@ -153,53 +166,82 @@
     .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
+    .quick-links{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .quick-link{
+      border:none;
+      border-radius:12px;
+      padding:9px 11px;
+      font-size:12px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .quick-link.primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
     .meta-grid{
       display:grid;
+      grid-template-columns:1fr 1fr;
       gap:8px;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
     .meta-item{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:12px;
-      font-size:14px;
-      line-height:1.55;
+      padding:11px;
+      font-size:13px;
+      line-height:1.5;
     }
     .meta-item strong{
       display:block;
       margin-bottom:4px;
-      font-size:12px;
+      font-size:11px;
       color:var(--muted);
     }
 
     .desc{
       color:var(--text);
-      line-height:1.65;
+      line-height:1.62;
       font-size:14px;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
-    .submitter-card{
+    .host-card{
       display:flex;
       gap:12px;
       align-items:center;
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
+      border-radius:16px;
+      padding:11px;
     }
-    .submitter-avatar,.submitter-avatar-placeholder{
-      width:56px;
-      height:56px;
+    .host-avatar,.host-avatar-placeholder,
+    .member-avatar,.member-avatar-placeholder,
+    .comment-avatar,.comment-avatar-placeholder{
+      width:50px;
+      height:50px;
       border-radius:50%;
       flex-shrink:0;
       border:1px solid var(--line);
       background:var(--surface-3);
     }
-    .submitter-avatar{object-fit:cover}
-    .submitter-avatar-placeholder{
+    .host-avatar,.member-avatar,.comment-avatar{object-fit:cover}
+    .host-avatar-placeholder,.member-avatar-placeholder,.comment-avatar-placeholder{
       display:flex;
       align-items:center;
       justify-content:center;
@@ -208,9 +250,11 @@
       text-align:center;
       padding:6px;
     }
-    .submitter-body{min-width:0;flex:1}
-    .submitter-name{
-      font-size:15px;
+    .host-body,.member-body,.comment-body{min-width:0;flex:1}
+    .host-name,
+    .member-name,
+    .comment-name{
+      font-size:14px;
       font-weight:800;
       line-height:1.3;
       display:flex;
@@ -218,11 +262,15 @@
       gap:8px;
       flex-wrap:wrap;
     }
-    .submitter-name a{
+    .host-name a,
+    .member-name a,
+    .comment-name a{
       color:var(--text);
       text-decoration:none;
     }
-    .submitter-name a:hover{text-decoration:underline}
+    .host-name a:hover,
+    .member-name a:hover,
+    .comment-name a:hover{text-decoration:underline}
     .verified-dot{
       display:inline-flex;
       align-items:center;
@@ -236,14 +284,16 @@
       font-size:10px;
       font-weight:900;
     }
-    .submitter-username{
+    .host-username,
+    .member-username,
+    .comment-username{
       font-size:12px;
       color:var(--blue);
       font-weight:700;
       margin-top:3px;
       word-break:break-word;
     }
-    .submitter-bio{
+    .host-bio{
       font-size:12px;
       color:var(--muted);
       line-height:1.45;
@@ -251,9 +301,29 @@
     }
 
     .section-title{
-      font-size:17px;
+      font-size:16px;
       font-weight:800;
       margin-bottom:10px;
+    }
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .section-count{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
     }
 
     .action-row{
@@ -261,20 +331,20 @@
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top:12px;
+      margin-top:10px;
     }
     .action-btn{
       border:none;
       border-radius:12px;
-      padding:11px 14px;
-      font-size:13px;
+      padding:10px 13px;
+      font-size:12px;
       font-weight:800;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      min-height:42px;
+      min-height:40px;
     }
     .btn-primary{
       background:rgba(76,201,255,.14);
@@ -310,28 +380,53 @@
     .message{
       min-height:18px;
       font-size:13px;
-      margin-top:10px;
+      margin-top:8px;
     }
     .message.ok{color:#86efac}
     .message.err{color:#fda4af}
 
-    .edit-form{
+    .members-list,
+    .comments-list{
       display:grid;
+      gap:10px;
+    }
+    .member-card,
+    .comment-card{
+      display:flex;
       gap:12px;
+      align-items:flex-start;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:10px;
     }
-    .grid-2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
+
+    .comment-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:4px;
     }
-    .field{
-      display:grid;
-      gap:7px;
+    .comment-time{
+      font-size:11px;
+      color:var(--muted);
+      white-space:nowrap;
+      flex-shrink:0;
     }
-    .label{
-      font-size:13px;
-      font-weight:800;
+    .comment-text{
       color:var(--text);
+      font-size:13px;
+      line-height:1.58;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-top:6px;
+    }
+
+    .comment-form{
+      display:grid;
+      gap:10px;
+      margin-bottom:12px;
     }
     .input,
     .textarea,
@@ -339,21 +434,40 @@
       width:100%;
       border:none;
       outline:none;
-      padding:13px 14px;
-      border-radius:16px;
+      padding:12px 13px;
+      border-radius:15px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       font-size:14px;
     }
     .textarea{
-      min-height:120px;
+      min-height:95px;
       resize:vertical;
       line-height:1.55;
     }
     .input::placeholder,
     .textarea::placeholder{
       color:var(--muted);
+    }
+
+    .edit-form{
+      display:grid;
+      gap:11px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:11px;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    .label{
+      font-size:12px;
+      font-weight:800;
+      color:var(--text);
     }
 
     .bottom-nav{
@@ -400,10 +514,12 @@
     }
 
     @media (max-width:700px){
-      body{padding:10px 10px 110px}
+      body{padding:10px 10px 108px}
       .brand{font-size:18px}
-      .grid-2{grid-template-columns:1fr}
-      .place-title{font-size:20px}
+      .grid-2,.meta-grid{grid-template-columns:1fr}
+      .event-title{font-size:18px}
+      .quick-links .quick-link,
+      .action-row .action-btn{flex:1}
     }
   </style>
 </head>
@@ -418,36 +534,56 @@
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
-        <div class="brand-sub">Place detail</div>
+        <div class="brand-sub">Event detail</div>
       </div>
 
-      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+      <a href="nearby-events.html" class="top-icon-btn" aria-label="Events">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0"></path>
-          <circle cx="12" cy="7" r="4"></circle>
+          <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+          <path d="M16 3v4"></path>
+          <path d="M8 3v4"></path>
+          <path d="M3 11h18"></path>
         </svg>
       </a>
     </div>
 
     <div id="loadingPanel" class="panel">
-      <div class="loading-box">Loading place...</div>
+      <div class="loading-box">Loading event...</div>
     </div>
 
     <div id="notFoundPanel" class="panel hidden">
-      <div class="empty-box">Place not found.</div>
+      <div id="notFoundText" class="empty-box">Event not found.</div>
     </div>
 
-    <div id="placePanel" class="hidden">
-      <div class="panel">
-        <img id="heroImage" class="hero-image hidden" alt="Place image" />
+    <div id="lockedPanel" class="panel hidden">
+      <div class="locked-box" id="lockedText">
+        This private event is not available to view.
+      </div>
+    </div>
 
-        <div id="placeTitle" class="place-title">Unnamed Place</div>
+    <div id="eventPanel" class="hidden">
+      <div class="panel">
+        <img id="heroImage" class="hero-image hidden" alt="Event image" />
+
+        <div class="compact-head">
+          <div>
+            <div id="eventTitle" class="event-title">Untitled Event</div>
+            <div id="eventSub" class="event-sub">Event detail</div>
+          </div>
+        </div>
+
         <div id="badgeRow" class="badge-row"></div>
+
+        <div class="quick-links" id="quickLinks"></div>
 
         <div class="meta-grid">
           <div class="meta-item">
-            <strong>Category</strong>
-            <span id="categoryText">-</span>
+            <strong>Date</strong>
+            <span id="dateText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Time</strong>
+            <span id="timeText">-</span>
           </div>
           <div class="meta-item">
             <strong>City</strong>
@@ -462,16 +598,24 @@
             <span id="countryText">-</span>
           </div>
           <div class="meta-item">
-            <strong>Address</strong>
-            <span id="addressText">-</span>
+            <strong>Venue / Address</strong>
+            <span id="venueText">-</span>
           </div>
           <div class="meta-item">
-            <strong>Source</strong>
-            <span id="sourceText">-</span>
+            <strong>People Going</strong>
+            <span id="membersCountText">0</span>
           </div>
           <div class="meta-item">
-            <strong>Admin Status</strong>
-            <span id="adminStatusText">-</span>
+            <strong>Comments</strong>
+            <span id="commentsCountText">0</span>
+          </div>
+          <div class="meta-item">
+            <strong>Created By</strong>
+            <span id="creatorText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Status</strong>
+            <span id="statusText">-</span>
           </div>
         </div>
 
@@ -482,30 +626,25 @@
       </div>
 
       <div class="panel">
-        <div class="section-title">Submitted By</div>
-        <div id="submitterCard" class="submitter-card"></div>
+        <div class="section-title">Host</div>
+        <div id="hostCard" class="host-card"></div>
       </div>
 
       <div id="editPanel" class="panel hidden">
-        <div class="section-title">Edit Place</div>
+        <div class="section-title">Edit Event</div>
 
         <form id="editForm" class="edit-form">
           <div class="grid-2">
             <div class="field">
-              <label class="label" for="editName">Place Name</label>
-              <input id="editName" class="input" type="text" placeholder="Place name" />
+              <label class="label" for="editTitle">Event Title</label>
+              <input id="editTitle" class="input" type="text" placeholder="Event title" />
             </div>
 
             <div class="field">
-              <label class="label" for="editCategory">Category</label>
-              <select id="editCategory" class="select">
-                <option value="General">General</option>
-                <option value="Park">Park</option>
-                <option value="Beach">Beach</option>
-                <option value="Club">Club</option>
-                <option value="Retreat">Retreat</option>
-                <option value="Private Spot">Private Spot</option>
-                <option value="Other">Other</option>
+              <label class="label" for="editVisibility">Visibility</label>
+              <select id="editVisibility" class="select">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
               </select>
             </div>
           </div>
@@ -529,15 +668,27 @@
             </div>
 
             <div class="field">
-              <label class="label" for="editAddress">Address</label>
-              <input id="editAddress" class="input" type="text" placeholder="Address" />
+              <label class="label" for="editVenue">Venue / Spot</label>
+              <input id="editVenue" class="input" type="text" placeholder="Venue" />
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
-              <label class="label" for="editWebsite">Website / Link</label>
-              <input id="editWebsite" class="input" type="text" placeholder="https://example.com" />
+              <label class="label" for="editDate">Date</label>
+              <input id="editDate" class="input" type="date" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editTime">Time</label>
+              <input id="editTime" class="input" type="time" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editAddress">Address</label>
+              <input id="editAddress" class="input" type="text" placeholder="Address" />
             </div>
 
             <div class="field">
@@ -571,6 +722,34 @@
           <div id="editMessage" class="message"></div>
         </form>
       </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <div class="section-title">Comments</div>
+          <div id="commentsCountChip" class="section-count">0 comments</div>
+        </div>
+
+        <form id="commentForm" class="comment-form">
+          <textarea id="commentInput" class="textarea" placeholder="Write a comment..."></textarea>
+          <div class="action-row">
+            <button id="postCommentBtn" type="submit" class="action-btn btn-primary">Post Comment</button>
+          </div>
+          <div id="commentMessage" class="message"></div>
+        </form>
+
+        <div id="commentsList" class="comments-list"></div>
+        <div id="commentsEmpty" class="empty-box hidden">No comments yet.</div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <div class="section-title">People Going</div>
+          <div id="membersCountChip" class="section-count">0 going</div>
+        </div>
+
+        <div id="membersList" class="members-list"></div>
+        <div id="membersEmpty" class="empty-box hidden">No one has joined yet.</div>
+      </div>
     </div>
   </div>
 
@@ -603,6 +782,8 @@
     import {
       doc,
       getDoc,
+      getDocs,
+      setDoc,
       deleteDoc,
       addDoc,
       updateDoc,
@@ -614,33 +795,43 @@
 
     const loadingPanel = document.getElementById("loadingPanel");
     const notFoundPanel = document.getElementById("notFoundPanel");
-    const placePanel = document.getElementById("placePanel");
+    const notFoundText = document.getElementById("notFoundText");
+    const lockedPanel = document.getElementById("lockedPanel");
+    const lockedText = document.getElementById("lockedText");
+    const eventPanel = document.getElementById("eventPanel");
 
     const heroImage = document.getElementById("heroImage");
-    const placeTitle = document.getElementById("placeTitle");
+    const eventTitle = document.getElementById("eventTitle");
+    const eventSub = document.getElementById("eventSub");
     const badgeRow = document.getElementById("badgeRow");
-    const categoryText = document.getElementById("categoryText");
+    const quickLinks = document.getElementById("quickLinks");
+    const dateText = document.getElementById("dateText");
+    const timeText = document.getElementById("timeText");
     const cityText = document.getElementById("cityText");
     const provinceText = document.getElementById("provinceText");
     const countryText = document.getElementById("countryText");
-    const addressText = document.getElementById("addressText");
-    const sourceText = document.getElementById("sourceText");
-    const adminStatusText = document.getElementById("adminStatusText");
+    const venueText = document.getElementById("venueText");
+    const membersCountText = document.getElementById("membersCountText");
+    const commentsCountText = document.getElementById("commentsCountText");
+    const creatorText = document.getElementById("creatorText");
+    const statusText = document.getElementById("statusText");
     const descText = document.getElementById("descText");
     const topActionRow = document.getElementById("topActionRow");
     const topMessage = document.getElementById("topMessage");
 
-    const submitterCard = document.getElementById("submitterCard");
+    const hostCard = document.getElementById("hostCard");
 
     const editPanel = document.getElementById("editPanel");
     const editForm = document.getElementById("editForm");
-    const editName = document.getElementById("editName");
-    const editCategory = document.getElementById("editCategory");
+    const editTitle = document.getElementById("editTitle");
+    const editVisibility = document.getElementById("editVisibility");
     const editCity = document.getElementById("editCity");
     const editProvince = document.getElementById("editProvince");
     const editCountry = document.getElementById("editCountry");
+    const editVenue = document.getElementById("editVenue");
+    const editDate = document.getElementById("editDate");
+    const editTime = document.getElementById("editTime");
     const editAddress = document.getElementById("editAddress");
-    const editWebsite = document.getElementById("editWebsite");
     const editImageURL = document.getElementById("editImageURL");
     const editLat = document.getElementById("editLat");
     const editLng = document.getElementById("editLng");
@@ -648,15 +839,30 @@
     const cancelEditBtn = document.getElementById("cancelEditBtn");
     const editMessage = document.getElementById("editMessage");
 
+    const membersList = document.getElementById("membersList");
+    const membersEmpty = document.getElementById("membersEmpty");
+    const membersCountChip = document.getElementById("membersCountChip");
+
+    const commentsList = document.getElementById("commentsList");
+    const commentsEmpty = document.getElementById("commentsEmpty");
+    const commentsCountChip = document.getElementById("commentsCountChip");
+    const commentForm = document.getElementById("commentForm");
+    const commentInput = document.getElementById("commentInput");
+    const commentMessage = document.getElementById("commentMessage");
+    const postCommentBtn = document.getElementById("postCommentBtn");
+
     let currentUser = null;
     let currentUserProfile = null;
-    let currentPlaceId = "";
-    let currentSource = "";
-    let currentPlace = null;
-    let currentSubmitterProfile = null;
+    let currentEventId = "";
+    let currentEvent = null;
+    let currentHostProfile = null;
+    let joined = false;
     let isCreator = false;
-
-    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+    let isExpired = false;
+    let membersRows = [];
+    let commentsRows = [];
+    let editOpen = false;
+    const profileCache = new Map();
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -679,13 +885,16 @@
       if (e.key === "bwTheme") applyTheme(getStoredTheme());
     });
 
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
-      else window.location.href = "nearby-places.html";
+      else window.location.href = "nearby-events.html";
     });
 
     function setTopMessage(text = "", type = "") {
@@ -698,6 +907,11 @@
       editMessage.className = `message ${type}`;
     }
 
+    function setCommentMessage(text = "", type = "") {
+      commentMessage.textContent = text;
+      commentMessage.className = `message ${type}`;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text || "";
@@ -707,6 +921,17 @@
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+      try {
+        if (value?.toDate) return value.toDate().toLocaleString();
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function normalizeText(value) {
@@ -740,13 +965,6 @@
       .toLowerCase();
     }
 
-    function normalizeHref(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
-    }
-
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
@@ -762,32 +980,104 @@
       };
     }
 
-    function normalizePlace(raw, fallbackId = "", sourceName = "") {
+    function normalizeEvent(raw, fallbackId = "") {
       const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
-
       return {
         id: d.id || fallbackId || "",
-        source: sourceName,
-        name: d.name || d.title || d.placeName || "Unnamed Place",
-        category: d.category || d.topic || "General",
-        description: d.description || d.desc || d.notes || "",
+        title: d.title || d.name || "Untitled Event",
+        description: d.description || d.desc || "",
         city: d.city || d.locationCity || "",
         province: d.province || d.state || d.region || "",
         country: d.country || d.locationCountry || "",
-        address: d.address || d.fullAddress || "",
-        website: d.website || d.url || d.link || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        createdBy: d.createdBy || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || "Member",
+        venue: d.venue || d.spot || "",
+        address: d.address || "",
+        date: d.date || "",
+        time: d.time || "",
+        visibility: d.visibility || d.eventVisibility || "public",
+        creatorId: d.creatorId || d.userId || d.uid || "",
+        creatorName: d.creatorName || d.displayName || d.hostName || "Member",
         creatorUsername: d.creatorUsername || "",
-        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
-        pending: status === "pending" || d.pending === true || (!d.approved && !d.verified && !d.isVerified && status !== "rejected"),
-        rejected: status === "rejected",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
         lat: num(d.lat ?? d.latitude),
-        lng: num(d.lng ?? d.longitude)
+        lng: num(d.lng ?? d.longitude),
+        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted
       };
+    }
+
+    function normalizeComment(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        userId: d.userId || d.uid || d.authorId || "",
+        text: d.text || d.comment || d.body || "",
+        displayName: d.displayName || d.name || "Member",
+        username: d.username || "",
+        createdAt: d.createdAt || null,
+        createdAtMs: d.createdAt?.toDate ? d.createdAt.toDate().getTime() : 0
+      };
+    }
+
+    function parseEventDateTime(dateStr, timeStr) {
+      const dateRaw = String(dateStr || "").trim();
+      if (!dateRaw) return null;
+
+      let year, month, day;
+      const isoMatch = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+      if (isoMatch) {
+        year = Number(isoMatch[1]);
+        month = Number(isoMatch[2]) - 1;
+        day = Number(isoMatch[3]);
+      } else {
+        const parsed = new Date(dateRaw);
+        if (Number.isNaN(parsed.getTime())) return null;
+        year = parsed.getFullYear();
+        month = parsed.getMonth();
+        day = parsed.getDate();
+      }
+
+      let hour = 23;
+      let minute = 59;
+      const timeRaw = String(timeStr || "").trim().toLowerCase();
+
+      if (timeRaw) {
+        let match = timeRaw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+        if (match) {
+          hour = Number(match[1]) % 12;
+          minute = Number(match[2]);
+          if (match[3] === "pm") hour += 12;
+        } else {
+          match = timeRaw.match(/^(\d{1,2})\s*(am|pm)$/);
+          if (match) {
+            hour = Number(match[1]) % 12;
+            minute = 0;
+            if (match[2] === "pm") hour += 12;
+          } else {
+            match = timeRaw.match(/^(\d{1,2}):(\d{2})$/);
+            if (match) {
+              hour = Number(match[1]);
+              minute = Number(match[2]);
+            }
+          }
+        }
+      }
+
+      return new Date(year, month, day, hour, minute, 0, 0);
+    }
+
+    function buildMapsLink() {
+      if (currentEvent?.lat != null && currentEvent?.lng != null) {
+        return `https://www.google.com/maps?q=${encodeURIComponent(`${currentEvent.lat},${currentEvent.lng}`)}`;
+      }
+      const query = [
+        currentEvent?.venue,
+        currentEvent?.address,
+        currentEvent?.city,
+        currentEvent?.province,
+        currentEvent?.country
+      ].filter(Boolean).join(", ");
+      if (!query) return "";
+      return `https://www.google.com/maps?q=${encodeURIComponent(query)}`;
     }
 
     async function createNotificationSafe(targetUid, payload) {
@@ -797,181 +1087,462 @@
       } catch {}
     }
 
-    async function loadProfile(uid) {
+    async function loadMergedProfile(uid) {
       if (!uid) return normalizeProfile({}, "");
+      if (profileCache.has(uid)) return profileCache.get(uid);
+
       try {
         const [userSnap, publicSnap] = await Promise.all([
           getDoc(doc(db, "users", uid)),
           getDoc(doc(db, "publicProfiles", uid))
         ]);
 
-        return normalizeProfile({
+        const merged = normalizeProfile({
           ...(publicSnap.exists() ? publicSnap.data() : {}),
           ...(userSnap.exists() ? userSnap.data() : {}),
           uid
         }, uid);
+
+        profileCache.set(uid, merged);
+        return merged;
       } catch {
-        return normalizeProfile({ uid }, uid);
+        const fallback = normalizeProfile({ uid }, uid);
+        profileCache.set(uid, fallback);
+        return fallback;
       }
     }
 
-    async function findPlace(placeId, source) {
-      if (source && PLACE_SOURCES.includes(source)) {
-        try {
-          const snap = await getDoc(doc(db, source, placeId));
-          if (snap.exists()) {
-            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, source);
-          }
-        } catch {}
+    async function ensureCreatorMember() {
+      if (!isCreator || !currentEventId || !currentUser?.uid) return;
+
+      try {
+        const ref = doc(db, "events", currentEventId, "members", currentUser.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            userId: currentUser.uid,
+            displayName: currentUserProfile?.displayName || currentUser.displayName || "Member",
+            username: currentUserProfile?.username || "",
+            joinedAt: serverTimestamp(),
+            creatorHost: true
+          }, { merge: true });
+        }
+      } catch {}
+    }
+
+    async function loadMembers() {
+      membersRows = [];
+      membersList.innerHTML = "";
+
+      try {
+        const snap = await getDocs(collection(db, "events", currentEventId, "members"));
+        const rows = await Promise.all(
+          snap.docs.map(async (d) => {
+            const data = d.data();
+            const profile = await loadMergedProfile(d.id);
+            return {
+              uid: d.id,
+              displayName: profile.displayName || data.displayName || "Member",
+              username: profile.username || data.username || "",
+              photoURL: profile.photoURL || "",
+              verified: !!profile.verified,
+              joinedAt: data.joinedAt || null,
+              joinedAtMs: data.joinedAt?.toDate ? data.joinedAt.toDate().getTime() : 0,
+              creatorHost: !!data.creatorHost
+            };
+          })
+        );
+
+        membersRows = rows.sort((a, b) => {
+          if (a.creatorHost && !b.creatorHost) return -1;
+          if (b.creatorHost && !a.creatorHost) return 1;
+          return b.joinedAtMs - a.joinedAtMs;
+        });
+      } catch {}
+
+      membersCountText.textContent = String(membersRows.length);
+      membersCountChip.textContent = `${membersRows.length} going`;
+
+      if (!membersRows.length) {
+        membersList.innerHTML = "";
+        membersEmpty.classList.remove("hidden");
+        return;
       }
 
-      for (const col of PLACE_SOURCES) {
-        try {
-          const snap = await getDoc(doc(db, col, placeId));
-          if (snap.exists()) {
-            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, col);
-          }
-        } catch {}
+      membersEmpty.classList.add("hidden");
+
+      membersRows.forEach(member => {
+        const card = document.createElement("div");
+        card.className = "member-card";
+
+        const avatarHtml = member.photoURL
+          ? `<img class="member-avatar" src="${escapeHtml(member.photoURL)}" alt="Member photo">`
+          : `<div class="member-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="member-body">
+            <div class="member-name">
+              <a href="member.html?uid=${encodeURIComponent(member.uid)}">${escapeHtml(member.displayName)}</a>
+              ${member.verified ? `<span class="verified-dot">✓</span>` : ""}
+              ${member.creatorHost ? `<span class="badge badge-purple">Host</span>` : ""}
+            </div>
+            ${member.username ? `<div class="member-username">@${escapeHtml(member.username)}</div>` : ""}
+          </div>
+        `;
+
+        const img = card.querySelector(".member-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="member-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        membersList.appendChild(card);
+      });
+    }
+
+    async function loadComments() {
+      commentsRows = [];
+      commentsList.innerHTML = "";
+
+      try {
+        const snap = await getDocs(collection(db, "events", currentEventId, "comments"));
+        const rows = await Promise.all(
+          snap.docs.map(async (d) => {
+            const base = normalizeComment({ id: d.id, ...d.data() }, d.id);
+            const profile = await loadMergedProfile(base.userId);
+            return {
+              ...base,
+              displayName: profile.displayName || base.displayName || "Member",
+              username: profile.username || base.username || "",
+              photoURL: profile.photoURL || "",
+              verified: !!profile.verified
+            };
+          })
+        );
+
+        commentsRows = rows
+          .filter(row => String(row.text || "").trim())
+          .sort((a, b) => b.createdAtMs - a.createdAtMs);
+      } catch {}
+
+      commentsCountText.textContent = String(commentsRows.length);
+      commentsCountChip.textContent = `${commentsRows.length} comment${commentsRows.length === 1 ? "" : "s"}`;
+
+      if (!commentsRows.length) {
+        commentsList.innerHTML = "";
+        commentsEmpty.classList.remove("hidden");
+        return;
       }
 
-      return null;
+      commentsEmpty.classList.add("hidden");
+
+      commentsRows.forEach(comment => {
+        const card = document.createElement("div");
+        card.className = "comment-card";
+
+        const avatarHtml = comment.photoURL
+          ? `<img class="comment-avatar" src="${escapeHtml(comment.photoURL)}" alt="Comment user photo">`
+          : `<div class="comment-avatar-placeholder">No photo</div>`;
+
+        const canDelete = comment.userId === currentUser.uid || isCreator;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="comment-body">
+            <div class="comment-top">
+              <div>
+                <div class="comment-name">
+                  <a href="member.html?uid=${encodeURIComponent(comment.userId)}">${escapeHtml(comment.displayName)}</a>
+                  ${comment.verified ? `<span class="verified-dot">✓</span>` : ""}
+                </div>
+                ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
+              </div>
+              <div class="comment-time">${escapeHtml(formatDate(comment.createdAt))}</div>
+            </div>
+
+            <div class="comment-text">${escapeHtml(comment.text)}</div>
+
+            ${canDelete ? `
+              <div class="action-row">
+                <button class="action-btn btn-soft delete-comment-btn" data-id="${escapeHtml(comment.id)}" type="button">Delete</button>
+              </div>
+            ` : ``}
+          </div>
+        `;
+
+        const img = card.querySelector(".comment-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="comment-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        commentsList.appendChild(card);
+      });
+
+      commentsList.querySelectorAll(".delete-comment-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const commentId = btn.getAttribute("data-id");
+          if (!commentId) return;
+
+          const ok = confirm("Delete this comment?");
+          if (!ok) return;
+
+          btn.disabled = true;
+          setCommentMessage("");
+
+          try {
+            await deleteDoc(doc(db, "events", currentEventId, "comments", commentId));
+            await loadComments();
+            setCommentMessage("Comment deleted.", "ok");
+          } catch (err) {
+            console.error(err);
+            setCommentMessage("Could not delete comment.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
     function renderBadges() {
       const badges = [];
-      badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.category || "General")}</span>`);
-      badges.push(`<span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">${currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending approval"}</span>`);
-      if (isCreator) badges.push(`<span class="badge badge-purple">Your Place</span>`);
-      if (currentPlace.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.city)}</span>`);
+      badges.push(`<span class="badge ${currentEvent.visibility === "private" ? "badge-yellow" : "badge-blue"}">${currentEvent.visibility === "private" ? "Private" : "Public"}</span>`);
+      if (isCreator) badges.push(`<span class="badge badge-purple">Your Event</span>`);
+      if (joined && !isCreator) badges.push(`<span class="badge badge-green">Joined</span>`);
+      if (isExpired) badges.push(`<span class="badge badge-red">Expired</span>`);
+      else badges.push(`<span class="badge badge-green">Upcoming</span>`);
+      if (currentEvent.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentEvent.city)}</span>`);
       badgeRow.innerHTML = badges.join("");
     }
 
-    function renderSubmitter() {
-      const avatarHtml = currentSubmitterProfile.photoURL
-        ? `<img class="submitter-avatar" src="${escapeHtml(currentSubmitterProfile.photoURL)}" alt="Submitter photo">`
-        : `<div class="submitter-avatar-placeholder">No photo</div>`;
+    function renderQuickLinks() {
+      const links = [];
+      links.push(`<a class="quick-link" href="nearby-events.html">All Events</a>`);
+      links.push(`<a class="quick-link" href="nearby.html">Nearby Hub</a>`);
+      links.push(`<a class="quick-link primary" href="member.html?uid=${encodeURIComponent(currentEvent.creatorId)}">Host Profile</a>`);
 
-      submitterCard.innerHTML = `
+      const mapsLink = buildMapsLink();
+      if (mapsLink) {
+        links.push(`<a class="quick-link" href="${mapsLink}" target="_blank" rel="noopener noreferrer">Open Maps</a>`);
+      }
+
+      quickLinks.innerHTML = links.join("");
+    }
+
+    function renderHost() {
+      const avatarHtml = currentHostProfile.photoURL
+        ? `<img class="host-avatar" src="${escapeHtml(currentHostProfile.photoURL)}" alt="Host photo">`
+        : `<div class="host-avatar-placeholder">No photo</div>`;
+
+      hostCard.innerHTML = `
         ${avatarHtml}
-        <div class="submitter-body">
-          <div class="submitter-name">
-            <a href="member.html?uid=${encodeURIComponent(currentPlace.createdBy)}">${escapeHtml(currentSubmitterProfile.displayName || currentPlace.creatorName || "Member")}</a>
-            ${currentSubmitterProfile.verified ? `<span class="verified-dot">✓</span>` : ""}
+        <div class="host-body">
+          <div class="host-name">
+            <a href="member.html?uid=${encodeURIComponent(currentEvent.creatorId)}">${escapeHtml(currentHostProfile.displayName || currentEvent.creatorName || "Member")}</a>
+            ${currentHostProfile.verified ? `<span class="verified-dot">✓</span>` : ""}
           </div>
-          ${currentSubmitterProfile.username ? `<div class="submitter-username">@${escapeHtml(currentSubmitterProfile.username)}</div>` : ""}
-          <div class="submitter-bio">${escapeHtml(currentSubmitterProfile.bio || "Member profile")}</div>
+          ${currentHostProfile.username ? `<div class="host-username">@${escapeHtml(currentHostProfile.username)}</div>` : ""}
+          <div class="host-bio">${escapeHtml(currentHostProfile.bio || "Event host")}</div>
         </div>
       `;
 
-      const img = submitterCard.querySelector(".submitter-avatar");
+      const img = hostCard.querySelector(".host-avatar");
       if (img) {
         img.addEventListener("error", () => {
-          img.outerHTML = `<div class="submitter-avatar-placeholder">No photo</div>`;
+          img.outerHTML = `<div class="host-avatar-placeholder">No photo</div>`;
         });
       }
     }
 
     function fillEditForm() {
-      editName.value = currentPlace.name || "";
-      editCategory.value = currentPlace.category || "General";
-      editCity.value = currentPlace.city || "";
-      editProvince.value = currentPlace.province || "";
-      editCountry.value = currentPlace.country || "";
-      editAddress.value = currentPlace.address || "";
-      editWebsite.value = currentPlace.website || "";
-      editImageURL.value = currentPlace.imageURL || "";
-      editLat.value = currentPlace.lat ?? "";
-      editLng.value = currentPlace.lng ?? "";
-      editDescription.value = currentPlace.description || "";
+      editTitle.value = currentEvent.title || "";
+      editVisibility.value = currentEvent.visibility || "public";
+      editCity.value = currentEvent.city || "";
+      editProvince.value = currentEvent.province || "";
+      editCountry.value = currentEvent.country || "";
+      editVenue.value = currentEvent.venue || "";
+      editDate.value = currentEvent.date || "";
+      editTime.value = currentEvent.time || "";
+      editAddress.value = currentEvent.address || "";
+      editImageURL.value = currentEvent.imageURL || "";
+      editLat.value = currentEvent.lat ?? "";
+      editLng.value = currentEvent.lng ?? "";
+      editDescription.value = currentEvent.description || "";
       setEditMessage("");
+    }
+
+    function setEditPanelState(open) {
+      editOpen = open;
+      editPanel.classList.toggle("hidden", !open);
+
+      const toggleEditBtn = document.getElementById("toggleEditBtn");
+      if (toggleEditBtn) {
+        toggleEditBtn.textContent = open ? "Hide Edit" : "Edit Event";
+      }
+
+      if (open) fillEditForm();
     }
 
     function renderTopActions() {
       const buttons = [];
-      const siteHref = normalizeHref(currentPlace.website);
-
-      if (currentPlace.website) {
-        buttons.push(`<a href="${escapeHtml(siteHref)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-primary">Open Link</a>`);
-      }
-
-      if (currentPlace.createdBy) {
-        buttons.push(`<a href="member.html?uid=${encodeURIComponent(currentPlace.createdBy)}" class="action-btn btn-soft">View Profile</a>`);
-      }
 
       if (isCreator) {
-        buttons.push(`<button id="toggleEditBtn" class="action-btn btn-purple" type="button">Edit Place</button>`);
-        buttons.push(`<button id="deletePlaceBtn" class="action-btn btn-red" type="button">Delete Place</button>`);
+        buttons.push(`<button id="toggleEditBtn" class="action-btn btn-primary" type="button">${editOpen ? "Hide Edit" : "Edit Event"}</button>`);
+        buttons.push(`<button id="deleteEventBtn" class="action-btn btn-red" type="button">Delete Event</button>`);
       } else {
-        buttons.push(`<a href="report.html?type=place&targetId=${encodeURIComponent(currentPlaceId)}&targetUserId=${encodeURIComponent(currentPlace.createdBy || "")}" class="action-btn btn-yellow">Report</a>`);
+        if (isExpired) {
+          buttons.push(`<button class="action-btn btn-soft" type="button" disabled>Expired</button>`);
+        } else if (joined) {
+          buttons.push(`<button id="leaveEventBtn" class="action-btn btn-red" type="button">Leave Event</button>`);
+        } else {
+          buttons.push(`<button id="joinEventBtn" class="action-btn btn-green" type="button">Join Event</button>`);
+        }
+
+        buttons.push(`<a href="report.html?type=event&targetId=${encodeURIComponent(currentEventId)}&targetUserId=${encodeURIComponent(currentEvent.creatorId)}" class="action-btn btn-yellow">Report</a>`);
       }
 
       topActionRow.innerHTML = buttons.join("");
 
+      const joinBtn = document.getElementById("joinEventBtn");
+      const leaveBtn = document.getElementById("leaveEventBtn");
+      const deleteBtn = document.getElementById("deleteEventBtn");
       const toggleEditBtn = document.getElementById("toggleEditBtn");
-      const deletePlaceBtn = document.getElementById("deletePlaceBtn");
 
-      if (toggleEditBtn) {
-        toggleEditBtn.addEventListener("click", () => {
-          const opening = editPanel.classList.contains("hidden");
-          if (opening) {
-            fillEditForm();
-            editPanel.classList.remove("hidden");
-            editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-            toggleEditBtn.textContent = "Hide Edit";
-          } else {
-            editPanel.classList.add("hidden");
-            toggleEditBtn.textContent = "Edit Place";
+      if (joinBtn) {
+        joinBtn.addEventListener("click", async () => {
+          joinBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await setDoc(doc(db, "events", currentEventId, "members", currentUser.uid), {
+              userId: currentUser.uid,
+              displayName: currentUserProfile?.displayName || currentUser.displayName || "Member",
+              username: currentUserProfile?.username || "",
+              joinedAt: serverTimestamp()
+            }, { merge: true });
+
+            joined = true;
+
+            await createNotificationSafe(currentEvent.creatorId, {
+              type: "event_join",
+              title: "Event joined",
+              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} joined your event.`,
+              fromUserId: currentUser.uid,
+              toUserId: currentEvent.creatorId,
+              eventId: currentEventId,
+              createdAt: serverTimestamp(),
+              isRead: false
+            });
+
+            renderBadges();
+            renderTopActions();
+            await loadMembers();
+            setTopMessage("Joined event.", "ok");
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not join event.", "err");
+            joinBtn.disabled = false;
           }
         });
       }
 
-      if (deletePlaceBtn) {
-        deletePlaceBtn.addEventListener("click", async () => {
-          const ok = confirm("Delete this place?");
+      if (leaveBtn) {
+        leaveBtn.addEventListener("click", async () => {
+          const ok = confirm("Leave this event?");
           if (!ok) return;
 
-          deletePlaceBtn.disabled = true;
+          leaveBtn.disabled = true;
           setTopMessage("");
 
           try {
-            await deleteDoc(doc(db, currentSource, currentPlaceId));
-            window.location.href = "nearby-places.html";
+            await deleteDoc(doc(db, "events", currentEventId, "members", currentUser.uid));
+            joined = false;
+            renderBadges();
+            renderTopActions();
+            await loadMembers();
+            setTopMessage("Left event.", "ok");
           } catch (err) {
             console.error(err);
-            setTopMessage("Could not delete place.", "err");
-            deletePlaceBtn.disabled = false;
+            setTopMessage("Could not leave event.", "err");
+            leaveBtn.disabled = false;
+          }
+        });
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          const ok = confirm("Delete this event?");
+          if (!ok) return;
+
+          deleteBtn.disabled = true;
+          setTopMessage("");
+
+          try {
+            await updateDoc(doc(db, "events", currentEventId), {
+              hidden: true,
+              softDeleted: true,
+              deletedAt: serverTimestamp()
+            });
+            window.location.href = "nearby-events.html";
+          } catch (err) {
+            console.error(err);
+            setTopMessage("Could not delete event.", "err");
+            deleteBtn.disabled = false;
+          }
+        });
+      }
+
+      if (toggleEditBtn) {
+        toggleEditBtn.addEventListener("click", () => {
+          setEditPanelState(!editOpen);
+          if (editOpen) {
+            editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         });
       }
     }
 
-    async function renderPlaceView() {
-      placeTitle.textContent = currentPlace.name || "Unnamed Place";
-      categoryText.textContent = currentPlace.category || "General";
-      cityText.textContent = currentPlace.city || "-";
-      provinceText.textContent = currentPlace.province || "-";
-      countryText.textContent = currentPlace.country || "-";
-      addressText.textContent = currentPlace.address || "-";
-      sourceText.textContent = currentSource || "-";
-      adminStatusText.textContent = currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending approval";
-      descText.textContent = currentPlace.description || "No description added.";
+    async function renderEventView() {
+      eventTitle.textContent = currentEvent.title || "Untitled Event";
+      eventSub.textContent = isCreator
+        ? "You created this event."
+        : `Hosted by ${currentHostProfile.displayName || currentEvent.creatorName || "Member"}`;
 
-      if (currentPlace.imageURL) {
-        heroImage.src = currentPlace.imageURL;
+      dateText.textContent = currentEvent.date || "-";
+      timeText.textContent = currentEvent.time || "-";
+      cityText.textContent = currentEvent.city || "-";
+      provinceText.textContent = currentEvent.province || "-";
+      countryText.textContent = currentEvent.country || "-";
+      venueText.textContent = [currentEvent.venue, currentEvent.address].filter(Boolean).join(" • ") || "-";
+      creatorText.textContent = currentHostProfile.displayName || currentEvent.creatorName || "-";
+      descText.textContent = currentEvent.description || "No description added.";
+      statusText.textContent = isExpired ? "Expired" : "Upcoming";
+
+      if (currentEvent.imageURL) {
+        heroImage.src = currentEvent.imageURL;
         heroImage.classList.remove("hidden");
       } else {
         heroImage.classList.add("hidden");
       }
 
       renderBadges();
-      renderSubmitter();
+      renderQuickLinks();
+      renderHost();
       renderTopActions();
+      await Promise.all([loadMembers(), loadComments()]);
+
+      if (editOpen && isCreator) {
+        editPanel.classList.remove("hidden");
+        fillEditForm();
+      } else {
+        editPanel.classList.add("hidden");
+      }
     }
 
     cancelEditBtn.addEventListener("click", () => {
-      editPanel.classList.add("hidden");
-      const toggleEditBtn = document.getElementById("toggleEditBtn");
-      if (toggleEditBtn) toggleEditBtn.textContent = "Edit Place";
+      setEditPanelState(false);
     });
 
     heroImage.addEventListener("error", () => {
@@ -980,22 +1551,24 @@
 
     editForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!currentPlace || !isCreator) return;
+      if (!currentEvent || !isCreator) return;
 
-      const name = editName.value.trim();
-      const category = editCategory.value.trim() || "General";
+      const title = editTitle.value.trim();
+      const visibility = editVisibility.value.trim() || "public";
       const city = editCity.value.trim();
       const province = editProvince.value.trim();
       const country = editCountry.value.trim();
+      const venue = editVenue.value.trim();
+      const date = editDate.value.trim();
+      const time = editTime.value.trim();
       const address = editAddress.value.trim();
-      const website = editWebsite.value.trim();
       const imageURL = editImageURL.value.trim();
       const description = editDescription.value.trim();
       const latText = editLat.value.trim();
       const lngText = editLng.value.trim();
 
-      if (!name) {
-        setEditMessage("Place name is required.", "err");
+      if (!title) {
+        setEditMessage("Event title is required.", "err");
         return;
       }
       if (!city) {
@@ -1010,8 +1583,22 @@
         setEditMessage("Country is required.", "err");
         return;
       }
+      if (!date) {
+        setEditMessage("Date is required.", "err");
+        return;
+      }
+      if (!time) {
+        setEditMessage("Time is required.", "err");
+        return;
+      }
       if (!description) {
         setEditMessage("Description is required.", "err");
+        return;
+      }
+
+      const dt = new Date(`${date}T${time}`);
+      if (Number.isNaN(dt.getTime())) {
+        setEditMessage("Date or time is invalid.", "err");
         return;
       }
 
@@ -1032,9 +1619,9 @@
       setEditMessage("");
 
       try {
-        await updateDoc(doc(db, currentSource, currentPlaceId), {
-          name,
-          category,
+        await updateDoc(doc(db, "events", currentEventId), {
+          title,
+          visibility,
           city,
           province,
           state: province,
@@ -1042,39 +1629,91 @@
           country,
           locationCountry: country,
           locationSearch: buildLocationSearch(city, province, country),
+          venue,
+          date,
+          time,
           address,
-          website,
           imageURL,
           description,
           lat,
-          lng,
-          updatedAt: serverTimestamp()
+          lng
         });
 
-        currentPlace = {
-          ...currentPlace,
-          name,
-          category,
+        currentEvent = {
+          ...currentEvent,
+          title,
+          visibility,
           city,
           province,
           country,
+          venue,
+          date,
+          time,
           address,
-          website,
           imageURL,
           description,
           lat,
           lng
         };
 
-        await renderPlaceView();
-        setEditMessage("Place updated.", "ok");
-        setTopMessage("Place updated.", "ok");
+        const eventDateTime = parseEventDateTime(currentEvent.date, currentEvent.time);
+        isExpired = eventDateTime ? Date.now() > eventDateTime.getTime() : false;
+
+        await renderEventView();
+        setEditMessage("Event updated.", "ok");
+        setTopMessage("Event updated.", "ok");
       } catch (err) {
         console.error(err);
-        setEditMessage("Could not update place.", "err");
+        setEditMessage("Could not update event.", "err");
       }
 
       saveBtn.disabled = false;
+    });
+
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentEventId || !currentUser?.uid) return;
+
+      const text = commentInput.value.trim();
+      if (!text) {
+        setCommentMessage("Write something first.", "err");
+        return;
+      }
+
+      postCommentBtn.disabled = true;
+      setCommentMessage("");
+
+      try {
+        await addDoc(collection(db, "events", currentEventId, "comments"), {
+          userId: currentUser.uid,
+          displayName: currentUserProfile?.displayName || currentUser.displayName || "Member",
+          username: currentUserProfile?.username || "",
+          text,
+          createdAt: serverTimestamp()
+        });
+
+        if (currentEvent.creatorId && currentEvent.creatorId !== currentUser.uid) {
+          await createNotificationSafe(currentEvent.creatorId, {
+            type: "event_comment",
+            title: "New comment on event",
+            text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} commented on your event.`,
+            fromUserId: currentUser.uid,
+            toUserId: currentEvent.creatorId,
+            eventId: currentEventId,
+            createdAt: serverTimestamp(),
+            isRead: false
+          });
+        }
+
+        commentInput.value = "";
+        await loadComments();
+        setCommentMessage("Comment posted.", "ok");
+      } catch (err) {
+        console.error(err);
+        setCommentMessage("Could not post comment.", "err");
+      }
+
+      postCommentBtn.disabled = false;
     });
 
     onAuthStateChanged(auth, async (user) => {
@@ -1084,39 +1723,67 @@
       }
 
       currentUser = user;
-      currentUserProfile = await loadProfile(user.uid);
+      currentEventId = new URLSearchParams(window.location.search).get("eventId") || "";
 
-      const params = new URLSearchParams(window.location.search);
-      currentPlaceId = params.get("placeId") || "";
-      currentSource = params.get("source") || "";
-
-      if (!currentPlaceId) {
+      if (!currentEventId) {
         loadingPanel.classList.add("hidden");
         notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "No event selected.";
         return;
       }
 
       try {
-        currentPlace = await findPlace(currentPlaceId, currentSource);
+        currentUserProfile = await loadMergedProfile(user.uid);
 
-        if (!currentPlace || currentPlace.hidden) {
+        const eventSnap = await getDoc(doc(db, "events", currentEventId));
+        if (!eventSnap.exists()) {
           loadingPanel.classList.add("hidden");
           notFoundPanel.classList.remove("hidden");
           return;
         }
 
-        currentSource = currentPlace.source;
-        currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
-        isCreator = currentPlace.createdBy === user.uid;
+        currentEvent = normalizeEvent({ id: eventSnap.id, ...eventSnap.data() }, eventSnap.id);
 
-        await renderPlaceView();
+        if (currentEvent.hidden) {
+          loadingPanel.classList.add("hidden");
+          notFoundPanel.classList.remove("hidden");
+          notFoundText.textContent = "This event is no longer available.";
+          return;
+        }
+
+        currentHostProfile = await loadMergedProfile(currentEvent.creatorId);
+        isCreator = currentEvent.creatorId === user.uid;
+
+        if (isCreator) {
+          await ensureCreatorMember();
+        }
+
+        let joinedSnap = null;
+        try {
+          joinedSnap = await getDoc(doc(db, "events", currentEventId, "members", user.uid));
+        } catch {}
+        joined = joinedSnap ? joinedSnap.exists() : false;
+
+        const eventDateTime = parseEventDateTime(currentEvent.date, currentEvent.time);
+        isExpired = eventDateTime ? Date.now() > eventDateTime.getTime() : false;
+
+        const canView = currentEvent.visibility !== "private" || isCreator || joined;
+        if (!canView) {
+          loadingPanel.classList.add("hidden");
+          lockedPanel.classList.remove("hidden");
+          lockedText.textContent = "This private event is only available to the host and joined members.";
+          return;
+        }
+
+        await renderEventView();
 
         loadingPanel.classList.add("hidden");
-        placePanel.classList.remove("hidden");
+        eventPanel.classList.remove("hidden");
       } catch (err) {
         console.error(err);
         loadingPanel.classList.add("hidden");
         notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "Could not load event.";
       }
     });
   </script>
