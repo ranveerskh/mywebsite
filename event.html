@@ -590,6 +590,14 @@
             <span id="cityText">-</span>
           </div>
           <div class="meta-item">
+            <strong>Province / State</strong>
+            <span id="provinceText">-</span>
+          </div>
+          <div class="meta-item">
+            <strong>Country</strong>
+            <span id="countryText">-</span>
+          </div>
+          <div class="meta-item">
             <strong>Venue / Address</strong>
             <span id="venueText">-</span>
           </div>
@@ -645,6 +653,18 @@
             <div class="field">
               <label class="label" for="editCity">City</label>
               <input id="editCity" class="input" type="text" placeholder="City" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="editProvince">Province / State</label>
+              <input id="editProvince" class="input" type="text" placeholder="Province / State" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label" for="editCountry">Country</label>
+              <input id="editCountry" class="input" type="text" placeholder="Country" />
             </div>
 
             <div class="field">
@@ -788,6 +808,8 @@
     const dateText = document.getElementById("dateText");
     const timeText = document.getElementById("timeText");
     const cityText = document.getElementById("cityText");
+    const provinceText = document.getElementById("provinceText");
+    const countryText = document.getElementById("countryText");
     const venueText = document.getElementById("venueText");
     const membersCountText = document.getElementById("membersCountText");
     const commentsCountText = document.getElementById("commentsCountText");
@@ -804,6 +826,8 @@
     const editTitle = document.getElementById("editTitle");
     const editVisibility = document.getElementById("editVisibility");
     const editCity = document.getElementById("editCity");
+    const editProvince = document.getElementById("editProvince");
+    const editCountry = document.getElementById("editCountry");
     const editVenue = document.getElementById("editVenue");
     const editDate = document.getElementById("editDate");
     const editTime = document.getElementById("editTime");
@@ -910,6 +934,37 @@
       }
     }
 
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleText(value) {
+      return String(value || "").trim();
+    }
+
+    function countryAliases(country) {
+      const c = normalizeText(country);
+      if (!c) return "";
+      const aliases = [c];
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "canada") aliases.push("ca");
+      return aliases.join(" ");
+    }
+
+    function buildLocationSearch(city, province, country) {
+      return [
+        titleText(city),
+        titleText(province),
+        titleText(country),
+        countryAliases(country)
+      ]
+      .filter(Boolean)
+      .join(" ")
+      .trim()
+      .toLowerCase();
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
@@ -932,6 +987,8 @@
         title: d.title || d.name || "Untitled Event",
         description: d.description || d.desc || "",
         city: d.city || d.locationCity || "",
+        province: d.province || d.state || d.region || "",
+        country: d.country || d.locationCountry || "",
         venue: d.venue || d.spot || "",
         address: d.address || "",
         date: d.date || "",
@@ -1012,7 +1069,13 @@
       if (currentEvent?.lat != null && currentEvent?.lng != null) {
         return `https://www.google.com/maps?q=${encodeURIComponent(`${currentEvent.lat},${currentEvent.lng}`)}`;
       }
-      const query = [currentEvent?.venue, currentEvent?.address, currentEvent?.city].filter(Boolean).join(", ");
+      const query = [
+        currentEvent?.venue,
+        currentEvent?.address,
+        currentEvent?.city,
+        currentEvent?.province,
+        currentEvent?.country
+      ].filter(Boolean).join(", ");
       if (!query) return "";
       return `https://www.google.com/maps?q=${encodeURIComponent(query)}`;
     }
@@ -1297,6 +1360,8 @@
       editTitle.value = currentEvent.title || "";
       editVisibility.value = currentEvent.visibility || "public";
       editCity.value = currentEvent.city || "";
+      editProvince.value = currentEvent.province || "";
+      editCountry.value = currentEvent.country || "";
       editVenue.value = currentEvent.venue || "";
       editDate.value = currentEvent.date || "";
       editTime.value = currentEvent.time || "";
@@ -1448,6 +1513,8 @@
       dateText.textContent = currentEvent.date || "-";
       timeText.textContent = currentEvent.time || "-";
       cityText.textContent = currentEvent.city || "-";
+      provinceText.textContent = currentEvent.province || "-";
+      countryText.textContent = currentEvent.country || "-";
       venueText.textContent = [currentEvent.venue, currentEvent.address].filter(Boolean).join(" • ") || "-";
       creatorText.textContent = currentHostProfile.displayName || currentEvent.creatorName || "-";
       descText.textContent = currentEvent.description || "No description added.";
@@ -1489,6 +1556,8 @@
       const title = editTitle.value.trim();
       const visibility = editVisibility.value.trim() || "public";
       const city = editCity.value.trim();
+      const province = editProvince.value.trim();
+      const country = editCountry.value.trim();
       const venue = editVenue.value.trim();
       const date = editDate.value.trim();
       const time = editTime.value.trim();
@@ -1504,6 +1573,14 @@
       }
       if (!city) {
         setEditMessage("City is required.", "err");
+        return;
+      }
+      if (!province) {
+        setEditMessage("Province / State is required.", "err");
+        return;
+      }
+      if (!country) {
+        setEditMessage("Country is required.", "err");
         return;
       }
       if (!date) {
@@ -1546,6 +1623,12 @@
           title,
           visibility,
           city,
+          province,
+          state: province,
+          region: province,
+          country,
+          locationCountry: country,
+          locationSearch: buildLocationSearch(city, province, country),
           venue,
           date,
           time,
@@ -1561,6 +1644,8 @@
           title,
           visibility,
           city,
+          province,
+          country,
           venue,
           date,
           time,
