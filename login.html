@@ -493,11 +493,7 @@
   </div>
 
   <script type="module">
-    import { auth } from "./firebase.js";
-    import {
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { supabase } from "./supabase.js";
 
     const loginForm = document.getElementById("loginForm");
     const loginBtn = document.getElementById("loginBtn");
@@ -533,6 +529,68 @@
       applyTheme(next);
     }
 
+    function showLoader() {
+      loader.classList.remove("hidden");
+    }
+
+    function hideLoader() {
+      loader.classList.add("hidden");
+      pageContent.classList.remove("hidden");
+    }
+
+    function redirectToFeed() {
+      window.location.href = "feed.html";
+    }
+
+    function getLoginErrorMessage(error) {
+      const msg = String(error?.message || "").toLowerCase();
+
+      if (
+        msg.includes("invalid login credentials") ||
+        msg.includes("invalid credentials") ||
+        msg.includes("email not found") ||
+        msg.includes("invalid email or password")
+      ) {
+        return "Invalid email or password.";
+      }
+
+      if (msg.includes("email not confirmed")) {
+        return "Please confirm your email first.";
+      }
+
+      if (msg.includes("invalid email")) {
+        return "Invalid email address.";
+      }
+
+      if (msg.includes("too many requests")) {
+        return "Too many attempts. Try again later.";
+      }
+
+      if (msg.includes("network")) {
+        return "Network issue. Try again.";
+      }
+
+      return "Login failed.";
+    }
+
+    async function checkExistingSession() {
+      showLoader();
+
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        if (data?.session?.user) {
+          redirectToFeed();
+          return;
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+      }
+
+      hideLoader();
+    }
+
     applyTheme();
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -548,17 +606,18 @@
 
     themeBtn.addEventListener("click", toggleTheme);
 
-    loader.classList.remove("hidden");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "feed.html";
+    supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        redirectToFeed();
         return;
       }
 
-      loader.classList.add("hidden");
-      pageContent.classList.remove("hidden");
+      if (!session?.user) {
+        hideLoader();
+      }
     });
+
+    checkExistingSession();
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -573,32 +632,28 @@
 
       loginBtn.disabled = true;
       loginBtn.textContent = "Logging in...";
+      setMessage("");
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        setMessage("Login successful. Redirecting...", "success");
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
-        setTimeout(() => {
-          window.location.href = "feed.html";
-        }, 500);
-      } catch (error) {
-        console.error(error);
+        if (error) throw error;
 
-        let msg = "Login failed.";
-
-        if (
-          error.code === "auth/invalid-credential" ||
-          error.code === "auth/wrong-password" ||
-          error.code === "auth/user-not-found"
-        ) {
-          msg = "Invalid email or password.";
-        } else if (error.code === "auth/invalid-email") {
-          msg = "Invalid email address.";
-        } else if (error.code === "auth/too-many-requests") {
-          msg = "Too many attempts. Try again later.";
+        if (data?.user) {
+          setMessage("Login successful. Redirecting...", "success");
+          setTimeout(() => {
+            redirectToFeed();
+          }, 500);
+          return;
         }
 
-        setMessage(msg, "error");
+        throw new Error("Login failed");
+      } catch (error) {
+        console.error(error);
+        setMessage(getLoginErrorMessage(error), "error");
         loginBtn.disabled = false;
         loginBtn.textContent = "Login";
       }
