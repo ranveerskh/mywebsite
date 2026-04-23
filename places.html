@@ -649,7 +649,6 @@
     const editMessage = document.getElementById("editMessage");
 
     let currentUser = null;
-    let currentUserProfile = null;
     let currentPlaceId = "";
     let currentSource = "";
     let currentPlace = null;
@@ -679,9 +678,12 @@
       if (e.key === "bwTheme") applyTheme(getStoredTheme());
     });
 
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    if (mq.addEventListener) {
+      mq.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -773,7 +775,7 @@
         category: d.category || d.topic || "General",
         description: d.description || d.desc || d.notes || "",
         city: d.city || d.locationCity || "",
-        province: d.province || d.state || d.region || "",
+        province: d.province || d.state || d.region || d.locationProvince || "",
         country: d.country || d.locationCountry || "",
         address: d.address || d.fullAddress || "",
         website: d.website || d.url || d.link || "",
@@ -783,18 +785,11 @@
         creatorUsername: d.creatorUsername || "",
         approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
         pending: status === "pending" || d.pending === true || (!d.approved && !d.verified && !d.isVerified && status !== "rejected"),
-        rejected: status === "rejected",
+        rejected: status === "rejected" || d.rejected === true,
         hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
         lat: num(d.lat ?? d.latitude),
         lng: num(d.lng ?? d.longitude)
       };
-    }
-
-    async function createNotificationSafe(targetUid, payload) {
-      if (!targetUid || targetUid === currentUser.uid) return;
-      try {
-        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
-      } catch {}
     }
 
     async function loadProfile(uid) {
@@ -1036,11 +1031,16 @@
           name,
           category,
           city,
+          locationCity: city,
+          currentCity: city,
           province,
           state: province,
           region: province,
+          locationProvince: province,
+          currentProvince: province,
           country,
           locationCountry: country,
+          currentCountry: country,
           locationSearch: buildLocationSearch(city, province, country),
           address,
           website,
@@ -1084,7 +1084,6 @@
       }
 
       currentUser = user;
-      currentUserProfile = await loadProfile(user.uid);
 
       const params = new URLSearchParams(window.location.search);
       currentPlaceId = params.get("placeId") || "";
@@ -1108,6 +1107,13 @@
         currentSource = currentPlace.source;
         currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
         isCreator = currentPlace.createdBy === user.uid;
+
+        if (!isCreator && (currentPlace.pending || currentPlace.rejected)) {
+          loadingPanel.classList.add("hidden");
+          notFoundPanel.classList.remove("hidden");
+          notFoundPanel.querySelector(".empty-box").textContent = "This place is not public yet.";
+          return;
+        }
 
         await renderPlaceView();
 
