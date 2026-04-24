@@ -237,6 +237,8 @@
       text-align:center;
       line-height:1.65;
       font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
 
     .request-actions{
@@ -424,6 +426,10 @@
       flex-shrink:0;
     }
     .send-btn svg{width:20px;height:20px;display:block}
+    .send-btn:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
 
     .form-message{
       min-height:18px;
@@ -575,23 +581,7 @@
   </div>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      addDoc,
-      getDocs,
-      collection,
-      query,
-      where,
-      orderBy,
-      limit,
-      onSnapshot,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const topSub = document.getElementById("topSub");
@@ -638,8 +628,9 @@
     let currentThreadData = null;
     let currentMode = "loading";
     let requestDocModel = null;
-    let messagesUnsub = null;
-    let requestDocUnsub = null;
+    let messageChannel = null;
+    let requestChannel = null;
+    let threadChannel = null;
     let iBlockedTarget = false;
     let targetBlockedMe = false;
 
@@ -671,6 +662,10 @@
       });
     }
 
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     function setPageMessage(text = "", type = "") {
       pageMessage.textContent = text;
       pageMessage.className = `page-message ${type}`;
@@ -689,38 +684,47 @@
 
     function formatDate(ts) {
       if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch {
-        try {
-          const d = new Date(ts);
-          return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-        } catch {
-          return "Just now";
-        }
+      try {
+        const d = new Date(ts);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
       }
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
     }
 
     function getSortedPair(a, b) {
       return [a, b].sort((x, y) => x.localeCompare(y));
     }
 
-    function makeThreadId(a, b) {
-      return getSortedPair(a, b).join("__");
-    }
-
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        verified: !!(d.verified || d.isVerified),
-        bio: d.bio || "",
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        bio: getField(d, ["bio"]),
+        blockedUsers: Array.isArray(d.blocked_users)
+          ? d.blocked_users
+          : Array.isArray(d.blockedUsers)
+          ? d.blockedUsers
+          : [],
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted)
       };
     }
 
@@ -728,18 +732,18 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        type: d.type || "direct",
-        status: d.status || "accepted",
-        participantA: d.participantA || "",
-        participantB: d.participantB || "",
-        createdBy: d.createdBy || "",
-        acceptedFromRequestId: d.acceptedFromRequestId || "",
-        starterText: d.starterText || "",
-        starterFrom: d.starterFrom || "",
-        lastMessageText: d.lastMessageText || "",
-        lastMessageAt: d.lastMessageAt || d.createdAt || null,
-        lastSenderId: d.lastSenderId || "",
-        createdAt: d.createdAt || null
+        type: getField(d, ["type"]) || "direct",
+        status: getField(d, ["status"]) || "accepted",
+        participantA: getField(d, ["participant_a", "participantA"]),
+        participantB: getField(d, ["participant_b", "participantB"]),
+        createdBy: getField(d, ["created_by", "createdBy"]),
+        acceptedFromRequestId: getField(d, ["accepted_from_request_id", "acceptedFromRequestId"]),
+        starterText: getField(d, ["starter_text", "starterText"]),
+        starterFrom: getField(d, ["starter_from", "starterFrom"]),
+        lastMessageText: getField(d, ["last_message_text", "lastMessageText"]),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.created_at ?? d.createdAt ?? null,
+        lastSenderId: getField(d, ["last_sender_id", "lastSenderId"]),
+        createdAt: d.created_at ?? d.createdAt ?? null
       };
     }
 
@@ -747,24 +751,38 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        requesterId: d.requesterId || "",
-        targetId: d.targetId || "",
-        text: d.text || "",
-        status: d.status || "pending",
-        createdAt: d.createdAt || null,
-        updatedAt: d.updatedAt || null
+        requesterId: getField(d, ["requester_id", "requesterId"]),
+        targetId: getField(d, ["target_id", "targetId"]),
+        text: getField(d, ["text", "message", "starter_text", "starterText"]),
+        status: getField(d, ["status"]) || "pending",
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null
+      };
+    }
+
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getField(d, ["thread_id", "threadId"]),
+        senderId: getField(d, ["sender_id", "senderId"]),
+        text: getField(d, ["text", "message", "body"]),
+        createdAt: d.created_at ?? d.createdAt ?? null
       };
     }
 
     async function loadFullProfile(uid) {
-      const [userSnap, publicSnap] = await Promise.all([
-        getDoc(doc(db, "users", uid)).catch(() => null),
-        getDoc(doc(db, "publicProfiles", uid)).catch(() => null)
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
       ]);
 
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
       return normalizeProfile({
-        ...(publicSnap?.exists ? publicSnap.data() : {}),
-        ...(userSnap?.exists ? userSnap.data() : {}),
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
         uid
       }, uid);
     }
@@ -808,16 +826,20 @@
     }
 
     function clearMessageListener() {
-      if (messagesUnsub) {
-        try { messagesUnsub(); } catch {}
-        messagesUnsub = null;
+      if (messageChannel) {
+        try { supabase.removeChannel(messageChannel); } catch {}
+        messageChannel = null;
+      }
+      if (threadChannel) {
+        try { supabase.removeChannel(threadChannel); } catch {}
+        threadChannel = null;
       }
     }
 
     function clearRequestListener() {
-      if (requestDocUnsub) {
-        try { requestDocUnsub(); } catch {}
-        requestDocUnsub = null;
+      if (requestChannel) {
+        try { supabase.removeChannel(requestChannel); } catch {}
+        requestChannel = null;
       }
     }
 
@@ -852,9 +874,7 @@
 
       if (mode === "chat") {
         modeChip.textContent = "Chat";
-        modeChip.className = "chip chip-blue";
         statusChip.textContent = "Accepted";
-        statusChip.className = "chip chip-green";
         messagesPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
         composerNote.textContent = "This is a direct chat.";
@@ -863,9 +883,7 @@
 
       if (mode === "direct_new") {
         modeChip.textContent = "Chat";
-        modeChip.className = "chip chip-blue";
         statusChip.textContent = "Ready to start";
-        statusChip.className = "chip chip-purple";
         messagesPanel.classList.remove("hidden");
         messagesEmpty.classList.remove("hidden");
         messagesList.classList.add("hidden");
@@ -877,9 +895,7 @@
 
       if (mode === "request_compose") {
         modeChip.textContent = "Request";
-        modeChip.className = "chip chip-yellow";
         statusChip.textContent = "One message allowed";
-        statusChip.className = "chip chip-purple";
         requestInfoPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
         requestInfoBox.textContent = "You are not a follower yet. Send one message request. They must accept it before full chat opens.";
@@ -889,9 +905,7 @@
 
       if (mode === "request_outgoing_pending") {
         modeChip.textContent = "Request";
-        modeChip.className = "chip chip-yellow";
         statusChip.textContent = "Pending";
-        statusChip.className = "chip chip-purple";
         requestInfoPanel.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
         requestPreviewBox.textContent = requestDocModel?.text
@@ -903,9 +917,7 @@
 
       if (mode === "request_incoming_pending") {
         modeChip.textContent = "Request";
-        modeChip.className = "chip chip-yellow";
         statusChip.textContent = "Incoming request";
-        statusChip.className = "chip chip-purple";
         requestInfoPanel.classList.remove("hidden");
         requestActionRow.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
@@ -918,9 +930,7 @@
 
       if (mode === "request_declined") {
         modeChip.textContent = "Request";
-        modeChip.className = "chip chip-yellow";
         statusChip.textContent = "Declined";
-        statusChip.className = "chip chip-red";
         requestInfoPanel.classList.remove("hidden");
         requestInfoBox.textContent = "This request was declined.";
         topSub.textContent = "Request declined";
@@ -933,6 +943,76 @@
       });
     }
 
+    async function fetchMessages(threadId) {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("thread_id", threadId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return (data || []).map(row => normalizeMessage(row, row.id));
+    }
+
+    function renderMessages(messages) {
+      messagesLoading.classList.add("hidden");
+      messagesList.innerHTML = "";
+
+      const finalMessages = [...messages];
+
+      if (!finalMessages.length && currentThreadData?.starterText) {
+        finalMessages.push({
+          id: "starter-fallback",
+          threadId: currentThreadId,
+          senderId: currentThreadData.starterFrom || currentTargetUid,
+          text: currentThreadData.starterText,
+          createdAt: currentThreadData.createdAt || currentThreadData.lastMessageAt || null
+        });
+      }
+
+      if (!finalMessages.length) {
+        messagesList.classList.add("hidden");
+        messagesEmpty.classList.remove("hidden");
+        return;
+      }
+
+      messagesEmpty.classList.add("hidden");
+      messagesList.classList.remove("hidden");
+
+      finalMessages.forEach(msg => {
+        const mine = msg.senderId === currentUser.id;
+
+        const row = document.createElement("div");
+        row.className = `bubble-row ${mine ? "mine" : "other"}`;
+
+        row.innerHTML = `
+          <div class="bubble ${mine ? "mine" : "other"}">
+            <div class="bubble-text">${escapeHtml(msg.text || "")}</div>
+            <div class="bubble-meta">
+              <div class="bubble-time">${escapeHtml(formatDate(msg.createdAt))}</div>
+            </div>
+          </div>
+        `;
+
+        messagesList.appendChild(row);
+      });
+
+      scrollMessagesToBottom();
+    }
+
+    async function refreshMessages(threadId) {
+      try {
+        const messages = await fetchMessages(threadId);
+        renderMessages(messages);
+      } catch (err) {
+        console.error(err);
+        messagesLoading.classList.add("hidden");
+        messagesList.classList.add("hidden");
+        messagesEmpty.classList.remove("hidden");
+        messagesEmpty.textContent = "Could not load messages.";
+      }
+    }
+
     function listenToMessages(threadId) {
       clearMessageListener();
 
@@ -941,127 +1021,89 @@
       messagesList.classList.add("hidden");
       messagesEmpty.classList.add("hidden");
 
-      const q = query(
-        collection(db, "chat_threads", threadId, "messages"),
-        orderBy("createdAt", "asc")
-      );
+      refreshMessages(threadId);
 
-      messagesUnsub = onSnapshot(q, (snap) => {
-        messagesLoading.classList.add("hidden");
-        messagesList.innerHTML = "";
+      messageChannel = supabase
+        .channel(`chat-messages-${threadId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
+          () => refreshMessages(threadId)
+        )
+        .subscribe();
 
-        if (snap.empty) {
-          messagesList.classList.add("hidden");
-          messagesEmpty.classList.remove("hidden");
-          return;
-        }
-
-        messagesEmpty.classList.add("hidden");
-        messagesList.classList.remove("hidden");
-
-        snap.docs.forEach(d => {
-          const msg = d.data();
-          const mine = msg.senderId === currentUser.uid;
-
-          const row = document.createElement("div");
-          row.className = `bubble-row ${mine ? "mine" : "other"}`;
-
-          row.innerHTML = `
-            <div class="bubble ${mine ? "mine" : "other"}">
-              <div class="bubble-text">${escapeHtml(msg.text || "")}</div>
-              <div class="bubble-meta">
-                <div class="bubble-time">${escapeHtml(formatDate(msg.createdAt))}</div>
-              </div>
-            </div>
-          `;
-
-          messagesList.appendChild(row);
-        });
-
-        scrollMessagesToBottom();
-      }, (err) => {
-        console.error(err);
-        messagesLoading.classList.add("hidden");
-        messagesList.classList.add("hidden");
-        messagesEmpty.classList.remove("hidden");
-        messagesEmpty.textContent = "Could not load messages.";
-      });
+      threadChannel = supabase
+        .channel(`chat-thread-${threadId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "chat_threads", filter: `id=eq.${threadId}` },
+          async (payload) => {
+            if (payload?.new) {
+              currentThreadData = normalizeThread(payload.new, payload.new.id);
+            } else {
+              const { data } = await supabase.from("chat_threads").select("*").eq("id", threadId).maybeSingle();
+              if (data) currentThreadData = normalizeThread(data, data.id);
+            }
+          }
+        )
+        .subscribe();
     }
 
-    function listenToPendingRequest(requestId, direction) {
-      clearRequestListener();
+    async function findExistingThreadByUsers(uidA, uidB) {
+      const { data: first, error: firstError } = await supabase
+        .from("chat_threads")
+        .select("*")
+        .eq("participant_a", uidA)
+        .eq("participant_b", uidB)
+        .limit(1);
 
-      requestDocUnsub = onSnapshot(doc(db, "message_requests", requestId), async (snap) => {
-        if (!snap.exists()) return;
+      if (firstError) throw firstError;
+      if (first && first.length) return normalizeThread(first[0], first[0].id);
 
-        requestDocModel = normalizeRequest({ id: snap.id, ...snap.data() }, snap.id);
+      const { data: second, error: secondError } = await supabase
+        .from("chat_threads")
+        .select("*")
+        .eq("participant_a", uidB)
+        .eq("participant_b", uidA)
+        .limit(1);
 
-        if (requestDocModel.status === "accepted") {
-          const threadId = makeThreadId(requestDocModel.requesterId, requestDocModel.targetId);
-          const threadSnap = await getDoc(doc(db, "chat_threads", threadId));
+      if (secondError) throw secondError;
+      if (second && second.length) return normalizeThread(second[0], second[0].id);
 
-          if (threadSnap.exists()) {
-            await openThread(normalizeThread({ id: threadSnap.id, ...threadSnap.data() }, threadSnap.id));
-            setPageMessage("Request accepted.", "ok");
-            return;
-          }
-        }
+      return null;
+    }
 
-        if (requestDocModel.status === "declined") {
-          setModeUI("request_declined");
-          if (direction === "outgoing") {
-            requestPreviewBox.classList.remove("hidden");
-            requestPreviewBox.textContent = requestDocModel.text
-              ? `Your request message:\n\n${requestDocModel.text}`
-              : "Request declined.";
-          }
-          return;
-        }
+    async function loadRequestBetween(requesterId, targetId) {
+      const { data, error } = await supabase
+        .from("message_requests")
+        .select("*")
+        .eq("requester_id", requesterId)
+        .eq("target_id", targetId)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-        setModeUI(direction === "incoming" ? "request_incoming_pending" : "request_outgoing_pending");
-      });
+      if (error) throw error;
+      if (!data || !data.length) return null;
+      return normalizeRequest(data[0], data[0].id);
     }
 
     async function createNotificationSafe(targetUid, payload) {
-      if (!targetUid || targetUid === currentUser.uid) return;
+      if (!targetUid || targetUid === currentUser.id) return;
       try {
-        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+        await supabase.from("notifications").insert(payload);
       } catch {}
     }
 
     async function checkFollowing(viewerUid, targetUid) {
-      try {
-        const direct = await getDoc(doc(db, "follows", `${viewerUid}__${targetUid}`));
-        if (direct.exists()) return true;
-      } catch {}
+      const { data, error } = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", viewerUid)
+        .eq("following_id", targetUid)
+        .limit(1);
 
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follows"),
-            where("followerId", "==", viewerUid),
-            where("followingId", "==", targetUid),
-            limit(1)
-          )
-        );
-        return !snap.empty;
-      } catch {
-        return false;
-      }
-    }
-
-    async function findExistingThreadByUsers(uidA, uidB) {
-      const threadId = makeThreadId(uidA, uidB);
-      const snap = await getDoc(doc(db, "chat_threads", threadId));
-      if (!snap.exists()) return null;
-      return normalizeThread({ id: snap.id, ...snap.data() }, snap.id);
-    }
-
-    async function loadRequestBetween(requesterId, targetId) {
-      const requestId = `${requesterId}__${targetId}`;
-      const snap = await getDoc(doc(db, "message_requests", requestId));
-      if (!snap.exists()) return null;
-      return normalizeRequest({ id: snap.id, ...snap.data() }, snap.id);
+      if (error) return false;
+      return !!(data && data.length);
     }
 
     async function openThread(threadModel) {
@@ -1069,7 +1111,7 @@
 
       currentThreadId = threadModel.id;
       currentThreadData = threadModel;
-      currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
+      currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
       currentTargetProfile = await loadFullProfile(currentTargetUid);
 
       if (
@@ -1083,7 +1125,7 @@
       }
 
       iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
-      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.uid);
+      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.id);
 
       setHeader(currentTargetProfile);
 
@@ -1098,6 +1140,63 @@
 
       setModeUI("chat");
       listenToMessages(currentThreadId);
+    }
+
+    async function listenToPendingRequest(requestId, direction) {
+      clearRequestListener();
+
+      requestChannel = supabase
+        .channel(`message-request-${requestId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "message_requests", filter: `id=eq.${requestId}` },
+          async () => {
+            try {
+              const { data, error } = await supabase
+                .from("message_requests")
+                .select("*")
+                .eq("id", requestId)
+                .maybeSingle();
+
+              if (error) return;
+              if (!data) return;
+
+              requestDocModel = normalizeRequest(data, data.id);
+
+              if (requestDocModel.status === "accepted") {
+                let thread = null;
+
+                for (let i = 0; i < 5; i++) {
+                  thread = await findExistingThreadByUsers(requestDocModel.requesterId, requestDocModel.targetId);
+                  if (thread) break;
+                  await sleep(250);
+                }
+
+                if (thread) {
+                  await openThread(thread);
+                  setPageMessage("Request accepted.", "ok");
+                  return;
+                }
+              }
+
+              if (requestDocModel.status === "declined") {
+                setModeUI("request_declined");
+                if (direction === "outgoing") {
+                  requestPreviewBox.classList.remove("hidden");
+                  requestPreviewBox.textContent = requestDocModel.text
+                    ? `Your request message:\n\n${requestDocModel.text}`
+                    : "Request declined.";
+                }
+                return;
+              }
+
+              setModeUI(direction === "incoming" ? "request_incoming_pending" : "request_outgoing_pending");
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        )
+        .subscribe();
     }
 
     async function openByTargetUid(targetUid) {
@@ -1117,7 +1216,7 @@
       }
 
       iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(targetUid);
-      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.uid);
+      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.id);
 
       if (iBlockedTarget || targetBlockedMe) {
         showBlocked(
@@ -1128,32 +1227,32 @@
         return;
       }
 
-      const existingThread = await findExistingThreadByUsers(currentUser.uid, targetUid);
+      const existingThread = await findExistingThreadByUsers(currentUser.id, targetUid);
       if (existingThread && existingThread.status === "accepted") {
         await openThread(existingThread);
         return;
       }
 
-      const outgoingReq = await loadRequestBetween(currentUser.uid, targetUid);
+      const outgoingReq = await loadRequestBetween(currentUser.id, targetUid);
       if (outgoingReq && outgoingReq.status === "pending") {
         requestDocModel = outgoingReq;
         setModeUI("request_outgoing_pending");
-        listenToPendingRequest(outgoingReq.id, "outgoing");
+        await listenToPendingRequest(outgoingReq.id, "outgoing");
         return;
       }
 
-      const incomingReq = await loadRequestBetween(targetUid, currentUser.uid);
+      const incomingReq = await loadRequestBetween(targetUid, currentUser.id);
       if (incomingReq && incomingReq.status === "pending") {
         requestDocModel = incomingReq;
         setModeUI("request_incoming_pending");
-        listenToPendingRequest(incomingReq.id, "incoming");
+        await listenToPendingRequest(incomingReq.id, "incoming");
         return;
       }
 
-      const iFollowTarget = await checkFollowing(currentUser.uid, targetUid);
+      const iFollowTarget = await checkFollowing(currentUser.id, targetUid);
 
       if (iFollowTarget) {
-        currentThreadId = makeThreadId(currentUser.uid, targetUid);
+        currentThreadId = "";
         currentThreadData = null;
         setModeUI("direct_new");
         return;
@@ -1162,90 +1261,135 @@
       setModeUI("request_compose");
     }
 
-    async function sendDirectMessage(text) {
-      const threadId = makeThreadId(currentUser.uid, currentTargetUid);
-      const threadRef = doc(db, "chat_threads", threadId);
-      const threadSnap = await getDoc(threadRef);
+    async function ensureDirectThread() {
+      if (currentThreadId) {
+        const { data, error } = await supabase
+          .from("chat_threads")
+          .select("*")
+          .eq("id", currentThreadId)
+          .maybeSingle();
 
-      if (!threadSnap.exists()) {
-        await setDoc(threadRef, {
-          type: "direct",
-          status: "accepted",
-          participantA: getSortedPair(currentUser.uid, currentTargetUid)[0],
-          participantB: getSortedPair(currentUser.uid, currentTargetUid)[1],
-          createdBy: currentUser.uid,
-          createdAt: serverTimestamp(),
-          lastMessageText: text,
-          lastMessageAt: serverTimestamp(),
-          lastSenderId: currentUser.uid
-        });
-      } else {
-        await updateDoc(threadRef, {
-          status: "accepted",
-          lastMessageText: text,
-          lastMessageAt: serverTimestamp(),
-          lastSenderId: currentUser.uid
-        });
+        if (!error && data) {
+          currentThreadData = normalizeThread(data, data.id);
+          return currentThreadData;
+        }
       }
 
-      await addDoc(collection(db, "chat_threads", threadId, "messages"), {
-        senderId: currentUser.uid,
-        text,
-        createdAt: serverTimestamp()
-      });
+      let existing = await findExistingThreadByUsers(currentUser.id, currentTargetUid);
+      if (existing) {
+        currentThreadId = existing.id;
+        currentThreadData = existing;
+        return existing;
+      }
+
+      const pair = getSortedPair(currentUser.id, currentTargetUid);
+      const { data, error } = await supabase
+        .from("chat_threads")
+        .insert({
+          type: "direct",
+          status: "accepted",
+          participant_a: pair[0],
+          participant_b: pair[1],
+          created_by: currentUser.id,
+          created_at: nowIso(),
+          last_message_text: "",
+          last_message_at: nowIso(),
+          last_sender_id: ""
+        })
+        .select("*")
+        .single();
+
+      if (error) throw error;
+
+      const created = normalizeThread(data, data.id);
+      currentThreadId = created.id;
+      currentThreadData = created;
+      return created;
+    }
+
+    async function sendDirectMessage(text) {
+      const thread = await ensureDirectThread();
+
+      const { error: messageError } = await supabase
+        .from("chat_messages")
+        .insert({
+          thread_id: thread.id,
+          sender_id: currentUser.id,
+          text,
+          created_at: nowIso()
+        });
+
+      if (messageError) throw messageError;
+
+      const { error: threadError } = await supabase
+        .from("chat_threads")
+        .update({
+          status: "accepted",
+          last_message_text: text,
+          last_message_at: nowIso(),
+          last_sender_id: currentUser.id
+        })
+        .eq("id", thread.id);
+
+      if (threadError) throw threadError;
 
       await createNotificationSafe(currentTargetUid, {
         type: "message",
         title: "New message",
-        text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a message.`,
-        fromUserId: currentUser.uid,
-        toUserId: currentTargetUid,
-        threadId,
-        createdAt: serverTimestamp(),
-        isRead: false
+        text: `${currentViewerProfile?.displayName || "Someone"} sent you a message.`,
+        from_user_id: currentUser.id,
+        to_user_id: currentTargetUid,
+        thread_id: thread.id,
+        created_at: nowIso(),
+        is_read: false
       });
 
-      const finalThreadSnap = await getDoc(threadRef);
-      currentThreadData = normalizeThread({ id: finalThreadSnap.id, ...finalThreadSnap.data() }, finalThreadSnap.id);
-      currentThreadId = threadId;
+      currentThreadId = thread.id;
+      currentThreadData = thread;
       setModeUI("chat");
-      listenToMessages(threadId);
+      listenToMessages(thread.id);
     }
 
     async function sendRequestMessage(text) {
-      const requestId = `${currentUser.uid}__${currentTargetUid}`;
+      const existingPending = await loadRequestBetween(currentUser.id, currentTargetUid);
 
-      await setDoc(doc(db, "message_requests", requestId), {
-        requesterId: currentUser.uid,
-        targetId: currentTargetUid,
-        text,
-        status: "pending",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      if (existingPending && existingPending.status === "pending") {
+        requestDocModel = existingPending;
+        setModeUI("request_outgoing_pending");
+        await listenToPendingRequest(existingPending.id, "outgoing");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("message_requests")
+        .insert({
+          requester_id: currentUser.id,
+          target_id: currentTargetUid,
+          text,
+          status: "pending",
+          created_at: nowIso(),
+          updated_at: nowIso()
+        })
+        .select("*")
+        .single();
+
+      if (error) throw error;
+
+      requestDocModel = normalizeRequest(data, data.id);
 
       await createNotificationSafe(currentTargetUid, {
         type: "message_request",
         title: "New message request",
-        text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a message request.`,
-        fromUserId: currentUser.uid,
-        toUserId: currentTargetUid,
-        requestId,
-        createdAt: serverTimestamp(),
-        isRead: false
+        text: `${currentViewerProfile?.displayName || "Someone"} sent you a message request.`,
+        from_user_id: currentUser.id,
+        to_user_id: currentTargetUid,
+        request_id: requestDocModel.id,
+        created_at: nowIso(),
+        is_read: false
       });
 
-      requestDocModel = {
-        id: requestId,
-        requesterId: currentUser.uid,
-        targetId: currentTargetUid,
-        text,
-        status: "pending",
-        createdAt: new Date()
-      };
-
       setModeUI("request_outgoing_pending");
-      listenToPendingRequest(requestId, "outgoing");
+      await listenToPendingRequest(requestDocModel.id, "outgoing");
     }
 
     async function acceptIncomingRequest() {
@@ -1256,46 +1400,77 @@
       setPageMessage("");
 
       try {
-        await updateDoc(doc(db, "message_requests", requestDocModel.id), {
-          status: "accepted",
-          acceptedAt: serverTimestamp(),
-          acceptedBy: currentUser.uid
-        });
-
-        const threadId = makeThreadId(requestDocModel.requesterId, requestDocModel.targetId);
-        const threadRef = doc(db, "chat_threads", threadId);
-        const threadSnap = await getDoc(threadRef);
-
-        if (!threadSnap.exists()) {
-          await setDoc(threadRef, {
-            type: "direct",
+        const { error: requestError } = await supabase
+          .from("message_requests")
+          .update({
             status: "accepted",
-            participantA: getSortedPair(requestDocModel.requesterId, requestDocModel.targetId)[0],
-            participantB: getSortedPair(requestDocModel.requesterId, requestDocModel.targetId)[1],
-            createdBy: currentUser.uid,
-            acceptedFromRequestId: requestDocModel.id,
-            starterText: requestDocModel.text || "",
-            starterFrom: requestDocModel.requesterId,
-            createdAt: serverTimestamp(),
-            lastMessageText: "",
-            lastMessageAt: serverTimestamp(),
-            lastSenderId: ""
-          });
+            accepted_at: nowIso(),
+            accepted_by: currentUser.id,
+            updated_at: nowIso()
+          })
+          .eq("id", requestDocModel.id);
+
+        if (requestError) throw requestError;
+
+        let thread = await findExistingThreadByUsers(requestDocModel.requesterId, requestDocModel.targetId);
+
+        if (!thread) {
+          const pair = getSortedPair(requestDocModel.requesterId, requestDocModel.targetId);
+          const { data: threadRow, error: threadInsertError } = await supabase
+            .from("chat_threads")
+            .insert({
+              type: "direct",
+              status: "accepted",
+              participant_a: pair[0],
+              participant_b: pair[1],
+              created_by: currentUser.id,
+              accepted_from_request_id: requestDocModel.id,
+              starter_text: requestDocModel.text || "",
+              starter_from: requestDocModel.requesterId || "",
+              created_at: nowIso(),
+              last_message_text: requestDocModel.text || "",
+              last_message_at: nowIso(),
+              last_sender_id: requestDocModel.requesterId || ""
+            })
+            .select("*")
+            .single();
+
+          if (threadInsertError) throw threadInsertError;
+          thread = normalizeThread(threadRow, threadRow.id);
+        } else {
+          const updatePayload = {
+            status: "accepted",
+            accepted_from_request_id: requestDocModel.id,
+            last_message_at: nowIso()
+          };
+
+          if (requestDocModel.text) {
+            updatePayload.starter_text = thread.starterText || requestDocModel.text;
+            updatePayload.starter_from = thread.starterFrom || requestDocModel.requesterId;
+            updatePayload.last_message_text = thread.lastMessageText || requestDocModel.text;
+            updatePayload.last_sender_id = thread.lastSenderId || requestDocModel.requesterId;
+          }
+
+          const { error: threadUpdateError } = await supabase
+            .from("chat_threads")
+            .update(updatePayload)
+            .eq("id", thread.id);
+
+          if (threadUpdateError) throw threadUpdateError;
         }
 
         await createNotificationSafe(requestDocModel.requesterId, {
           type: "message_request_accepted",
           title: "Message request accepted",
-          text: `${currentViewerProfile?.displayName || currentUser.displayName || "Someone"} accepted your message request.`,
-          fromUserId: currentUser.uid,
-          toUserId: requestDocModel.requesterId,
-          threadId,
-          createdAt: serverTimestamp(),
-          isRead: false
+          text: `${currentViewerProfile?.displayName || "Someone"} accepted your message request.`,
+          from_user_id: currentUser.id,
+          to_user_id: requestDocModel.requesterId,
+          thread_id: thread.id,
+          created_at: nowIso(),
+          is_read: false
         });
 
-        const freshThreadSnap = await getDoc(threadRef);
-        await openThread(normalizeThread({ id: freshThreadSnap.id, ...freshThreadSnap.data() }, freshThreadSnap.id));
+        await openThread(thread);
         setPageMessage("Request accepted.", "ok");
       } catch (err) {
         console.error(err);
@@ -1313,11 +1488,17 @@
       setPageMessage("");
 
       try {
-        await updateDoc(doc(db, "message_requests", requestDocModel.id), {
-          status: "declined",
-          declinedAt: serverTimestamp(),
-          declinedBy: currentUser.uid
-        });
+        const { error } = await supabase
+          .from("message_requests")
+          .update({
+            status: "declined",
+            declined_at: nowIso(),
+            declined_by: currentUser.id,
+            updated_at: nowIso()
+          })
+          .eq("id", requestDocModel.id);
+
+        if (error) throw error;
 
         setModeUI("request_declined");
         setPageMessage("Request declined.", "ok");
@@ -1374,15 +1555,17 @@
 
     messageInput.addEventListener("input", autoResizeMessageBox);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         clearAllListeners();
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
-      currentViewerProfile = await loadFullProfile(user.uid);
+      currentUser = authData.user;
+      currentViewerProfile = await loadFullProfile(currentUser.id);
 
       const params = new URLSearchParams(window.location.search);
       const threadIdParam = (params.get("threadId") || "").trim();
@@ -1395,17 +1578,23 @@
 
       try {
         if (threadIdParam) {
-          const threadSnap = await getDoc(doc(db, "chat_threads", threadIdParam));
-          if (!threadSnap.exists()) {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", threadIdParam)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!data) {
             showBlocked("Chat not found.");
             return;
           }
 
-          const threadModel = normalizeThread({ id: threadSnap.id, ...threadSnap.data() }, threadSnap.id);
+          const threadModel = normalizeThread(data, data.id);
 
           const isParticipant =
-            threadModel.participantA === currentUser.uid ||
-            threadModel.participantB === currentUser.uid;
+            threadModel.participantA === currentUser.id ||
+            threadModel.participantB === currentUser.id;
 
           if (!isParticipant) {
             showBlocked("This chat is not available to you.");
@@ -1414,35 +1603,31 @@
 
           if (threadModel.status === "accepted") {
             await openThread(threadModel);
-            return;
+          } else {
+            currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
+            currentTargetProfile = await loadFullProfile(currentTargetUid);
+            setHeader(currentTargetProfile);
+
+            const incomingReq = await loadRequestBetween(currentTargetUid, currentUser.id);
+            if (incomingReq && incomingReq.status === "pending") {
+              requestDocModel = incomingReq;
+              setModeUI("request_incoming_pending");
+              await listenToPendingRequest(incomingReq.id, "incoming");
+            } else {
+              const outgoingReq = await loadRequestBetween(currentUser.id, currentTargetUid);
+              if (outgoingReq && outgoingReq.status === "pending") {
+                requestDocModel = outgoingReq;
+                setModeUI("request_outgoing_pending");
+                await listenToPendingRequest(outgoingReq.id, "outgoing");
+              } else {
+                showBlocked("This request is no longer available.");
+              }
+            }
           }
-
-          currentTargetUid = threadModel.participantA === currentUser.uid ? threadModel.participantB : threadModel.participantA;
-          currentTargetProfile = await loadFullProfile(currentTargetUid);
-          setHeader(currentTargetProfile);
-
-          const incomingReq = await loadRequestBetween(currentTargetUid, currentUser.uid);
-          if (incomingReq && incomingReq.status === "pending") {
-            requestDocModel = incomingReq;
-            setModeUI("request_incoming_pending");
-            listenToPendingRequest(incomingReq.id, "incoming");
-            return;
-          }
-
-          const outgoingReq = await loadRequestBetween(currentUser.uid, currentTargetUid);
-          if (outgoingReq && outgoingReq.status === "pending") {
-            requestDocModel = outgoingReq;
-            setModeUI("request_outgoing_pending");
-            listenToPendingRequest(outgoingReq.id, "outgoing");
-            return;
-          }
-
-          showBlocked("This request is no longer available.");
-          return;
         }
 
         if (uidParam) {
-          if (uidParam === currentUser.uid) {
+          if (uidParam === currentUser.id) {
             showBlocked("You cannot chat with yourself.");
             return;
           }
@@ -1451,15 +1636,24 @@
         }
 
         autoResizeMessageBox();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            clearAllListeners();
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showBlocked("Could not load chat.");
       }
-    });
+    }
 
     window.addEventListener("beforeunload", () => {
       clearAllListeners();
     });
+
+    initPage();
   </script>
 </body>
 </html>
