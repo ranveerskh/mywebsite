@@ -164,6 +164,10 @@
       display:block;
       flex-shrink:0;
     }
+    .write-btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
 
     .filter-tabs{
       display:flex;
@@ -243,7 +247,8 @@
     }
 
     .field{margin-bottom:10px}
-    textarea,input[type="text"]{
+    textarea,
+    input[type="file"]{
       width:100%;
       border:none;
       outline:none;
@@ -256,7 +261,7 @@
       font-size:14px;
     }
     textarea{min-height:92px}
-    textarea::placeholder,input::placeholder{color:var(--muted)}
+    textarea::placeholder{color:var(--muted)}
 
     .composer-actions{
       display:flex;
@@ -275,7 +280,12 @@
       cursor:pointer;
       min-width:124px;
     }
-    .close-compose-btn{
+    .post-btn:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
+    .close-compose-btn,
+    .remove-image-btn{
       border:none;
       background:var(--surface-2);
       color:var(--text);
@@ -294,6 +304,21 @@
       font-size:11px;
       line-height:1.45;
       margin-top:5px;
+    }
+
+    .image-preview-wrap{
+      margin-top:10px;
+      display:grid;
+      gap:10px;
+    }
+    .image-preview{
+      width:100%;
+      max-height:360px;
+      object-fit:cover;
+      border-radius:16px;
+      display:block;
+      background:var(--surface-3);
+      border:1px solid var(--line-soft);
     }
 
     .posts-list{display:block}
@@ -493,7 +518,15 @@
     }
     .comment-input{
       flex:1;
-      min-width:200px
+      min-width:200px;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:13px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:13px;
     }
     .comment-submit{
       background:var(--green);
@@ -645,6 +678,7 @@
       .feed-item{padding:11px}
       .feed-head-top{align-items:stretch}
       .write-btn{width:100%;justify-content:center}
+      .remove-image-btn{width:100%}
     }
   </style>
 </head>
@@ -701,7 +735,7 @@
             <div>
               <h3 id="myName">Loading...</h3>
               <div id="myUsername" class="composer-username hidden">@username</div>
-              <div class="muted">Write something or add a photo link</div>
+              <div class="muted">Write something or upload a photo</div>
             </div>
           </div>
 
@@ -714,8 +748,13 @@
           </div>
 
           <div class="field">
-            <input type="text" id="imageURL" placeholder="Optional image link (https://example.com/photo.jpg)" />
-            <div class="tiny-note">Direct image link only. Optional.</div>
+            <input type="file" id="imageFile" accept="image/*" />
+            <div class="tiny-note">Direct upload to Supabase Storage. No image link needed.</div>
+
+            <div id="imagePreviewWrap" class="image-preview-wrap hidden">
+              <img id="imagePreview" class="image-preview" alt="Selected image preview" />
+              <button id="removeImageBtn" class="remove-image-btn" type="button">Remove Photo</button>
+            </div>
           </div>
 
           <div class="composer-actions">
@@ -784,31 +823,17 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import {
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      addDoc,
-      doc,
-      getDoc,
-      getDocs,
-      query,
-      orderBy,
-      onSnapshot,
-      serverTimestamp,
-      deleteDoc,
-      setDoc,
-      where,
-      writeBatch,
-      limit
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
+
+    const STORAGE_BUCKET = "media";
 
     const postForm = document.getElementById("postForm");
     const postBtn = document.getElementById("postBtn");
     const captionInput = document.getElementById("caption");
-    const imageURLInput = document.getElementById("imageURL");
+    const imageFileInput = document.getElementById("imageFile");
+    const imagePreviewWrap = document.getElementById("imagePreviewWrap");
+    const imagePreview = document.getElementById("imagePreview");
+    const removeImageBtn = document.getElementById("removeImageBtn");
     const formMessage = document.getElementById("formMessage");
 
     const myName = document.getElementById("myName");
@@ -834,8 +859,12 @@
     let currentFeedFilter = "all";
     let follows = [];
     let outgoingRequests = [];
-    let allPostDocs = [];
+    let allPosts = [];
     let publicProfilesMap = new Map();
+    let selectedImageFile = null;
+    let feedSubscriptions = [];
+    let hasPostLikesTable = false;
+    let refreshTimer = null;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -903,10 +932,14 @@
       myAvatarPlaceholder.classList.remove("hidden");
     });
 
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
+    function formatDate(value) {
+      if (!value) return "Just now";
+      try {
+        const d = typeof value === "string" ? new Date(value) : new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function escapeHtml(text) {
@@ -915,98 +948,121 @@
       return div.innerHTML;
     }
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        verified: !!(d.verified || d.isVerified),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        bio: d.bio || "",
-        suspensionUntil: d.suspensionUntil || d.suspendUntil || null
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted),
+        bio: getField(d, ["bio", "about", "description"]),
+        suspensionUntil: d.suspension_until ?? d.suspensionUntil ?? null
       };
     }
 
+    function normalizePost(raw) {
+      const d = raw || {};
+      return {
+        id: d.id || "",
+        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
+        displayName: getField(d, ["display_name", "displayName", "name"]),
+        username: getField(d, ["username"]),
+        userPhotoURL: getField(d, ["user_photo_url", "userPhotoURL", "photo_url", "photoURL"]),
+        caption: getField(d, ["caption", "text", "content"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        source: getField(d, ["source"]) || "feed",
+        hidden: !!(d.hidden),
+        hiddenByAdmin: !!(d.hidden_by_admin ?? d.hiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted),
+        createdAt: d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function normalizeComment(raw) {
+      const d = raw || {};
+      return {
+        id: d.id || "",
+        postId: getField(d, ["post_id", "postId"]),
+        userId: getField(d, ["user_id", "userId", "uid"]),
+        displayName: getField(d, ["display_name", "displayName", "name"]) || "Member",
+        username: getField(d, ["username"]),
+        text: getField(d, ["text", "comment", "body"]),
+        createdAt: d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function normalizeNotification(raw) {
+      const d = raw || {};
+      return {
+        id: d.id || "",
+        isRead: !!(d.is_read ?? d.isRead ?? d.read),
+        toUserId: getField(d, ["to_user_id", "toUserId", "user_id", "userId"])
+      };
+    }
+
+    function authorHidden(author) {
+      return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
+    }
+
     function getAuthorProfile(uid) {
-      if (uid === currentUser?.uid && currentUserProfile) return currentUserProfile;
+      if (uid === currentUser?.id && currentUserProfile) return currentUserProfile;
       return publicProfilesMap.get(uid) || null;
     }
 
-    function getPostOwnerId(post) {
-      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
-    }
-
-    function getPostImage(post) {
-      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
-    }
-
-    function getPostCaption(post) {
-      return post?.caption || post?.text || post?.content || "";
-    }
-
-    function getPostDocById(postId) {
-      return allPostDocs.find(d => d.id === postId) || null;
-    }
-
     function isFollowing(userId) {
-      return follows.some(f => f.followerId === currentUser.uid && f.followingId === userId);
+      return follows.some(f => (f.following_id || f.followingId) === userId);
     }
 
     function isOutgoingRequested(userId) {
-      return outgoingRequests.some(r => r.requesterId === currentUser.uid && r.targetId === userId);
+      return outgoingRequests.some(r => (r.target_id || r.targetId) === userId);
     }
 
-    async function findFollowDocId(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return null;
+    function canViewerSeePost(post) {
+      if (!post?.userId || !currentUser) return false;
+      if (post.userId === currentUser.id) return true;
 
-      try {
-        const directId = `${viewerUid}__${targetUid}`;
-        const direct = await getDoc(doc(db, "follows", directId));
-        if (direct.exists()) return directId;
-      } catch {}
+      const author = getAuthorProfile(post.userId);
+      if (!author) return true;
+      if (authorHidden(author)) return false;
 
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follows"),
-            where("followerId", "==", viewerUid),
-            where("followingId", "==", targetUid),
-            limit(1)
-          )
-        );
-        if (!snap.empty) return snap.docs[0].id;
-      } catch {}
+      if (author.isPrivate && !isFollowing(post.userId)) {
+        return false;
+      }
 
-      return null;
+      return true;
     }
 
-    async function findRequestDocId(viewerUid, targetUid) {
-      if (!viewerUid || !targetUid) return null;
+    function getFilteredPosts() {
+      return allPosts.filter(post => {
+        if (!post.userId) return false;
+        if (post.hidden || post.hiddenByAdmin || post.softDeleted) return false;
 
-      try {
-        const directId = `${viewerUid}__${targetUid}`;
-        const direct = await getDoc(doc(db, "follow_requests", directId));
-        if (direct.exists()) return directId;
-      } catch {}
+        const author = getAuthorProfile(post.userId);
+        if (authorHidden(author)) return false;
 
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "follow_requests"),
-            where("requesterId", "==", viewerUid),
-            where("targetId", "==", targetUid),
-            limit(1)
-          )
-        );
-        if (!snap.empty) return snap.docs[0].id;
-      } catch {}
+        if (currentFeedFilter === "following") {
+          return post.userId === currentUser.id || isFollowing(post.userId);
+        }
 
-      return null;
+        return canViewerSeePost(post);
+      });
     }
 
     function applyFeedTabUI() {
@@ -1014,12 +1070,24 @@
       followingTab.classList.toggle("active", currentFeedFilter === "following");
     }
 
+    allTab.addEventListener("click", async () => {
+      currentFeedFilter = "all";
+      applyFeedTabUI();
+      await renderPosts();
+    });
+
+    followingTab.addEventListener("click", async () => {
+      currentFeedFilter = "following";
+      applyFeedTabUI();
+      await renderPosts();
+    });
+
     function formatBadgeCount(count) {
       return count > 99 ? "99+" : String(count);
     }
 
     function renderNotifications(items) {
-      const unread = items.filter(item => item.isRead !== true && item.read !== true);
+      const unread = items.filter(item => !item.isRead);
       const count = unread.length;
 
       if (!count) {
@@ -1037,47 +1105,9 @@
       }
     }
 
-    function authorHidden(author) {
-      return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
-    }
-
-    function canViewerSeePost(post) {
-      const ownerId = getPostOwnerId(post);
-      if (!ownerId || !currentUser) return false;
-      if (ownerId === currentUser.uid) return true;
-
-      const author = getAuthorProfile(ownerId);
-      if (!author) return false;
-      if (authorHidden(author)) return false;
-
-      if (author.isPrivate && !isFollowing(ownerId)) {
-        return false;
-      }
-
-      return true;
-    }
-
-    function getFilteredPostDocs() {
-      return allPostDocs.filter(postDoc => {
-        const post = postDoc.data();
-        const ownerId = getPostOwnerId(post);
-        const author = getAuthorProfile(ownerId);
-
-        if (!ownerId) return false;
-        if (post.hidden || post.hiddenByAdmin || post.softDeleted) return false;
-        if (authorHidden(author)) return false;
-
-        if (currentFeedFilter === "following") {
-          return ownerId === currentUser.uid || isFollowing(ownerId);
-        }
-
-        return canViewerSeePost(post);
-      });
-    }
-
     function getRelationState(authorId) {
       if (!currentUser || !authorId) return "none";
-      if (authorId === currentUser.uid) return "self";
+      if (authorId === currentUser.id) return "self";
       if (isFollowing(authorId)) return "following";
 
       const author = getAuthorProfile(authorId);
@@ -1088,305 +1118,10 @@
       return "follow";
     }
 
-    async function refreshLikeUI(postId) {
-      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
-      if (!likeBtn || !currentUser) return;
-
-      try {
-        const likesCol = collection(db, "posts", postId, "likes");
-        const likesSnap = await getDocs(likesCol);
-        const likeRef = doc(db, "posts", postId, "likes", currentUser.uid);
-        const myLike = await getDoc(likeRef);
-
-        const liked = myLike.exists();
-        const count = likesSnap.size;
-
-        likeBtn.dataset.liked = liked ? "yes" : "no";
-        const countEl = likeBtn.querySelector(".like-count");
-        if (countEl) countEl.textContent = String(count);
-      } catch (error) {
-        console.error("Like UI error:", error);
-      }
-    }
-
-    async function refreshCommentsUI(postId) {
-      const commentsList = document.querySelector(`.comments-list[data-post-id="${postId}"]`);
-      const commentsToggle = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
-      if (!commentsList || !commentsToggle || !currentUser) return;
-
-      commentsList.innerHTML = "";
-
-      try {
-        const postRow = getPostDocById(postId);
-        const postOwnerId = postRow ? getPostOwnerId(postRow.data()) : "";
-
-        const commentsQuery = query(
-          collection(db, "posts", postId, "comments"),
-          orderBy("createdAt", "asc")
-        );
-        const commentsSnap = await getDocs(commentsQuery);
-
-        const countEl = commentsToggle.querySelector(".comment-count");
-        if (countEl) countEl.textContent = String(commentsSnap.size);
-
-        if (commentsSnap.empty) {
-          commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
-          return;
-        }
-
-        commentsSnap.forEach((commentDoc) => {
-          const comment = commentDoc.data();
-          const commentId = commentDoc.id;
-          const canDelete = comment.userId === currentUser.uid || postOwnerId === currentUser.uid;
-
-          const commentEl = document.createElement("div");
-          commentEl.className = "comment-item";
-          commentEl.innerHTML = `
-            <div class="comment-top">
-              <div>
-                <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
-                ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
-                <div class="comment-date">${formatDate(comment.createdAt)}</div>
-              </div>
-              ${canDelete ? `<button class="comment-delete-btn" data-post-id="${postId}" data-comment-id="${commentId}">Delete</button>` : ""}
-            </div>
-            <div class="comment-text">${escapeHtml(comment.text || "")}</div>
-          `;
-
-          commentsList.appendChild(commentEl);
-        });
-
-        commentsList.querySelectorAll(".comment-delete-btn").forEach((btn) => {
-          btn.addEventListener("click", async () => {
-            const pId = btn.getAttribute("data-post-id");
-            const cId = btn.getAttribute("data-comment-id");
-            const ok = confirm("Delete this comment?");
-            if (!ok) return;
-
-            try {
-              await deleteDoc(doc(db, "posts", pId, "comments", cId));
-              await refreshCommentsUI(pId);
-            } catch (error) {
-              console.error(error);
-              alert("Could not delete comment.");
-            }
-          });
-        });
-      } catch (error) {
-        console.error("Comments UI error:", error);
-        commentsList.innerHTML = `<div class="error">Could not load comments.</div>`;
-      }
-    }
-
-    async function refreshPostMeta(postId) {
-      await Promise.all([
-        refreshLikeUI(postId),
-        refreshCommentsUI(postId)
-      ]);
-    }
-
-    async function handleTopRelationAction(authorId, relationBtn) {
-      if (!currentUser || !authorId || authorId === currentUser.uid) return;
-
-      const author = getAuthorProfile(authorId);
-      const relation = getRelationState(authorId);
-      relationBtn.disabled = true;
-
-      try {
-        if (relation === "following") {
-          relationBtn.disabled = false;
-          return;
-        } else if (relation === "requested") {
-          const requestDocId = await findRequestDocId(currentUser.uid, authorId);
-          if (requestDocId) {
-            await deleteDoc(doc(db, "follow_requests", requestDocId));
-          }
-        } else if (author?.isPrivate) {
-          await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${authorId}`), {
-            requesterId: currentUser.uid,
-            targetId: authorId,
-            createdAt: serverTimestamp()
-          });
-
-          try {
-            await addDoc(collection(db, "notifications", authorId, "items"), {
-              type: "follow_request",
-              title: "Follow request",
-              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
-              fromUserId: currentUser.uid,
-              toUserId: authorId,
-              createdAt: serverTimestamp(),
-              isRead: false
-            });
-          } catch (notifyErr) {
-            console.error("Follow request notification failed:", notifyErr);
-          }
-        } else {
-          await setDoc(doc(db, "follows", `${currentUser.uid}__${authorId}`), {
-            followerId: currentUser.uid,
-            followingId: authorId,
-            createdAt: serverTimestamp()
-          });
-
-          try {
-            await addDoc(collection(db, "notifications", authorId, "items"), {
-              type: "follow",
-              title: "New follower",
-              text: `${currentUserProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
-              fromUserId: currentUser.uid,
-              toUserId: authorId,
-              createdAt: serverTimestamp(),
-              isRead: false
-            });
-          } catch (notifyErr) {
-            console.error("Follow notification failed:", notifyErr);
-          }
-        }
-      } catch (error) {
-        console.error("Relation action failed:", error);
-        alert("Could not update follow state.");
-      }
-
-      relationBtn.disabled = false;
-    }
-
-    function attachPostActions(postId, postData) {
-      const ownerId = getPostOwnerId(postData);
-      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
-      const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
-      const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
-      const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
-      const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
-      const relationBtn = document.querySelector(`.follow-top-btn[data-author-id="${ownerId}"][data-post-id="${postId}"]`);
-
-      if (relationBtn) {
-        relationBtn.addEventListener("click", async () => {
-          await handleTopRelationAction(ownerId, relationBtn);
-        });
-      }
-
-      if (likeBtn) {
-        likeBtn.addEventListener("click", async () => {
-          if (!currentUser) return;
-
-          const likeRef = doc(db, "posts", postId, "likes", currentUser.uid);
-          const existing = await getDoc(likeRef);
-          likeBtn.disabled = true;
-
-          try {
-            if (existing.exists()) {
-              await deleteDoc(likeRef);
-            } else {
-              await setDoc(likeRef, {
-                userId: currentUser.uid,
-                createdAt: serverTimestamp()
-              });
-
-              if (ownerId && ownerId !== currentUser.uid) {
-                const actorName =
-                  currentUserProfile?.displayName ||
-                  currentUser.displayName ||
-                  "Someone";
-
-                try {
-                  await addDoc(collection(db, "notifications", ownerId, "items"), {
-                    type: "like",
-                    title: "New like",
-                    text: `${actorName} liked your post.`,
-                    fromUserId: currentUser.uid,
-                    toUserId: ownerId,
-                    postId,
-                    createdAt: serverTimestamp(),
-                    isRead: false
-                  });
-                } catch (notifyErr) {
-                  console.error("Like notification failed:", notifyErr);
-                }
-              }
-            }
-            await refreshLikeUI(postId);
-          } catch (error) {
-            console.error(error);
-            alert("Could not update like.");
-          }
-
-          likeBtn.disabled = false;
-        });
-      }
-
-      if (commentToggleBtn && commentWrap) {
-        commentToggleBtn.addEventListener("click", async () => {
-          commentWrap.classList.toggle("hidden");
-          if (!commentWrap.classList.contains("hidden")) {
-            await refreshCommentsUI(postId);
-          }
-        });
-      }
-
-      if (commentForm && commentInput) {
-        commentForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const text = commentInput.value.trim();
-          if (!text) return;
-
-          const displayName =
-            currentUserProfile?.displayName ||
-            currentUser.displayName ||
-            "Member";
-
-          const username = currentUserProfile?.username || "";
-          const userPhotoURL = currentUserProfile?.photoURL || "";
-          const submitBtn = commentForm.querySelector("button");
-          submitBtn.disabled = true;
-
-          try {
-            await addDoc(collection(db, "posts", postId, "comments"), {
-              userId: currentUser.uid,
-              displayName,
-              username,
-              userPhotoURL,
-              text,
-              createdAt: serverTimestamp()
-            });
-
-            commentInput.value = "";
-
-            if (ownerId && ownerId !== currentUser.uid) {
-              try {
-                await addDoc(collection(db, "notifications", ownerId, "items"), {
-                  type: "comment",
-                  title: "New comment",
-                  text: `${displayName} commented on your post.`,
-                  fromUserId: currentUser.uid,
-                  toUserId: ownerId,
-                  postId,
-                  createdAt: serverTimestamp(),
-                  isRead: false
-                });
-              } catch (notifyErr) {
-                console.error("Comment notification failed:", notifyErr);
-              }
-            }
-
-            await refreshCommentsUI(postId);
-          } catch (error) {
-            console.error(error);
-            alert(error?.message || "Could not add comment.");
-          }
-
-          submitBtn.disabled = false;
-        });
-      }
-    }
-
     function buildRelationButton(authorId, postId) {
       const relation = getRelationState(authorId);
       if (relation === "self") return "";
-
-      if (relation === "following") {
-        return "";
-      }
+      if (relation === "following") return "";
 
       if (relation === "requested") {
         return `
@@ -1425,11 +1160,623 @@
       `;
     }
 
+    function updateSelectedImageUI() {
+      if (!selectedImageFile) {
+        imageFileInput.value = "";
+        imagePreviewWrap.classList.add("hidden");
+        imagePreview.removeAttribute("src");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        imagePreview.src = reader.result;
+        imagePreviewWrap.classList.remove("hidden");
+      };
+      reader.readAsDataURL(selectedImageFile);
+    }
+
+    imageFileInput.addEventListener("change", () => {
+      const file = imageFileInput.files?.[0] || null;
+      if (!file) {
+        selectedImageFile = null;
+        updateSelectedImageUI();
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        selectedImageFile = null;
+        updateSelectedImageUI();
+        setFormMessage("Please choose an image file.", "error");
+        return;
+      }
+
+      selectedImageFile = file;
+      setFormMessage("");
+      updateSelectedImageUI();
+    });
+
+    removeImageBtn.addEventListener("click", () => {
+      selectedImageFile = null;
+      updateSelectedImageUI();
+    });
+
+    async function detectOptionalTables() {
+      try {
+        const { error } = await supabase
+          .from("post_likes")
+          .select("id", { count: "exact", head: true })
+          .limit(1);
+
+        hasPostLikesTable = !error;
+      } catch {
+        hasPostLikesTable = false;
+      }
+    }
+
+    async function ensureOwnProfileRows() {
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", currentUser.id).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", currentUser.id).maybeSingle()
+      ]);
+
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
+      let userRow = userRes.data || null;
+      let publicRow = publicRes.data || null;
+
+      if (!userRow && !publicRow) {
+        const fallbackName =
+          currentUser.user_metadata?.display_name ||
+          currentUser.email?.split("@")[0] ||
+          "Member";
+
+        const fallbackUsername = "";
+        const baseRow = {
+          uid: currentUser.id,
+          display_name: fallbackName,
+          display_name_lower: fallbackName.toLowerCase(),
+          username: fallbackUsername,
+          username_lower: fallbackUsername,
+          bio: "",
+          photo_url: "",
+          city: "",
+          city_lower: "",
+          province: "",
+          country: "",
+          location_search: "",
+          city_visible: false,
+          is_private: false,
+          is_verified: false,
+          show_in_nearby: true,
+          location_visibility: "city",
+          moderation_status: "",
+          updated_at: nowIso()
+        };
+
+        const userPayload = {
+          ...baseRow,
+          email: currentUser.email || "",
+          real_name: "",
+          blocked_users: []
+        };
+
+        const { error: saveUserError } = await supabase
+          .from("users")
+          .upsert(userPayload, { onConflict: "uid" });
+        if (saveUserError) throw saveUserError;
+
+        const { error: savePublicError } = await supabase
+          .from("public_profiles")
+          .upsert(baseRow, { onConflict: "uid" });
+        if (savePublicError) throw savePublicError;
+
+        userRow = userPayload;
+        publicRow = baseRow;
+      }
+
+      return normalizeProfile({ ...(publicRow || {}), ...(userRow || {}), uid: currentUser.id }, currentUser.id);
+    }
+
+    async function loadCurrentUserProfile() {
+      currentUserProfile = await ensureOwnProfileRows();
+
+      myName.textContent =
+        currentUserProfile.displayName ||
+        currentUser.user_metadata?.display_name ||
+        currentUser.email?.split("@")[0] ||
+        "Member";
+
+      if (currentUserProfile.username) {
+        myUsername.textContent = "@" + currentUserProfile.username;
+        myUsername.classList.remove("hidden");
+      } else {
+        myUsername.classList.add("hidden");
+      }
+
+      showMyAvatar(currentUserProfile.photoURL || "");
+
+      const status = currentUserProfile?.moderationStatus || "";
+      const suspendUntilValue = currentUserProfile?.suspensionUntil || null;
+
+      const suspensionUntil = suspendUntilValue
+        ? new Date(suspendUntilValue).getTime()
+        : 0;
+
+      if (status === "banned") {
+        hideComposer();
+        openComposerBtn.disabled = true;
+        setFormMessage("Your account is banned. Posting is disabled.", "error");
+      } else if (status === "suspended" && suspensionUntil && Date.now() < suspensionUntil) {
+        hideComposer();
+        openComposerBtn.disabled = true;
+        setFormMessage("Your account is suspended. Posting is disabled for now.", "error");
+      } else {
+        openComposerBtn.disabled = false;
+      }
+    }
+
+    async function loadFollows() {
+      const { data, error } = await supabase
+        .from("follows")
+        .select("*")
+        .eq("follower_id", currentUser.id);
+
+      if (error) throw error;
+      follows = data || [];
+    }
+
+    async function loadOutgoingRequests() {
+      const { data, error } = await supabase
+        .from("follow_requests")
+        .select("*")
+        .eq("requester_id", currentUser.id);
+
+      if (error) throw error;
+      outgoingRequests = data || [];
+    }
+
+    async function loadNotificationsCount() {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("to_user_id", currentUser.id)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) {
+        console.error("Notification load error:", error);
+        renderNotifications([]);
+        return;
+      }
+
+      renderNotifications((data || []).map(normalizeNotification));
+    }
+
+    async function loadPostsAndProfiles() {
+      const { data: postRows, error: postError } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (postError) throw postError;
+
+      allPosts = (postRows || []).map(normalizePost);
+
+      const authorIds = [...new Set(allPosts.map(p => p.userId).filter(Boolean))];
+      publicProfilesMap = new Map();
+
+      if (authorIds.length) {
+        const { data: profileRows, error: profileError } = await supabase
+          .from("public_profiles")
+          .select("*")
+          .in("uid", authorIds);
+
+        if (profileError) throw profileError;
+
+        (profileRows || []).forEach(row => {
+          const p = normalizeProfile(row, row.uid);
+          publicProfilesMap.set(p.uid, p);
+        });
+      }
+
+      if (currentUserProfile) {
+        publicProfilesMap.set(currentUser.id, currentUserProfile);
+      }
+    }
+
+    async function findFollowRow(authorId) {
+      const existing = follows.find(f => (f.following_id || f.followingId) === authorId);
+      if (existing) return existing;
+
+      const { data, error } = await supabase
+        .from("follows")
+        .select("*")
+        .eq("follower_id", currentUser.id)
+        .eq("following_id", authorId)
+        .limit(1);
+
+      if (error) throw error;
+      return data?.[0] || null;
+    }
+
+    async function findRequestRow(authorId) {
+      const existing = outgoingRequests.find(r => (r.target_id || r.targetId) === authorId);
+      if (existing) return existing;
+
+      const { data, error } = await supabase
+        .from("follow_requests")
+        .select("*")
+        .eq("requester_id", currentUser.id)
+        .eq("target_id", authorId)
+        .limit(1);
+
+      if (error) throw error;
+      return data?.[0] || null;
+    }
+
+    async function createNotificationSafe(payload) {
+      if (!payload?.to_user_id || payload.to_user_id === currentUser.id) return;
+      try {
+        await supabase.from("notifications").insert(payload);
+      } catch (err) {
+        console.error("Notification error:", err);
+      }
+    }
+
+    async function handleTopRelationAction(authorId, relationBtn) {
+      if (!currentUser || !authorId || authorId === currentUser.id) return;
+
+      const author = getAuthorProfile(authorId);
+      const relation = getRelationState(authorId);
+      relationBtn.disabled = true;
+
+      try {
+        if (relation === "requested") {
+          const row = await findRequestRow(authorId);
+          if (row?.id) {
+            const { error } = await supabase
+              .from("follow_requests")
+              .delete()
+              .eq("id", row.id);
+            if (error) throw error;
+          }
+        } else if (author?.isPrivate) {
+          const row = await findRequestRow(authorId);
+          if (!row) {
+            const { error } = await supabase
+              .from("follow_requests")
+              .insert({
+                requester_id: currentUser.id,
+                target_id: authorId,
+                created_at: nowIso()
+              });
+            if (error) throw error;
+
+            await createNotificationSafe({
+              type: "follow_request",
+              title: "Follow request",
+              text: `${currentUserProfile?.displayName || "Someone"} sent you a follow request.`,
+              from_user_id: currentUser.id,
+              to_user_id: authorId,
+              created_at: nowIso(),
+              is_read: false
+            });
+          }
+        } else {
+          const row = await findFollowRow(authorId);
+          if (!row) {
+            const { error } = await supabase
+              .from("follows")
+              .insert({
+                follower_id: currentUser.id,
+                following_id: authorId,
+                created_at: nowIso()
+              });
+            if (error) throw error;
+
+            await createNotificationSafe({
+              type: "follow",
+              title: "New follower",
+              text: `${currentUserProfile?.displayName || "Someone"} started following you.`,
+              from_user_id: currentUser.id,
+              to_user_id: authorId,
+              created_at: nowIso(),
+              is_read: false
+            });
+          }
+        }
+
+        await Promise.all([loadFollows(), loadOutgoingRequests()]);
+        await renderPosts();
+      } catch (error) {
+        console.error("Relation action failed:", error);
+        alert("Could not update follow state.");
+      }
+
+      relationBtn.disabled = false;
+    }
+
+    async function loadPostMeta(postId) {
+      let likeCount = 0;
+      let liked = false;
+
+      if (hasPostLikesTable) {
+        try {
+          const [countRes, myLikeRes] = await Promise.all([
+            supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", postId),
+            supabase.from("post_likes").select("id").eq("post_id", postId).eq("user_id", currentUser.id).limit(1)
+          ]);
+
+          if (!countRes.error) likeCount = countRes.count || 0;
+          if (!myLikeRes.error) liked = !!(myLikeRes.data && myLikeRes.data.length);
+        } catch (err) {
+          console.error("Like meta error:", err);
+        }
+      }
+
+      let commentCount = 0;
+      try {
+        const { count, error } = await supabase
+          .from("post_comments")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", postId);
+
+        if (!error) commentCount = count || 0;
+      } catch (err) {
+        console.error("Comment meta error:", err);
+      }
+
+      return { likeCount, liked, commentCount };
+    }
+
+    async function renderCommentsUI(postId) {
+      const commentsList = document.querySelector(`.comments-list[data-post-id="${postId}"]`);
+      const commentsToggle = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      if (!commentsList || !commentsToggle || !currentUser) return;
+
+      commentsList.innerHTML = "";
+
+      try {
+        const postRow = allPosts.find(p => p.id === postId);
+        const postOwnerId = postRow ? postRow.userId : "";
+
+        const { data, error } = await supabase
+          .from("post_comments")
+          .select("*")
+          .eq("post_id", postId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        const comments = (data || []).map(normalizeComment);
+        const countEl = commentsToggle.querySelector(".comment-count");
+        if (countEl) countEl.textContent = String(comments.length);
+
+        if (!comments.length) {
+          commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
+          return;
+        }
+
+        comments.forEach((comment) => {
+          const canDelete = comment.userId === currentUser.id || postOwnerId === currentUser.id;
+
+          const commentEl = document.createElement("div");
+          commentEl.className = "comment-item";
+          commentEl.innerHTML = `
+            <div class="comment-top">
+              <div>
+                <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+                ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
+                <div class="comment-date">${formatDate(comment.createdAt)}</div>
+              </div>
+              ${canDelete ? `<button class="comment-delete-btn" data-post-id="${postId}" data-comment-id="${comment.id}">Delete</button>` : ""}
+            </div>
+            <div class="comment-text">${escapeHtml(comment.text || "")}</div>
+          `;
+
+          commentsList.appendChild(commentEl);
+        });
+
+        commentsList.querySelectorAll(".comment-delete-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const pId = btn.getAttribute("data-post-id");
+            const cId = btn.getAttribute("data-comment-id");
+            const ok = confirm("Delete this comment?");
+            if (!ok) return;
+
+            try {
+              const { error } = await supabase
+                .from("post_comments")
+                .delete()
+                .eq("id", cId);
+
+              if (error) throw error;
+              await refreshPostMeta(pId);
+            } catch (error) {
+              console.error(error);
+              alert("Could not delete comment.");
+            }
+          });
+        });
+      } catch (error) {
+        console.error("Comments UI error:", error);
+        commentsList.innerHTML = `<div class="error">Could not load comments.</div>`;
+      }
+    }
+
+    async function refreshPostMeta(postId) {
+      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+      const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      const commentsWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
+
+      const meta = await loadPostMeta(postId);
+
+      if (likeBtn) {
+        likeBtn.dataset.liked = meta.liked ? "yes" : "no";
+        const countEl = likeBtn.querySelector(".like-count");
+        if (countEl) countEl.textContent = String(meta.likeCount);
+      }
+
+      if (commentToggleBtn) {
+        const countEl = commentToggleBtn.querySelector(".comment-count");
+        if (countEl) countEl.textContent = String(meta.commentCount);
+      }
+
+      if (commentsWrap && !commentsWrap.classList.contains("hidden")) {
+        await renderCommentsUI(postId);
+      }
+    }
+
+    function buildLikeButton(postId) {
+      if (!hasPostLikesTable) return "";
+      return `
+        <button class="icon-action-btn like-btn" data-post-id="${postId}" data-liked="no" aria-label="Like">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
+          </svg>
+          <span class="like-count">0</span>
+        </button>
+      `;
+    }
+
+    function attachPostActions(postId, postData) {
+      const ownerId = postData.userId;
+      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+      const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
+      const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
+      const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
+      const relationBtn = document.querySelector(`.follow-top-btn[data-author-id="${ownerId}"][data-post-id="${postId}"]`);
+
+      if (relationBtn) {
+        relationBtn.addEventListener("click", async () => {
+          await handleTopRelationAction(ownerId, relationBtn);
+        });
+      }
+
+      if (likeBtn) {
+        likeBtn.addEventListener("click", async () => {
+          if (!currentUser || !hasPostLikesTable) return;
+          likeBtn.disabled = true;
+
+          try {
+            const { data: existing, error: findError } = await supabase
+              .from("post_likes")
+              .select("id")
+              .eq("post_id", postId)
+              .eq("user_id", currentUser.id)
+              .limit(1);
+
+            if (findError) throw findError;
+
+            if (existing && existing.length) {
+              const { error } = await supabase
+                .from("post_likes")
+                .delete()
+                .eq("id", existing[0].id);
+              if (error) throw error;
+            } else {
+              const { error } = await supabase
+                .from("post_likes")
+                .insert({
+                  post_id: postId,
+                  user_id: currentUser.id,
+                  created_at: nowIso()
+                });
+              if (error) throw error;
+
+              if (ownerId && ownerId !== currentUser.id) {
+                await createNotificationSafe({
+                  type: "like",
+                  title: "New like",
+                  text: `${currentUserProfile?.displayName || "Someone"} liked your post.`,
+                  from_user_id: currentUser.id,
+                  to_user_id: ownerId,
+                  post_id: postId,
+                  created_at: nowIso(),
+                  is_read: false
+                });
+              }
+            }
+
+            await refreshPostMeta(postId);
+          } catch (error) {
+            console.error(error);
+            alert("Could not update like.");
+          }
+
+          likeBtn.disabled = false;
+        });
+      }
+
+      if (commentToggleBtn && commentWrap) {
+        commentToggleBtn.addEventListener("click", async () => {
+          commentWrap.classList.toggle("hidden");
+          if (!commentWrap.classList.contains("hidden")) {
+            await renderCommentsUI(postId);
+          }
+        });
+      }
+
+      if (commentForm && commentInput) {
+        commentForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const text = commentInput.value.trim();
+          if (!text) return;
+
+          const displayName = currentUserProfile?.displayName || "Member";
+          const username = currentUserProfile?.username || "";
+          const submitBtn = commentForm.querySelector("button");
+          submitBtn.disabled = true;
+
+          try {
+            const { error } = await supabase
+              .from("post_comments")
+              .insert({
+                post_id: postId,
+                user_id: currentUser.id,
+                display_name: displayName,
+                username,
+                text,
+                created_at: nowIso()
+              });
+
+            if (error) throw error;
+
+            commentInput.value = "";
+
+            if (ownerId && ownerId !== currentUser.id) {
+              await createNotificationSafe({
+                type: "comment",
+                title: "New comment",
+                text: `${displayName} commented on your post.`,
+                from_user_id: currentUser.id,
+                to_user_id: ownerId,
+                post_id: postId,
+                created_at: nowIso(),
+                is_read: false
+              });
+            }
+
+            await refreshPostMeta(postId);
+          } catch (error) {
+            console.error(error);
+            alert(error?.message || "Could not add comment.");
+          }
+
+          submitBtn.disabled = false;
+        });
+      }
+    }
+
     async function renderPosts() {
-      const docs = getFilteredPostDocs();
+      const posts = getFilteredPosts();
       postsList.innerHTML = "";
 
-      if (!docs.length) {
+      if (!posts.length) {
         emptyBox.classList.remove("hidden");
         emptyBox.textContent = currentFeedFilter === "following"
           ? "No updates from people you follow yet."
@@ -1440,10 +1787,9 @@
       emptyBox.classList.add("hidden");
       const postIds = [];
 
-      for (const postDoc of docs) {
-        const post = postDoc.data();
-        const postId = postDoc.id;
-        const ownerId = getPostOwnerId(post);
+      for (const post of posts) {
+        const postId = post.id;
+        const ownerId = post.userId;
         const author = getAuthorProfile(ownerId);
 
         if (!ownerId) continue;
@@ -1454,8 +1800,8 @@
         const displayName = author?.displayName || post.displayName || "Member";
         const username = author?.username || post.username || "";
         const avatarUrl = author?.photoURL || post.userPhotoURL || "";
-        const caption = getPostCaption(post);
-        const imageUrl = getPostImage(post);
+        const caption = post.caption;
+        const imageUrl = post.imageURL;
 
         const avatarHtml = avatarUrl
           ? `<a href="member.html?uid=${encodeURIComponent(ownerId)}">
@@ -1469,7 +1815,7 @@
           ? `<span class="verified-dot">✓</span>`
           : "";
 
-        const deleteButton = currentUser && ownerId === currentUser.uid
+        const deleteButton = currentUser && ownerId === currentUser.id
           ? `
             <button data-id="${postId}" class="delete-post-btn" title="Delete post" aria-label="Delete post">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1485,7 +1831,7 @@
 
         const relationButton = buildRelationButton(ownerId, postId);
 
-        const reportButton = currentUser && ownerId !== currentUser.uid
+        const reportButton = currentUser && ownerId !== currentUser.id
           ? `
             <a class="icon-report-link" href="report.html?type=post&targetId=${encodeURIComponent(postId)}&targetUserId=${encodeURIComponent(ownerId)}" aria-label="Report">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1525,12 +1871,7 @@
           </a>
 
           <div class="post-actions">
-            <button class="icon-action-btn like-btn" data-post-id="${postId}" data-liked="no" aria-label="Like">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
-              </svg>
-              <span class="like-count">0</span>
-            </button>
+            ${buildLikeButton(postId)}
 
             <button class="icon-action-btn comment-toggle-btn" data-post-id="${postId}" aria-label="Comments">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1582,7 +1923,14 @@
           if (!ok) return;
 
           try {
-            await deleteDoc(doc(db, "posts", postId));
+            const { error } = await supabase
+              .from("posts")
+              .delete()
+              .eq("id", postId)
+              .eq("user_id", currentUser.id);
+
+            if (error) throw error;
+            await refreshFeedData();
           } catch (error) {
             console.error(error);
             alert("Could not delete post.");
@@ -1595,152 +1943,69 @@
       });
     }
 
+    async function uploadPostImage(file) {
+      if (!file) return "";
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const safeName = (file.name || "image")
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[^a-zA-Z0-9_-]/g, "-")
+        .slice(0, 40) || "image";
+
+      const path = `posts/${currentUser.id}/${Date.now()}_${safeName}.${ext}`;
+
+      const { error: uploadError } = await supabase
+        .storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "image/jpeg"
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      return data?.publicUrl || "";
+    }
+
+    async function markNotificationsRead() {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("to_user_id", currentUser.id)
+        .eq("is_read", false);
+
+      if (error) {
+        console.error("Could not fetch unread notifications:", error);
+        return;
+      }
+
+      const ids = (data || []).map(row => row.id).filter(Boolean);
+      if (!ids.length) return;
+
+      const { error: updateError } = await supabase
+        .from("notifications")
+        .update({
+          is_read: true,
+          read: true,
+          read_at: nowIso()
+        })
+        .in("id", ids);
+
+      if (updateError) {
+        console.error("Could not mark notifications read:", updateError);
+      }
+    }
+
     notifyBtn.addEventListener("click", async () => {
       if (!currentUser) {
         window.location.href = "notifications.html";
         return;
       }
 
-      try {
-        const snap = await getDocs(collection(db, "notifications", currentUser.uid, "items"));
-        const unreadDocs = snap.docs.filter(d => {
-          const data = d.data();
-          return data.isRead !== true && data.read !== true;
-        });
-
-        if (unreadDocs.length) {
-          const batch = writeBatch(db);
-          unreadDocs.forEach(d => {
-            batch.update(d.ref, {
-              isRead: true,
-              read: true,
-              readAt: serverTimestamp()
-            });
-          });
-          await batch.commit();
-        }
-      } catch (error) {
-        console.error("Could not mark notifications read:", error);
-      }
-
+      await markNotificationsRead();
       window.location.href = "notifications.html";
-    });
-
-    allTab.addEventListener("click", async () => {
-      currentFeedFilter = "all";
-      applyFeedTabUI();
-      await renderPosts();
-    });
-
-    followingTab.addEventListener("click", async () => {
-      currentFeedFilter = "following";
-      applyFeedTabUI();
-      await renderPosts();
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      currentUser = user;
-
-      try {
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(doc(db, "users", user.uid)),
-          getDoc(doc(db, "publicProfiles", user.uid))
-        ]);
-
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        const publicData = publicSnap.exists() ? publicSnap.data() : {};
-        currentUserProfile = normalizeProfile({ ...publicData, ...userData, uid: user.uid }, user.uid);
-
-        myName.textContent = currentUserProfile.displayName || user.displayName || "Member";
-
-        if (currentUserProfile.username) {
-          myUsername.textContent = "@" + currentUserProfile.username;
-          myUsername.classList.remove("hidden");
-        } else {
-          myUsername.classList.add("hidden");
-        }
-
-        showMyAvatar(currentUserProfile.photoURL || "");
-
-        if (window.location.hash === "#composerPanel") {
-          showComposer();
-        }
-
-        const status = currentUserProfile?.moderationStatus || "";
-        const suspendUntilValue = currentUserProfile?.suspensionUntil || null;
-
-        const suspensionUntil = suspendUntilValue?.toDate
-          ? suspendUntilValue.toDate().getTime()
-          : suspendUntilValue
-          ? new Date(suspendUntilValue).getTime()
-          : 0;
-
-        if (status === "banned") {
-          hideComposer();
-          openComposerBtn.disabled = true;
-          setFormMessage("Your account is banned. Posting is disabled.", "error");
-        } else if (status === "suspended" && suspensionUntil && Date.now() < suspensionUntil) {
-          hideComposer();
-          openComposerBtn.disabled = true;
-          setFormMessage("Your account is suspended. Posting is disabled for now.", "error");
-        }
-
-        onSnapshot(collection(db, "publicProfiles"), async (snapshot) => {
-          publicProfilesMap = new Map();
-          snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            const uid = data.uid || docSnap.id;
-            publicProfilesMap.set(uid, normalizeProfile({ id: docSnap.id, ...data }, uid));
-          });
-          await renderPosts();
-        });
-
-        onSnapshot(collection(db, "follows"), async (snapshot) => {
-          follows = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          await renderPosts();
-        });
-
-        onSnapshot(
-          query(collection(db, "follow_requests"), where("requesterId", "==", user.uid)),
-          async (snapshot) => {
-            outgoingRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            await renderPosts();
-          }
-        );
-
-        const postsQuery = query(
-          collection(db, "posts"),
-          orderBy("createdAt", "desc")
-        );
-
-        onSnapshot(postsQuery, async (snapshot) => {
-          allPostDocs = snapshot.docs;
-          await renderPosts();
-        }, (error) => {
-          console.error(error);
-          postsList.innerHTML = "";
-          emptyBox.classList.remove("hidden");
-          emptyBox.textContent = "Could not load feed.";
-        });
-
-        onSnapshot(collection(db, "notifications", user.uid, "items"), (snapshot) => {
-          const items = snapshot.docs.map(d => d.data());
-          renderNotifications(items);
-        }, (error) => {
-          console.error("Notification load error:", error);
-          renderNotifications([]);
-        });
-
-      } catch (error) {
-        console.error(error);
-        myName.textContent = "Member";
-        myUsername.classList.add("hidden");
-      }
     });
 
     postForm.addEventListener("submit", async (e) => {
@@ -1749,10 +2014,9 @@
       if (!currentUser) return;
 
       const caption = captionInput.value.trim();
-      const imageURL = imageURLInput.value.trim();
 
-      if (!caption && !imageURL) {
-        setFormMessage("Write something or add an image link.", "error");
+      if (!caption && !selectedImageFile) {
+        setFormMessage("Write something or upload a photo.", "error");
         return;
       }
 
@@ -1760,45 +2024,142 @@
       postBtn.textContent = "Posting...";
 
       try {
+        let uploadedImageUrl = "";
+        if (selectedImageFile) {
+          uploadedImageUrl = await uploadPostImage(selectedImageFile);
+        }
+
         const displayName =
           currentUserProfile?.displayName ||
-          currentUser.displayName ||
+          currentUser.user_metadata?.display_name ||
           "Member";
 
         const userPhotoURL = currentUserProfile?.photoURL || "";
         const username = currentUserProfile?.username || "";
 
-        await addDoc(collection(db, "posts"), {
-          userId: currentUser.uid,
-          displayName,
-          username,
-          userPhotoURL,
-          caption,
-          imageURL,
-          source: "feed",
-          hidden: false,
-          hiddenByAdmin: false,
-          softDeleted: false,
-          createdAt: serverTimestamp()
-        });
+        const { error } = await supabase
+          .from("posts")
+          .insert({
+            user_id: currentUser.id,
+            display_name: displayName,
+            username,
+            user_photo_url: userPhotoURL,
+            caption,
+            image_url: uploadedImageUrl,
+            source: "feed",
+            hidden: false,
+            hidden_by_admin: false,
+            soft_deleted: false,
+            created_at: nowIso(),
+            updated_at: nowIso()
+          });
+
+        if (error) throw error;
 
         captionInput.value = "";
-        imageURLInput.value = "";
+        selectedImageFile = null;
+        updateSelectedImageUI();
         setFormMessage("Update posted.", "success");
         hideComposer();
+        await refreshFeedData();
       } catch (error) {
         console.error(error);
-        setFormMessage("Could not post update.", "error");
+        setFormMessage(error?.message || "Could not post update.", "error");
       }
 
       postBtn.disabled = false;
       postBtn.textContent = "Post Update";
     });
 
+    async function refreshFeedData() {
+      await Promise.all([
+        loadCurrentUserProfile(),
+        loadFollows(),
+        loadOutgoingRequests(),
+        loadPostsAndProfiles(),
+        loadNotificationsCount()
+      ]);
+
+      await renderPosts();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshFeedData().catch(err => console.error("Refresh error:", err));
+      }, 350);
+    }
+
+    function clearSubscriptions() {
+      feedSubscriptions.forEach(sub => {
+        try {
+          supabase.removeChannel(sub);
+        } catch {}
+      });
+      feedSubscriptions = [];
+    }
+
+    function setupRealtime() {
+      clearSubscriptions();
+
+      const tables = [
+        "posts",
+        "public_profiles",
+        "follows",
+        "follow_requests",
+        "notifications"
+      ];
+
+      tables.forEach(table => {
+        const channel = supabase
+          .channel(`feed-live-${table}-${Math.random().toString(36).slice(2)}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table },
+            () => scheduleRefresh()
+          )
+          .subscribe();
+
+        feedSubscriptions.push(channel);
+      });
+    }
+
     window.addEventListener("hashchange", () => {
       if (window.location.hash === "#composerPanel") {
         showComposer();
       }
+    });
+
+    async function initFeed() {
+      const { data: userRes, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !userRes?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = userRes.user;
+
+      await detectOptionalTables();
+      await refreshFeedData();
+      setupRealtime();
+
+      if (window.location.hash === "#composerPanel") {
+        showComposer();
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    initFeed().catch((error) => {
+      console.error(error);
+      postsList.innerHTML = "";
+      emptyBox.classList.remove("hidden");
+      emptyBox.textContent = "Could not load feed.";
     });
   </script>
 </body>
