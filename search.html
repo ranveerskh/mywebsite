@@ -84,6 +84,7 @@
       align-items:center;
       justify-content:center;
       text-decoration:none;
+      position:relative;
     }
     .top-icon-btn svg{width:19px;height:19px;display:block}
     .top-center{text-align:center;min-width:0}
@@ -304,7 +305,9 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .small-pill{
+
+    .small-pill,
+    .mini-badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -317,9 +320,16 @@
       color:var(--text);
       flex-shrink:0;
     }
-    .pill-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .pill-blue,.mini-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .pill-green,.mini-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .pill-yellow,.mini-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .mini-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
 
     .card-title{
       font-size:16px;
@@ -571,14 +581,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      getDocs,
-      collection
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearBtn");
@@ -588,6 +591,7 @@
     const postsCountChip = document.getElementById("postsCountChip");
     const eventsCountChip = document.getElementById("eventsCountChip");
     const placesCountChip = document.getElementById("placesCountChip");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     const sectionTitle = document.getElementById("sectionTitle");
     const listLoading = document.getElementById("listLoading");
@@ -671,23 +675,42 @@
       return div.innerHTML;
     }
 
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        bio: d.bio || d.about || d.description || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        verified: !!(d.verified || d.isVerified),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        showInNearby: !!d.showInNearby,
-        locationVisibility: d.locationVisibility || "hidden",
-        city: d.city || d.locationCity || d.currentCity || "",
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted),
+        showInNearby: (d.show_in_nearby ?? d.showInNearby) !== false,
+        locationVisibility: getField(d, ["location_visibility", "locationVisibility"]) || "hidden",
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        blockedUsers: Array.isArray(d.blocked_users)
+          ? d.blocked_users
+          : Array.isArray(d.blockedUsers)
+          ? d.blockedUsers
+          : [],
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -697,10 +720,10 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        userId: d.userId || d.authorId || d.ownerId || d.uid || "",
-        caption: d.caption || d.text || d.content || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
+        caption: getField(d, ["caption", "text", "content"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         createdAtMs: getCreatedMs(d)
       };
     }
@@ -709,15 +732,15 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        title: d.title || d.name || "Untitled Event",
-        description: d.description || d.desc || "",
-        city: d.city || d.locationCity || "",
-        date: d.date || "",
-        time: d.time || "",
-        visibility: d.visibility || d.eventVisibility || "public",
-        creatorId: d.creatorId || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || d.hostName || "Member",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        title: getField(d, ["title", "name"]) || "Untitled Event",
+        description: getField(d, ["description", "desc"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        date: getField(d, ["date"]),
+        time: getField(d, ["time"]),
+        visibility: getField(d, ["visibility", "event_visibility", "eventVisibility"]) || "public",
+        creatorId: getField(d, ["creator_id", "creatorId", "user_id", "userId", "uid"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -730,23 +753,22 @@
       return {
         id: d.id || fallbackId || "",
         source: sourceName,
-        name: d.name || d.title || d.placeName || "Unnamed Place",
-        description: d.description || d.desc || d.notes || "",
-        city: d.city || d.locationCity || "",
-        address: d.address || d.fullAddress || "",
-        website: d.website || d.url || d.link || "",
-        createdBy: d.createdBy || d.userId || d.uid || "",
-        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        name: getField(d, ["name", "title", "place_name", "placeName"]) || "Unnamed Place",
+        description: getField(d, ["description", "desc", "notes"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        address: getField(d, ["address", "full_address", "fullAddress"]),
+        website: getField(d, ["website", "url", "link"]),
+        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
+        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved","active","verified"].includes(status),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         lat: readLat(d),
         lng: readLng(d)
       };
     }
 
     function getCreatedMs(obj) {
-      const value = obj?.createdAt || obj?.timestamp || null;
+      const value = obj?.created_at || obj?.createdAt || obj?.timestamp || null;
       if (!value) return 0;
-      if (value?.toDate) return value.toDate().getTime();
       const ms = new Date(value).getTime();
       return Number.isNaN(ms) ? 0 : ms;
     }
@@ -809,18 +831,23 @@
       return true;
     }
 
+    function getAuthorProfile(uid) {
+      if (uid === currentUser?.id && viewerProfile) return viewerProfile;
+      return profilesMap.get(uid) || null;
+    }
+
     function canViewPost(post) {
       if (!post || post.hidden) return false;
-      const owner = profilesMap.get(post.userId);
-      if (!owner) return false;
+      const owner = getAuthorProfile(post.userId);
+      if (!owner) return post.userId === currentUser.id;
       if (!canViewProfile(owner)) return false;
-      if (owner.uid === currentUser.uid) return true;
+      if (owner.uid === currentUser.id) return true;
       if (!owner.isPrivate) return true;
       return followingIds.has(owner.uid);
     }
 
     function renderCounts() {
-      const peopleCount = peopleData.filter(p => p.uid !== currentUser.uid && canViewProfile(p)).length;
+      const peopleCount = peopleData.filter(p => p.uid !== currentUser.id && canViewProfile(p)).length;
       const postsCount = postsData.filter(canViewPost).length;
       const eventsCount = eventsData.filter(e => !e.hidden).length;
       const placesCount = placesData.filter(p => !p.hidden && p.approved).length;
@@ -831,11 +858,35 @@
       placesCountChip.textContent = `Places: ${placesCount}`;
     }
 
+    async function loadUnreadCount() {
+      try {
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("to_user_id", currentUser.id)
+          .eq("is_read", false);
+
+        if (error) {
+          inboxBadge.classList.add("hidden");
+          return;
+        }
+
+        if (!count) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = count > 99 ? "99+" : String(count);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
     function getFilteredPeople() {
       const q = searchInput.value.trim();
 
       return peopleData
-        .filter(p => p.uid !== currentUser.uid)
+        .filter(p => p.uid !== currentUser.id)
         .filter(canViewProfile)
         .filter(p => matchesSearch([p.displayName, p.username, p.bio, p.city], q))
         .sort((a, b) => {
@@ -853,7 +904,7 @@
       return postsData
         .filter(canViewPost)
         .filter(post => {
-          const owner = profilesMap.get(post.userId);
+          const owner = getAuthorProfile(post.userId);
           return matchesSearch([
             post.caption,
             owner?.displayName,
@@ -870,9 +921,9 @@
       return eventsData
         .filter(e => !e.hidden)
         .filter(e => {
-          const creator = profilesMap.get(e.creatorId);
+          const creator = getAuthorProfile(e.creatorId);
           if (creator && !canViewProfile(creator)) return false;
-          return e.visibility !== "private" || e.creatorId === currentUser.uid;
+          return e.visibility !== "private" || e.creatorId === currentUser.id;
         })
         .filter(e => matchesSearch([e.title, e.description, e.city, e.creatorName], q))
         .sort((a, b) => a.title.localeCompare(b.title));
@@ -962,7 +1013,7 @@
       listWrap.innerHTML = "";
 
       rows.forEach(post => {
-        const owner = profilesMap.get(post.userId) || {};
+        const owner = getAuthorProfile(post.userId) || {};
         const card = document.createElement("div");
         card.className = "card";
 
@@ -1010,7 +1061,7 @@
       listWrap.innerHTML = "";
 
       rows.forEach(event => {
-        const creator = profilesMap.get(event.creatorId) || {};
+        const creator = getAuthorProfile(event.creatorId) || {};
         const badges = [];
         badges.push(`<span class="mini-badge ${event.visibility === "private" ? "mini-yellow" : "mini-blue"}">${event.visibility === "private" ? "Private" : "Public"}</span>`);
         if (event.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(event.city)}</span>`);
@@ -1051,11 +1102,14 @@
 
       rows.forEach(place => {
         const badges = [];
-        badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+        badges.push(`<span class="mini-badge mini-green">Approved</span>`);
         if (place.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(place.city)}</span>`);
 
+        const websiteHref = normalizeHref(place.website);
+        const openDetail = `places.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source || "")}`;
+
         const websiteHtml = place.website
-          ? `<a href="${escapeHtml(place.website)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>`
+          ? `<a href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>`
           : "";
 
         const card = document.createElement("div");
@@ -1069,7 +1123,7 @@
           </div>
           <div class="desc">${escapeHtml(place.description || "No description added.")}</div>
           <div class="card-actions">
-            <a href="nearby-places.html" class="action-btn btn-primary">Open Places Page</a>
+            <a href="${openDetail}" class="action-btn btn-primary">Open Place</a>
             ${websiteHtml}
           </div>
         `;
@@ -1092,14 +1146,17 @@
     }
 
     async function loadViewer(uid) {
-      const [userSnap, publicSnap] = await Promise.all([
-        getDoc(doc(db, "users", uid)),
-        getDoc(doc(db, "publicProfiles", uid))
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
       ]);
 
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
       viewerProfile = normalizeProfile({
-        ...(publicSnap.exists() ? publicSnap.data() : {}),
-        ...(userSnap.exists() ? userSnap.data() : {}),
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
         uid
       }, uid);
 
@@ -1107,32 +1164,46 @@
     }
 
     async function loadProfiles() {
-      const snap = await getDocs(collection(db, "publicProfiles"));
-      peopleData = snap.docs.map(d => normalizeProfile({ id: d.id, ...d.data() }, d.id));
+      const { data, error } = await supabase.from("public_profiles").select("*");
+      if (error) throw error;
+
+      peopleData = (data || []).map(d => normalizeProfile(d, d.uid));
       profilesMap = new Map();
       peopleData.forEach(p => profilesMap.set(p.uid, p));
     }
 
     async function loadFollows() {
-      const snap = await getDocs(collection(db, "follows"));
-      followingIds = new Set();
+      const { data, error } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", currentUser.id);
 
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.followerId === currentUser.uid && data.followingId) {
-          followingIds.add(data.followingId);
-        }
-      });
+      if (error) throw error;
+
+      followingIds = new Set((data || []).map(row => row.following_id).filter(Boolean));
     }
 
     async function loadPosts() {
-      const snap = await getDocs(collection(db, "posts"));
-      postsData = snap.docs.map(d => normalizePost({ id: d.id, ...d.data() }, d.id));
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      postsData = (data || []).map(d => normalizePost(d, d.id));
     }
 
     async function loadEvents() {
-      const snap = await getDocs(collection(db, "events"));
-      eventsData = snap.docs.map(d => normalizeEvent({ id: d.id, ...d.data() }, d.id));
+      const { data, error } = await supabase
+        .from("events")
+        .select("*");
+
+      if (error) {
+        eventsData = [];
+        return;
+      }
+
+      eventsData = (data || []).map(d => normalizeEvent(d, d.id));
     }
 
     async function loadPlaces() {
@@ -1141,9 +1212,11 @@
 
       for (const source of sources) {
         try {
-          const snap = await getDocs(collection(db, source));
-          snap.forEach(d => {
-            const place = normalizePlace({ id: d.id, ...d.data() }, d.id, source);
+          const { data, error } = await supabase.from(source).select("*");
+          if (error) continue;
+
+          (data || []).forEach(d => {
+            const place = normalizePlace(d, d.id, source);
             map.set(`${source}:${place.id}`, place);
           });
         } catch {}
@@ -1159,7 +1232,8 @@
         loadFollows(),
         loadPosts(),
         loadEvents(),
-        loadPlaces()
+        loadPlaces(),
+        loadUnreadCount()
       ]);
       renderCounts();
       renderResults();
@@ -1183,22 +1257,32 @@
 
     refreshBtn.addEventListener("click", refreshAll);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = authData.user;
 
       try {
-        await loadViewer(user.uid);
+        await loadViewer(currentUser.id);
         await refreshAll();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showEmpty("Could not load search page.");
       }
-    });
+    }
+
+    initPage();
   </script>
 </body>
 </html>
