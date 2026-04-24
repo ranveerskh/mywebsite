@@ -527,24 +527,13 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      collection,
-      query,
-      where,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const locationChip = document.getElementById("locationChip");
     const modeChip = document.getElementById("modeChip");
     const browserChip = document.getElementById("browserChip");
     const countChip = document.getElementById("countChip");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
@@ -620,6 +609,18 @@
       return Number.isFinite(n) ? n : null;
     }
 
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function readLat(obj) {
       return num(
         obj?.lat ??
@@ -664,10 +665,10 @@
     }
 
     function buildLocationSearch(d) {
-      const existing = titleText(d.locationSearch);
-      const city = titleText(d.city || d.locationCity || "");
+      const existing = titleText(d.location_search || d.locationSearch);
+      const city = titleText(d.city || d.location_city || d.locationCity || "");
       const province = titleText(d.province || d.state || d.region || "");
-      const country = titleText(d.country || d.locationCountry || "");
+      const country = titleText(d.country || d.location_country || d.locationCountry || "");
       return [existing, city, province, country, countryAliases(country)]
         .filter(Boolean)
         .join(" ")
@@ -677,10 +678,6 @@
 
     function buildPlaceKey(source, placeId) {
       return `${String(source || "").trim()}__${String(placeId || "").trim()}`;
-    }
-
-    function buildVisitDocId(userId, source, placeId) {
-      return `${userId}__${String(source || "").trim()}__${String(placeId || "").trim()}`;
     }
 
     function isVisitRecord(raw) {
@@ -712,10 +709,10 @@
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        city: d.city || d.locationCity || d.currentCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
-        country: d.country || d.locationCountry || d.currentCountry || "",
-        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        locationVisibility: getField(d, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) || "city",
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -732,22 +729,22 @@
       return {
         id: d.id || fallbackId || "",
         source: sourceName,
-        name: d.name || d.title || d.placeName || "Unnamed Place",
-        category: d.category || d.topic || "General",
-        description: d.description || d.desc || d.notes || "",
-        city: d.city || d.locationCity || "",
-        province: d.province || d.state || d.region || "",
-        country: d.country || d.locationCountry || "",
+        name: getField(d, ["name", "title", "place_name", "placeName"]) || "Unnamed Place",
+        category: getField(d, ["category", "topic"]) || "General",
+        description: getField(d, ["description", "desc", "notes"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        province: getField(d, ["province", "state", "region"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
         locationSearch: buildLocationSearch(d),
-        address: d.address || d.fullAddress || "",
-        website: d.website || d.url || d.link || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        createdBy: d.createdBy || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || "Member",
+        address: getField(d, ["address", "full_address", "fullAddress"]),
+        website: getField(d, ["website", "url", "link"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
         approved,
         pending,
         rejected,
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -782,6 +779,30 @@
       }
     }
 
+    async function loadInboxBadge() {
+      if (!currentUser) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("to_user_id", currentUser.id)
+          .eq("is_read", false);
+
+        if (error) throw error;
+
+        const count = (data || []).length;
+        if (!count) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = count > 99 ? "99+" : String(count);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
     async function requestBrowserLocation() {
       if (!navigator.geolocation) {
         browserCoords = null;
@@ -806,26 +827,24 @@
             browserChip.className = "chip chip-green";
 
             try {
-              await Promise.all([
-                setDoc(doc(db, "users", currentUser.uid), {
+              await supabase
+                .from("users")
+                .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  locationVisibility: "gps",
-                  nearbyMode: "gps",
-                  showInNearby: true
-                }, { merge: true }),
-                setDoc(doc(db, "publicProfiles", currentUser.uid), {
+                  lng: browserCoords.lng
+                })
+                .eq("uid", currentUser.id);
+
+              await supabase
+                .from("public_profiles")
+                .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  locationVisibility: "gps",
-                  nearbyMode: "gps",
-                  showInNearby: true
-                }, { merge: true })
-              ]);
+                  lng: browserCoords.lng
+                })
+                .eq("uid", currentUser.id);
 
               viewerProfile.lat = browserCoords.lat;
               viewerProfile.lng = browserCoords.lng;
-              viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
               setPageStatus("Browser GPS enabled. Your city list stays first, and distance labels improve.", "status-ok");
             } catch (err) {
@@ -898,7 +917,7 @@
 
       return allPlaces
         .filter(model => !model.hidden && !model.rejected)
-        .filter(model => model.approved || (model.createdBy === currentUser.uid && model.pending))
+        .filter(model => model.approved || (model.createdBy === currentUser.id && model.pending))
         .map(model => {
           const city = normalizeText(model.city);
           const sameCity = !!viewerCity && !!city && viewerCity === city;
@@ -921,7 +940,7 @@
 
           const visitCount = getVisitCount(model);
           const visited = hasVisited(model);
-          const mine = model.createdBy === currentUser.uid;
+          const mine = model.createdBy === currentUser.id;
 
           return {
             ...model,
@@ -967,32 +986,42 @@
     }
 
     async function loadViewer(uid) {
-      const [userSnap, publicSnap] = await Promise.all([
-        getDoc(doc(db, "users", uid)),
-        getDoc(doc(db, "publicProfiles", uid))
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
       ]);
 
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
       viewerProfile = normalizeProfile({
-        ...(publicSnap.exists() ? publicSnap.data() : {}),
-        ...(userSnap.exists() ? userSnap.data() : {}),
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
         uid
       }, uid);
 
       renderViewerLocation();
     }
 
+    async function fetchSourceRows(tableName) {
+      try {
+        const { data, error } = await supabase.from(tableName).select("*");
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.error(`Failed loading ${tableName}:`, err);
+        return [];
+      }
+    }
+
     async function loadPlaces() {
-      const snapshots = await Promise.all(
-        PLACE_SOURCES.map(source =>
-          getDocs(collection(db, source)).catch(() => ({ docs: [] }))
-        )
-      );
+      const results = await Promise.all(PLACE_SOURCES.map(fetchSourceRows));
 
       const merged = [];
-      snapshots.forEach((snap, index) => {
+      results.forEach((rows, index) => {
         const source = PLACE_SOURCES[index];
-        snap.docs.forEach(d => {
-          merged.push(normalizePlace({ id: d.id, ...d.data() }, d.id, source));
+        rows.forEach(row => {
+          merged.push(normalizePlace(row, row.id, source));
         });
       });
 
@@ -1005,45 +1034,59 @@
       userVisitExactMap = new Map();
       userVisitLooseMap = new Map();
 
-      const [allVisitsSnap, myVisitsSnap] = await Promise.all([
-        getDocs(collection(db, "place_visits")).catch(() => ({ docs: [] })),
-        getDocs(query(collection(db, "place_visits"), where("userId", "==", currentUser.uid))).catch(() => ({ docs: [] }))
-      ]);
+      try {
+        const { data: allData, error: allError } = await supabase
+          .from("place_visits")
+          .select("*");
 
-      (allVisitsSnap.docs || []).forEach(d => {
-        const raw = d.data() || {};
-        if (!isVisitRecord(raw)) return;
+        if (allError) throw allError;
 
-        const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || "";
-        const source = raw.source || raw.placeSource || "";
+        (allData || []).forEach(raw => {
+          if (!isVisitRecord(raw)) return;
 
-        if (placeId) {
-          visitCountLooseMap.set(placeId, (visitCountLooseMap.get(placeId) || 0) + 1);
-        }
+          const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
+          const source = raw.source || raw.place_source || raw.placeSource || "";
 
-        if (placeId && source) {
-          const exactKey = buildPlaceKey(source, placeId);
-          visitCountMap.set(exactKey, (visitCountMap.get(exactKey) || 0) + 1);
-        }
-      });
+          if (placeId) {
+            visitCountLooseMap.set(placeId, (visitCountLooseMap.get(placeId) || 0) + 1);
+          }
 
-      (myVisitsSnap.docs || []).forEach(d => {
-        const raw = d.data() || {};
-        if (!isVisitRecord(raw)) return;
+          if (placeId && source) {
+            const exactKey = buildPlaceKey(source, placeId);
+            visitCountMap.set(exactKey, (visitCountMap.get(exactKey) || 0) + 1);
+          }
+        });
+      } catch (err) {
+        console.error("All place visits load error:", err);
+      }
 
-        const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || "";
-        const source = raw.source || raw.placeSource || "";
-        const record = { ...raw, docId: d.id };
+      try {
+        const { data: myData, error: myError } = await supabase
+          .from("place_visits")
+          .select("*")
+          .eq("user_id", currentUser.id);
 
-        if (placeId) {
-          userVisitLooseMap.set(placeId, record);
-        }
+        if (myError) throw myError;
 
-        if (placeId && source) {
-          const exactKey = buildPlaceKey(source, placeId);
-          userVisitExactMap.set(exactKey, record);
-        }
-      });
+        (myData || []).forEach(raw => {
+          if (!isVisitRecord(raw)) return;
+
+          const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
+          const source = raw.source || raw.place_source || raw.placeSource || "";
+          const record = { ...raw, docId: raw.id };
+
+          if (placeId) {
+            userVisitLooseMap.set(placeId, record);
+          }
+
+          if (placeId && source) {
+            const exactKey = buildPlaceKey(source, placeId);
+            userVisitExactMap.set(exactKey, record);
+          }
+        });
+      } catch (err) {
+        console.error("My place visits load error:", err);
+      }
     }
 
     async function toggleVisited(model, btn) {
@@ -1054,25 +1097,39 @@
         const existing = getUserVisitRecord(model);
 
         if (existing) {
-          await deleteDoc(doc(db, "place_visits", existing.docId));
+          if (existing.docId) {
+            const { error } = await supabase.from("place_visits").delete().eq("id", existing.docId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase
+              .from("place_visits")
+              .delete()
+              .eq("user_id", currentUser.id)
+              .eq("place_id", model.id)
+              .eq("source", model.source);
+
+            if (error) throw error;
+          }
+
           setPageStatus("Removed from visited places.", "status-ok");
         } else {
-          const visitDocId = buildVisitDocId(currentUser.uid, model.source, model.id);
+          const { error } = await supabase
+            .from("place_visits")
+            .insert({
+              user_id: currentUser.id,
+              place_id: model.id,
+              source: model.source,
+              place_source: model.source,
+              status: "visited",
+              visited: true,
+              explored: false,
+              place_name: model.name || "",
+              city: model.city || "",
+              created_at: nowIso(),
+              updated_at: nowIso()
+            });
 
-          await setDoc(doc(db, "place_visits", visitDocId), {
-            userId: currentUser.uid,
-            placeId: model.id,
-            source: model.source,
-            placeSource: model.source,
-            status: "visited",
-            visited: true,
-            explored: false,
-            placeName: model.name || "",
-            city: model.city || "",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-
+          if (error) throw error;
           setPageStatus("Marked as visited.", "status-ok");
         }
 
@@ -1175,7 +1232,8 @@
       openLoading();
       await Promise.all([
         loadPlaces(),
-        loadVisits()
+        loadVisits(),
+        loadInboxBadge()
       ]);
       renderViewerLocation();
       renderPlaces();
@@ -1196,22 +1254,32 @@
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = authData.user;
 
       try {
-        await loadViewer(user.uid);
+        await loadViewer(currentUser.id);
         await refreshAll();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showEmpty("Could not load nearby places.");
       }
-    });
+    }
+
+    initPage();
   </script>
 </body>
 </html>
