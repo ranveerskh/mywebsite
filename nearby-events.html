@@ -522,23 +522,13 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      addDoc,
-      collection,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const locationChip = document.getElementById("locationChip");
     const modeChip = document.getElementById("modeChip");
     const browserChip = document.getElementById("browserChip");
     const countChip = document.getElementById("countChip");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
@@ -555,6 +545,7 @@
     let browserCoords = null;
     let eventsData = [];
     let memberMap = new Map();
+    let memberRowMap = new Map();
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -608,6 +599,18 @@
       return Number.isFinite(n) ? n : null;
     }
 
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function readLat(obj) {
       return num(
         obj?.lat ??
@@ -645,10 +648,10 @@
     }
 
     function buildLocationSearch(d) {
-      const existing = titleText(d.locationSearch);
-      const city = titleText(d.city || d.locationCity || "");
+      const existing = titleText(d.location_search || d.locationSearch);
+      const city = titleText(d.city || d.location_city || d.locationCity || "");
       const province = titleText(d.province || d.state || d.region || "");
-      const country = titleText(d.country || d.locationCountry || "");
+      const country = titleText(d.country || d.location_country || d.locationCountry || "");
       return [existing, city, province, country, countryAliases(country)]
         .filter(Boolean)
         .join(" ")
@@ -680,10 +683,12 @@
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        city: d.city || d.locationCity || d.currentCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
-        country: d.country || d.locationCountry || d.currentCountry || "",
-        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        locationVisibility: getField(d, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) || "city",
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -693,21 +698,21 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        title: d.title || d.name || "Untitled Event",
-        description: d.description || d.desc || "",
-        city: d.city || d.locationCity || "",
-        province: d.province || d.state || d.region || "",
-        country: d.country || d.locationCountry || "",
+        title: getField(d, ["title", "name"]) || "Untitled Event",
+        description: getField(d, ["description", "desc"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        province: getField(d, ["province", "state", "region"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
         locationSearch: buildLocationSearch(d),
-        venue: d.venue || d.spot || "",
-        address: d.address || "",
-        date: d.date || "",
-        time: d.time || "",
-        visibility: d.visibility || d.eventVisibility || "public",
-        creatorId: d.creatorId || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || "Member",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+        venue: getField(d, ["venue", "spot"]),
+        address: getField(d, ["address"]),
+        date: getField(d, ["date"]),
+        time: getField(d, ["time"]),
+        visibility: getField(d, ["visibility", "event_visibility", "eventVisibility"]) || "public",
+        creatorId: getField(d, ["creator_id", "creatorId", "user_id", "userId", "uid"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -738,6 +743,30 @@
         modeChip.textContent = "Mode: GPS fallback";
       } else {
         modeChip.textContent = "Mode: No location";
+      }
+    }
+
+    async function loadInboxBadge() {
+      if (!currentUser) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("to_user_id", currentUser.id)
+          .eq("is_read", false);
+
+        if (error) throw error;
+
+        const count = (data || []).length;
+        if (!count) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = count > 99 ? "99+" : String(count);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
       }
     }
 
@@ -794,9 +823,9 @@
     }
 
     async function createNotificationSafe(targetUid, payload) {
-      if (!targetUid || targetUid === currentUser.uid) return;
+      if (!targetUid || targetUid === currentUser.id) return;
       try {
-        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+        await supabase.from("notifications").insert(payload);
       } catch {}
     }
 
@@ -824,26 +853,24 @@
             browserChip.className = "chip chip-green";
 
             try {
-              await Promise.all([
-                setDoc(doc(db, "users", currentUser.uid), {
+              await supabase
+                .from("users")
+                .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  locationVisibility: "gps",
-                  nearbyMode: "gps",
-                  showInNearby: true
-                }, { merge: true }),
-                setDoc(doc(db, "publicProfiles", currentUser.uid), {
+                  lng: browserCoords.lng
+                })
+                .eq("uid", currentUser.id);
+
+              await supabase
+                .from("public_profiles")
+                .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  locationVisibility: "gps",
-                  nearbyMode: "gps",
-                  showInNearby: true
-                }, { merge: true })
-              ]);
+                  lng: browserCoords.lng
+                })
+                .eq("uid", currentUser.id);
 
               viewerProfile.lat = browserCoords.lat;
               viewerProfile.lng = browserCoords.lng;
-              viewerProfile.locationVisibility = "gps";
               renderViewerLocation();
               setPageStatus("Browser GPS enabled. Same-city events still stay first.", "status-ok");
             } catch (err) {
@@ -906,7 +933,7 @@
 
       return eventsData
         .filter(model => !model.hidden)
-        .filter(model => model.visibility !== "private" || model.creatorId === currentUser.uid || isJoined(model.id))
+        .filter(model => model.visibility !== "private" || model.creatorId === currentUser.id || isJoined(model.id))
         .map(model => {
           const city = normalizeText(model.city);
           const sameCity = !!viewerCity && !!city && viewerCity === city;
@@ -925,7 +952,7 @@
             model.locationSearch
           ].filter(Boolean).join(" ").toLowerCase();
 
-          const mine = model.creatorId === currentUser.uid;
+          const mine = model.creatorId === currentUser.id;
 
           return {
             ...model,
@@ -974,24 +1001,32 @@
       setPageStatus("");
 
       try {
-        await setDoc(doc(db, "events", model.id, "members", currentUser.uid), {
-          userId: currentUser.uid,
-          displayName: viewerProfile?.displayName || currentUser.displayName || "Member",
-          username: viewerProfile?.username || "",
-          joinedAt: serverTimestamp()
-        }, { merge: true });
+        const { data: insertData, error } = await supabase
+          .from("event_members")
+          .insert({
+            event_id: model.id,
+            user_id: currentUser.id,
+            display_name: viewerProfile?.displayName || currentUser.email || "Member",
+            username: viewerProfile?.username || "",
+            joined_at: nowIso()
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
 
         memberMap.set(model.id, true);
+        if (insertData?.id) memberRowMap.set(model.id, insertData.id);
 
         await createNotificationSafe(model.creatorId, {
           type: "event_join",
           title: "Event joined",
-          text: `${currentUser.displayName || "Someone"} joined your event.`,
-          fromUserId: currentUser.uid,
-          toUserId: model.creatorId,
-          eventId: model.id,
-          createdAt: serverTimestamp(),
-          isRead: false
+          text: `${viewerProfile?.displayName || currentUser.email || "Someone"} joined your event.`,
+          from_user_id: currentUser.id,
+          to_user_id: model.creatorId,
+          event_id: model.id,
+          created_at: nowIso(),
+          is_read: false
         });
 
         renderEvents();
@@ -1008,8 +1043,23 @@
       setPageStatus("");
 
       try {
-        await deleteDoc(doc(db, "events", model.id, "members", currentUser.uid));
+        const rowId = memberRowMap.get(model.id);
+
+        if (rowId) {
+          const { error } = await supabase.from("event_members").delete().eq("id", rowId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("event_members")
+            .delete()
+            .eq("event_id", model.id)
+            .eq("user_id", currentUser.id);
+
+          if (error) throw error;
+        }
+
         memberMap.set(model.id, false);
+        memberRowMap.delete(model.id);
         renderEvents();
         setPageStatus("Left event.", "status-ok");
       } catch (err) {
@@ -1119,14 +1169,17 @@
     }
 
     async function loadViewer(uid) {
-      const [userSnap, publicSnap] = await Promise.all([
-        getDoc(doc(db, "users", uid)),
-        getDoc(doc(db, "publicProfiles", uid))
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
       ]);
 
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
       viewerProfile = normalizeProfile({
-        ...(publicSnap.exists() ? publicSnap.data() : {}),
-        ...(userSnap.exists() ? userSnap.data() : {}),
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
         uid
       }, uid);
 
@@ -1134,27 +1187,41 @@
     }
 
     async function loadEvents() {
-      const snap = await getDocs(collection(db, "events"));
-      eventsData = snap.docs.map(d => normalizeEvent({ id: d.id, ...d.data() }, d.id));
+      const { data, error } = await supabase.from("events").select("*");
+      if (error) throw error;
+      eventsData = (data || []).map(row => normalizeEvent(row, row.id));
     }
 
-    async function loadJoinedState(events) {
-      const results = await Promise.all(events.map(async model => {
-        try {
-          const memberSnap = await getDoc(doc(db, "events", model.id, "members", currentUser.uid));
-          return { eventId: model.id, joined: memberSnap.exists() };
-        } catch {
-          return { eventId: model.id, joined: false };
-        }
-      }));
+    async function loadJoinedState() {
+      memberMap = new Map();
+      memberRowMap = new Map();
 
-      memberMap = new Map(results.map(x => [x.eventId, x.joined]));
+      try {
+        const { data, error } = await supabase
+          .from("event_members")
+          .select("*")
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+
+        (data || []).forEach(row => {
+          if (row.event_id) {
+            memberMap.set(row.event_id, true);
+            if (row.id) memberRowMap.set(row.event_id, row.id);
+          }
+        });
+      } catch (err) {
+        console.error("event_members load error:", err);
+      }
     }
 
     async function refreshAll() {
       openLoading();
-      await loadEvents();
-      await loadJoinedState(eventsData);
+      await Promise.all([
+        loadEvents(),
+        loadJoinedState(),
+        loadInboxBadge()
+      ]);
       renderViewerLocation();
       renderEvents();
     }
@@ -1174,22 +1241,32 @@
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = authData.user;
 
       try {
-        await loadViewer(user.uid);
+        await loadViewer(currentUser.id);
         await refreshAll();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showEmpty("Could not load nearby events.");
       }
-    });
+    }
+
+    initPage();
   </script>
 </body>
 </html>
