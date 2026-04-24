@@ -651,21 +651,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      query,
-      where,
-      getDocs,
-      getDoc,
-      doc,
-      setDoc,
-      updateDoc,
-      addDoc,
-      serverTimestamp,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -692,8 +678,9 @@
     let threadMapB = new Map();
     let requestDocsMap = new Map();
 
-    let unsubscribers = [];
+    let realtimeChannels = [];
     let isBootstrapping = false;
+    let refreshTimer = null;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -736,39 +723,45 @@
 
     function formatDate(ts) {
       if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch {
-        try {
-          const d = new Date(ts);
-          return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-        } catch {
-          return "Just now";
-        }
+      try {
+        const d = new Date(ts);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
       }
     }
 
     function tsMs(ts) {
       if (!ts) return 0;
-      try { return ts.toDate().getTime(); }
-      catch {
-        try {
-          const ms = new Date(ts).getTime();
-          return Number.isFinite(ms) ? ms : 0;
-        } catch {
-          return 0;
-        }
+      try {
+        const ms = new Date(ts).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
       }
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        verified: !!(d.verified || d.isVerified),
-        bio: d.bio || ""
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        bio: getField(d, ["bio"])
       };
     }
 
@@ -776,18 +769,18 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        type: d.type || "direct",
-        status: d.status || "accepted",
-        participantA: d.participantA || "",
-        participantB: d.participantB || "",
-        createdBy: d.createdBy || "",
-        createdAt: d.createdAt || null,
-        acceptedFromRequestId: d.acceptedFromRequestId || "",
-        starterText: d.starterText || "",
-        starterFrom: d.starterFrom || "",
-        lastMessageText: d.lastMessageText || "",
-        lastMessageAt: d.lastMessageAt || d.createdAt || null,
-        lastSenderId: d.lastSenderId || ""
+        type: getField(d, ["type"]) || "direct",
+        status: getField(d, ["status"]) || "accepted",
+        participantA: getField(d, ["participant_a", "participantA"]),
+        participantB: getField(d, ["participant_b", "participantB"]),
+        createdBy: getField(d, ["created_by", "createdBy"]),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        acceptedFromRequestId: getField(d, ["accepted_from_request_id", "acceptedFromRequestId"]),
+        starterText: getField(d, ["starter_text", "starterText"]),
+        starterFrom: getField(d, ["starter_from", "starterFrom"]),
+        lastMessageText: getField(d, ["last_message_text", "lastMessageText"]),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.created_at ?? d.createdAt ?? null,
+        lastSenderId: getField(d, ["last_sender_id", "lastSenderId"])
       };
     }
 
@@ -795,18 +788,19 @@
       const d = raw || {};
       return {
         id: d.id || fallbackId || "",
-        requesterId: d.requesterId || "",
-        targetId: d.targetId || "",
-        text: d.text || "",
-        status: d.status || "pending",
-        createdAt: d.createdAt || null
+        requesterId: getField(d, ["requester_id", "requesterId"]),
+        targetId: getField(d, ["target_id", "targetId"]),
+        text: getField(d, ["text", "message", "starter_text", "starterText"]),
+        status: getField(d, ["status"]) || "pending",
+        createdAt: d.created_at ?? d.createdAt ?? null
       };
     }
 
-    function mapFromSnapshot(snapshot, normalizer) {
+    function rowsToMap(rows, normalizer) {
       const map = new Map();
-      snapshot.forEach(d => {
-        map.set(d.id, normalizer({ id: d.id, ...d.data() }, d.id));
+      (rows || []).forEach(row => {
+        const model = normalizer(row, row.id);
+        map.set(model.id, model);
       });
       return map;
     }
@@ -817,17 +811,17 @@
 
     function getAcceptedThreads() {
       return Array.from(getMergedThreadsMap().values())
-        .filter(thread => thread.status === "accepted");
+        .filter(thread => (thread.status || "accepted") === "accepted");
     }
 
     function getPendingRequests() {
       return Array.from(requestDocsMap.values())
-        .filter(requestDoc => requestDoc.status === "pending");
+        .filter(requestDoc => (requestDoc.status || "pending") === "pending");
     }
 
     function getOtherUidFromThread(thread) {
       if (!currentUser) return "";
-      return thread.participantA === currentUser.uid ? thread.participantB : thread.participantA;
+      return thread.participantA === currentUser.id ? thread.participantB : thread.participantA;
     }
 
     function getProfile(uid) {
@@ -882,7 +876,7 @@
 
     function buildChatPreview(thread) {
       if (thread.lastMessageText) {
-        const prefix = thread.lastSenderId === currentUser.uid ? "You: " : "";
+        const prefix = thread.lastSenderId === currentUser.id ? "You: " : "";
         return prefix + thread.lastMessageText;
       }
       if (thread.starterText) {
@@ -903,25 +897,41 @@
         if (requestDoc.requesterId) uids.push(requestDoc.requesterId);
       });
 
-      const unique = [...new Set(uids)];
+      const unique = [...new Set(uids)].filter(Boolean);
       const missing = unique.filter(uid => !publicProfilesMap.has(uid));
 
       if (!missing.length) return;
 
-      await Promise.all(
-        missing.map(async (uid) => {
-          try {
-            const snap = await getDoc(doc(db, "publicProfiles", uid));
-            if (snap.exists()) {
-              publicProfilesMap.set(uid, normalizeProfile({ id: snap.id, ...snap.data() }, uid));
-            } else {
+      const chunkSize = 100;
+      for (let i = 0; i < missing.length; i += chunkSize) {
+        const chunk = missing.slice(i, i + chunkSize);
+        const { data, error } = await supabase
+          .from("public_profiles")
+          .select("*")
+          .in("uid", chunk);
+
+        if (error) {
+          chunk.forEach(uid => {
+            if (!publicProfilesMap.has(uid)) {
               publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
             }
-          } catch {
+          });
+          continue;
+        }
+
+        const found = new Set();
+        (data || []).forEach(row => {
+          const profile = normalizeProfile(row, row.uid);
+          publicProfilesMap.set(profile.uid, profile);
+          found.add(profile.uid);
+        });
+
+        chunk.forEach(uid => {
+          if (!found.has(uid) && !publicProfilesMap.has(uid)) {
             publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
           }
-        })
-      );
+        });
+      }
     }
 
     function renderChats() {
@@ -975,6 +985,39 @@
       showList();
     }
 
+    async function findExistingThreadBetween(uidA, uidB) {
+      const { data: first, error: firstError } = await supabase
+        .from("chat_threads")
+        .select("*")
+        .eq("participant_a", uidA)
+        .eq("participant_b", uidB)
+        .limit(1);
+
+      if (firstError) throw firstError;
+      if (first && first.length) return normalizeThread(first[0], first[0].id);
+
+      const { data: second, error: secondError } = await supabase
+        .from("chat_threads")
+        .select("*")
+        .eq("participant_a", uidB)
+        .eq("participant_b", uidA)
+        .limit(1);
+
+      if (secondError) throw secondError;
+      if (second && second.length) return normalizeThread(second[0], second[0].id);
+
+      return null;
+    }
+
+    async function createNotificationSafe(payload) {
+      if (!payload?.to_user_id || payload.to_user_id === currentUser.id) return;
+      try {
+        await supabase.from("notifications").insert(payload);
+      } catch (err) {
+        console.error("Notification error:", err);
+      }
+    }
+
     async function acceptMessageRequest(requestModel, acceptBtn, declineBtn) {
       if (!currentUser) return;
 
@@ -983,47 +1026,81 @@
       setPageMessage("");
 
       try {
-        const requestRef = doc(db, "message_requests", requestModel.id);
+        const { error: requestUpdateError } = await supabase
+          .from("message_requests")
+          .update({
+            status: "accepted",
+            accepted_at: nowIso(),
+            accepted_by: currentUser.id
+          })
+          .eq("id", requestModel.id);
 
-        await updateDoc(requestRef, {
-          status: "accepted",
-          acceptedAt: serverTimestamp(),
-          acceptedBy: currentUser.uid
-        });
+        if (requestUpdateError) throw requestUpdateError;
 
         const pair = getSortedPair(requestModel.requesterId, requestModel.targetId);
-        const threadId = `${pair[0]}__${pair[1]}`;
-        const threadRef = doc(db, "chat_threads", threadId);
+        let thread = await findExistingThreadBetween(pair[0], pair[1]);
 
-        await setDoc(threadRef, {
-          type: "direct",
-          status: "accepted",
-          participantA: pair[0],
-          participantB: pair[1],
-          createdBy: currentUser.uid,
-          acceptedFromRequestId: requestModel.id,
-          starterText: requestModel.text || "",
-          starterFrom: requestModel.requesterId,
-          lastMessageAt: serverTimestamp()
-        }, { merge: true });
+        if (thread) {
+          const updatePayload = {
+            status: "accepted",
+            accepted_from_request_id: requestModel.id,
+            last_message_at: nowIso()
+          };
 
-        if (requestModel.requesterId !== currentUser.uid) {
-          try {
-            await addDoc(collection(db, "notifications", requestModel.requesterId, "items"), {
-              type: "message_request_accepted",
-              title: "Message request accepted",
-              text: "Your message request was accepted.",
-              fromUserId: currentUser.uid,
-              toUserId: requestModel.requesterId,
-              threadId,
-              createdAt: serverTimestamp(),
-              isRead: false
-            });
-          } catch {}
+          if (requestModel.text) {
+            updatePayload.starter_text = thread.starterText || requestModel.text;
+            updatePayload.starter_from = thread.starterFrom || requestModel.requesterId;
+            updatePayload.last_message_text = thread.lastMessageText || requestModel.text;
+            updatePayload.last_sender_id = thread.lastSenderId || requestModel.requesterId;
+          }
+
+          const { error: threadUpdateError } = await supabase
+            .from("chat_threads")
+            .update(updatePayload)
+            .eq("id", thread.id);
+
+          if (threadUpdateError) throw threadUpdateError;
+        } else {
+          const insertPayload = {
+            type: "direct",
+            status: "accepted",
+            participant_a: pair[0],
+            participant_b: pair[1],
+            created_by: currentUser.id,
+            accepted_from_request_id: requestModel.id,
+            starter_text: requestModel.text || "",
+            starter_from: requestModel.requesterId || "",
+            last_message_text: requestModel.text || "",
+            last_sender_id: requestModel.requesterId || "",
+            created_at: nowIso(),
+            last_message_at: nowIso()
+          };
+
+          const { data: newThread, error: threadInsertError } = await supabase
+            .from("chat_threads")
+            .insert(insertPayload)
+            .select("*")
+            .single();
+
+          if (threadInsertError) throw threadInsertError;
+          thread = normalizeThread(newThread, newThread.id);
+        }
+
+        if (requestModel.requesterId !== currentUser.id) {
+          await createNotificationSafe({
+            type: "message_request_accepted",
+            title: "Message request accepted",
+            text: "Your message request was accepted.",
+            from_user_id: currentUser.id,
+            to_user_id: requestModel.requesterId,
+            thread_id: thread.id,
+            created_at: nowIso(),
+            is_read: false
+          });
         }
 
         setPageMessage("Request accepted. Opening chat...", "ok");
-        window.location.href = `chat.html?threadId=${encodeURIComponent(threadId)}`;
+        window.location.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
       } catch (err) {
         console.error(err);
         setPageMessage(err?.message || "Could not accept request.", "err");
@@ -1038,13 +1115,18 @@
       setPageMessage("");
 
       try {
-        await updateDoc(doc(db, "message_requests", requestModel.id), {
-          status: "declined",
-          declinedAt: serverTimestamp(),
-          declinedBy: currentUser.uid
-        });
+        const { error } = await supabase
+          .from("message_requests")
+          .update({
+            status: "declined",
+            declined_at: nowIso(),
+            declined_by: currentUser.id
+          })
+          .eq("id", requestModel.id);
 
+        if (error) throw error;
         setPageMessage("Request declined.", "ok");
+        await fetchInboxData(false);
       } catch (err) {
         console.error(err);
         setPageMessage(err?.message || "Could not decline request.", "err");
@@ -1128,37 +1210,75 @@
       }
     }
 
+    async function fetchInboxData(showSpinner = true) {
+      if (!currentUser) return;
+
+      if (showSpinner) {
+        setPageMessage("");
+        showLoading("Loading inbox...");
+      }
+
+      const [chatARes, chatBRes, requestRes] = await Promise.all([
+        supabase.from("chat_threads").select("*").eq("participant_a", currentUser.id),
+        supabase.from("chat_threads").select("*").eq("participant_b", currentUser.id),
+        supabase.from("message_requests").select("*").eq("target_id", currentUser.id).eq("status", "pending")
+      ]);
+
+      if (chatARes.error) throw chatARes.error;
+      if (chatBRes.error) throw chatBRes.error;
+      if (requestRes.error) throw requestRes.error;
+
+      threadMapA = rowsToMap(chatARes.data || [], normalizeThread);
+      threadMapB = rowsToMap(chatBRes.data || [], normalizeThread);
+      requestDocsMap = rowsToMap(requestRes.data || [], normalizeRequest);
+
+      await renderCurrentTab();
+    }
+
     function clearLiveListeners() {
-      unsubscribers.forEach(fn => {
-        try { fn(); } catch {}
+      realtimeChannels.forEach(ch => {
+        try { supabase.removeChannel(ch); } catch {}
       });
-      unsubscribers = [];
+      realtimeChannels = [];
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        fetchInboxData(false).catch(err => {
+          console.error("Inbox live refresh error:", err);
+        });
+      }, 250);
+    }
+
+    function startLiveListeners() {
+      clearLiveListeners();
+      if (!currentUser) return;
+
+      const tables = ["chat_threads", "message_requests", "public_profiles"];
+
+      tables.forEach(table => {
+        const channel = supabase
+          .channel(`inbox-live-${table}-${Math.random().toString(36).slice(2)}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table },
+            () => scheduleRefresh()
+          )
+          .subscribe();
+
+        realtimeChannels.push(channel);
+      });
     }
 
     async function bootstrapInbox() {
       if (!currentUser || isBootstrapping) return;
       isBootstrapping = true;
 
-      clearLiveListeners();
       setPageMessage("");
-      showLoading("Loading inbox...");
 
       try {
-        const [
-          chatASnap,
-          chatBSnap,
-          requestSnap
-        ] = await Promise.all([
-          getDocs(query(collection(db, "chat_threads"), where("participantA", "==", currentUser.uid))),
-          getDocs(query(collection(db, "chat_threads"), where("participantB", "==", currentUser.uid))),
-          getDocs(query(collection(db, "message_requests"), where("targetId", "==", currentUser.uid), where("status", "==", "pending")))
-        ]);
-
-        threadMapA = mapFromSnapshot(chatASnap, normalizeThread);
-        threadMapB = mapFromSnapshot(chatBSnap, normalizeThread);
-        requestDocsMap = mapFromSnapshot(requestSnap, normalizeRequest);
-
-        await renderCurrentTab();
+        await fetchInboxData(true);
         startLiveListeners();
       } catch (err) {
         console.error(err);
@@ -1167,45 +1287,6 @@
       }
 
       isBootstrapping = false;
-    }
-
-    function startLiveListeners() {
-      if (!currentUser) return;
-
-      const subA = onSnapshot(
-        query(collection(db, "chat_threads"), where("participantA", "==", currentUser.uid)),
-        async (snap) => {
-          threadMapA = mapFromSnapshot(snap, normalizeThread);
-          await renderCurrentTab();
-        },
-        (err) => {
-          console.error(err);
-        }
-      );
-
-      const subB = onSnapshot(
-        query(collection(db, "chat_threads"), where("participantB", "==", currentUser.uid)),
-        async (snap) => {
-          threadMapB = mapFromSnapshot(snap, normalizeThread);
-          await renderCurrentTab();
-        },
-        (err) => {
-          console.error(err);
-        }
-      );
-
-      const subRequests = onSnapshot(
-        query(collection(db, "message_requests"), where("targetId", "==", currentUser.uid), where("status", "==", "pending")),
-        async (snap) => {
-          requestDocsMap = mapFromSnapshot(snap, normalizeRequest);
-          await renderCurrentTab();
-        },
-        (err) => {
-          console.error(err);
-        }
-      );
-
-      unsubscribers.push(subA, subB, subRequests);
     }
 
     function openInfoModal() {
@@ -1228,25 +1309,41 @@
     });
 
     refreshBtn.addEventListener("click", async () => {
-      await bootstrapInbox();
-      setPageMessage("Inbox refreshed.", "ok");
+      try {
+        await fetchInboxData(true);
+        setPageMessage("Inbox refreshed.", "ok");
+      } catch (err) {
+        console.error(err);
+        setPageMessage("Could not refresh inbox.", "err");
+      }
     });
 
     chatsTabBtn.addEventListener("click", () => setTab("chats"));
     requestsTabBtn.addEventListener("click", () => setTab("requests"));
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         clearLiveListeners();
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = authData.user;
       await bootstrapInbox();
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          clearLiveListeners();
+          window.location.href = "login.html";
+        }
+      });
+    }
 
     window.addEventListener("beforeunload", clearLiveListeners);
+
+    initPage();
   </script>
 </body>
 </html>
