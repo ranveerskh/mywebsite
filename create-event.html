@@ -600,352 +600,597 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      addDoc,
-      setDoc,
-      collection,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { supabase } from "./supabase.js";
 
-    const loading = document.getElementById("loading");
-    const content = document.getElementById("content");
-    const eventForm = document.getElementById("eventForm");
-    const saveBtn = document.getElementById("saveBtn");
-    const message = document.getElementById("message");
+  const loading = document.getElementById("loading");
+  const content = document.getElementById("content");
+  const eventForm = document.getElementById("eventForm");
+  const saveBtn = document.getElementById("saveBtn");
+  const message = document.getElementById("message");
 
-    const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
-    const useGpsBtn = document.getElementById("useGpsBtn");
+  const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
+  const useGpsBtn = document.getElementById("useGpsBtn");
 
-    const profileCityText = document.getElementById("profileCityText");
-    const profileProvinceText = document.getElementById("profileProvinceText");
-    const profileCountryText = document.getElementById("profileCountryText");
+  const profileCityText = document.getElementById("profileCityText");
+  const profileProvinceText = document.getElementById("profileProvinceText");
+  const profileCountryText = document.getElementById("profileCountryText");
 
-    const titleInput = document.getElementById("title");
-    const visibilityInput = document.getElementById("visibility");
-    const descriptionInput = document.getElementById("description");
-    const cityInput = document.getElementById("city");
-    const provinceInput = document.getElementById("province");
-    const countryInput = document.getElementById("country");
-    const venueInput = document.getElementById("venue");
-    const addressInput = document.getElementById("address");
-    const latInput = document.getElementById("lat");
-    const lngInput = document.getElementById("lng");
-    const dateInput = document.getElementById("date");
-    const timeInput = document.getElementById("time");
-    const imageURLInput = document.getElementById("imageURL");
+  const titleInput = document.getElementById("title");
+  const visibilityInput = document.getElementById("visibility");
+  const descriptionInput = document.getElementById("description");
+  const cityInput = document.getElementById("city");
+  const provinceInput = document.getElementById("province");
+  const countryInput = document.getElementById("country");
+  const venueInput = document.getElementById("venue");
+  const addressInput = document.getElementById("address");
+  const latInput = document.getElementById("lat");
+  const lngInput = document.getElementById("lng");
+  const dateInput = document.getElementById("date");
+  const timeInput = document.getElementById("time");
+  const imageURLInput = document.getElementById("imageURL");
 
-    let currentUser = null;
-    let currentProfile = null;
+  let currentUser = null;
+  let currentProfile = null;
 
-    function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  function getStoredTheme() {
+    return localStorage.getItem("bwTheme") || "dark";
+  }
+
+  function resolveTheme(themeValue) {
+    if (themeValue === "system") {
+      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    return themeValue === "light" ? "light" : "dark";
+  }
+
+  function applyTheme(themeValue) {
+    document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+  }
+
+  applyTheme(getStoredTheme());
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === "bwTheme") applyTheme(getStoredTheme());
+  });
+
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+  }
+
+  function showMessage(text = "", type = "") {
+    message.textContent = text;
+    message.className = `message ${type}`;
+  }
+
+  function num(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function titleText(value) {
+    return String(value || "").trim();
+  }
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function countryAliases(country) {
+    const c = normalizeText(country);
+    if (!c) return "";
+    const aliases = [c];
+    if (c === "united states") aliases.push("usa", "us", "america");
+    if (c === "united kingdom") aliases.push("uk", "britain");
+    if (c === "canada") aliases.push("ca");
+    return aliases.join(" ");
+  }
+
+  function buildLocationSearch(city, province, country) {
+    return [
+      titleText(city),
+      titleText(province),
+      titleText(country),
+      countryAliases(country)
+    ]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
+    .toLowerCase();
+  }
+
+  function readLat(obj) {
+    return num(
+      obj?.lat ??
+      obj?.latitude ??
+      obj?.location?.lat ??
+      obj?.location?.latitude ??
+      obj?.coords?.lat ??
+      obj?.coords?.latitude
+    );
+  }
+
+  function readLng(obj) {
+    return num(
+      obj?.lng ??
+      obj?.lon ??
+      obj?.long ??
+      obj?.longitude ??
+      obj?.location?.lng ??
+      obj?.location?.lon ??
+      obj?.location?.long ??
+      obj?.location?.longitude ??
+      obj?.coords?.lng ??
+      obj?.coords?.longitude
+    );
+  }
+
+  function getField(raw, names) {
+    for (const name of names) {
+      const value = raw?.[name];
+      if (value != null && String(value).trim()) return String(value).trim();
+    }
+    return "";
+  }
+
+  function normalizeProfile(raw, fallbackUid = "") {
+    const d = raw || {};
+    return {
+      uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+      displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+      username: getField(d, ["username", "handle", "user_name", "userName"]),
+      city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+      province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+      country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+      lat: readLat(d),
+      lng: readLng(d)
+    };
+  }
+
+  function applyProfileInfo() {
+    profileCityText.textContent = currentProfile?.city || "-";
+    profileProvinceText.textContent = currentProfile?.province || "-";
+    profileCountryText.textContent = currentProfile?.country || "-";
+  }
+
+  function useProfileLocation() {
+    if (!currentProfile) return;
+
+    cityInput.value = currentProfile.city || "";
+    provinceInput.value = currentProfile.province || "";
+    countryInput.value = currentProfile.country || "";
+
+    if (currentProfile.lat != null) latInput.value = String(currentProfile.lat);
+    if (currentProfile.lng != null) lngInput.value = String(currentProfile.lng);
+
+    showMessage("Profile location filled.", "success");
+  }
+
+  async function useBrowserGps() {
+    if (!navigator.geolocation) {
+      showMessage("Browser GPS is not supported on this device.", "error");
+      return;
     }
 
-    function resolveTheme(themeValue) {
-      if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-      }
-      return themeValue === "light" ? "light" : "dark";
-    }
+    showMessage("Checking browser GPS...", "success");
+    useGpsBtn.disabled = true;
 
-    function applyTheme(themeValue) {
-      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-    }
-
-    applyTheme(getStoredTheme());
-
-    window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          latInput.value = String(position.coords.latitude);
+          lngInput.value = String(position.coords.longitude);
+          showMessage("GPS coordinates filled.", "success");
+          resolve();
+        },
+        () => {
+          showMessage("Could not get browser GPS.", "error");
+          resolve();
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
     });
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", () => {
-        if (getStoredTheme() === "system") applyTheme("system");
-      });
+    useGpsBtn.disabled = false;
+  }
+
+  useProfileLocationBtn.addEventListener("click", useProfileLocation);
+  useGpsBtn.addEventListener("click", useBrowserGps);
+
+  async function fetchProfileRowByUidOrId(table, uid) {
+    const columns = ["uid", "id", "user_id", "userId"];
+
+    for (const column of columns) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, uid)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch {}
     }
 
-    function showMessage(text = "", type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    return null;
+  }
+
+  async function loadCurrentUser() {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data?.user) {
+      window.location.href = "login.html";
+      return;
     }
 
-    function num(v) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
+    currentUser = data.user;
+
+    try {
+      const [userRow, publicRow] = await Promise.all([
+        fetchProfileRowByUidOrId("users", currentUser.id),
+        fetchProfileRowByUidOrId("public_profiles", currentUser.id)
+      ]);
+
+      currentProfile = normalizeProfile({
+        ...(publicRow || {}),
+        ...(userRow || {}),
+        uid: currentUser.id
+      }, currentUser.id);
+
+      applyProfileInfo();
+      useProfileLocation();
+
+      loading.classList.add("hidden");
+      content.classList.remove("hidden");
+    } catch (err) {
+      console.error(err);
+      loading.textContent = "Could not load profile.";
     }
 
-    function titleText(value) {
-      return String(value || "").trim();
-    }
-
-    function normalizeText(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function countryAliases(country) {
-      const c = normalizeText(country);
-      if (!c) return "";
-      const aliases = [c];
-      if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
-      if (c === "canada") aliases.push("ca");
-      return aliases.join(" ");
-    }
-
-    function buildLocationSearch(city, province, country) {
-      return [
-        titleText(city),
-        titleText(province),
-        titleText(country),
-        countryAliases(country)
-      ]
-      .filter(Boolean)
-      .join(" ")
-      .trim()
-      .toLowerCase();
-    }
-
-    function readLat(obj) {
-      return num(
-        obj?.lat ??
-        obj?.latitude ??
-        obj?.location?.lat ??
-        obj?.location?.latitude ??
-        obj?.coords?.lat ??
-        obj?.coords?.latitude
-      );
-    }
-
-    function readLng(obj) {
-      return num(
-        obj?.lng ??
-        obj?.lon ??
-        obj?.long ??
-        obj?.longitude ??
-        obj?.location?.lng ??
-        obj?.location?.lon ??
-        obj?.location?.long ??
-        obj?.location?.longitude ??
-        obj?.coords?.lng ??
-        obj?.coords?.longitude
-      );
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-      return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        city: d.city || d.locationCity || d.currentCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
-        country: d.country || d.locationCountry || d.currentCountry || "",
-        lat: readLat(d),
-        lng: readLng(d)
-      };
-    }
-
-    function applyProfileInfo() {
-      profileCityText.textContent = currentProfile?.city || "-";
-      profileProvinceText.textContent = currentProfile?.province || "-";
-      profileCountryText.textContent = currentProfile?.country || "-";
-    }
-
-    function useProfileLocation() {
-      if (!currentProfile) return;
-      cityInput.value = currentProfile.city || "";
-      provinceInput.value = currentProfile.province || "";
-      countryInput.value = currentProfile.country || "";
-      if (currentProfile.lat != null) latInput.value = currentProfile.lat;
-      if (currentProfile.lng != null) lngInput.value = currentProfile.lng;
-      showMessage("Profile location filled.", "success");
-    }
-
-    async function useBrowserGps() {
-      if (!navigator.geolocation) {
-        showMessage("Browser GPS is not supported on this device.", "error");
-        return;
-      }
-
-      showMessage("Checking browser GPS...", "success");
-      useGpsBtn.disabled = true;
-
-      await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            latInput.value = String(position.coords.latitude);
-            lngInput.value = String(position.coords.longitude);
-            showMessage("GPS coordinates filled.", "success");
-            resolve();
-          },
-          () => {
-            showMessage("Could not get browser GPS.", "error");
-            resolve();
-          },
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-        );
-      });
-
-      useGpsBtn.disabled = false;
-    }
-
-    useProfileLocationBtn.addEventListener("click", useProfileLocation);
-    useGpsBtn.addEventListener("click", useBrowserGps);
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (!session?.user) {
         window.location.href = "login.html";
-        return;
-      }
-
-      currentUser = user;
-
-      try {
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(doc(db, "users", user.uid)),
-          getDoc(doc(db, "publicProfiles", user.uid))
-        ]);
-
-        currentProfile = normalizeProfile({
-          ...(publicSnap.exists() ? publicSnap.data() : {}),
-          ...(userSnap.exists() ? userSnap.data() : {}),
-          uid: user.uid
-        }, user.uid);
-
-        applyProfileInfo();
-        useProfileLocation();
-
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
-      } catch (err) {
-        console.error(err);
-        loading.textContent = "Could not load profile.";
       }
     });
+  }
 
-    eventForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!currentUser || !currentProfile) return;
+  async function insertEventWithFallback(payloadVariants) {
+    let lastError = null;
 
-      const title = titleInput.value.trim();
-      const visibility = visibilityInput.value || "public";
-      const description = descriptionInput.value.trim();
-      const city = cityInput.value.trim();
-      const province = provinceInput.value.trim();
-      const country = countryInput.value.trim();
-      const venue = venueInput.value.trim();
-      const address = addressInput.value.trim();
-      const date = dateInput.value.trim();
-      const time = timeInput.value.trim();
-      const imageURL = imageURLInput.value.trim();
-      const latText = latInput.value.trim();
-      const lngText = lngInput.value.trim();
-
-      if (!title) {
-        showMessage("Event title is required.", "error");
-        return;
-      }
-      if (!description) {
-        showMessage("Description is required.", "error");
-        return;
-      }
-      if (!city || !province || !country) {
-        showMessage("City, province/state and country are required.", "error");
-        return;
-      }
-      if (!date) {
-        showMessage("Date is required.", "error");
-        return;
-      }
-      if (!time) {
-        showMessage("Time is required.", "error");
-        return;
-      }
-
-      const dt = new Date(`${date}T${time}`);
-      if (Number.isNaN(dt.getTime())) {
-        showMessage("Date or time is invalid.", "error");
-        return;
-      }
-
-      const lat = latText ? Number(latText) : null;
-      const lng = lngText ? Number(lngText) : null;
-
-      if (latText && !Number.isFinite(lat)) {
-        showMessage("Latitude must be a valid number.", "error");
-        return;
-      }
-      if (lngText && !Number.isFinite(lng)) {
-        showMessage("Longitude must be a valid number.", "error");
-        return;
-      }
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Creating...";
-      showMessage("");
-
+    for (const payload of payloadVariants) {
       try {
-        const ref = await addDoc(collection(db, "events"), {
-          title,
-          description,
-          visibility,
-          eventVisibility: visibility,
+        const { data, error } = await supabase
+          .from("events")
+          .insert(payload)
+          .select("id")
+          .single();
 
-          city,
-          locationCity: city,
-          province,
-          state: province,
-          region: province,
-          locationProvince: province,
-          country,
-          locationCountry: country,
-          locationSearch: buildLocationSearch(city, province, country),
-
-          venue,
-          spot: venue,
-          address,
-
-          date,
-          time,
-          imageURL,
-
-          lat,
-          lng,
-
-          creatorId: currentUser.uid,
-          creatorName: currentProfile.displayName || currentUser.displayName || "Member",
-          creatorUsername: currentProfile.username || "",
-
-          hidden: false,
-          hiddenByAdmin: false,
-          softDeleted: false,
-
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-
-        await setDoc(doc(db, "events", ref.id, "members", currentUser.uid), {
-          userId: currentUser.uid,
-          displayName: currentProfile.displayName || currentUser.displayName || "Member",
-          username: currentProfile.username || "",
-          joinedAt: serverTimestamp(),
-          creatorHost: true
-        }, { merge: true });
-
-        showMessage("Event created successfully.", "success");
-        window.location.href = `event.html?eventId=${encodeURIComponent(ref.id)}`;
+        if (!error && data?.id) return data;
+        lastError = error || lastError;
       } catch (err) {
-        console.error(err);
-        showMessage("Could not create event.", "error");
-        saveBtn.disabled = false;
-        saveBtn.textContent = "Create Event";
+        lastError = err;
       }
-    });
-  </script>
+    }
+
+    throw lastError || new Error("Could not create event.");
+  }
+
+  async function insertEventMemberWithFallback(payloadVariants) {
+    let lastError = null;
+
+    for (const payload of payloadVariants) {
+      try {
+        const { data, error } = await supabase
+          .from("event_members")
+          .insert(payload)
+          .select("id")
+          .maybeSingle();
+
+        if (!error) return data || null;
+        lastError = error || lastError;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error("Could not add host as event member.");
+  }
+
+  eventForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!currentUser || !currentProfile) return;
+
+    const title = titleInput.value.trim();
+    const visibility = visibilityInput.value || "public";
+    const description = descriptionInput.value.trim();
+    const city = cityInput.value.trim();
+    const province = provinceInput.value.trim();
+    const country = countryInput.value.trim();
+    const venue = venueInput.value.trim();
+    const address = addressInput.value.trim();
+    const date = dateInput.value.trim();
+    const time = timeInput.value.trim();
+    const imageURL = imageURLInput.value.trim();
+    const latText = latInput.value.trim();
+    const lngText = lngInput.value.trim();
+
+    if (!title) {
+      showMessage("Event title is required.", "error");
+      return;
+    }
+
+    if (!description) {
+      showMessage("Description is required.", "error");
+      return;
+    }
+
+    if (!city || !province || !country) {
+      showMessage("City, province/state and country are required.", "error");
+      return;
+    }
+
+    if (!date) {
+      showMessage("Date is required.", "error");
+      return;
+    }
+
+    if (!time) {
+      showMessage("Time is required.", "error");
+      return;
+    }
+
+    const dt = new Date(`${date}T${time}`);
+
+    if (Number.isNaN(dt.getTime())) {
+      showMessage("Date or time is invalid.", "error");
+      return;
+    }
+
+    const lat = latText ? Number(latText) : null;
+    const lng = lngText ? Number(lngText) : null;
+
+    if (latText && !Number.isFinite(lat)) {
+      showMessage("Latitude must be a valid number.", "error");
+      return;
+    }
+
+    if (lngText && !Number.isFinite(lng)) {
+      showMessage("Longitude must be a valid number.", "error");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Creating...";
+    showMessage("");
+
+    try {
+      const locationSearch = buildLocationSearch(city, province, country);
+      const eventDateTimeIso = dt.toISOString();
+      const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || "Member";
+      const creatorUsername = currentProfile.username || "";
+
+      const snakePayload = {
+        title,
+        description,
+        visibility,
+        event_visibility: visibility,
+
+        city,
+        location_city: city,
+        province,
+        state: province,
+        region: province,
+        location_province: province,
+        country,
+        location_country: country,
+        location_search: locationSearch,
+
+        venue,
+        spot: venue,
+        address,
+
+        date,
+        time,
+        event_at: eventDateTimeIso,
+        event_datetime: eventDateTimeIso,
+
+        image_url: imageURL,
+
+        lat,
+        lng,
+
+        creator_id: currentUser.id,
+        created_by: currentUser.id,
+        creator_name: creatorName,
+        creator_username: creatorUsername,
+
+        hidden: false,
+        hidden_by_admin: false,
+        soft_deleted: false,
+
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      const camelPayload = {
+        title,
+        description,
+        visibility,
+        eventVisibility: visibility,
+
+        city,
+        locationCity: city,
+        province,
+        state: province,
+        region: province,
+        locationProvince: province,
+        country,
+        locationCountry: country,
+        locationSearch,
+
+        venue,
+        spot: venue,
+        address,
+
+        date,
+        time,
+        eventAt: eventDateTimeIso,
+        eventDatetime: eventDateTimeIso,
+
+        imageURL,
+
+        lat,
+        lng,
+
+        creatorId: currentUser.id,
+        createdBy: currentUser.id,
+        creatorName,
+        creatorUsername,
+
+        hidden: false,
+        hiddenByAdmin: false,
+        softDeleted: false,
+
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+
+      const minimalSnakePayload = {
+        title,
+        description,
+        visibility,
+        city,
+        province,
+        country,
+        venue,
+        address,
+        date,
+        time,
+        event_at: eventDateTimeIso,
+        image_url: imageURL,
+        lat,
+        lng,
+        creator_id: currentUser.id,
+        created_by: currentUser.id,
+        status: "active",
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      const createdEvent = await insertEventWithFallback([
+        snakePayload,
+        camelPayload,
+        minimalSnakePayload
+      ]);
+
+      const eventId = createdEvent.id;
+
+      const memberSnakePayload = {
+        event_id: eventId,
+        user_id: currentUser.id,
+        display_name: creatorName,
+        username: creatorUsername,
+        role: "host",
+        creator_host: true,
+        joined_at: nowIso(),
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      const memberCamelPayload = {
+        eventId,
+        userId: currentUser.id,
+        displayName: creatorName,
+        username: creatorUsername,
+        role: "host",
+        creatorHost: true,
+        joinedAt: nowIso(),
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+
+      const memberMinimalPayload = {
+        event_id: eventId,
+        user_id: currentUser.id,
+        role: "host",
+        joined_at: nowIso()
+      };
+
+      await insertEventMemberWithFallback([
+        memberSnakePayload,
+        memberCamelPayload,
+        memberMinimalPayload
+      ]);
+
+      showMessage("Event created successfully.", "success");
+      window.location.href = `event.html?eventId=${encodeURIComponent(eventId)}`;
+    } catch (err) {
+      console.error(err);
+      showMessage(err?.message || "Could not create event.", "error");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Create Event";
+    }
+  });
+
+  loadCurrentUser();
+
+  /*
+    SUPABASE NEEDS FOR THIS PAGE:
+
+    TABLES:
+    - users: select
+    - public_profiles: select
+    - events: insert, select id after insert
+    - event_members: insert
+
+    IMPORTANT COLUMNS USED:
+    events:
+    - id
+    - title
+    - description
+    - visibility
+    - city
+    - province
+    - country
+    - venue
+    - address
+    - date
+    - time
+    - event_at
+    - image_url
+    - lat
+    - lng
+    - creator_id OR created_by
+    - creator_name
+    - creator_username
+    - hidden
+    - hidden_by_admin
+    - soft_deleted
+    - created_at
+    - updated_at
+
+    event_members:
+    - id
+    - event_id
+    - user_id
+    - display_name
+    - username
+    - role
+    - creator_host
+    - joined_at
+    - created_at
+
+    SHARE BUTTON:
+    - Not needed on this create page because this page does not display posts.
+    - We will add Share button on feed/profile/member/post detail where post cards appear.
+  */
+</script>
 </body>
 </html>
