@@ -556,25 +556,13 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      getDocs,
-      updateDoc,
-      deleteDoc,
-      addDoc,
-      setDoc,
-      collection,
-      writeBatch,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const refreshSummaryBtn = document.getElementById("refreshSummaryBtn");
     const refreshSectionBtn = document.getElementById("refreshSectionBtn");
 
+    const accessPanel = document.getElementById("accessPanel");
     const accessLoading = document.getElementById("accessLoading");
     const accessDenied = document.getElementById("accessDenied");
     const adminWrap = document.getElementById("adminWrap");
@@ -591,31 +579,46 @@
 
     let currentUser = null;
     let currentTab = "dashboard";
+
     let state = {
       placesFilter: "pending",
       reportsFilter: "open",
       schoolEdit: { source: "school_posts", id: null }
     };
 
+    const SCHOOL_SOURCES = ["school_posts", "school_lessons", "schoolLessons", "school"];
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
     }
+
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
       return themeValue === "light" ? "light" : "dark";
     }
+
     function applyTheme(themeValue) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
+
     applyTheme(getStoredTheme());
+
     window.addEventListener("storage", (e) => {
       if (e.key === "bwTheme") applyTheme(getStoredTheme());
     });
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (themeMediaQuery.addEventListener) {
+      themeMediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -634,13 +637,33 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
+    }
+
+    function val(obj, names, fallback = "") {
+      for (const name of names) {
+        const value = obj?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
     }
 
     function tsMs(ts) {
       if (!ts) return 0;
-      try { return ts.toDate().getTime(); } catch {}
+
+      try {
+        if (typeof ts === "object" && typeof ts.toDate === "function") {
+          return ts.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof ts === "object" && typeof ts.seconds === "number") {
+          return ts.seconds * 1000;
+        }
+      } catch {}
+
       try {
         const ms = new Date(ts).getTime();
         return Number.isFinite(ms) ? ms : 0;
@@ -649,38 +672,110 @@
       }
     }
 
+    function createdMs(item) {
+      return tsMs(
+        item?.created_at ??
+        item?.createdAt ??
+        item?.created ??
+        item?.timestamp ??
+        item?.updated_at ??
+        item?.updatedAt
+      );
+    }
+
     function fmtDate(ts) {
       if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); } catch {}
-      try { return new Date(ts).toLocaleString(); } catch {}
+
+      try {
+        if (typeof ts === "object" && typeof ts.toDate === "function") {
+          return ts.toDate().toLocaleString();
+        }
+      } catch {}
+
+      try {
+        if (typeof ts === "object" && typeof ts.seconds === "number") {
+          return new Date(ts.seconds * 1000).toLocaleString();
+        }
+      } catch {}
+
+      try {
+        const d = new Date(ts);
+        if (!Number.isNaN(d.getTime())) return d.toLocaleString();
+      } catch {}
+
       return "Just now";
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        bio: d.bio || d.about || d.description || "",
-        verified: !!(d.verified || d.isVerified),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted
+        uid: val(d, ["uid", "id", "user_id", "userId"], fallbackUid || ""),
+        displayName: val(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member"),
+        username: val(d, ["username", "handle", "user_name", "userName"], ""),
+        photoURL: val(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "userPhotoURL"], ""),
+        bio: val(d, ["bio", "about", "description"], ""),
+        verified: !!val(d, ["verified", "is_verified", "isVerified"], false),
+        moderationStatus: val(d, ["moderation_status", "moderationStatus", "status"], ""),
+        isHiddenByAdmin: !!val(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
+        softDeleted: !!val(d, ["soft_deleted", "softDeleted"], false)
       };
+    }
+
+    async function selectAll(table) {
+      const { data, error } = await supabase.from(table).select("*");
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function selectAllSafe(table) {
+      try {
+        return await selectAll(table);
+      } catch (err) {
+        console.warn(`Could not load ${table}`, err?.message || err);
+        return [];
+      }
+    }
+
+    async function selectRowByColumn(table, column, value) {
+      if (!value) return null;
+
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .eq(column, value)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data || null;
+    }
+
+    async function selectRowFlexible(table, uid) {
+      const columns = ["id", "uid", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const row = await selectRowByColumn(table, column, uid);
+          if (row) return row;
+        } catch (err) {
+          console.warn(`Flexible select skipped ${table}.${column}`, err?.message || err);
+        }
+      }
+
+      return null;
     }
 
     async function getProfile(uid) {
       if (!uid) return normalizeProfile({}, "");
+
       try {
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(doc(db, "users", uid)),
-          getDoc(doc(db, "publicProfiles", uid))
+        const [userRow, publicRow] = await Promise.all([
+          selectRowFlexible("users", uid),
+          selectRowFlexible("public_profiles", uid)
         ]);
+
         return normalizeProfile({
-          ...(publicSnap.exists() ? publicSnap.data() : {}),
-          ...(userSnap.exists() ? userSnap.data() : {}),
+          ...(publicRow || {}),
+          ...(userRow || {}),
           uid
         }, uid);
       } catch {
@@ -689,32 +784,159 @@
     }
 
     async function ensureAdmin(uid) {
-      const snap = await getDoc(doc(db, "admins", uid));
-      return snap.exists();
+      const columns = ["id", "uid", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const row = await selectRowByColumn("admins", column, uid);
+          if (row) return true;
+        } catch (err) {
+          console.warn(`Admin check skipped admins.${column}`, err?.message || err);
+        }
+      }
+
+      return false;
+    }
+
+    async function insertWithFallback(table, payloadVariants = []) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function updateByIdWithFallback(table, id, payloadVariants = []) {
+      let lastError = null;
+      const idColumns = ["id", "uid", "user_id", "userId"];
+
+      for (const idColumn of idColumns) {
+        for (const payload of payloadVariants) {
+          try {
+            const { data, error } = await supabase
+              .from(table)
+              .update(payload)
+              .eq(idColumn, id)
+              .select();
+
+            if (!error) return data || [];
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    async function deleteById(table, id) {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    }
+
+    async function upsertByIdWithFallback(table, id, payloadVariants = []) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .upsert({ id, ...payload }, { onConflict: "id" })
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      try {
+        return await updateByIdWithFallback(table, id, payloadVariants);
+      } catch (err) {
+        lastError = err;
+      }
+
+      throw lastError || new Error(`Could not upsert ${table}.`);
     }
 
     async function logAdminAction(action, payload = {}) {
+      if (!currentUser?.id) return;
+
+      const snakePayload = {
+        action,
+        admin_uid: currentUser.id,
+        admin_id: currentUser.id,
+        target_id: payload.targetId || payload.target_id || "",
+        target_user_id: payload.targetUserId || payload.target_user_id || "",
+        target_type: payload.targetType || payload.target_type || "",
+        report_id: payload.reportId || payload.report_id || "",
+        source: payload.source || "",
+        created_at: nowIso()
+      };
+
+      const camelPayload = {
+        action,
+        adminUid: currentUser.id,
+        adminId: currentUser.id,
+        targetId: payload.targetId || payload.target_id || "",
+        targetUserId: payload.targetUserId || payload.target_user_id || "",
+        targetType: payload.targetType || payload.target_type || "",
+        reportId: payload.reportId || payload.report_id || "",
+        source: payload.source || "",
+        createdAt: nowIso()
+      };
+
+      const minimalPayload = {
+        action,
+        admin_uid: currentUser.id,
+        created_at: nowIso()
+      };
+
       try {
-        await addDoc(collection(db, "moderation_history"), {
-          action,
-          adminUid: currentUser.uid,
-          ...payload,
-          createdAt: serverTimestamp()
-        });
-      } catch {}
+        await insertWithFallback("moderation_history", [
+          snakePayload,
+          camelPayload,
+          minimalPayload
+        ]);
+      } catch (err) {
+        console.warn("Could not log admin action:", err?.message || err);
+      }
     }
 
     function setActiveTab(tab) {
       currentTab = tab;
+
       document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
+
       sectionNameChip.textContent =
         tab === "dashboard" ? "Dashboard" :
         tab === "places" ? "Places" :
         tab === "reports" ? "Reports" :
         tab === "school" ? "School" :
         tab === "verification" ? "Verification" : "History";
+
       loadSection(tab);
     }
 
@@ -732,27 +954,35 @@
     });
 
     async function loadSummary() {
-      const [placesSnap, reportsSnap, verificationSnap, historySnap] = await Promise.all([
-        getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "reports")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }))
+      const [places, reports, verifications, history] = await Promise.all([
+        selectAllSafe("nearby_places"),
+        selectAllSafe("reports"),
+        selectAllSafe("verification_requests"),
+        selectAllSafe("moderation_history")
       ]);
 
-      const places = placesSnap.docs.map(d => d.data());
-      const reports = reportsSnap.docs.map(d => d.data());
-      const verifications = verificationSnap.docs.map(d => d.data());
-
       sumPlaces.textContent = String(
-        places.filter(p => String(p.status || "").toLowerCase() === "pending" || p.pending === true || p.approved !== true).length
+        places.filter(p => {
+          const status = String(val(p, ["status"], "")).toLowerCase();
+          return status === "pending" || p.pending === true || p.approved !== true;
+        }).length
       );
+
       sumReports.textContent = String(
-        reports.filter(r => !["resolved", "closed", "done"].includes(String(r.status || "").toLowerCase())).length
+        reports.filter(r => {
+          const status = String(val(r, ["status"], "")).toLowerCase();
+          return !["resolved", "closed", "done"].includes(status);
+        }).length
       );
+
       sumVerification.textContent = String(
-        verifications.filter(v => String(v.status || "pending").toLowerCase() === "pending").length
+        verifications.filter(v => {
+          const status = String(val(v, ["status"], "pending")).toLowerCase();
+          return status === "pending";
+        }).length
       );
-      sumHistory.textContent = String(historySnap.docs.length);
+
+      sumHistory.textContent = String(history.length);
     }
 
     async function loadSection(tab, force = false) {
@@ -769,7 +999,7 @@
         else if (tab === "history") await loadHistory();
       } catch (err) {
         console.error(err);
-        sectionContent.innerHTML = `<div class="empty-box">Could not load this section.</div>`;
+        sectionContent.innerHTML = `<div class="empty-box">Could not load this section.<br>${escapeHtml(err?.message || "")}</div>`;
       }
 
       setSectionLoading(false);
@@ -777,25 +1007,33 @@
     }
 
     async function loadDashboard() {
-      const [placesSnap, reportsSnap, verificationSnap, historySnap] = await Promise.all([
-        getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "reports")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] })),
-        getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }))
+      const [placesRaw, reportsRaw, verificationsRaw, historyRaw] = await Promise.all([
+        selectAllSafe("nearby_places"),
+        selectAllSafe("reports"),
+        selectAllSafe("verification_requests"),
+        selectAllSafe("moderation_history")
       ]);
 
-      const places = placesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
-      const reports = reportsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
-      const verifications = verificationSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
-      const history = historySnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const places = placesRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
+      const reports = reportsRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
+      const verifications = verificationsRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
+      const history = historyRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
 
-      const pendingPlaces = places.filter(p => String(p.status || "").toLowerCase() === "pending" || p.pending === true || p.approved !== true).slice(0, 5);
-      const openReports = reports.filter(r => !["resolved", "closed", "done"].includes(String(r.status || "").toLowerCase())).slice(0, 5);
-      const pendingVerification = verifications.filter(v => String(v.status || "pending").toLowerCase() === "pending").slice(0, 5);
+      const pendingPlaces = places.filter(p => {
+        const status = String(val(p, ["status"], "")).toLowerCase();
+        return status === "pending" || p.pending === true || p.approved !== true;
+      }).slice(0, 5);
+
+      const openReports = reports.filter(r => {
+        const status = String(val(r, ["status"], "")).toLowerCase();
+        return !["resolved", "closed", "done"].includes(status);
+      }).slice(0, 5);
+
+      const pendingVerification = verifications.filter(v => {
+        const status = String(val(v, ["status"], "pending")).toLowerCase();
+        return status === "pending";
+      }).slice(0, 5);
+
       const recentHistory = history.slice(0, 8);
 
       sectionContent.innerHTML = `
@@ -807,8 +1045,8 @@
             <div class="card-title">Pending Places</div>
             ${pendingPlaces.length ? pendingPlaces.map(item => `
               <div class="meta-item">
-                <strong>${escapeHtml(item.name || item.title || "Unnamed Place")}</strong>
-                ${escapeHtml(item.city || "No city")} • ${escapeHtml(item.category || "General")}
+                <strong>${escapeHtml(val(item, ["name", "title", "place_name", "placeName"], "Unnamed Place"))}</strong>
+                ${escapeHtml(val(item, ["city", "location_city", "locationCity"], "No city"))} • ${escapeHtml(val(item, ["category"], "General"))}
               </div>
             `).join("") : `<div class="empty-box">No pending places.</div>`}
             <div class="inline-actions">
@@ -820,8 +1058,8 @@
             <div class="card-title">Open Reports</div>
             ${openReports.length ? openReports.map(item => `
               <div class="meta-item">
-                <strong>${escapeHtml(item.targetType || item.type || "Report")}</strong>
-                ${escapeHtml(item.reason || item.title || "No reason provided")}
+                <strong>${escapeHtml(val(item, ["target_type", "targetType", "type"], "Report"))}</strong>
+                ${escapeHtml(val(item, ["reason", "title", "description", "text"], "No reason provided"))}
               </div>
             `).join("") : `<div class="empty-box">No open reports.</div>`}
             <div class="inline-actions">
@@ -833,8 +1071,8 @@
             <div class="card-title">Pending Verification</div>
             ${pendingVerification.length ? pendingVerification.map(item => `
               <div class="meta-item">
-                <strong>${escapeHtml(item.displayName || item.fullName || item.username || item.id || "Request")}</strong>
-                ${escapeHtml(item.status || "pending")}
+                <strong>${escapeHtml(val(item, ["display_name", "displayName", "full_name", "fullName", "username", "id"], "Request"))}</strong>
+                ${escapeHtml(val(item, ["status"], "pending"))}
               </div>
             `).join("") : `<div class="empty-box">No pending verification.</div>`}
             <div class="inline-actions">
@@ -846,8 +1084,8 @@
             <div class="card-title">Recent History</div>
             ${recentHistory.length ? recentHistory.map(item => `
               <div class="meta-item">
-                <strong>${escapeHtml(item.action || "Action")}</strong>
-                ${escapeHtml(fmtDate(item.createdAt))}
+                <strong>${escapeHtml(val(item, ["action"], "Action"))}</strong>
+                ${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}
               </div>
             `).join("") : `<div class="empty-box">No history yet.</div>`}
             <div class="inline-actions">
@@ -863,12 +1101,12 @@
     }
 
     async function loadPlaces() {
-      const snap = await getDocs(collection(db, "nearby_places")).catch(() => ({ docs: [] }));
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const docs = (await selectAllSafe("nearby_places"))
+        .map(d => ({ ...d }))
+        .sort((a, b) => createdMs(b) - createdMs(a));
 
       const filtered = docs.filter(item => {
-        const status = String(item.status || "").toLowerCase();
+        const status = String(val(item, ["status"], "")).toLowerCase();
         const isPending = status === "pending" || item.pending === true || item.approved !== true;
         const isApproved = item.approved === true || status === "approved";
         const isRejected = status === "rejected" || item.rejected === true;
@@ -892,37 +1130,39 @@
 
         <div class="list">
           ${filtered.length ? filtered.map(item => {
-            const status = String(item.status || "").toLowerCase();
+            const status = String(val(item, ["status"], "")).toLowerCase();
             const statusClass = item.approved === true || status === "approved"
               ? "green" : status === "rejected" || item.rejected === true
               ? "red" : "yellow";
 
+            const id = val(item, ["id"], "");
+
             return `
               <div class="card">
                 <div class="card-top">
-                  <div class="card-title">${escapeHtml(item.name || item.title || "Unnamed Place")}</div>
-                  <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+                  <div class="card-title">${escapeHtml(val(item, ["name", "title", "place_name", "placeName"], "Unnamed Place"))}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
                 </div>
 
                 <div class="badge-row">
-                  <span class="badge ${statusClass}">${escapeHtml(item.status || (item.approved ? "approved" : "pending"))}</span>
-                  <span class="badge blue">${escapeHtml(item.city || "No city")}</span>
-                  <span class="badge purple">${escapeHtml(item.category || "General")}</span>
+                  <span class="badge ${statusClass}">${escapeHtml(val(item, ["status"], item.approved ? "approved" : "pending"))}</span>
+                  <span class="badge blue">${escapeHtml(val(item, ["city", "location_city", "locationCity"], "No city"))}</span>
+                  <span class="badge purple">${escapeHtml(val(item, ["category"], "General"))}</span>
                 </div>
 
                 <div class="meta-grid">
-                  <div class="meta-item"><strong>Address</strong>${escapeHtml(item.address || "Not added")}</div>
-                  <div class="meta-item"><strong>Website</strong>${escapeHtml(item.website || "Not added")}</div>
-                  <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(item.creatorName || item.createdBy || "Unknown")}</div>
+                  <div class="meta-item"><strong>Address</strong>${escapeHtml(val(item, ["address"], "Not added"))}</div>
+                  <div class="meta-item"><strong>Website</strong>${escapeHtml(val(item, ["website", "url", "link"], "Not added"))}</div>
+                  <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(val(item, ["creator_name", "creatorName", "created_by", "createdBy"], "Unknown"))}</div>
                 </div>
 
-                <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+                <div class="card-text">${escapeHtml(val(item, ["description"], "No description added."))}</div>
 
                 <div class="inline-actions">
-                  <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(item.id)}&source=nearby_places">Open Place</a>
-                  <button class="action-btn green approve-place-btn" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
-                  <button class="action-btn yellow reject-place-btn" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
-                  <button class="action-btn red delete-place-btn" data-id="${escapeHtml(item.id)}" type="button">Delete</button>
+                  <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(id)}&source=nearby_places">Open Place</a>
+                  <button class="action-btn green approve-place-btn" data-id="${escapeHtml(id)}" type="button">Approve</button>
+                  <button class="action-btn yellow reject-place-btn" data-id="${escapeHtml(id)}" type="button">Reject</button>
+                  <button class="action-btn red delete-place-btn" data-id="${escapeHtml(id)}" type="button">Delete</button>
                 </div>
               </div>
             `;
@@ -940,16 +1180,36 @@
       sectionContent.querySelectorAll(".approve-place-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
+          if (!id) return;
+
           btn.disabled = true;
+
           try {
-            await updateDoc(doc(db, "nearby_places", id), {
-              approved: true,
-              pending: false,
-              rejected: false,
-              status: "approved",
-              reviewedAt: serverTimestamp(),
-              reviewedBy: currentUser.uid
-            });
+            await updateByIdWithFallback("nearby_places", id, [
+              {
+                approved: true,
+                pending: false,
+                rejected: false,
+                status: "approved",
+                reviewed_at: nowIso(),
+                reviewed_by: currentUser.id,
+                updated_at: nowIso()
+              },
+              {
+                approved: true,
+                pending: false,
+                rejected: false,
+                status: "approved",
+                reviewedAt: nowIso(),
+                reviewedBy: currentUser.id,
+                updatedAt: nowIso()
+              },
+              {
+                status: "approved",
+                approved: true
+              }
+            ]);
+
             await logAdminAction("place_approved", { targetId: id, targetType: "place" });
             await loadSummary();
             await loadPlaces();
@@ -965,16 +1225,36 @@
       sectionContent.querySelectorAll(".reject-place-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
+          if (!id) return;
+
           btn.disabled = true;
+
           try {
-            await updateDoc(doc(db, "nearby_places", id), {
-              approved: false,
-              pending: false,
-              rejected: true,
-              status: "rejected",
-              reviewedAt: serverTimestamp(),
-              reviewedBy: currentUser.uid
-            });
+            await updateByIdWithFallback("nearby_places", id, [
+              {
+                approved: false,
+                pending: false,
+                rejected: true,
+                status: "rejected",
+                reviewed_at: nowIso(),
+                reviewed_by: currentUser.id,
+                updated_at: nowIso()
+              },
+              {
+                approved: false,
+                pending: false,
+                rejected: true,
+                status: "rejected",
+                reviewedAt: nowIso(),
+                reviewedBy: currentUser.id,
+                updatedAt: nowIso()
+              },
+              {
+                status: "rejected",
+                rejected: true
+              }
+            ]);
+
             await logAdminAction("place_rejected", { targetId: id, targetType: "place" });
             await loadSummary();
             await loadPlaces();
@@ -990,11 +1270,15 @@
       sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
+          if (!id) return;
+
           const ok = confirm("Delete this place?");
           if (!ok) return;
+
           btn.disabled = true;
+
           try {
-            await deleteDoc(doc(db, "nearby_places", id));
+            await deleteById("nearby_places", id);
             await logAdminAction("place_deleted", { targetId: id, targetType: "place" });
             await loadSummary();
             await loadPlaces();
@@ -1009,99 +1293,231 @@
     }
 
     async function hideReportedContent(report) {
-      const targetType = String(report.targetType || report.type || "").toLowerCase();
-      const targetId = report.targetId || "";
+      const targetType = String(val(report, ["target_type", "targetType", "type"], "")).toLowerCase();
+      const targetId = val(report, ["target_id", "targetId"], "");
       if (!targetId) return;
 
       if (targetType === "post") {
-        await updateDoc(doc(db, "posts", targetId), {
-          hidden: true,
-          hiddenByAdmin: true,
-          softDeleted: true
-        });
+        await updateByIdWithFallback("posts", targetId, [
+          {
+            hidden: true,
+            hidden_by_admin: true,
+            soft_deleted: true,
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            hiddenByAdmin: true,
+            softDeleted: true,
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
       } else if (targetType === "event") {
-        await updateDoc(doc(db, "events", targetId), {
-          hidden: true,
-          hiddenByAdmin: true,
-          softDeleted: true
-        });
+        await updateByIdWithFallback("events", targetId, [
+          {
+            hidden: true,
+            hidden_by_admin: true,
+            soft_deleted: true,
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            hiddenByAdmin: true,
+            softDeleted: true,
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
       } else if (targetType === "place") {
-        const source = report.targetSource || report.source || "nearby_places";
-        await updateDoc(doc(db, source, targetId), {
-          hidden: true,
-          hiddenByAdmin: true,
-          softDeleted: true
-        });
+        let source = val(report, ["target_source", "targetSource", "source"], "nearby_places");
+
+        if (source === "publicProfiles") source = "public_profiles";
+        if (source === "nearbyPlaces") source = "nearby_places";
+
+        await updateByIdWithFallback(source, targetId, [
+          {
+            hidden: true,
+            hidden_by_admin: true,
+            soft_deleted: true,
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            hiddenByAdmin: true,
+            softDeleted: true,
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
+      }
+    }
+
+    async function updateUserModeration(targetUid, action) {
+      if (!targetUid) return;
+
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const untilIso = new Date(Date.now() + thirtyDaysMs).toISOString();
+
+      if (action === "warn") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            {
+              moderation_status: "warned",
+              warning_until: untilIso,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "warned",
+              warningUntil: untilIso,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "warned"
+            }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            {
+              moderation_status: "warned",
+              warning_until: untilIso,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "warned",
+              warningUntil: untilIso,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "warned"
+            }
+          ])
+        ]);
+      }
+
+      if (action === "suspend") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            {
+              moderation_status: "suspended",
+              suspension_until: untilIso,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "suspended",
+              suspensionUntil: untilIso,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "suspended"
+            }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            {
+              moderation_status: "suspended",
+              suspension_until: untilIso,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "suspended",
+              suspensionUntil: untilIso,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "suspended"
+            }
+          ])
+        ]);
+      }
+
+      if (action === "ban") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            {
+              moderation_status: "banned",
+              is_hidden_by_admin: true,
+              soft_deleted: true,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "banned",
+              isHiddenByAdmin: true,
+              softDeleted: true,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "banned"
+            }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            {
+              moderation_status: "banned",
+              is_hidden_by_admin: true,
+              soft_deleted: true,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "banned",
+              isHiddenByAdmin: true,
+              softDeleted: true,
+              updatedAt: nowIso()
+            },
+            {
+              moderation_status: "banned"
+            }
+          ])
+        ]);
       }
     }
 
     async function applyModerationAction(report, action) {
-      const targetUid = report.targetUserId || report.reportedUserId || report.targetUid || "";
-      const reportId = report.id;
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-      const batch = writeBatch(db);
+      const targetUid = val(report, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId", "target_uid", "targetUid"], "");
+      const reportId = val(report, ["id"], "");
 
-      if (targetUid) {
-        if (action === "warn") {
-          batch.set(doc(db, "users", targetUid), {
-            moderationStatus: "warned",
-            warningUntil: new Date(Date.now() + thirtyDaysMs)
-          }, { merge: true });
-
-          batch.set(doc(db, "publicProfiles", targetUid), {
-            moderationStatus: "warned",
-            warningUntil: new Date(Date.now() + thirtyDaysMs)
-          }, { merge: true });
-        }
-
-        if (action === "suspend") {
-          batch.set(doc(db, "users", targetUid), {
-            moderationStatus: "suspended",
-            suspensionUntil: new Date(Date.now() + thirtyDaysMs)
-          }, { merge: true });
-
-          batch.set(doc(db, "publicProfiles", targetUid), {
-            moderationStatus: "suspended"
-          }, { merge: true });
-        }
-
-        if (action === "ban") {
-          batch.set(doc(db, "users", targetUid), {
-            moderationStatus: "banned",
-            isHiddenByAdmin: true,
-            softDeleted: true
-          }, { merge: true });
-
-          batch.set(doc(db, "publicProfiles", targetUid), {
-            moderationStatus: "banned",
-            isHiddenByAdmin: true,
-            softDeleted: true
-          }, { merge: true });
-        }
+      if (targetUid && ["warn", "suspend", "ban"].includes(action)) {
+        await updateUserModeration(targetUid, action);
       }
 
-      batch.set(doc(db, "reports", reportId), {
-        status: action === "resolve" ? "resolved" : action,
-        reviewedAt: serverTimestamp(),
-        reviewedBy: currentUser.uid
-      }, { merge: true });
+      if (reportId) {
+        await updateByIdWithFallback("reports", reportId, [
+          {
+            status: action === "resolve" ? "resolved" : action,
+            reviewed_at: nowIso(),
+            reviewed_by: currentUser.id,
+            updated_at: nowIso()
+          },
+          {
+            status: action === "resolve" ? "resolved" : action,
+            reviewedAt: nowIso(),
+            reviewedBy: currentUser.id,
+            updatedAt: nowIso()
+          },
+          {
+            status: action === "resolve" ? "resolved" : action
+          }
+        ]);
+      }
 
-      await batch.commit();
       await logAdminAction(`report_${action}`, {
         reportId,
-        targetId: report.targetId || "",
+        targetId: val(report, ["target_id", "targetId"], ""),
         targetUserId: targetUid || "",
-        targetType: report.targetType || report.type || "report"
+        targetType: val(report, ["target_type", "targetType", "type"], "report")
       });
     }
 
     async function loadReports() {
-      const snap = await getDocs(collection(db, "reports")).catch(() => ({ docs: [] }));
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const docs = (await selectAllSafe("reports"))
+        .map(d => ({ ...d }))
+        .sort((a, b) => createdMs(b) - createdMs(a));
 
       const filtered = docs.filter(item => {
-        const status = String(item.status || "").toLowerCase();
+        const status = String(val(item, ["status"], "")).toLowerCase();
         if (state.reportsFilter === "open") return !["resolved", "closed", "done"].includes(status);
         if (state.reportsFilter === "resolved") return ["resolved", "closed", "done"].includes(status);
         return true;
@@ -1118,35 +1534,40 @@
         </div>
 
         <div class="list">
-          ${filtered.length ? filtered.map(item => `
-            <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(item.title || item.reason || "Report")}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
-              </div>
+          ${filtered.length ? filtered.map(item => {
+            const id = val(item, ["id"], "");
+            const status = String(val(item, ["status"], "")).toLowerCase();
 
-              <div class="badge-row">
-                <span class="badge yellow">${escapeHtml(item.targetType || item.type || "unknown")}</span>
-                <span class="badge ${["resolved","closed","done"].includes(String(item.status || "").toLowerCase()) ? "green" : "red"}">${escapeHtml(item.status || "open")}</span>
-              </div>
+            return `
+              <div class="card">
+                <div class="card-top">
+                  <div class="card-title">${escapeHtml(val(item, ["title", "reason"], "Report"))}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
+                </div>
 
-              <div class="meta-grid">
-                <div class="meta-item"><strong>Reporter</strong>${escapeHtml(item.reporterId || "Unknown")}</div>
-                <div class="meta-item"><strong>Target User</strong>${escapeHtml(item.targetUserId || item.reportedUserId || "Unknown")}</div>
-                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(item.targetId || "Not linked")}</div>
-              </div>
+                <div class="badge-row">
+                  <span class="badge yellow">${escapeHtml(val(item, ["target_type", "targetType", "type"], "unknown"))}</span>
+                  <span class="badge ${["resolved","closed","done"].includes(status) ? "green" : "red"}">${escapeHtml(val(item, ["status"], "open"))}</span>
+                </div>
 
-              <div class="card-text">${escapeHtml(item.reason || item.text || item.description || "No report description added.")}</div>
+                <div class="meta-grid">
+                  <div class="meta-item"><strong>Reporter</strong>${escapeHtml(val(item, ["reporter_id", "reporterId"], "Unknown"))}</div>
+                  <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId"], "Unknown"))}</div>
+                  <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId"], "Not linked"))}</div>
+                </div>
 
-              <div class="inline-actions">
-                <button class="action-btn yellow hide-content-btn" data-id="${escapeHtml(item.id)}" type="button">Hide Content</button>
-                <button class="action-btn blue warn-btn" data-id="${escapeHtml(item.id)}" type="button">Warn</button>
-                <button class="action-btn purple suspend-btn" data-id="${escapeHtml(item.id)}" type="button">Suspend</button>
-                <button class="action-btn red ban-btn" data-id="${escapeHtml(item.id)}" type="button">Ban</button>
-                <button class="action-btn green resolve-btn" data-id="${escapeHtml(item.id)}" type="button">Resolve</button>
+                <div class="card-text">${escapeHtml(val(item, ["reason", "text", "description"], "No report description added."))}</div>
+
+                <div class="inline-actions">
+                  <button class="action-btn yellow hide-content-btn" data-id="${escapeHtml(id)}" type="button">Hide Content</button>
+                  <button class="action-btn blue warn-btn" data-id="${escapeHtml(id)}" type="button">Warn</button>
+                  <button class="action-btn purple suspend-btn" data-id="${escapeHtml(id)}" type="button">Suspend</button>
+                  <button class="action-btn red ban-btn" data-id="${escapeHtml(id)}" type="button">Ban</button>
+                  <button class="action-btn green resolve-btn" data-id="${escapeHtml(id)}" type="button">Resolve</button>
+                </div>
               </div>
-            </div>
-          `).join("") : `<div class="empty-box">No reports found in this filter.</div>`}
+            `;
+          }).join("") : `<div class="empty-box">No reports found in this filter.</div>`}
         </div>
       `;
 
@@ -1159,16 +1580,20 @@
 
       sectionContent.querySelectorAll(".hide-content-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const report = filtered.find(r => r.id === btn.dataset.id);
+          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
           if (!report) return;
+
           btn.disabled = true;
+
           try {
             await hideReportedContent(report);
+
             await logAdminAction("content_hidden", {
-              reportId: report.id,
-              targetId: report.targetId || "",
-              targetType: report.targetType || report.type || ""
+              reportId: val(report, ["id"], ""),
+              targetId: val(report, ["target_id", "targetId"], ""),
+              targetType: val(report, ["target_type", "targetType", "type"], "")
             });
+
             setMessage("Reported content hidden.", "ok");
           } catch (err) {
             console.error(err);
@@ -1180,9 +1605,11 @@
 
       sectionContent.querySelectorAll(".warn-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const report = filtered.find(r => r.id === btn.dataset.id);
+          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
           if (!report) return;
+
           btn.disabled = true;
+
           try {
             await applyModerationAction(report, "warn");
             await loadSummary();
@@ -1198,9 +1625,11 @@
 
       sectionContent.querySelectorAll(".suspend-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const report = filtered.find(r => r.id === btn.dataset.id);
+          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
           if (!report) return;
+
           btn.disabled = true;
+
           try {
             await applyModerationAction(report, "suspend");
             await loadSummary();
@@ -1216,11 +1645,14 @@
 
       sectionContent.querySelectorAll(".ban-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const report = filtered.find(r => r.id === btn.dataset.id);
+          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
           if (!report) return;
+
           const ok = confirm("Ban this user?");
           if (!ok) return;
+
           btn.disabled = true;
+
           try {
             await applyModerationAction(report, "ban");
             await hideReportedContent(report).catch(() => {});
@@ -1237,9 +1669,11 @@
 
       sectionContent.querySelectorAll(".resolve-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const report = filtered.find(r => r.id === btn.dataset.id);
+          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
           if (!report) return;
+
           btn.disabled = true;
+
           try {
             await applyModerationAction(report, "resolve");
             await loadSummary();
@@ -1255,23 +1689,22 @@
     }
 
     async function loadSchool() {
-      const sources = ["school_posts", "schoolLessons", "school"];
       const all = [];
 
-      for (const source of sources) {
+      for (const source of SCHOOL_SOURCES) {
         try {
-          const snap = await getDocs(collection(db, source));
-          snap.docs.forEach(d => {
+          const rows = await selectAllSafe(source);
+          rows.forEach(row => {
             all.push({
-              id: d.id,
+              id: val(row, ["id"], ""),
               source,
-              ...d.data()
+              ...row
             });
           });
         } catch {}
       }
 
-      all.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      all.sort((a, b) => createdMs(b) - createdMs(a));
 
       const edit = state.schoolEdit;
 
@@ -1312,6 +1745,7 @@
                 <label class="label" for="schoolSource">Collection</label>
                 <select id="schoolSource" class="select">
                   <option value="school_posts">school_posts</option>
+                  <option value="school_lessons">school_lessons</option>
                   <option value="schoolLessons">schoolLessons</option>
                   <option value="school">school</option>
                 </select>
@@ -1340,30 +1774,35 @@
         </div>
 
         <div class="list">
-          ${all.length ? all.map(item => `
-            <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(item.title || "Untitled Lesson")}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
-              </div>
+          ${all.length ? all.map(item => {
+            const id = val(item, ["id"], "");
+            const published = val(item, ["published"], true) !== false;
 
-              <div class="badge-row">
-                <span class="badge blue">${escapeHtml(item.category || "General")}</span>
-                <span class="badge purple">${escapeHtml(item.source)}</span>
-                <span class="badge ${item.published === false ? "yellow" : "green"}">${item.published === false ? "Draft" : "Published"}</span>
-              </div>
+            return `
+              <div class="card">
+                <div class="card-top">
+                  <div class="card-title">${escapeHtml(val(item, ["title"], "Untitled Lesson"))}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
+                </div>
 
-              <div class="card-text">${escapeHtml(item.summary || item.description || "No summary added.")}</div>
+                <div class="badge-row">
+                  <span class="badge blue">${escapeHtml(val(item, ["category"], "General"))}</span>
+                  <span class="badge purple">${escapeHtml(item.source)}</span>
+                  <span class="badge ${published ? "green" : "yellow"}">${published ? "Published" : "Draft"}</span>
+                </div>
 
-              <div class="inline-actions">
-                <button class="action-btn purple edit-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" type="button">Edit</button>
-                <button class="action-btn ${item.published === false ? "green" : "yellow"} toggle-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" data-published="${item.published === false ? "no" : "yes"}" type="button">
-                  ${item.published === false ? "Publish" : "Unpublish"}
-                </button>
-                <button class="action-btn red delete-school-btn" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" type="button">Delete</button>
+                <div class="card-text">${escapeHtml(val(item, ["summary", "description"], "No summary added."))}</div>
+
+                <div class="inline-actions">
+                  <button class="action-btn purple edit-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" type="button">Edit</button>
+                  <button class="action-btn ${published ? "yellow" : "green"} toggle-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" data-published="${published ? "yes" : "no"}" type="button">
+                    ${published ? "Unpublish" : "Publish"}
+                  </button>
+                  <button class="action-btn red delete-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" type="button">Delete</button>
+                </div>
               </div>
-            </div>
-          `).join("") : `<div class="empty-box">No school content yet.</div>`}
+            `;
+          }).join("") : `<div class="empty-box">No school content yet.</div>`}
         </div>
       `;
 
@@ -1399,15 +1838,15 @@
           return;
         }
 
-        state.schoolEdit = { source: item.source, id: item.id };
-        schoolTitle.value = item.title || "";
-        schoolCategory.value = item.category || "";
-        schoolSummary.value = item.summary || item.description || "";
-        schoolImageURL.value = item.imageURL || item.imageUrl || item.photoURL || "";
-        schoolOrder.value = item.order ?? "";
+        state.schoolEdit = { source: item.source, id: val(item, ["id"], "") };
+        schoolTitle.value = val(item, ["title"], "");
+        schoolCategory.value = val(item, ["category"], "");
+        schoolSummary.value = val(item, ["summary", "description"], "");
+        schoolImageURL.value = val(item, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL"], "");
+        schoolOrder.value = val(item, ["sort_order", "order"], "");
         schoolSource.value = item.source || "school_posts";
-        schoolBody.value = item.body || item.content || item.text || "";
-        schoolPublished.checked = item.published !== false;
+        schoolBody.value = val(item, ["body", "content", "text"], "");
+        schoolPublished.checked = val(item, ["published"], true) !== false;
         setSchoolMessage("Editing existing lesson.", "ok");
       }
 
@@ -1416,18 +1855,15 @@
       schoolForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const payload = {
-          title: schoolTitle.value.trim(),
-          category: schoolCategory.value.trim(),
-          summary: schoolSummary.value.trim(),
-          imageURL: schoolImageURL.value.trim(),
-          body: schoolBody.value.trim(),
-          published: !!schoolPublished.checked,
-          order: schoolOrder.value.trim() ? Number(schoolOrder.value.trim()) : null,
-          updatedAt: serverTimestamp()
-        };
+        const title = schoolTitle.value.trim();
+        const category = schoolCategory.value.trim();
+        const summary = schoolSummary.value.trim();
+        const imageURL = schoolImageURL.value.trim();
+        const body = schoolBody.value.trim();
+        const published = !!schoolPublished.checked;
+        const orderValue = schoolOrder.value.trim() ? Number(schoolOrder.value.trim()) : null;
 
-        if (!payload.title) {
+        if (!title) {
           setSchoolMessage("Title is required.", "err");
           return;
         }
@@ -1435,35 +1871,83 @@
         const targetSource = schoolSource.value || state.schoolEdit.source || "school_posts";
         const editing = !!state.schoolEdit.id;
 
+        const snakePayload = {
+          title,
+          category,
+          summary,
+          image_url: imageURL,
+          body,
+          published,
+          sort_order: orderValue,
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
+          title,
+          category,
+          summary,
+          imageURL,
+          body,
+          published,
+          order: orderValue,
+          updatedAt: nowIso()
+        };
+
+        const minimalPayload = {
+          title,
+          category,
+          summary,
+          body,
+          published
+        };
+
         try {
           if (editing) {
-            await updateDoc(doc(db, state.schoolEdit.source, state.schoolEdit.id), payload);
+            await updateByIdWithFallback(state.schoolEdit.source, state.schoolEdit.id, [
+              snakePayload,
+              camelPayload,
+              minimalPayload
+            ]);
+
             await logAdminAction("school_updated", {
               targetId: state.schoolEdit.id,
               source: state.schoolEdit.source
             });
+
             setSchoolMessage("Lesson updated.", "ok");
           } else {
-            await addDoc(collection(db, targetSource), {
-              ...payload,
-              createdAt: serverTimestamp()
-            });
+            await insertWithFallback(targetSource, [
+              {
+                ...snakePayload,
+                created_at: nowIso()
+              },
+              {
+                ...camelPayload,
+                createdAt: nowIso()
+              },
+              {
+                ...minimalPayload,
+                created_at: nowIso()
+              }
+            ]);
+
             await logAdminAction("school_created", {
               source: targetSource
             });
+
             setSchoolMessage("Lesson created.", "ok");
           }
 
           await loadSchool();
         } catch (err) {
           console.error(err);
-          setSchoolMessage("Could not save lesson.", "err");
+          setSchoolMessage(err?.message || "Could not save lesson.", "err");
         }
       });
 
       sectionContent.querySelectorAll(".edit-school-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-          const item = all.find(x => x.id === btn.dataset.id && x.source === btn.dataset.source);
+          const item = all.find(x => String(x.id) === String(btn.dataset.id) && x.source === btn.dataset.source);
           if (!item) return;
           fillSchoolForm(item);
           schoolTitle.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1472,18 +1956,33 @@
 
       sectionContent.querySelectorAll(".toggle-school-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const item = all.find(x => x.id === btn.dataset.id && x.source === btn.dataset.source);
+          const item = all.find(x => String(x.id) === String(btn.dataset.id) && x.source === btn.dataset.source);
           if (!item) return;
+
           btn.disabled = true;
+
+          const nextPublished = val(item, ["published"], true) === false ? true : false;
+
           try {
-            await updateDoc(doc(db, item.source, item.id), {
-              published: item.published === false ? true : false,
-              updatedAt: serverTimestamp()
-            });
+            await updateByIdWithFallback(item.source, item.id, [
+              {
+                published: nextPublished,
+                updated_at: nowIso()
+              },
+              {
+                published: nextPublished,
+                updatedAt: nowIso()
+              },
+              {
+                published: nextPublished
+              }
+            ]);
+
             await logAdminAction("school_publish_toggle", {
               targetId: item.id,
               source: item.source
             });
+
             await loadSchool();
             setMessage("Lesson publish state updated.", "ok");
           } catch (err) {
@@ -1498,13 +1997,17 @@
         btn.addEventListener("click", async () => {
           const ok = confirm("Delete this lesson?");
           if (!ok) return;
+
           btn.disabled = true;
+
           try {
-            await deleteDoc(doc(db, btn.dataset.source, btn.dataset.id));
+            await deleteById(btn.dataset.source, btn.dataset.id);
+
             await logAdminAction("school_deleted", {
               targetId: btn.dataset.id,
               source: btn.dataset.source
             });
+
             await loadSchool();
             setMessage("Lesson deleted.", "ok");
           } catch (err) {
@@ -1515,68 +2018,108 @@
         });
       });
 
-      fillSchoolForm(edit.id ? all.find(x => x.id === edit.id && x.source === edit.source) || null : null);
+      fillSchoolForm(edit.id ? all.find(x => String(x.id) === String(edit.id) && x.source === edit.source) || null : null);
     }
 
     async function loadVerification() {
-      const snap = await getDocs(collection(db, "verification_requests")).catch(() => ({ docs: [] }));
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const docs = (await selectAllSafe("verification_requests"))
+        .map(d => ({ ...d }))
+        .sort((a, b) => createdMs(b) - createdMs(a));
 
       sectionContent.innerHTML = `
         <div class="section-title">Verification</div>
         <div class="section-note">Approve or reject verification requests.</div>
 
         <div class="list">
-          ${docs.length ? docs.map(item => `
-            <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(item.displayName || item.fullName || item.username || item.id)}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
-              </div>
+          ${docs.length ? docs.map(item => {
+            const id = val(item, ["id", "uid", "user_id", "userId"], "");
+            const status = String(val(item, ["status"], "pending")).toLowerCase();
 
-              <div class="badge-row">
-                <span class="badge ${String(item.status || "pending").toLowerCase() === "approved" ? "green" : String(item.status || "pending").toLowerCase() === "rejected" ? "red" : "yellow"}">
-                  ${escapeHtml(item.status || "pending")}
-                </span>
-              </div>
+            return `
+              <div class="card">
+                <div class="card-top">
+                  <div class="card-title">${escapeHtml(val(item, ["display_name", "displayName", "full_name", "fullName", "username", "id"], "Request"))}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
+                </div>
 
-              <div class="card-text">${escapeHtml(item.reason || item.note || item.text || "No details added.")}</div>
+                <div class="badge-row">
+                  <span class="badge ${status === "approved" ? "green" : status === "rejected" ? "red" : "yellow"}">
+                    ${escapeHtml(val(item, ["status"], "pending"))}
+                  </span>
+                </div>
 
-              <div class="inline-actions">
-                <button class="action-btn green approve-verification-btn" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
-                <button class="action-btn red reject-verification-btn" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
+                <div class="card-text">${escapeHtml(val(item, ["reason", "note", "text"], "No details added."))}</div>
+
+                <div class="inline-actions">
+                  <button class="action-btn green approve-verification-btn" data-id="${escapeHtml(id)}" type="button">Approve</button>
+                  <button class="action-btn red reject-verification-btn" data-id="${escapeHtml(id)}" type="button">Reject</button>
+                </div>
               </div>
-            </div>
-          `).join("") : `<div class="empty-box">No verification requests found.</div>`}
+            `;
+          }).join("") : `<div class="empty-box">No verification requests found.</div>`}
         </div>
       `;
 
       sectionContent.querySelectorAll(".approve-verification-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const uid = btn.dataset.id;
+          if (!uid) return;
+
           btn.disabled = true;
+
           try {
-            const batch = writeBatch(db);
+            await updateByIdWithFallback("verification_requests", uid, [
+              {
+                status: "approved",
+                reviewed_at: nowIso(),
+                approved_at: nowIso(),
+                reviewed_by: currentUser.id,
+                updated_at: nowIso()
+              },
+              {
+                status: "approved",
+                reviewedAt: nowIso(),
+                approvedAt: nowIso(),
+                reviewedBy: currentUser.id,
+                updatedAt: nowIso()
+              },
+              {
+                status: "approved"
+              }
+            ]);
 
-            batch.set(doc(db, "verification_requests", uid), {
-              status: "approved",
-              reviewedAt: serverTimestamp(),
-              approvedAt: serverTimestamp(),
-              reviewedBy: currentUser.uid
-            }, { merge: true });
-
-            batch.set(doc(db, "users", uid), {
-              verified: true,
-              isVerified: true
-            }, { merge: true });
-
-            batch.set(doc(db, "publicProfiles", uid), {
-              verified: true,
-              isVerified: true
-            }, { merge: true });
-
-            await batch.commit();
+            await Promise.allSettled([
+              updateByIdWithFallback("users", uid, [
+                {
+                  verified: true,
+                  is_verified: true,
+                  updated_at: nowIso()
+                },
+                {
+                  verified: true,
+                  isVerified: true,
+                  updatedAt: nowIso()
+                },
+                {
+                  verified: true
+                }
+              ]),
+              updateByIdWithFallback("public_profiles", uid, [
+                {
+                  verified: true,
+                  is_verified: true,
+                  updated_at: nowIso()
+                },
+                {
+                  verified: true,
+                  isVerified: true,
+                  updatedAt: nowIso()
+                },
+                {
+                  verified: true
+                }
+              ])
+            ]);
 
             await logAdminAction("verification_approved", { targetUserId: uid });
             await loadSummary();
@@ -1593,14 +2136,30 @@
       sectionContent.querySelectorAll(".reject-verification-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const uid = btn.dataset.id;
+          if (!uid) return;
+
           btn.disabled = true;
+
           try {
-            await setDoc(doc(db, "verification_requests", uid), {
-              status: "rejected",
-              reviewedAt: serverTimestamp(),
-              rejectedAt: serverTimestamp(),
-              reviewedBy: currentUser.uid
-            }, { merge: true });
+            await updateByIdWithFallback("verification_requests", uid, [
+              {
+                status: "rejected",
+                reviewed_at: nowIso(),
+                rejected_at: nowIso(),
+                reviewed_by: currentUser.id,
+                updated_at: nowIso()
+              },
+              {
+                status: "rejected",
+                reviewedAt: nowIso(),
+                rejectedAt: nowIso(),
+                reviewedBy: currentUser.id,
+                updatedAt: nowIso()
+              },
+              {
+                status: "rejected"
+              }
+            ]);
 
             await logAdminAction("verification_rejected", { targetUserId: uid });
             await loadSummary();
@@ -1616,9 +2175,9 @@
     }
 
     async function loadHistory() {
-      const snap = await getDocs(collection(db, "moderation_history")).catch(() => ({ docs: [] }));
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      const docs = (await selectAllSafe("moderation_history"))
+        .map(d => ({ ...d }))
+        .sort((a, b) => createdMs(b) - createdMs(a));
 
       sectionContent.innerHTML = `
         <div class="section-title">Moderation History</div>
@@ -1628,14 +2187,14 @@
           ${docs.length ? docs.map(item => `
             <div class="card">
               <div class="card-top">
-                <div class="card-title">${escapeHtml(item.action || "Action")}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+                <div class="card-title">${escapeHtml(val(item, ["action"], "Action"))}</div>
+                <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
               </div>
 
               <div class="meta-grid">
-                <div class="meta-item"><strong>Admin</strong>${escapeHtml(item.adminUid || "Unknown")}</div>
-                <div class="meta-item"><strong>Target Type</strong>${escapeHtml(item.targetType || "Not set")}</div>
-                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(item.targetId || item.targetUserId || item.reportId || "Not set")}</div>
+                <div class="meta-item"><strong>Admin</strong>${escapeHtml(val(item, ["admin_uid", "adminUid", "admin_id", "adminId"], "Unknown"))}</div>
+                <div class="meta-item"><strong>Target Type</strong>${escapeHtml(val(item, ["target_type", "targetType"], "Not set"))}</div>
+                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId", "target_user_id", "targetUserId", "report_id", "reportId"], "Not set"))}</div>
               </div>
             </div>
           `).join("") : `<div class="empty-box">No moderation history found.</div>`}
@@ -1643,16 +2202,18 @@
       `;
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initAdmin() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
 
       try {
-        const ok = await ensureAdmin(user.uid);
+        const ok = await ensureAdmin(currentUser.id);
         accessLoading.classList.add("hidden");
 
         if (!ok) {
@@ -1660,7 +2221,9 @@
           return;
         }
 
+        accessPanel.classList.add("hidden");
         adminWrap.classList.remove("hidden");
+
         await loadSummary();
         await loadSection(currentTab);
       } catch (err) {
@@ -1668,7 +2231,38 @@
         accessLoading.classList.add("hidden");
         accessDenied.classList.remove("hidden");
       }
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    initAdmin();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - admins: select
+      - nearby_places: select, update, delete
+      - reports: select, update
+      - posts: update for hiding reported posts
+      - events: update for hiding reported events
+      - users: select, update
+      - public_profiles: select, update
+      - verification_requests: select, update
+      - moderation_history: select, insert
+      - school_posts: select, insert, update, delete
+      - school_lessons OR schoolLessons: select, insert, update, delete
+      - school: select, insert, update, delete
+
+      IMPORTANT:
+      - This page does not need Share button because it is not showing normal post cards.
+      - We will add Share on feed.html, post-detail.html, profile/member pages, and anywhere real posts appear.
+      - Later, after all pages are converted, we should clean fallback camelCase/snake_case payloads to one final Supabase schema.
+    */
   </script>
 </body>
 </html>
