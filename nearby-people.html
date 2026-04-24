@@ -496,18 +496,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      addDoc,
-      collection,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const cityChip = document.getElementById("cityChip");
     const modeChip = document.getElementById("modeChip");
@@ -577,13 +566,21 @@
       return String(value || "").trim().toLowerCase();
     }
 
-    function safeText(value) {
-      return String(value || "").trim();
-    }
-
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
     }
 
     function readLat(obj) {
@@ -616,21 +613,25 @@
       const d = raw || {};
       return {
         uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        bio: d.bio || d.about || d.description || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        verified: !!(d.verified || d.isVerified),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        showInNearby: d.showInNearby !== false,
-        locationVisibility: d.locationVisibility || d.nearbyMode || "city",
-        city: d.city || d.locationCity || d.currentCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || d.currentProvince || "",
-        country: d.country || d.locationCountry || d.currentCountry || "",
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted),
+        showInNearby: (d.show_in_nearby ?? d.showInNearby) !== false,
+        locationVisibility: getField(d, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) || "city",
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        blockedUsers: Array.isArray(d.blocked_users)
+          ? d.blocked_users
+          : Array.isArray(d.blockedUsers)
+          ? d.blockedUsers
+          : [],
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -744,7 +745,7 @@
     }
 
     function getRelation(profile) {
-      if (profile.uid === currentUser.uid) return "self";
+      if (profile.uid === currentUser.id) return "self";
       if (followMap.has(profile.uid)) return "following";
       if (requestMap.has(profile.uid)) return "requested";
       return profile.isPrivate ? "request" : "follow";
@@ -830,7 +831,7 @@
       const hasSearch = !!q;
 
       let rows = peopleData
-        .filter(p => p.uid !== currentUser.uid)
+        .filter(p => p.uid !== currentUser.id)
         .filter(p => p.showInNearby)
         .filter(p => !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned")
         .filter(p => !viewerBlockedUsers.includes(p.uid))
@@ -865,56 +866,87 @@
     }
 
     async function createNotificationSafe(targetUid, payload) {
-      if (!targetUid || targetUid === currentUser.uid) return;
+      if (!targetUid || targetUid === currentUser.id) return;
       try {
-        await addDoc(collection(db, "notifications", targetUid, "items"), payload);
+        await supabase.from("notifications").insert(payload);
       } catch {}
     }
 
     async function followPerson(profile) {
-      await setDoc(doc(db, "follows", `${currentUser.uid}__${profile.uid}`), {
-        followerId: currentUser.uid,
-        followingId: profile.uid,
-        createdAt: serverTimestamp()
+      const { error } = await supabase.from("follows").insert({
+        follower_id: currentUser.id,
+        following_id: profile.uid,
+        created_at: nowIso()
       });
+
+      if (error) throw error;
 
       await createNotificationSafe(profile.uid, {
         type: "follow",
         title: "New follower",
-        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} started following you.`,
-        fromUserId: currentUser.uid,
-        toUserId: profile.uid,
-        createdAt: serverTimestamp(),
-        isRead: false
+        text: `${viewerProfile?.displayName || "Someone"} started following you.`,
+        from_user_id: currentUser.id,
+        to_user_id: profile.uid,
+        created_at: nowIso(),
+        is_read: false
       });
     }
 
     async function unfollowPerson(profile) {
-      const docId = followMap.get(profile.uid) || `${currentUser.uid}__${profile.uid}`;
-      await deleteDoc(doc(db, "follows", docId));
+      const rowId = followMap.get(profile.uid);
+
+      if (rowId) {
+        const { error } = await supabase.from("follows").delete().eq("id", rowId);
+        if (error) throw error;
+        return;
+      }
+
+      const { error } = await supabase
+        .from("follows")
+        .delete()
+        .eq("follower_id", currentUser.id)
+        .eq("following_id", profile.uid);
+
+      if (error) throw error;
     }
 
     async function requestFollow(profile) {
-      await setDoc(doc(db, "follow_requests", `${currentUser.uid}__${profile.uid}`), {
-        requesterId: currentUser.uid,
-        targetId: profile.uid,
-        createdAt: serverTimestamp()
+      const { error } = await supabase.from("follow_requests").insert({
+        requester_id: currentUser.id,
+        target_id: profile.uid,
+        status: "pending",
+        created_at: nowIso()
       });
+
+      if (error) throw error;
 
       await createNotificationSafe(profile.uid, {
         type: "follow_request",
         title: "Follow request",
-        text: `${viewerProfile?.displayName || currentUser.displayName || "Someone"} sent you a follow request.`,
-        fromUserId: currentUser.uid,
-        toUserId: profile.uid,
-        createdAt: serverTimestamp(),
-        isRead: false
+        text: `${viewerProfile?.displayName || "Someone"} sent you a follow request.`,
+        from_user_id: currentUser.id,
+        to_user_id: profile.uid,
+        created_at: nowIso(),
+        is_read: false
       });
     }
 
     async function cancelRequest(profile) {
-      const docId = requestMap.get(profile.uid) || `${currentUser.uid}__${profile.uid}`;
-      await deleteDoc(doc(db, "follow_requests", docId));
+      const rowId = requestMap.get(profile.uid);
+
+      if (rowId) {
+        const { error } = await supabase.from("follow_requests").delete().eq("id", rowId);
+        if (error) throw error;
+        return;
+      }
+
+      const { error } = await supabase
+        .from("follow_requests")
+        .delete()
+        .eq("requester_id", currentUser.id)
+        .eq("target_id", profile.uid);
+
+      if (error) throw error;
     }
 
     function buildRelationButton(profile) {
@@ -1059,14 +1091,17 @@
     }
 
     async function loadViewer(uid) {
-      const [userSnap, publicSnap] = await Promise.all([
-        getDoc(doc(db, "users", uid)),
-        getDoc(doc(db, "publicProfiles", uid))
+      const [userRes, publicRes] = await Promise.all([
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
       ]);
 
+      if (userRes.error) throw userRes.error;
+      if (publicRes.error) throw publicRes.error;
+
       viewerProfile = normalizeProfile({
-        ...(publicSnap.exists() ? publicSnap.data() : {}),
-        ...(userSnap.exists() ? userSnap.data() : {}),
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
         uid
       }, uid);
 
@@ -1074,30 +1109,32 @@
     }
 
     async function loadPeople() {
-      const snap = await getDocs(collection(db, "publicProfiles"));
-      peopleData = snap.docs.map(d => normalizeProfile({ id: d.id, ...d.data() }, d.id));
+      const { data, error } = await supabase.from("public_profiles").select("*");
+      if (error) throw error;
+      peopleData = (data || []).map(row => normalizeProfile(row, row.uid));
     }
 
     async function loadRelations() {
       followMap = new Map();
       requestMap = new Map();
 
-      const [followsSnap, requestsSnap] = await Promise.all([
-        getDocs(collection(db, "follows")),
-        getDocs(collection(db, "follow_requests"))
+      const [followsRes, requestsRes] = await Promise.all([
+        supabase.from("follows").select("*").eq("follower_id", currentUser.id),
+        supabase.from("follow_requests").select("*").eq("requester_id", currentUser.id).eq("status", "pending")
       ]);
 
-      followsSnap.forEach(d => {
-        const data = d.data();
-        if (data.followerId === currentUser.uid && data.followingId) {
-          followMap.set(data.followingId, d.id);
+      if (followsRes.error) throw followsRes.error;
+      if (requestsRes.error) throw requestsRes.error;
+
+      (followsRes.data || []).forEach(row => {
+        if (row.following_id) {
+          followMap.set(row.following_id, row.id);
         }
       });
 
-      requestsSnap.forEach(d => {
-        const data = d.data();
-        if (data.requesterId === currentUser.uid && data.targetId) {
-          requestMap.set(data.targetId, d.id);
+      (requestsRes.data || []).forEach(row => {
+        if (row.target_id) {
+          requestMap.set(row.target_id, row.id);
         }
       });
     }
@@ -1145,25 +1182,44 @@
       searchInput.focus();
     });
 
-    refreshBtn.addEventListener("click", refreshAll);
+    refreshBtn.addEventListener("click", async () => {
+      try {
+        await refreshAll();
+        setPageStatus("Nearby people refreshed.", "status-ok");
+      } catch (err) {
+        console.error(err);
+        setPageStatus("Could not refresh nearby people.", "status-err");
+      }
+    });
+
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = authData.user;
 
       try {
-        await loadViewer(user.uid);
+        await loadViewer(currentUser.id);
         await refreshAll();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showEmpty("Could not load nearby people.");
       }
-    });
+    }
+
+    initPage();
   </script>
 </body>
 </html>
