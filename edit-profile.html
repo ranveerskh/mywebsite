@@ -737,19 +737,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import {
-      onAuthStateChanged,
-      signOut,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      writeBatch,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const loading = document.getElementById("loading");
     const profileContent = document.getElementById("profileContent");
@@ -791,6 +779,12 @@
     let verifiedStatus = false;
     let originalUsernameLower = "";
     let originalLocationKey = "";
+    let originalLat = null;
+    let originalLng = null;
+    let currentRealName = "";
+    let currentModerationStatus = "";
+    let currentWarningUntil = null;
+    let currentBlockedUsers = [];
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -908,11 +902,43 @@
     }
 
     function extractLinksToLoad(raw) {
-      let link1 = firstFilled([raw.link1, raw.url1, raw.website1, raw.site1, raw.social1]);
-      let link1Label = firstFilled([raw.link1Label, raw.url1Label, raw.website1Label, raw.site1Label, raw.social1Label, raw.link1Title]);
+      let link1 = firstFilled([
+        raw.link1,
+        raw.link_1,
+        raw.url1,
+        raw.website1,
+        raw.site1,
+        raw.social1
+      ]);
+      let link1Label = firstFilled([
+        raw.link1Label,
+        raw.link1_label,
+        raw.link_1_label,
+        raw.url1Label,
+        raw.website1Label,
+        raw.site1Label,
+        raw.social1Label,
+        raw.link1Title
+      ]);
 
-      let link2 = firstFilled([raw.link2, raw.url2, raw.website2, raw.site2, raw.social2]);
-      let link2Label = firstFilled([raw.link2Label, raw.url2Label, raw.website2Label, raw.site2Label, raw.social2Label, raw.link2Title]);
+      let link2 = firstFilled([
+        raw.link2,
+        raw.link_2,
+        raw.url2,
+        raw.website2,
+        raw.site2,
+        raw.social2
+      ]);
+      let link2Label = firstFilled([
+        raw.link2Label,
+        raw.link2_label,
+        raw.link_2_label,
+        raw.url2Label,
+        raw.website2Label,
+        raw.site2Label,
+        raw.social2Label,
+        raw.link2Title
+      ]);
 
       if ((!link1 || !link2) && Array.isArray(raw.links)) {
         const arr = raw.links.slice(0, 2);
@@ -946,6 +972,18 @@
       };
     }
 
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     async function checkUsernameAvailability(rawValue) {
       const username = normalizeUsername(rawValue);
 
@@ -960,15 +998,24 @@
       }
 
       try {
-        const usernameSnap = await getDoc(doc(db, "usernames", username));
+        const { data, error } = await supabase
+          .from("usernames")
+          .select("uid")
+          .eq("username", username)
+          .maybeSingle();
 
-        if (!usernameSnap.exists()) {
+        if (error) {
+          console.error("Username check failed:", error);
+          setUsernameStatus("Could not verify username.", false);
+          return { ok: false, reason: "error", username };
+        }
+
+        if (!data) {
           setUsernameStatus("Username available.", true);
           return { ok: true, reason: "available", username };
         }
 
-        const ownerUid = usernameSnap.data()?.uid || "";
-        if (ownerUid === auth.currentUser?.uid) {
+        if (data.uid === currentUser.id) {
           setUsernameStatus("This is your current username.", true);
           return { ok: true, reason: "own", username };
         }
@@ -1034,63 +1081,76 @@
       showMessage("Preview updated.", "success");
     });
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function loadProfilePage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
-      emailText.textContent = user.email || "-";
+      currentUser = authData.user;
+      emailText.textContent = currentUser.email || "-";
 
       try {
-        const userRef = doc(db, "users", user.uid);
-        const publicRef = doc(db, "publicProfiles", user.uid);
-
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(userRef),
-          getDoc(publicRef)
+        const [userRes, publicRes] = await Promise.all([
+          supabase.from("users").select("*").eq("uid", currentUser.id).maybeSingle(),
+          supabase.from("public_profiles").select("*").eq("uid", currentUser.id).maybeSingle()
         ]);
 
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        const publicData = publicSnap.exists() ? publicSnap.data() : {};
+        if (userRes.error) throw userRes.error;
+        if (publicRes.error) throw publicRes.error;
+
+        const userData = userRes.data || {};
+        const publicData = publicRes.data || {};
         const merged = { ...publicData, ...userData };
 
         const links = extractLinksToLoad(merged);
 
-        const city = merged.city || merged.locationCity || merged.currentCity || "";
-        const province = merged.province || merged.state || merged.region || merged.locationProvince || merged.currentProvince || "";
-        const country = merged.country || merged.locationCountry || merged.currentCountry || "";
-        const locationVisibility =
-          merged.locationVisibility ||
-          merged.nearbyMode ||
-          (merged.showInNearby === false ? "hidden" : "city");
+        const city = getField(merged, ["city", "location_city", "current_city"]);
+        const province = getField(merged, ["province", "state", "region", "location_province", "current_province"]);
+        const country = getField(merged, ["country", "location_country", "current_country"]);
 
-        displayNameInput.value = merged.displayName || user.displayName || "";
-        usernameInput.value = normalizeUsername(merged.username || merged.handle || merged.userName || "");
+        const locationVisibility =
+          getField(merged, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) ||
+          ((merged.show_in_nearby === false || merged.showInNearby === false) ? "hidden" : "city");
+
+        displayNameInput.value = getField(merged, ["display_name", "displayName"]) || "";
+        usernameInput.value = normalizeUsername(getField(merged, ["username", "handle", "userName"]) || "");
         cityInput.value = city;
         provinceInput.value = province;
         countryInput.value = country;
         locationVisibilityInput.value = locationVisibility;
-        bioInput.value = merged.bio || "";
-        cityVisibleInput.checked = !!merged.cityVisible;
-        isPrivateInput.checked = !!(merged.isPrivate || merged.privateProfile || merged.private || merged.accountPrivate);
-        photoURLInput.value = merged.photoURL || merged.userPhotoURL || "";
-        genderInput.value = merged.gender || "";
-        genderCustomInput.value = merged.genderCustom || "";
-        genderVisibleInput.checked = !!merged.genderVisible;
+        bioInput.value = getField(merged, ["bio", "about", "description"]);
+        cityVisibleInput.checked = !!(merged.city_visible ?? merged.cityVisible);
+        isPrivateInput.checked = !!(merged.is_private ?? merged.isPrivate ?? merged.privateProfile ?? merged.private ?? merged.accountPrivate);
+        photoURLInput.value = getField(merged, ["photo_url", "photoURL", "user_photo_url", "userPhotoURL"]);
+        genderInput.value = getField(merged, ["gender"]);
+        genderCustomInput.value = getField(merged, ["gender_custom", "genderCustom"]);
+        genderVisibleInput.checked = !!(merged.gender_visible ?? merged.genderVisible);
 
         link1Input.value = links.link1 || "";
         link1LabelInput.value = links.link1Label || "";
         link2Input.value = links.link2 || "";
         link2LabelInput.value = links.link2Label || "";
 
-        verifiedStatus = !!(merged.isVerified || merged.verified);
+        verifiedStatus = !!(merged.is_verified ?? merged.isVerified ?? merged.verified);
         verifiedText.textContent = verifiedStatus ? "Yes" : "No";
         nearbyStatusText.textContent = locationVisibility === "hidden" ? "Hidden" : "Visible";
 
-        originalUsernameLower = normalizeUsername(merged.username || "");
+        currentRealName = getField(merged, ["real_name", "realName"]);
+        currentModerationStatus = getField(merged, ["moderation_status", "moderationStatus"]);
+        currentWarningUntil = merged.warning_until ?? merged.warningUntil ?? null;
+        currentBlockedUsers = Array.isArray(merged.blocked_users)
+          ? merged.blocked_users
+          : Array.isArray(merged.blockedUsers)
+          ? merged.blockedUsers
+          : [];
+
+        originalUsernameLower = normalizeUsername(getField(merged, ["username"]));
         originalLocationKey = locationKey(city, province, country);
+        originalLat = merged.lat ?? null;
+        originalLng = merged.lng ?? null;
 
         toggleGenderCustom();
         showPreview(photoURLInput.value);
@@ -1105,7 +1165,7 @@
         console.error(error);
         loading.textContent = "Error loading profile.";
       }
-    });
+    }
 
     profileForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1188,98 +1248,133 @@
           return;
         }
 
-        const batch = writeBatch(db);
-
         if (originalUsernameLower && originalUsernameLower !== username) {
-          batch.delete(doc(db, "usernames", originalUsernameLower));
+          const { error: deleteOldUsernameError } = await supabase
+            .from("usernames")
+            .delete()
+            .eq("username", originalUsernameLower)
+            .eq("uid", currentUser.id);
+
+          if (deleteOldUsernameError) throw deleteOldUsernameError;
         }
 
-        batch.set(doc(db, "usernames", username), {
-          uid: currentUser.uid,
-          username,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        const { error: usernameError } = await supabase
+          .from("usernames")
+          .upsert({
+            username,
+            uid: currentUser.id,
+            updated_at: nowIso()
+          }, { onConflict: "username" });
 
-        const userRef = doc(db, "users", currentUser.uid);
-        const publicProfileRef = doc(db, "publicProfiles", currentUser.uid);
+        if (usernameError) throw usernameError;
 
-        const locationPayload = {
-          city,
-          locationCity: city,
-          currentCity: city,
-          province,
-          state: province,
-          region: province,
-          locationProvince: province,
-          currentProvince: province,
-          country,
-          locationCountry: country,
-          currentCountry: country,
-          locationSearch,
-          showInNearby,
-          locationVisibility,
-          nearbyMode: locationVisibility
-        };
+        const locationChanged = locationKey(city, province, country) !== originalLocationKey;
+        const latValue = locationChanged ? null : originalLat;
+        const lngValue = locationChanged ? null : originalLng;
 
-        if (locationKey(city, province, country) !== originalLocationKey) {
-          locationPayload.lat = null;
-          locationPayload.lng = null;
-        }
-
-        const commonPayload = {
-          uid: currentUser.uid,
+        const userPayload = {
+          uid: currentUser.id,
           email: currentUser.email || "",
-          displayName,
-          displayNameLower: displayName.toLowerCase(),
+          display_name: displayName,
+          display_name_lower: displayName.toLowerCase(),
           username,
-          usernameLower: username,
+          username_lower: username,
+          real_name: currentRealName || "",
           bio,
-          cityVisible,
-          isPrivate,
-          private: isPrivate,
-          privateProfile: isPrivate,
-          accountPrivate: isPrivate,
-          isVerified: verifiedStatus,
-          verified: verifiedStatus,
-          photoURL,
-          userPhotoURL: photoURL,
+          photo_url: photoURL,
+          city,
+          city_lower: city.toLowerCase(),
+          province,
+          country,
+          location_search: locationSearch,
+          city_visible: cityVisible,
+          is_private: isPrivate,
+          is_verified: verifiedStatus,
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility,
           gender,
-          genderCustom,
-          genderVisible,
+          gender_custom: genderCustom,
+          gender_visible: genderVisible,
+          moderation_status: currentModerationStatus || "",
+          warning_until: currentWarningUntil,
+          lat: latValue,
+          lng: lngValue,
+          blocked_users: currentBlockedUsers,
           link1,
-          link1Label,
+          link1_label: link1Label,
           link2,
-          link2Label,
-          updatedAt: serverTimestamp()
+          link2_label: link2Label,
+          updated_at: nowIso()
         };
 
-        batch.set(userRef, {
-          ...commonPayload,
-          ...locationPayload
-        }, { merge: true });
+        const publicPayload = {
+          uid: currentUser.id,
+          display_name: displayName,
+          display_name_lower: displayName.toLowerCase(),
+          username,
+          username_lower: username,
+          bio,
+          photo_url: photoURL,
+          city,
+          city_lower: city.toLowerCase(),
+          province,
+          country,
+          location_search: locationSearch,
+          city_visible: cityVisible,
+          is_private: isPrivate,
+          is_verified: verifiedStatus,
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility,
+          gender,
+          gender_custom: genderCustom,
+          gender_visible: genderVisible,
+          moderation_status: currentModerationStatus || "",
+          warning_until: currentWarningUntil,
+          lat: latValue,
+          lng: lngValue,
+          link1,
+          link1_label: link1Label,
+          link2,
+          link2_label: link2Label,
+          updated_at: nowIso()
+        };
 
-        batch.set(publicProfileRef, {
-          ...commonPayload,
-          ...locationPayload
-        }, { merge: true });
+        const { error: userSaveError } = await supabase
+          .from("users")
+          .upsert(userPayload, { onConflict: "uid" });
 
-        await batch.commit();
+        if (userSaveError) throw userSaveError;
 
-        await updateProfile(currentUser, {
-          displayName,
-          photoURL
+        const { error: publicSaveError } = await supabase
+          .from("public_profiles")
+          .upsert(publicPayload, { onConflict: "uid" });
+
+        if (publicSaveError) throw publicSaveError;
+
+        const { error: authUpdateError } = await supabase.auth.updateUser({
+          data: {
+            display_name: displayName,
+            photo_url: photoURL
+          }
         });
+
+        if (authUpdateError) {
+          console.error("Auth metadata update warning:", authUpdateError);
+        }
 
         originalUsernameLower = username;
         originalLocationKey = locationKey(city, province, country);
+        originalLat = latValue;
+        originalLng = lngValue;
 
         nearbyStatusText.textContent = locationVisibility === "hidden" ? "Hidden" : "Visible";
+        emailText.textContent = currentUser.email || "-";
         showPreview(photoURL);
         setUsernameStatus("Username saved.", true);
         showMessage("Profile updated successfully.", "success");
       } catch (error) {
         console.error(error);
-        showMessage("Could not save profile.", "error");
+        showMessage(error?.message || "Could not save profile.", "error");
       }
 
       saveBtn.disabled = false;
@@ -1288,13 +1383,16 @@
 
     logoutBtn.addEventListener("click", async () => {
       try {
-        await signOut(auth);
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
         window.location.href = "login.html";
       } catch (error) {
         console.error(error);
         showMessage("Logout failed.", "error");
       }
     });
+
+    loadProfilePage();
   </script>
 </body>
 </html>
