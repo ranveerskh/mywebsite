@@ -668,7 +668,6 @@
       display:grid;
       gap:18px;
     }
-    .network-section:last-child{margin-bottom:0}
     .network-title{
       font-size:15px;
       font-weight:800;
@@ -1025,25 +1024,9 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      collection,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      addDoc,
-      serverTimestamp,
-      query,
-      where,
-      limit,
-      arrayUnion,
-      arrayRemove
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
-    const POST_OWNER_FIELDS = ["userId", "authorId", "uid", "ownerId"];
+    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
 
     const loading = document.getElementById("loading");
     const content = document.getElementById("content");
@@ -1113,6 +1096,7 @@
     let currentMemberUid = "";
     let currentMemberProfile = null;
     let currentViewerPublicProfile = null;
+    let currentUser = null;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -1166,6 +1150,18 @@
         if (value != null && String(value).trim()) return String(value).trim();
       }
       return "";
+    }
+
+    function getArrayField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (Array.isArray(value)) return value;
+      }
+      return [];
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
     }
 
     function extractProfileLinks(raw) {
@@ -1233,70 +1229,88 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
-      const city = d.city || d.locationCity || d.currentCity || "";
-      const province = d.province || d.state || d.region || d.locationProvince || d.currentProvince || "";
-      const country = d.country || d.locationCountry || d.currentCountry || "";
-      const genderValue = d.gender === "self_describe"
-        ? (d.genderCustom || "")
-        : (d.gender || "");
+      const city = getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]);
+      const province = getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]);
+      const country = getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]);
+      const genderMode = getField(d, ["gender"]);
+      const genderCustom = getField(d, ["gender_custom", "genderCustom"]);
+      const genderValue = genderMode === "self_describe" ? genderCustom : genderMode;
 
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        bio: d.bio || d.about || d.description || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        moderationStatus: d.moderationStatus || d.status || "",
-        warningUntil: d.warningUntil || null,
-        verified: !!(d.verified || d.isVerified),
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted,
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
+        uid: getField(d, ["uid", "user_id", "userId", "id"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        isPrivate: !!(d.is_private || d.isPrivate || d.private_profile || d.privateProfile || d.private || d.account_private || d.accountPrivate),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        warningUntil: d.warning_until || d.warningUntil || null,
+        verified: !!(d.verified || d.is_verified || d.isVerified),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin || d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted || d.softDeleted),
+        blockedUsers: getArrayField(d, ["blocked_users", "blockedUsers"]),
         links: extractProfileLinks(d),
         city,
         province,
         country,
-        cityVisible: !!d.cityVisible,
+        cityVisible: !!(d.city_visible || d.cityVisible),
         gender: genderValue,
-        genderVisible: !!d.genderVisible
+        genderVisible: !!(d.gender_visible || d.genderVisible)
       };
     }
 
     function normalizePlace(raw, fallbackId = "") {
       const d = raw || {};
       return {
-        id: d.id || fallbackId || "",
-        name: d.name || d.title || "Untitled Place",
-        category: d.category || "General",
-        city: d.city || "",
-        description: d.description || d.desc || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted || d.status === "deleted",
-        creatorId: d.creatorId || d.createdBy || d.userId || d.ownerId || ""
+        id: getField(d, ["id"]) || fallbackId || "",
+        name: getField(d, ["name", "title"]) || "Untitled Place",
+        category: getField(d, ["category"]) || "General",
+        city: getField(d, ["city"]),
+        description: getField(d, ["description", "desc"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.status === "deleted"),
+        creatorId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "owner_id", "ownerId"])
       };
     }
 
-    async function safeGetDoc(ref) {
-      try {
-        return await getDoc(ref);
-      } catch {
-        return null;
-      }
+    function normalizeFollowRow(raw) {
+      return {
+        id: raw.id,
+        followerId: getField(raw, ["follower_id", "followerId"]),
+        followingId: getField(raw, ["following_id", "followingId"])
+      };
     }
 
-    async function safeGetDocs(ref) {
-      try {
-        return await getDocs(ref);
-      } catch {
-        return null;
-      }
+    function normalizePostRow(raw) {
+      return {
+        ...raw,
+        id: raw.id,
+        userId: getField(raw, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
+        caption: getField(raw, ["caption", "text", "content"]),
+        imageURL: getField(raw, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        hidden: !!(raw.hidden || raw.hidden_by_admin || raw.hiddenByAdmin || raw.soft_deleted || raw.softDeleted),
+        createdAt: raw.created_at || raw.createdAt || raw.timestamp || null
+      };
     }
 
-    function getCreatedMs(obj) {
-      const value = obj?.createdAt || obj?.timestamp || null;
+    function normalizeEventRow(raw) {
+      return {
+        ...raw,
+        id: raw.id,
+        title: getField(raw, ["title", "name"]) || "Untitled Event",
+        description: getField(raw, ["description", "desc"]),
+        city: getField(raw, ["city", "location_city", "locationCity"]),
+        date: getField(raw, ["date"]),
+        time: getField(raw, ["time"]),
+        visibility: getField(raw, ["visibility", "event_visibility", "eventVisibility"]) || "public",
+        creatorId: getField(raw, ["creator_id", "creatorId", "user_id", "userId", "uid"]),
+        creatorName: getField(raw, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
+        hidden: !!(raw.hidden || raw.hidden_by_admin || raw.hiddenByAdmin || raw.soft_deleted || raw.softDeleted)
+      };
+    }
+
+    function getCreatedMs(value) {
       if (!value) return 0;
-      if (value?.toDate) return value.toDate().getTime();
       const ms = new Date(value).getTime();
       return Number.isNaN(ms) ? 0 : ms;
     }
@@ -1304,7 +1318,6 @@
     function formatDate(value) {
       if (!value) return "Just now";
       try {
-        if (value?.toDate) return value.toDate().toLocaleString();
         const d = new Date(value);
         return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
       } catch {
@@ -1313,15 +1326,15 @@
     }
 
     function getPostOwnerId(post) {
-      return post?.userId || post?.authorId || post?.ownerId || post?.uid || "";
+      return post?.userId || "";
     }
 
     function getPostImage(post) {
-      return post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "";
+      return post?.imageURL || "";
     }
 
     function getPostCaption(post) {
-      return post?.caption || post?.text || post?.content || "";
+      return post?.caption || "";
     }
 
     function applyModerationBadge(status, warningUntil) {
@@ -1334,10 +1347,7 @@
       }
 
       if (status === "warned" && warningUntil) {
-        const untilMs = warningUntil?.toDate
-          ? warningUntil.toDate().getTime()
-          : new Date(warningUntil).getTime();
-
+        const untilMs = new Date(warningUntil).getTime();
         if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
           moderationBadge.className = "moderation-badge moderation-warn";
         }
@@ -1601,77 +1611,6 @@
       });
     }
 
-    function getPlaceStatusFromDoc(place, uid) {
-      const arrayVisitedFields = ["visitedBy", "visitedUsers", "visitors"];
-      const arrayExploredFields = ["exploredBy", "exploredUsers", "explorers"];
-
-      for (const key of arrayVisitedFields) {
-        if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
-      }
-      for (const key of arrayExploredFields) {
-        if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
-      }
-
-      if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
-        return String(place.userStatuses[uid]).toLowerCase();
-      }
-
-      if (place.peopleStatus && typeof place.peopleStatus === "object" && place.peopleStatus[uid]) {
-        return String(place.peopleStatus[uid]).toLowerCase();
-      }
-
-      return "";
-    }
-
-    function getVisitedPlaces(uid, placesSnap, placeVisitsSnap) {
-      const map = new Map();
-
-      if (placeVisitsSnap && placeVisitsSnap.docs) {
-        placeVisitsSnap.docs.forEach(d => {
-          const raw = d.data() || {};
-          const userId = raw.userId || raw.uid || raw.memberId || "";
-          const placeId = raw.placeId || raw.targetId || raw.nearbyPlaceId || raw.id || "";
-          const statusRaw = String(raw.status || raw.type || "").toLowerCase();
-
-          if (userId !== uid || !placeId) return;
-
-          let status = "";
-          if (statusRaw.includes("visited")) status = "visited";
-          else if (statusRaw.includes("explored")) status = "explored";
-          else if (raw.visited === true) status = "visited";
-          else if (raw.explored === true) status = "explored";
-          else status = "visited";
-
-          map.set(placeId, {
-            placeId,
-            userStatus: status
-          });
-        });
-      }
-
-      if (placesSnap && placesSnap.docs) {
-        placesSnap.docs.forEach(d => {
-          const place = d.data() || {};
-          if (place.hidden || place.hiddenByAdmin || place.softDeleted) return;
-
-          const detectedStatus = getPlaceStatusFromDoc(place, uid);
-          if (!detectedStatus && !map.has(d.id)) return;
-
-          const base = normalizePlace({ id: d.id, ...place }, d.id);
-          if (base.hidden) return;
-
-          const previous = map.get(d.id) || {};
-          map.set(d.id, {
-            ...base,
-            ...previous,
-            userStatus: detectedStatus || previous.userStatus || "visited"
-          });
-        });
-      }
-
-      return Array.from(map.values()).filter(Boolean);
-    }
-
     function renderPlaces(list, container, emptyEl, type) {
       container.innerHTML = "";
 
@@ -1772,67 +1711,100 @@
       });
     }
 
+    async function trySingle(builder) {
+      try {
+        const { data, error } = await builder();
+        if (error) throw error;
+        return data || null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function tryMany(builder) {
+      try {
+        const { data, error } = await builder();
+        if (error) throw error;
+        return data || [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function fetchProfileRowByUidOrId(table, uid) {
+      let row = await trySingle(() => supabase.from(table).select("*").eq("uid", uid).maybeSingle());
+      if (row) return row;
+
+      row = await trySingle(() => supabase.from(table).select("*").eq("id", uid).maybeSingle());
+      if (row) return row;
+
+      return null;
+    }
+
     async function getProfileFromPublicProfilesByKey(key) {
       if (!key) return null;
 
-      try {
-        const direct = await getDoc(doc(db, "publicProfiles", key));
-        if (direct.exists()) {
-          return normalizeProfile({ id: direct.id, ...direct.data() }, direct.id);
-        }
-      } catch {}
+      let row = await trySingle(() => supabase.from("public_profiles").select("*").eq("uid", key).maybeSingle());
+      if (row) return normalizeProfile(row, row.uid || row.id);
 
-      const fields = ["uid", "username", "handle", "userName"];
-      for (const field of fields) {
-        try {
-          const snap = await getDocs(query(collection(db, "publicProfiles"), where(field, "==", key), limit(1)));
-          if (!snap.empty) {
-            const d = snap.docs[0];
-            return normalizeProfile({ id: d.id, ...d.data() }, d.id);
-          }
-        } catch {}
-      }
+      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("id", key).maybeSingle());
+      if (row) return normalizeProfile(row, row.uid || row.id);
+
+      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("username", key).maybeSingle());
+      if (row) return normalizeProfile(row, row.uid || row.id);
+
+      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("handle", key).maybeSingle());
+      if (row) return normalizeProfile(row, row.uid || row.id);
+
+      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("user_name", key).maybeSingle());
+      if (row) return normalizeProfile(row, row.uid || row.id);
 
       return null;
+    }
+
+    async function getFollowsByFollower(viewerUid) {
+      let rows = await tryMany(() => supabase.from("follows").select("*").eq("follower_id", viewerUid));
+      if (rows.length) return rows.map(normalizeFollowRow);
+
+      rows = await tryMany(() => supabase.from("follows").select("*").eq("followerId", viewerUid));
+      return rows.map(normalizeFollowRow);
+    }
+
+    async function getFollowsByFollowing(viewerUid) {
+      let rows = await tryMany(() => supabase.from("follows").select("*").eq("following_id", viewerUid));
+      if (rows.length) return rows.map(normalizeFollowRow);
+
+      rows = await tryMany(() => supabase.from("follows").select("*").eq("followingId", viewerUid));
+      return rows.map(normalizeFollowRow);
+    }
+
+    async function getRequestsByRequester(viewerUid) {
+      let rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("requester_id", viewerUid));
+      if (rows.length) return rows;
+
+      rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("requesterId", viewerUid));
+      return rows;
+    }
+
+    async function getRequestsByTarget(viewerUid) {
+      let rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("target_id", viewerUid));
+      if (rows.length) return rows;
+
+      rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("targetId", viewerUid));
+      return rows;
     }
 
     async function getRelationship(viewerUid, memberUid) {
       let followDocId = null;
       let requestDocId = null;
 
-      try {
-        const directFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
-        if (directFollow.exists()) {
-          followDocId = directFollow.id;
-        }
-      } catch {}
+      const followRowsA = await getFollowsByFollower(viewerUid);
+      const followFound = followRowsA.find(r => r.followingId === memberUid);
+      if (followFound) followDocId = followFound.id;
 
-      if (!followDocId) {
-        try {
-          const followSnap = await getDocs(
-            query(collection(db, "follows"), where("followerId", "==", viewerUid), limit(100))
-          );
-          const found = followSnap.docs.find(d => d.data().followingId === memberUid);
-          if (found) followDocId = found.id;
-        } catch {}
-      }
-
-      try {
-        const directReq = await getDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-        if (directReq.exists()) {
-          requestDocId = directReq.id;
-        }
-      } catch {}
-
-      if (!requestDocId) {
-        try {
-          const reqSnap = await getDocs(
-            query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid), limit(100))
-          );
-          const found = reqSnap.docs.find(d => d.data().targetId === memberUid);
-          if (found) requestDocId = found.id;
-        } catch {}
-      }
+      const reqRowsA = await getRequestsByRequester(viewerUid);
+      const reqFound = reqRowsA.find(r => getField(r, ["target_id", "targetId"]) === memberUid);
+      if (reqFound) requestDocId = reqFound.id;
 
       let relationship = "none";
       if (followDocId) relationship = "following";
@@ -1842,71 +1814,64 @@
     }
 
     function getActorName(profileData, authUser) {
-      return profileData?.displayName || authUser?.displayName || authUser?.email || "Someone";
+      return profileData?.displayName || authUser?.user_metadata?.display_name || authUser?.email || "Someone";
     }
 
     async function createNotificationSafe(memberUid, payload) {
       try {
-        await addDoc(collection(db, "notifications", memberUid, "items"), payload);
+        await supabase.from("notifications").insert(payload);
       } catch {}
     }
 
     async function removeExistingRelations(viewerUid, memberUid) {
+      const attempts = [
+        () => supabase.from("follows").delete().eq("follower_id", viewerUid).eq("following_id", memberUid),
+        () => supabase.from("follows").delete().eq("followerId", viewerUid).eq("followingId", memberUid),
+        () => supabase.from("follows").delete().eq("follower_id", memberUid).eq("following_id", viewerUid),
+        () => supabase.from("follows").delete().eq("followerId", memberUid).eq("followingId", viewerUid),
+        () => supabase.from("follow_requests").delete().eq("requester_id", viewerUid).eq("target_id", memberUid),
+        () => supabase.from("follow_requests").delete().eq("requesterId", viewerUid).eq("targetId", memberUid),
+        () => supabase.from("follow_requests").delete().eq("requester_id", memberUid).eq("target_id", viewerUid),
+        () => supabase.from("follow_requests").delete().eq("requesterId", memberUid).eq("targetId", viewerUid)
+      ];
+
+      for (const fn of attempts) {
+        try { await fn(); } catch {}
+      }
+    }
+
+    async function upsertUserBlockedList(viewerUid, blockedUsers) {
+      const payload = {
+        uid: viewerUid,
+        blocked_users: blockedUsers,
+        updated_at: nowIso()
+      };
+
       try {
-        const [myFollowingSnap, myFollowerSnap, myOutgoingReqSnap, myIncomingReqSnap] = await Promise.all([
-          getDocs(query(collection(db, "follows"), where("followerId", "==", viewerUid))),
-          getDocs(query(collection(db, "follows"), where("followingId", "==", viewerUid))),
-          getDocs(query(collection(db, "follow_requests"), where("requesterId", "==", viewerUid))),
-          getDocs(query(collection(db, "follow_requests"), where("targetId", "==", viewerUid)))
-        ]);
-
-        const deletePromises = [];
-
-        myFollowingSnap.docs.forEach(d => {
-          const data = d.data();
-          if (data.followingId === memberUid) deletePromises.push(deleteDoc(d.ref));
-        });
-
-        myFollowerSnap.docs.forEach(d => {
-          const data = d.data();
-          if (data.followerId === memberUid) deletePromises.push(deleteDoc(d.ref));
-        });
-
-        myOutgoingReqSnap.docs.forEach(d => {
-          const data = d.data();
-          if (data.targetId === memberUid) deletePromises.push(deleteDoc(d.ref));
-        });
-
-        myIncomingReqSnap.docs.forEach(d => {
-          const data = d.data();
-          if (data.requesterId === memberUid) deletePromises.push(deleteDoc(d.ref));
-        });
-
-        await Promise.all(deletePromises);
+        const { error } = await supabase.from("users").upsert(payload, { onConflict: "uid" });
+        if (error) throw error;
       } catch (err) {
-        console.warn("Relation cleanup failed:", err);
+        const altPayload = {
+          uid: viewerUid,
+          blockedUsers,
+          updated_at: nowIso()
+        };
+        const { error } = await supabase.from("users").upsert(altPayload, { onConflict: "uid" });
+        if (error) throw error;
       }
     }
 
     async function blockUser(viewerUid, memberUid) {
-      await setDoc(doc(db, "users", viewerUid), {
-        uid: viewerUid,
-        blockedUsers: arrayUnion(memberUid),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      currentViewerBlockedUsers = [...new Set([...currentViewerBlockedUsers, memberUid])];
+      const next = [...new Set([...(currentViewerBlockedUsers || []), memberUid])];
+      await upsertUserBlockedList(viewerUid, next);
+      currentViewerBlockedUsers = next;
       await removeExistingRelations(viewerUid, memberUid);
     }
 
     async function unblockUser(viewerUid, memberUid) {
-      await setDoc(doc(db, "users", viewerUid), {
-        uid: viewerUid,
-        blockedUsers: arrayRemove(memberUid),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      currentViewerBlockedUsers = currentViewerBlockedUsers.filter(uid => uid !== memberUid);
+      const next = (currentViewerBlockedUsers || []).filter(uid => uid !== memberUid);
+      await upsertUserBlockedList(viewerUid, next);
+      currentViewerBlockedUsers = next;
     }
 
     function renderHeadActions(viewerUid, memberUid, isBlockedByViewer) {
@@ -1958,6 +1923,32 @@
       return link;
     }
 
+    async function deleteFollowById(id) {
+      if (!id) return;
+      let done = false;
+
+      try {
+        const { error } = await supabase.from("follows").delete().eq("id", id);
+        if (!error) done = true;
+      } catch {}
+
+      if (done) return;
+      throw new Error("Could not remove follow.");
+    }
+
+    async function deleteRequestById(id) {
+      if (!id) return;
+      let done = false;
+
+      try {
+        const { error } = await supabase.from("follow_requests").delete().eq("id", id);
+        if (!error) done = true;
+      } catch {}
+
+      if (done) return;
+      throw new Error("Could not remove request.");
+    }
+
     async function renderActions(viewerUid, memberUid, actorName, isPrivate, relationship, isBlockedByViewer, isBanned) {
       followArea.innerHTML = "";
       setActionMessage("");
@@ -1982,11 +1973,7 @@
           setActionMessage("");
 
           try {
-            if (relationshipInfo.followDocId) {
-              await deleteDoc(doc(db, "follows", relationshipInfo.followDocId));
-            } else {
-              await deleteDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
-            }
+            await deleteFollowById(relationshipInfo.followDocId);
             window.location.reload();
           } catch (err) {
             console.error(err);
@@ -2008,11 +1995,7 @@
           setActionMessage("");
 
           try {
-            if (relationshipInfo.requestDocId) {
-              await deleteDoc(doc(db, "follow_requests", relationshipInfo.requestDocId));
-            } else {
-              await deleteDoc(doc(db, "follow_requests", `${viewerUid}__${memberUid}`));
-            }
+            await deleteRequestById(relationshipInfo.requestDocId);
             window.location.reload();
           } catch (err) {
             console.error(err);
@@ -2035,24 +2018,34 @@
           setActionMessage("");
 
           try {
-            await setDoc(
-              doc(db, "follow_requests", `${viewerUid}__${memberUid}`),
-              {
+            let inserted = false;
+
+            try {
+              const { error } = await supabase.from("follow_requests").insert({
+                requester_id: viewerUid,
+                target_id: memberUid,
+                created_at: nowIso()
+              });
+              if (!error) inserted = true;
+            } catch {}
+
+            if (!inserted) {
+              const { error } = await supabase.from("follow_requests").insert({
                 requesterId: viewerUid,
                 targetId: memberUid,
-                createdAt: serverTimestamp()
-              },
-              { merge: true }
-            );
+                createdAt: nowIso()
+              });
+              if (error) throw error;
+            }
 
             await createNotificationSafe(memberUid, {
               type: "follow_request",
               title: "Follow request",
               text: `${actorName} sent you a follow request.`,
-              fromUserId: viewerUid,
-              toUserId: memberUid,
-              createdAt: serverTimestamp(),
-              isRead: false
+              from_user_id: viewerUid,
+              to_user_id: memberUid,
+              created_at: nowIso(),
+              is_read: false
             });
 
             window.location.reload();
@@ -2077,26 +2070,34 @@
         setActionMessage("");
 
         try {
-          const existingFollow = await getDoc(doc(db, "follows", `${viewerUid}__${memberUid}`));
-          if (existingFollow.exists()) {
-            window.location.reload();
-            return;
-          }
+          let inserted = false;
 
-          await setDoc(doc(db, "follows", `${viewerUid}__${memberUid}`), {
-            followerId: viewerUid,
-            followingId: memberUid,
-            createdAt: serverTimestamp()
-          });
+          try {
+            const { error } = await supabase.from("follows").insert({
+              follower_id: viewerUid,
+              following_id: memberUid,
+              created_at: nowIso()
+            });
+            if (!error) inserted = true;
+          } catch {}
+
+          if (!inserted) {
+            const { error } = await supabase.from("follows").insert({
+              followerId: viewerUid,
+              followingId: memberUid,
+              createdAt: nowIso()
+            });
+            if (error) throw error;
+          }
 
           await createNotificationSafe(memberUid, {
             type: "follow",
             title: "New follower",
             text: `${actorName} started following you.`,
-            fromUserId: viewerUid,
-            toUserId: memberUid,
-            createdAt: serverTimestamp(),
-            isRead: false
+            from_user_id: viewerUid,
+            to_user_id: memberUid,
+            created_at: nowIso(),
+            is_read: false
           });
 
           window.location.reload();
@@ -2111,11 +2112,148 @@
       followArea.appendChild(createMessageButton(memberUid));
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function getEventMembershipRowsForUser(uid) {
+      const attempts = [
+        () => supabase.from("event_members").select("*").eq("user_id", uid),
+        () => supabase.from("event_members").select("*").eq("userId", uid),
+        () => supabase.from("event_members").select("*").eq("member_id", uid),
+        () => supabase.from("event_members").select("*").eq("memberId", uid),
+        () => supabase.from("event_participants").select("*").eq("user_id", uid),
+        () => supabase.from("event_participants").select("*").eq("userId", uid),
+        () => supabase.from("event_attendees").select("*").eq("user_id", uid),
+        () => supabase.from("event_attendees").select("*").eq("userId", uid)
+      ];
+
+      for (const fn of attempts) {
+        try {
+          const { data, error } = await fn();
+          if (!error) return data || [];
+        } catch {}
+      }
+
+      return [];
+    }
+
+    function getJoinedEventIdsFromEventRows(events, uid) {
+      const ids = new Set();
+
+      events.forEach(event => {
+        const joinedArrays = [
+          event.joined_users,
+          event.joinedUsers,
+          event.members,
+          event.member_ids,
+          event.memberIds,
+          event.attendees,
+          event.attendee_ids,
+          event.attendeeIds
+        ];
+
+        for (const arr of joinedArrays) {
+          if (Array.isArray(arr) && arr.includes(uid)) {
+            ids.add(event.id);
+            break;
+          }
+        }
+
+        const joinedMaps = [event.member_statuses, event.memberStatuses, event.joined_map, event.joinedMap];
+        for (const obj of joinedMaps) {
+          if (obj && typeof obj === "object" && obj[uid]) {
+            ids.add(event.id);
+            break;
+          }
+        }
+      });
+
+      return ids;
+    }
+
+    async function fetchAllProfilesMap() {
+      const rows = await tryMany(() => supabase.from("public_profiles").select("*"));
+      const map = new Map();
+
+      rows.forEach(row => {
+        const p = normalizeProfile(row, row.uid || row.id);
+        const key = p.uid || row.id;
+        if (key) map.set(key, p);
+      });
+
+      return map;
+    }
+
+    async function fetchAllPlaces() {
+      const all = [];
+
+      for (const source of PLACE_SOURCES) {
+        const rows = await tryMany(() => supabase.from(source).select("*"));
+        rows.forEach(row => {
+          const place = normalizePlace(row, row.id);
+          place.source = source;
+          all.push(place);
+        });
+      }
+
+      return all;
+    }
+
+    async function fetchPlaceVisitsForUser(uid) {
+      let rows = await tryMany(() => supabase.from("place_visits").select("*").eq("user_id", uid));
+      if (rows.length) return rows;
+
+      rows = await tryMany(() => supabase.from("place_visits").select("*").eq("userId", uid));
+      return rows;
+    }
+
+    function buildVisitedPlaces(uid, allPlaces, visitRows) {
+      const byId = new Map(allPlaces.map(p => [p.id, p]));
+      const result = [];
+
+      visitRows.forEach(raw => {
+        const placeId = getField(raw, ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId", "id"]);
+        const statusRaw = String(raw.status || raw.type || "").toLowerCase();
+
+        let userStatus = "";
+        if (statusRaw.includes("explor")) userStatus = "explored";
+        else if (statusRaw.includes("visit")) userStatus = "visited";
+        else if (raw.explored === true) userStatus = "explored";
+        else userStatus = "visited";
+
+        const base = byId.get(placeId);
+        if (base) {
+          result.push({
+            ...base,
+            userStatus
+          });
+        } else {
+          result.push({
+            id: placeId || raw.id,
+            name: getField(raw, ["place_name", "placeName", "name"]) || "Visited Place",
+            category: getField(raw, ["category"]) || "",
+            city: getField(raw, ["city"]) || "",
+            description: "",
+            userStatus
+          });
+        }
+      });
+
+      const unique = new Map();
+      result.forEach(item => {
+        const key = item.id || `${item.name}-${item.city}`;
+        unique.set(key, item);
+      });
+
+      return Array.from(unique.values());
+    }
+
+    async function initPage() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
+
+      currentUser = authData.user;
 
       const memberKey = getMemberKey();
       if (!memberKey) {
@@ -2137,35 +2275,37 @@
         const memberUid = profile.uid;
 
         const [
-          myPublicSnap,
-          myUserSnap,
-          postsSnap,
-          eventsSnap,
-          followsSnap,
-          publicProfilesSnap,
-          placesSnap,
-          placeVisitsSnap,
-          relationship
+          viewerPublicRow,
+          viewerUserRow,
+          postsRows,
+          eventRows,
+          followRowsByFollower,
+          followRowsByFollowing,
+          profilesMap,
+          relationship,
+          allPlaces,
+          placeVisitRows,
+          eventMembershipRows
         ] = await Promise.all([
-          safeGetDoc(doc(db, "publicProfiles", user.uid)),
-          safeGetDoc(doc(db, "users", user.uid)),
-          safeGetDocs(collection(db, "posts")),
-          safeGetDocs(collection(db, "events")),
-          safeGetDocs(collection(db, "follows")),
-          safeGetDocs(collection(db, "publicProfiles")),
-          safeGetDocs(collection(db, "nearby_places")),
-          safeGetDocs(query(collection(db, "place_visits"), where("userId", "==", memberUid))),
-          getRelationship(user.uid, memberUid)
+          fetchProfileRowByUidOrId("public_profiles", currentUser.id),
+          fetchProfileRowByUidOrId("users", currentUser.id),
+          tryMany(() => supabase.from("posts").select("*")),
+          tryMany(() => supabase.from("events").select("*")),
+          getFollowsByFollower(currentUser.id),
+          getFollowsByFollowing(currentUser.id),
+          fetchAllProfilesMap(),
+          getRelationship(currentUser.id, memberUid),
+          fetchAllPlaces(),
+          fetchPlaceVisitsForUser(memberUid),
+          getEventMembershipRowsForUser(memberUid)
         ]);
 
-        currentViewerPublicProfile = myPublicSnap?.exists() ? myPublicSnap.data() : null;
-        currentViewerBlockedUsers = Array.isArray(myUserSnap?.exists() ? myUserSnap.data().blockedUsers : [])
-          ? myUserSnap.data().blockedUsers
-          : [];
+        currentViewerPublicProfile = viewerPublicRow ? normalizeProfile(viewerPublicRow, currentUser.id) : null;
+        currentViewerBlockedUsers = viewerUserRow ? normalizeProfile(viewerUserRow, currentUser.id).blockedUsers : [];
 
         relationshipInfo = relationship;
 
-        const isSelf = user.uid === memberUid;
+        const isSelf = currentUser.id === memberUid;
         const isPrivate = !!profile.isPrivate;
         const isBanned = profile.moderationStatus === "banned" || profile.isHiddenByAdmin || profile.softDeleted;
         const isBlockedByViewer = currentViewerBlockedUsers.includes(memberUid);
@@ -2201,21 +2341,21 @@
 
         renderLinks(profile.links || [], canShowExtendedInfo);
         renderProfileMeta(profile, canShowExtendedInfo, isBlockedByViewer);
-        renderHeadActions(user.uid, memberUid, isBlockedByViewer);
+        renderHeadActions(currentUser.id, memberUid, isBlockedByViewer);
 
         await renderActions(
-          user.uid,
+          currentUser.id,
           memberUid,
-          getActorName(currentViewerPublicProfile, user),
+          getActorName(currentViewerPublicProfile, currentUser),
           isPrivate,
           relationship.relationship,
           isBlockedByViewer,
           isBanned
         );
 
-        const follows = (followsSnap?.docs || []).map(d => d.data());
-        const followers = follows.filter(f => f.followingId === memberUid).map(f => f.followerId);
-        const following = follows.filter(f => f.followerId === memberUid).map(f => f.followingId);
+        const allFollows = [...followRowsByFollower, ...followRowsByFollowing];
+        const followers = allFollows.filter(f => f.followingId === memberUid).map(f => f.followerId);
+        const following = allFollows.filter(f => f.followerId === memberUid).map(f => f.followingId);
 
         followersCountEl.textContent = String(followers.filter(id => !currentViewerBlockedUsers.includes(id)).length);
         followingCountEl.textContent = String(following.filter(id => !currentViewerBlockedUsers.includes(id)).length);
@@ -2223,13 +2363,10 @@
         if (canViewFull) {
           setLockedMode(false);
 
-          dashboardPosts = (postsSnap?.docs || [])
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(p => {
-              const ownerId = getPostOwnerId(p);
-              return ownerId === memberUid && !p.hidden && !p.hiddenByAdmin && !p.softDeleted;
-            })
-            .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+          dashboardPosts = postsRows
+            .map(normalizePostRow)
+            .filter(p => getPostOwnerId(p) === memberUid && !p.hidden)
+            .sort((a, b) => getCreatedMs(b.createdAt) - getCreatedMs(a.createdAt));
 
           dashboardVisibleCount = 10;
           postsCountEl.textContent = String(dashboardPosts.length);
@@ -2238,50 +2375,33 @@
           const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
           renderPhotos(photoPosts);
 
-          const allEvents = (eventsSnap?.docs || [])
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(e => !e.hidden && !e.hiddenByAdmin && !e.softDeleted);
+          const allEvents = eventRows
+            .map(normalizeEventRow)
+            .filter(e => !e.hidden);
 
           const createdEvents = allEvents.filter(e => e.creatorId === memberUid);
 
-          const joinedChecks = await Promise.all(
-            allEvents.map(async (event) => {
-              if (event.creatorId === memberUid) return null;
-              try {
-                const joinSnap = await getDoc(doc(db, "events", event.id, "members", memberUid));
-                return joinSnap.exists() ? event : null;
-              } catch {
-                return null;
-              }
-            })
+          const joinedFromRows = new Set(
+            eventMembershipRows.map(r => getField(r, ["event_id", "eventId"]))
           );
+          const joinedFromEvents = getJoinedEventIdsFromEventRows(allEvents, memberUid);
+          const joinedIds = new Set([...joinedFromRows, ...joinedFromEvents]);
 
-          const joinedEvents = joinedChecks.filter(Boolean);
+          const joinedEvents = allEvents.filter(e => joinedIds.has(e.id) && e.creatorId !== memberUid);
 
           renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
           renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
-
-          const profilesMap = new Map();
-          (publicProfilesSnap?.docs || []).forEach(docSnap => {
-            const data = normalizeProfile({ id: docSnap.id, ...docSnap.data() }, docSnap.id);
-            const key = data.uid || docSnap.id;
-            profilesMap.set(key, data);
-          });
 
           await Promise.all([
             renderPeople(followers, profilesMap, currentViewerBlockedUsers, followersList, followersEmpty, "No followers yet."),
             renderPeople(following, profilesMap, currentViewerBlockedUsers, followingList, followingEmpty, "Not following anyone yet.")
           ]);
 
-          const allPlaces = (placesSnap?.docs || [])
-            .map(d => normalizePlace({ id: d.id, ...d.data() }, d.id))
-            .filter(place => !place.hidden);
-
           const addedPlaces = allPlaces
-            .filter(place => place.creatorId === memberUid)
+            .filter(place => !place.hidden && place.creatorId === memberUid)
             .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-          const visitedPlaces = getVisitedPlaces(memberUid, placesSnap, placeVisitsSnap)
+          const visitedPlaces = buildVisitedPlaces(memberUid, allPlaces, placeVisitRows)
             .filter(place => place.creatorId !== memberUid || place.userStatus)
             .sort((a, b) => {
               if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
@@ -2325,11 +2445,19 @@
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (!session?.user) {
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error("Member page load failed:", err);
         loading.textContent = "Could not load member profile.";
       }
-    });
+    }
+
+    initPage();
   </script>
 </body>
 </html>
