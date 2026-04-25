@@ -442,12 +442,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getDocs,
-      collection
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const lessonCountChip = document.getElementById("lessonCountChip");
     const categoryCountChip = document.getElementById("categoryCountChip");
@@ -467,6 +462,15 @@
     let currentUser = null;
     let currentCategory = "all";
     let lessonsData = [];
+    let schoolChannels = [];
+    let refreshTimer = null;
+
+    const SCHOOL_SOURCES = [
+      "school_posts",
+      "school_lessons",
+      "schoolLessons",
+      "school"
+    ];
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -479,47 +483,125 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "bwTheme") applyTheme();
     });
 
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find")
+      );
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
+        }
+      }
+      return fallback;
+    }
+
     function getCreatedMs(obj) {
-      const value = obj?.createdAt || obj?.timestamp || null;
+      const value =
+        obj?.created_at ??
+        obj?.createdAt ??
+        obj?.timestamp ??
+        obj?.created ??
+        null;
+
       if (!value) return 0;
-      if (value?.toDate) return value.toDate().getTime();
-      const ms = new Date(value).getTime();
-      return Number.isNaN(ms) ? 0 : ms;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isNaN(ms) ? 0 : ms;
+      } catch {
+        return 0;
+      }
+    }
+
+    function normalizeExternalUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
     function normalizeLesson(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
+
       return {
-        id: d.id || fallbackId || "",
+        id: String(getField(d, ["id"], fallbackId) || fallbackId || ""),
         source: sourceName,
-        title: d.title || d.name || "Untitled Lesson",
-        summary: d.summary || d.description || d.subtitle || "",
-        body: d.body || d.content || d.text || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        category: (d.category || d.topic || "General").trim(),
-        externalURL: d.externalURL || d.url || d.link || "",
-        published: d.published !== false,
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
+
+        title: String(getField(d, ["title", "name"], "Untitled Lesson") || "Untitled Lesson"),
+        summary: String(getField(d, ["summary", "description", "subtitle"], "") || ""),
+        body: String(getField(d, ["body", "content", "text"], "") || ""),
+
+        imageURL: String(getField(d, [
+          "image_url",
+          "imageURL",
+          "imageUrl",
+          "photo_url",
+          "photoURL",
+          "media_url",
+          "mediaUrl"
+        ], "") || ""),
+
+        category: String(getField(d, ["category", "topic"], "General") || "General").trim() || "General",
+
+        externalURL: normalizeExternalUrl(String(getField(d, [
+          "external_url",
+          "externalURL",
+          "url",
+          "link"
+        ], "") || "")),
+
+        published: d.published !== false && d.is_published !== false && d.isPublished !== false,
+        hidden: !!(
+          d.hidden ||
+          d.hidden_by_admin ||
+          d.hiddenByAdmin ||
+          d.soft_deleted ||
+          d.softDeleted
+        ),
+
         createdAtMs: getCreatedMs(d),
         order: Number.isFinite(Number(d.order)) ? Number(d.order) : null
       };
@@ -561,7 +643,8 @@
 
     function renderCategories() {
       const visibleLessons = lessonsData.filter(item => item.published && !item.hidden);
-      const categories = [...new Set(visibleLessons.map(item => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      const categories = [...new Set(visibleLessons.map(item => item.category).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
 
       const allButtons = [
         { key: "all", label: "All" },
@@ -575,11 +658,13 @@
         btn.className = `category-btn ${currentCategory === item.key ? "active" : ""}`;
         btn.type = "button";
         btn.textContent = item.label;
+
         btn.addEventListener("click", () => {
           currentCategory = item.key;
           renderCategories();
           renderLessons();
         });
+
         categoryRow.appendChild(btn);
       });
     }
@@ -592,12 +677,14 @@
         .filter(item => currentCategory === "all" || item.category === currentCategory)
         .filter(item => {
           if (!q) return true;
+
           const joined = [
             item.title,
             item.summary,
             item.body,
             item.category
           ].filter(Boolean).join(" ").toLowerCase();
+
           return joined.includes(q);
         })
         .sort((a, b) => {
@@ -681,21 +768,38 @@
       });
     }
 
+    async function selectLessonsFromTable(tableName) {
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("*");
+
+        if (error) throw error;
+
+        return (data || []).map(row => {
+          return normalizeLesson({ id: row.id, ...row }, row.id, tableName);
+        });
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`School source failed: ${tableName}`, err?.message || err);
+        }
+        return [];
+      }
+    }
+
     async function loadLessons() {
-      const sources = ["school_posts", "schoolLessons", "school"];
       const map = new Map();
 
-      for (const source of sources) {
-        try {
-          const snap = await getDocs(collection(db, source));
-          snap.forEach(d => {
-            const lesson = normalizeLesson({ id: d.id, ...d.data() }, d.id, source);
-            map.set(`${source}:${lesson.id}`, lesson);
-          });
-        } catch {}
+      for (const source of SCHOOL_SOURCES) {
+        const rows = await selectLessonsFromTable(source);
+
+        rows.forEach(lesson => {
+          map.set(`${lesson.source}:${lesson.id}`, lesson);
+        });
       }
 
       lessonsData = Array.from(map.values());
+
       updateCounts();
       renderCategories();
       renderLessons();
@@ -703,7 +807,49 @@
 
     async function refreshAll() {
       openLoading();
-      await loadLessons();
+
+      try {
+        await loadLessons();
+      } catch (err) {
+        console.error(err);
+        showEmpty("Could not load school page.");
+      }
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshAll().catch(err => console.error("School refresh failed:", err));
+      }, 350);
+    }
+
+    function clearRealtimeChannels() {
+      schoolChannels.forEach(channel => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      });
+
+      schoolChannels = [];
+    }
+
+    function setupRealtime() {
+      clearRealtimeChannels();
+
+      SCHOOL_SOURCES.forEach(source => {
+        try {
+          const channel = supabase
+            .channel(`school-live-${source}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: source },
+              () => scheduleRefresh()
+            )
+            .subscribe();
+
+          schoolChannels.push(channel);
+        } catch {}
+      });
     }
 
     searchInput.addEventListener("input", () => {
@@ -721,21 +867,89 @@
     refreshBtn.addEventListener("click", refreshAll);
     refreshHeroBtn.addEventListener("click", refreshAll);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
 
-      try {
-        await refreshAll();
-      } catch (err) {
-        console.error(err);
-        showEmpty("Could not load school page.");
-      }
+      await refreshAll();
+      setupRealtime();
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      clearRealtimeChannels();
     });
+
+    initPage().catch((err) => {
+      console.error(err);
+      showEmpty("Could not load school page.");
+    });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - school_posts: select, realtime optional
+      - school_lessons: select, realtime optional
+      - schoolLessons: select, realtime optional if you created camelCase table
+      - school: select, realtime optional
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS SUPPORTED:
+      school_posts / school_lessons / schoolLessons / school:
+      - id
+      - title
+      - name
+      - summary
+      - description
+      - subtitle
+      - body
+      - content
+      - text
+      - image_url
+      - imageURL
+      - imageUrl
+      - photo_url
+      - photoURL
+      - media_url
+      - mediaUrl
+      - category
+      - topic
+      - external_url
+      - externalURL
+      - url
+      - link
+      - published
+      - is_published
+      - hidden
+      - hidden_by_admin
+      - soft_deleted
+      - created_at
+      - createdAt
+      - timestamp
+      - order
+
+      RLS IDEA:
+      - Authenticated users can select published, visible lessons
+      - Admin can insert/update/delete lessons
+      - Enable realtime only if you want school page to update live
+
+      SHARE BUTTON:
+      - Not needed on school page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
