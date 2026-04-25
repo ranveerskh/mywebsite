@@ -456,7 +456,7 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
+    <a href="nearby-events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
@@ -467,17 +467,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      query,
-      orderBy,
-      onSnapshot,
-      doc,
-      updateDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -496,7 +486,8 @@
     let currentUser = null;
     let currentTab = "all";
     let allDocs = [];
-    let unsubscribeNotifications = null;
+    let notificationsChannel = null;
+    let refreshTimer = null;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -509,24 +500,31 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "bwTheme") applyTheme();
     });
 
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (themeMediaQuery.addEventListener) {
+      themeMediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "feed.html";
     });
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
 
     function setMessage(text = "", type = "") {
       pageMessage.textContent = text;
@@ -535,29 +533,103 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().toLocaleString();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return new Date(value.seconds * 1000).toLocaleString();
+        }
+      } catch {}
+
+      try {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function isUnread(item) {
-      return item.isRead !== true && item.read !== true;
+      return item.isRead !== true && item.read !== true && item.is_read !== true;
+    }
+
+    function normalizeNotification(raw) {
+      const d = raw || {};
+
+      return {
+        id: getField(d, ["id"], ""),
+        type: getField(d, ["type"], "activity"),
+        title: getField(d, ["title"], "Notification"),
+        text: getField(d, ["text", "message", "body"], "No details"),
+
+        fromUserId: getField(d, ["from_user_id", "fromUserId", "from_uid", "fromUid"], ""),
+        toUserId: getField(d, ["to_user_id", "toUserId", "user_id", "userId", "uid"], ""),
+
+        postId: getField(d, ["post_id", "postId"], ""),
+        eventId: getField(d, ["event_id", "eventId"], ""),
+        placeId: getField(d, ["place_id", "placeId"], ""),
+        source: getField(d, ["source", "place_source", "placeSource"], ""),
+
+        isRead: !!(d.is_read ?? d.isRead ?? d.read),
+        read: !!(d.read ?? d.isRead ?? d.is_read),
+        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+        createdAtMs: toMillis(d.created_at ?? d.createdAt ?? d.created ?? null)
+      };
     }
 
     function normalizeType(type = "") {
       const t = String(type || "").toLowerCase();
+
       if (t === "follow") return { label: "Follow", cls: "type-follow" };
       if (t === "follow_request") return { label: "Request", cls: "type-request" };
       if (t === "follow_accept") return { label: "Accepted", cls: "type-follow" };
       if (t === "like") return { label: "Like", cls: "type-like" };
       if (t === "comment") return { label: "Comment", cls: "type-comment" };
-      if (t === "event_join") return { label: "Event", cls: "type-event" };
+      if (t === "event_join" || t === "event_comment" || t === "event") return { label: "Event", cls: "type-event" };
       if (t === "place_update" || t === "place_approved" || t === "place_rejected" || t === "place") return { label: "Place", cls: "type-place" };
+
       return { label: t || "Activity", cls: "type-default" };
     }
 
@@ -565,25 +637,32 @@
       if (item.type === "follow" && item.fromUserId) {
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
+
       if (item.type === "follow_request") {
         return "follow-requests.html";
       }
+
       if (item.type === "follow_accept" && item.fromUserId) {
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
+
       if ((item.type === "like" || item.type === "comment") && item.postId) {
         return `post.html?postId=${encodeURIComponent(item.postId)}`;
       }
+
       if (item.eventId) {
         return `event.html?eventId=${encodeURIComponent(item.eventId)}`;
       }
+
       if (item.placeId) {
         const sourcePart = item.source ? `&source=${encodeURIComponent(item.source)}` : "";
         return `place.html?placeId=${encodeURIComponent(item.placeId)}${sourcePart}`;
       }
+
       if (item.fromUserId) {
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
+
       return "feed.html";
     }
 
@@ -605,6 +684,7 @@
       allCountChip.textContent = `All: ${allCount}`;
       unreadCountChip.textContent = `Unread: ${unreadCount}`;
       requestCountChip.textContent = `Requests: ${requestCount}`;
+
       followRequestsLink.textContent = unreadRequestCount > 0
         ? `Follow Requests (${unreadRequestCount > 99 ? "99+" : unreadRequestCount})`
         : "Follow Requests";
@@ -617,12 +697,17 @@
       return [
         item.title,
         item.text,
-        item.type
+        item.type,
+        item.fromUserId,
+        item.postId,
+        item.eventId,
+        item.placeId
       ].filter(Boolean).join(" ").toLowerCase().includes(q);
     }
 
     function filterItems() {
       const queryText = searchInput.value || "";
+
       return allDocs.filter(item => {
         if (!matchesSearch(item, queryText)) return false;
         if (currentTab === "unread") return isUnread(item);
@@ -637,10 +722,12 @@
       if (!items.length) {
         list.classList.add("hidden");
         emptyBox.classList.remove("hidden");
+
         emptyBox.textContent =
           currentTab === "unread" ? "No unread notifications." :
           currentTab === "requests" ? "No follow requests yet." :
           "No notifications yet.";
+
         return;
       }
 
@@ -675,36 +762,81 @@
           </div>
         `;
 
-        a.addEventListener("click", async () => {
+        a.addEventListener("click", async (e) => {
+          e.preventDefault();
+
           if (isUnread(item)) {
             await markOneAsRead(item.id);
           }
+
+          window.location.href = a.href;
         });
 
         list.appendChild(a);
       });
     }
 
+    async function updateNotificationById(notificationId, payloadVariants = []) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from("notifications")
+            .update(payload)
+            .eq("id", notificationId);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not update notification.");
+    }
+
     async function markOneAsRead(notificationId) {
-      if (!currentUser) return;
+      if (!currentUser || !notificationId) return;
 
       try {
-        await updateDoc(doc(db, "notifications", currentUser.uid, "items", notificationId), {
-          isRead: true,
-          readAt: serverTimestamp()
-        });
+        await updateNotificationById(notificationId, [
+          {
+            is_read: true,
+            read: true,
+            read_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            isRead: true,
+            read: true,
+            readAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            is_read: true
+          }
+        ]);
 
         const target = allDocs.find(d => d.id === notificationId);
         if (target) {
           target.isRead = true;
+          target.is_read = true;
+          target.read = true;
         }
-      } catch {}
+
+        updateCounts(allDocs);
+        renderItems(filterItems());
+      } catch (err) {
+        console.warn("Could not mark notification read:", err?.message || err);
+      }
     }
 
     async function markAllAsRead() {
       if (!currentUser) return;
 
       const unreadItems = allDocs.filter(isUnread);
+
       if (!unreadItems.length) {
         setMessage("Everything is already read.", "ok");
         return;
@@ -714,23 +846,49 @@
       setMessage("");
 
       try {
-        await Promise.all(
-          unreadItems.map(item =>
-            updateDoc(doc(db, "notifications", currentUser.uid, "items", item.id), {
+        const ids = unreadItems.map(item => item.id).filter(Boolean);
+
+        let done = false;
+
+        try {
+          const { error } = await supabase
+            .from("notifications")
+            .update({
+              is_read: true,
+              read: true,
+              read_at: nowIso(),
+              updated_at: nowIso()
+            })
+            .in("id", ids);
+
+          if (!error) done = true;
+        } catch {}
+
+        if (!done) {
+          const { error } = await supabase
+            .from("notifications")
+            .update({
               isRead: true,
-              readAt: serverTimestamp()
-            }).catch(() => {})
-          )
-        );
+              read: true,
+              readAt: nowIso(),
+              updatedAt: nowIso()
+            })
+            .in("id", ids);
+
+          if (error) throw error;
+        }
 
         unreadItems.forEach(item => {
           item.isRead = true;
+          item.is_read = true;
+          item.read = true;
         });
 
         updateCounts(allDocs);
         renderItems(filterItems());
         setMessage("All notifications marked as read.", "ok");
-      } catch {
+      } catch (err) {
+        console.error(err);
         setMessage("Could not mark all notifications as read.", "err");
       }
 
@@ -745,9 +903,11 @@
 
     function setActiveTab(tab) {
       currentTab = tab;
+
       document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
+
       renderFromState();
     }
 
@@ -771,40 +931,177 @@
 
     markAllBtn.addEventListener("click", markAllAsRead);
 
-    function subscribeNotifications(user) {
-      if (unsubscribeNotifications) unsubscribeNotifications();
-
-      const q = query(
-        collection(db, "notifications", user.uid, "items"),
-        orderBy("createdAt", "desc")
-      );
-
-      unsubscribeNotifications = onSnapshot(q, (snapshot) => {
-        allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderFromState();
-      }, () => {
-        loading.textContent = "Could not load notifications.";
-      });
-    }
-
-    refreshBtn.addEventListener("click", () => {
+    async function loadNotifications() {
       if (!currentUser) return;
+
       loading.classList.remove("hidden");
       list.classList.add("hidden");
       emptyBox.classList.add("hidden");
-      subscribeNotifications(currentUser);
-      setMessage("Notifications refreshed.", "ok");
+
+      let rows = [];
+      let lastError = null;
+
+      try {
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("to_user_id", currentUser.id)
+          .order("created_at", { ascending: false });
+
+        if (!error) {
+          rows = data || [];
+          lastError = null;
+        } else {
+          lastError = error;
+        }
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("toUserId", currentUser.id)
+            .order("createdAt", { ascending: false });
+
+          if (!error) {
+            rows = data || [];
+            lastError = null;
+          } else {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*");
+
+          if (error) throw error;
+
+          rows = (data || []).filter(row => {
+            const toUserId = getField(row, ["to_user_id", "toUserId", "user_id", "userId", "uid"], "");
+            return toUserId === currentUser.id;
+          });
+        } catch (err) {
+          console.error(err);
+          loading.textContent = "Could not load notifications.";
+          return;
+        }
+      }
+
+      allDocs = rows
+        .map(normalizeNotification)
+        .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+      renderFromState();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadNotifications().catch(err => console.error("Notification refresh failed:", err));
+      }, 350);
+    }
+
+    function subscribeNotifications() {
+      if (notificationsChannel) {
+        try {
+          supabase.removeChannel(notificationsChannel);
+        } catch {}
+      }
+
+      notificationsChannel = supabase
+        .channel(`notifications-live-${currentUser.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "notifications" },
+          () => scheduleRefresh()
+        )
+        .subscribe();
+    }
+
+    refreshBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      try {
+        await loadNotifications();
+        setMessage("Notifications refreshed.", "ok");
+      } catch (err) {
+        console.error(err);
+        setMessage("Could not refresh notifications.", "err");
+      }
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
-      subscribeNotifications(user);
+      currentUser = data.user;
+
+      await loadNotifications();
+      subscribeNotifications();
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      if (notificationsChannel) {
+        try {
+          supabase.removeChannel(notificationsChannel);
+        } catch {}
+      }
     });
+
+    initPage().catch((err) => {
+      console.error(err);
+      loading.textContent = "Could not load notifications.";
+    });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - notifications: select, update, realtime
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS:
+      notifications:
+      - id
+      - type
+      - title
+      - text
+      - from_user_id
+      - to_user_id
+      - post_id
+      - event_id
+      - place_id
+      - source
+      - is_read
+      - read
+      - read_at
+      - created_at
+      - updated_at
+
+      SHARE BUTTON:
+      - Not needed on notifications page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
