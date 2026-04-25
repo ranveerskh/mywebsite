@@ -1,13 +1,13 @@
-Use this as full add-place.html.
-
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Add Place</title>
+  <title>OwnSpace - Add Place</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
     :root,
     html[data-theme="dark"]{
       --bg:#07101f;
@@ -19,14 +19,15 @@ Use this as full add-place.html.
       --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
-      --green:#22c55e;
+      --green:#3ddc84;
       --yellow:#f5b942;
       --purple:#a78bfa;
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 18px 36px rgba(0,0,0,.18);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -37,22 +38,28 @@ Use this as full add-place.html.
       --text:#14213d;
       --muted:#6b7893;
       --blue:#1f8fff;
-      --green:#16a34a;
+      --green:#22b36c;
       --yellow:#d59617;
       --purple:#7f63ff;
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 28px rgba(20,33,61,.08);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
     }
+
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:8px 8px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
+
     .topbar{
       position:sticky;
       top:0;
@@ -69,6 +76,7 @@ Use this as full add-place.html.
       gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
       width:42px;
       height:42px;
@@ -82,25 +90,49 @@ Use this as full add-place.html.
       align-items:center;
       justify-content:center;
       text-decoration:none;
+      position:relative;
     }
-    .top-icon-btn svg{width:18px;height:18px;display:block}
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:18px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:13px;
+      border-radius:22px;
+      padding:12px;
       margin-bottom:10px;
       box-shadow:var(--shadow);
     }
+
     .loading{
       text-align:center;
       color:var(--muted);
       padding:28px 10px;
       font-size:14px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
     }
+
     .head{
       display:flex;
       justify-content:space-between;
@@ -109,93 +141,126 @@ Use this as full add-place.html.
       margin-bottom:10px;
       flex-wrap:wrap;
     }
+
     .head-title{
       font-size:18px;
-      font-weight:800;
+      font-weight:950;
       line-height:1.25;
       margin-bottom:4px;
     }
+
     .head-sub{
       color:var(--muted);
-      font-size:12px;
+      font-size:12.5px;
       line-height:1.55;
     }
+
     .chip-row{
-      display:flex;
-      gap:7px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
       margin-bottom:10px;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:800;
+      padding:7px 5px;
+      border-radius:12px;
+      font-size:10.5px;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
+      min-height:32px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+
     .quick-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:7px;
       margin-bottom:12px;
     }
+
     .quick-btn{
       border:none;
       border-radius:12px;
-      padding:10px 12px;
+      padding:9px 10px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:6px;
       cursor:pointer;
-      min-height:40px;
+      min-height:38px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
+      white-space:nowrap;
     }
+
+    .quick-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
     .quick-btn.primary{
       background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
+
     .quick-btn.green{
-      background:rgba(34,197,94,.14);
-      border-color:rgba(34,197,94,.20);
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
     }
+
+    .quick-btn.purple{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.22);
+    }
+
     .meta-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:10px;
+      gap:8px;
       margin-bottom:12px;
     }
+
     .meta-item{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
-      padding:12px;
+      padding:11px;
+      min-width:0;
     }
+
     .meta-item small{
       display:block;
       color:var(--muted);
-      margin-bottom:6px;
+      margin-bottom:5px;
       font-size:11px;
     }
+
     .meta-item span{
-      font-weight:800;
-      font-size:14px;
+      font-weight:950;
+      font-size:13.5px;
       line-height:1.5;
       word-break:break-word;
     }
+
     .section{
       background:var(--surface-2);
       border:1px solid var(--line);
@@ -203,30 +268,36 @@ Use this as full add-place.html.
       padding:12px;
       margin-top:12px;
     }
+
     .section-title{
       font-size:15px;
-      font-weight:800;
+      font-weight:950;
       margin-bottom:4px;
     }
+
     .section-sub{
       color:var(--muted);
       font-size:12px;
       line-height:1.5;
       margin-bottom:10px;
     }
+
     .form{
       display:grid;
       gap:11px;
     }
+
     .field{
       display:grid;
       gap:6px;
     }
+
     .label{
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       color:var(--text);
     }
+
     .input,
     .textarea,
     .select{
@@ -240,70 +311,90 @@ Use this as full add-place.html.
       border:1px solid var(--line);
       font-size:14px;
     }
+
     .textarea{
-      min-height:100px;
+      min-height:110px;
       resize:vertical;
       line-height:1.55;
     }
+
     .input::placeholder,
     .textarea::placeholder{
       color:var(--muted);
     }
+
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:11px;
     }
+
     .grid-3{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
       gap:11px;
     }
+
     .small-note,
     .note{
       color:var(--muted);
       line-height:1.45;
       font-size:11px;
     }
+
     .small-note{margin-top:2px}
     .note{margin-top:10px}
-    .row-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
+
     .btn{
       border:none;
       border-radius:12px;
       padding:10px 13px;
       cursor:pointer;
-      font-weight:800;
+      font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:7px;
       min-height:40px;
-      font-size:12px;
+      font-size:12.5px;
     }
+
+    .btn svg{
+      width:16px;
+      height:16px;
+      display:block;
+      flex-shrink:0;
+    }
+
     .btn-save{
-      background:rgba(34,197,94,.14);
+      background:rgba(61,220,132,.14);
       color:var(--text);
-      border:1px solid rgba(34,197,94,.20);
+      border:1px solid rgba(61,220,132,.22);
       width:100%;
       font-size:14px;
       min-height:44px;
     }
+
+    .btn:disabled,
+    .quick-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
     .file-box{
       border:1px dashed var(--line);
       border-radius:16px;
       padding:12px;
       background:var(--surface-3);
     }
+
     .file-input{
       width:100%;
       color:var(--text);
       font-size:13px;
     }
+
     .file-input::file-selector-button{
       border:none;
       background:rgba(76,201,255,.14);
@@ -313,13 +404,16 @@ Use this as full add-place.html.
       padding:8px 10px;
       margin-right:10px;
       cursor:pointer;
-      font-weight:800;
+      font-weight:950;
     }
+
     .preview-wrap{
       margin-top:10px;
       display:none;
     }
+
     .preview-wrap.show{display:block}
+
     .preview-img{
       width:100%;
       max-height:280px;
@@ -329,14 +423,19 @@ Use this as full add-place.html.
       background:var(--surface-2);
       display:block;
     }
+
     .message{
       margin-top:2px;
       min-height:18px;
       font-size:13px;
       text-align:left;
+      line-height:1.45;
+      color:var(--muted);
     }
-    .success{color:#86efac}
-    .error{color:#fda4af}
+
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -349,11 +448,12 @@ Use this as full add-place.html.
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
       overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -362,20 +462,22 @@ Use this as full add-place.html.
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
       position:relative;
     }
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
+
     .icon-svg{
       width:20px;
       height:20px;
@@ -384,18 +486,72 @@ Use this as full add-place.html.
       justify-content:center;
       line-height:1;
     }
+
     .icon-svg svg{
       width:20px;
       height:20px;
       display:block;
     }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
+
     @media (max-width:700px){
-      .meta-grid,.grid,.grid-3{grid-template-columns:1fr}
-      .quick-actions .quick-btn,
-      .row-actions .btn{flex:1}
+      .brand{font-size:17px}
+
+      .chip-row{
+        grid-template-columns:repeat(2,1fr);
+        gap:5px;
+      }
+
+      .chip{
+        font-size:10px;
+      }
+
+      .quick-actions,
+      .meta-grid,
+      .grid,
+      .grid-3{
+        grid-template-columns:1fr;
+      }
+
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
+    }
+
+    @media(max-width:390px){
+      .quick-btn,
+      .btn{
+        font-size:11.5px;
+        padding:8px 9px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -404,60 +560,96 @@ Use this as full add-place.html.
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
       </a>
+
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Add place</div>
       </div>
+
       <a href="nearby-places.html" class="top-icon-btn" aria-label="Places">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </a>
     </div>
+
     <div class="panel">
       <div id="loading" class="loading">Loading profile...</div>
+
       <div id="content" class="hidden">
         <div class="head">
           <div>
             <div class="head-title">Add New Place</div>
-            <div class="head-sub">This version uploads photo to Supabase Storage and saves the place for approval while still showing in your own places.</div>
+            <div class="head-sub">
+              Upload a photo, add location details, and submit the place for admin approval. It will still appear for you while pending.
+            </div>
           </div>
         </div>
+
         <div class="chip-row">
-          <span class="chip chip-blue">Full location required</span>
-          <span class="chip chip-green">Storage upload</span>
-          <span class="chip chip-purple">Pending approval flow</span>
+          <span class="chip chip-blue">Location required</span>
+          <span class="chip chip-green">Photo upload</span>
+          <span class="chip chip-purple">Pending approval</span>
           <span class="chip chip-yellow">GPS optional</span>
         </div>
+
         <div class="quick-actions">
-          <button id="useProfileLocationBtn" type="button" class="quick-btn primary">Use Profile Location</button>
-          <button id="useGpsBtn" type="button" class="quick-btn green">Use Browser GPS</button>
-          <a href="nearby-places.html" class="quick-btn">All Places</a>
+          <button id="useProfileLocationBtn" type="button" class="quick-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+              <circle cx="12" cy="9" r="2.5"></circle>
+            </svg>
+            <span>Use Profile Location</span>
+          </button>
+
+          <button id="useGpsBtn" type="button" class="quick-btn green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 2v3"></path>
+              <path d="M12 19v3"></path>
+              <path d="M2 12h3"></path>
+              <path d="M19 12h3"></path>
+            </svg>
+            <span>Use GPS</span>
+          </button>
+
+          <a href="nearby-places.html" class="quick-btn purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+            <span>All Places</span>
+          </a>
         </div>
+
         <div class="meta-grid">
           <div class="meta-item">
             <small>Profile City</small>
             <span id="profileCityText">-</span>
           </div>
+
           <div class="meta-item">
             <small>Profile Province</small>
             <span id="profileProvinceText">-</span>
           </div>
+
           <div class="meta-item">
             <small>Profile Country</small>
             <span id="profileCountryText">-</span>
           </div>
         </div>
+
         <form id="placeForm" class="form">
           <div class="section">
             <div class="section-title">Basic Info</div>
-            <div class="section-sub">These details appear in nearby places and your profile places tab.</div>
+            <div class="section-sub">These details appear in nearby places and on your profile places tab.</div>
+
             <div class="grid">
               <div class="field">
                 <label class="label" for="name">Place Name</label>
                 <input type="text" id="name" class="input" placeholder="Beach, park, club, retreat..." required />
               </div>
+
               <div class="field">
                 <label class="label" for="category">Category</label>
                 <select id="category" class="select">
@@ -471,98 +663,115 @@ Use this as full add-place.html.
                 </select>
               </div>
             </div>
+
             <div class="field">
               <label class="label" for="description">Description</label>
               <textarea id="description" class="textarea" placeholder="Describe the place..." required></textarea>
             </div>
           </div>
+
           <div class="section">
             <div class="section-title">Location</div>
-            <div class="section-sub">This part fixes nearby and search. Fill city, province/state and country.</div>
+            <div class="section-sub">City, province/state, and country are required so nearby and search work properly.</div>
+
             <div class="grid-3">
               <div class="field">
                 <label class="label" for="city">City</label>
                 <input type="text" id="city" class="input" placeholder="London" />
               </div>
+
               <div class="field">
                 <label class="label" for="province">Province / State</label>
                 <input type="text" id="province" class="input" placeholder="Ontario" />
               </div>
+
               <div class="field">
                 <label class="label" for="country">Country</label>
                 <input type="text" id="country" class="input" placeholder="Canada" />
               </div>
             </div>
+
             <div class="grid">
               <div class="field">
                 <label class="label" for="address">Address</label>
                 <input type="text" id="address" class="input" placeholder="Optional address" />
               </div>
+
               <div class="field">
                 <label class="label" for="website">Website / Link</label>
                 <input type="text" id="website" class="input" placeholder="https://example.com" />
               </div>
             </div>
+
             <div class="grid">
               <div class="field">
                 <label class="label" for="lat">Latitude</label>
                 <input type="text" id="lat" class="input" placeholder="Optional" />
               </div>
+
               <div class="field">
                 <label class="label" for="lng">Longitude</label>
                 <input type="text" id="lng" class="input" placeholder="Optional" />
               </div>
             </div>
-            <div class="small-note">Nearby places page can sort better when coordinates exist, but city is still the default rule.</div>
+
+            <div class="small-note">Nearby places can sort better when coordinates exist, but city is still the main default rule.</div>
           </div>
+
           <div class="section">
             <div class="section-title">Photo Upload</div>
-            <div class="section-sub">Optional. This uploads image to Supabase Storage instead of using a link.</div>
+            <div class="section-sub">Optional. This uploads an image to Supabase Storage.</div>
+
             <div class="file-box">
               <input id="imageFile" class="file-input" type="file" accept="image/*" />
-              <div class="small-note">Bucket name used in this code: <strong>place-media</strong></div>
+              <div class="small-note">Bucket used in this code: <strong>media</strong></div>
+
               <div id="previewWrap" class="preview-wrap">
                 <img id="previewImg" class="preview-img" alt="Preview" />
               </div>
             </div>
           </div>
-          <button type="submit" class="btn btn-save" id="saveBtn">Add Place</button>
+
+          <button type="submit" class="btn btn-save" id="saveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            <span>Add Place</span>
+          </button>
+
           <div id="message" class="message"></div>
         </form>
+
         <div class="note">
           New places save into <strong>nearby_places</strong>. If your storage bucket name is different, change only <strong>STORAGE_BUCKET</strong> in the script.
         </div>
       </div>
     </div>
   </div>
+
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 10.5 12 3l9 7.5"></path>
-          <path d="M5 9.5V21h14V9.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
         </svg>
       </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link active">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
-        </svg>
-      </span>
-      <span>Create</span>
-    </a>
+
     <a href="search.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -572,19 +781,33 @@ Use this as full add-place.html.
       </span>
       <span>Search</span>
     </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
     <a href="profile.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </span>
       <span>Profile</span>
     </a>
   </nav>
+
   <script type="module">
     import { supabase } from "./supabase.js";
+
     const STORAGE_BUCKET = "media";
+
     const loading = document.getElementById("loading");
     const content = document.getElementById("content");
     const placeForm = document.getElementById("placeForm");
@@ -592,9 +815,11 @@ Use this as full add-place.html.
     const message = document.getElementById("message");
     const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
     const useGpsBtn = document.getElementById("useGpsBtn");
+
     const profileCityText = document.getElementById("profileCityText");
     const profileProvinceText = document.getElementById("profileProvinceText");
     const profileCountryText = document.getElementById("profileCountryText");
+
     const nameInput = document.getElementById("name");
     const categoryInput = document.getElementById("category");
     const descriptionInput = document.getElementById("description");
@@ -608,60 +833,82 @@ Use this as full add-place.html.
     const imageFileInput = document.getElementById("imageFile");
     const previewWrap = document.getElementById("previewWrap");
     const previewImg = document.getElementById("previewImg");
+    const inboxBadge = document.getElementById("inboxBadge");
+
     let currentUser = null;
     let currentProfile = null;
     let previewObjectUrl = "";
-    function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+
+    function nowIso() {
+      return new Date().toISOString();
     }
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+    }
+
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
       return themeValue === "light" ? "light" : "dark";
     }
-    function applyTheme(themeValue) {
+
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
-    applyTheme(getStoredTheme());
+
+    applyTheme();
+
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
       });
     }
+
     function showMessage(text = "", type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
     }
+
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     }
+
     function titleText(value) {
       return String(value || "").trim();
     }
+
     function normalizeText(value) {
       return String(value || "").trim().toLowerCase();
     }
+
     function normalizeHref(url) {
       const value = String(url || "").trim();
       if (!value) return "";
       if (/^https?:\/\//i.test(value)) return value;
       return "https://" + value;
     }
+
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
+
       const aliases = [c];
+
       if (c === "united states") aliases.push("usa", "us", "america");
       if (c === "united kingdom") aliases.push("uk", "britain");
       if (c === "canada") aliases.push("ca");
+
       return aliases.join(" ");
     }
+
     function buildLocationSearch(city, province, country) {
       return [
         titleText(city),
@@ -674,6 +921,7 @@ Use this as full add-place.html.
       .trim()
       .toLowerCase();
     }
+
     function readLat(obj) {
       return num(
         obj?.lat ??
@@ -684,6 +932,7 @@ Use this as full add-place.html.
         obj?.coords?.latitude
       );
     }
+
     function readLng(obj) {
       return num(
         obj?.lng ??
@@ -698,6 +947,7 @@ Use this as full add-place.html.
         obj?.coords?.longitude
       );
     }
+
     function getField(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
@@ -705,8 +955,10 @@ Use this as full add-place.html.
       }
       return "";
     }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
         uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
@@ -718,27 +970,35 @@ Use this as full add-place.html.
         lng: readLng(d)
       };
     }
+
     function applyProfileInfo() {
       profileCityText.textContent = currentProfile?.city || "-";
       profileProvinceText.textContent = currentProfile?.province || "-";
       profileCountryText.textContent = currentProfile?.country || "-";
     }
+
     function useProfileLocation() {
       if (!currentProfile) return;
+
       cityInput.value = currentProfile.city || "";
       provinceInput.value = currentProfile.province || "";
       countryInput.value = currentProfile.country || "";
+
       if (currentProfile.lat != null) latInput.value = String(currentProfile.lat);
       if (currentProfile.lng != null) lngInput.value = String(currentProfile.lng);
+
       showMessage("Profile location filled.", "success");
     }
+
     async function useBrowserGps() {
       if (!navigator.geolocation) {
         showMessage("Browser GPS is not supported on this device.", "error");
         return;
       }
+
       showMessage("Checking browser GPS...", "success");
       useGpsBtn.disabled = true;
+
       await new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -751,83 +1011,209 @@ Use this as full add-place.html.
             showMessage("Could not get browser GPS.", "error");
             resolve();
           },
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000
+          }
         );
       });
+
       useGpsBtn.disabled = false;
     }
+
     function setPreviewFromFile(file) {
       if (previewObjectUrl) {
         URL.revokeObjectURL(previewObjectUrl);
         previewObjectUrl = "";
       }
+
       if (!file) {
         previewWrap.classList.remove("show");
         previewImg.removeAttribute("src");
         return;
       }
+
       previewObjectUrl = URL.createObjectURL(file);
       previewImg.src = previewObjectUrl;
       previewWrap.classList.add("show");
     }
+
     imageFileInput.addEventListener("change", () => {
       const file = imageFileInput.files?.[0] || null;
       setPreviewFromFile(file);
     });
+
     useProfileLocationBtn.addEventListener("click", useProfileLocation);
     useGpsBtn.addEventListener("click", useBrowserGps);
+
     async function fetchProfileRowByUidOrId(table, uid) {
-      let { data, error } = await supabase.from(table).select("*").eq("uid", uid).maybeSingle();
-      if (!error && data) return data;
-      ({ data, error } = await supabase.from(table).select("*").eq("id", uid).maybeSingle());
-      if (!error && data) return data;
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
       return null;
     }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
+
+          if (threadIds.length) {
+            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+            for (const field of seenFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .is(field, null);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+
+            const boolFields = ["is_read", "read"];
+
+            for (const field of boolFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .eq(field, false);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+          }
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadge() {
+      if (!currentUser) return;
+
+      try {
+        const [requests, unreadMessages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(unreadMessages || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
     async function loadCurrentUser() {
       const { data, error } = await supabase.auth.getUser();
+
       if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
+
       currentUser = data.user;
+
       const [publicRow, userRow] = await Promise.all([
         fetchProfileRowByUidOrId("public_profiles", currentUser.id),
         fetchProfileRowByUidOrId("users", currentUser.id)
       ]);
+
       currentProfile = normalizeProfile({
         ...(publicRow || {}),
         ...(userRow || {}),
         uid: currentUser.id
       }, currentUser.id);
+
       applyProfileInfo();
       useProfileLocation();
+      await loadInboxBadge();
+
       loading.classList.add("hidden");
       content.classList.remove("hidden");
+
       supabase.auth.onAuthStateChange((event, session) => {
         if (!session?.user) {
           window.location.href = "login.html";
         }
       });
     }
+
     async function uploadPlaceImage(file, userId) {
       const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
       const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `places/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(path, file, {
           cacheControl: "3600",
           upsert: false
         });
+
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+
+      const { data } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(path);
+
       return {
         path,
         publicUrl: data?.publicUrl || ""
       };
     }
+
     async function insertPlaceWithFallback(variants) {
       let lastError = null;
+
       for (const payload of variants) {
         try {
           const { data, error } = await supabase
@@ -835,17 +1221,23 @@ Use this as full add-place.html.
             .insert(payload)
             .select()
             .single();
+
           if (!error && data) return data;
+
           lastError = error || lastError;
         } catch (err) {
           lastError = err;
         }
       }
+
       throw lastError || new Error("Could not save place.");
     }
+
     placeForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       if (!currentUser || !currentProfile) return;
+
       const name = nameInput.value.trim();
       const category = categoryInput.value || "General";
       const description = descriptionInput.value.trim();
@@ -857,41 +1249,55 @@ Use this as full add-place.html.
       const latText = latInput.value.trim();
       const lngText = lngInput.value.trim();
       const imageFile = imageFileInput.files?.[0] || null;
+
       if (!name) {
         showMessage("Place name is required.", "error");
         return;
       }
+
       if (!description) {
         showMessage("Description is required.", "error");
         return;
       }
+
       if (!city || !province || !country) {
         showMessage("City, province/state and country are required.", "error");
         return;
       }
+
       const lat = latText ? Number(latText) : null;
       const lng = lngText ? Number(lngText) : null;
+
       if (latText && !Number.isFinite(lat)) {
         showMessage("Latitude must be a valid number.", "error");
         return;
       }
+
       if (lngText && !Number.isFinite(lng)) {
         showMessage("Longitude must be a valid number.", "error");
         return;
       }
+
       saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
+      saveBtn.innerHTML = "Saving...";
       showMessage("");
+
       try {
         let uploadedImageUrl = "";
         let uploadedImagePath = "";
+
         if (imageFile) {
           showMessage("Uploading image...", "success");
+
           const uploadResult = await uploadPlaceImage(imageFile, currentUser.id);
           uploadedImageUrl = uploadResult.publicUrl;
           uploadedImagePath = uploadResult.path;
         }
+
         const locationSearch = buildLocationSearch(city, province, country);
+        const createdAt = nowIso();
+        const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || currentUser.email || "Member";
+
         const snakePayload = {
           name,
           place_name: name,
@@ -915,7 +1321,7 @@ Use this as full add-place.html.
           lat,
           lng,
           created_by: currentUser.id,
-          creator_name: currentProfile.displayName || currentUser.user_metadata?.display_name || "Member",
+          creator_name: creatorName,
           creator_username: currentProfile.username || "",
           source: "nearby_places",
           status: "pending",
@@ -926,9 +1332,10 @@ Use this as full add-place.html.
           hidden: false,
           hidden_by_admin: false,
           soft_deleted: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: createdAt,
+          updated_at: createdAt
         };
+
         const camelPayload = {
           name,
           placeName: name,
@@ -952,7 +1359,7 @@ Use this as full add-place.html.
           lat,
           lng,
           createdBy: currentUser.id,
-          creatorName: currentProfile.displayName || currentUser.user_metadata?.display_name || "Member",
+          creatorName,
           creatorUsername: currentProfile.username || "",
           source: "nearby_places",
           status: "pending",
@@ -963,9 +1370,10 @@ Use this as full add-place.html.
           hidden: false,
           hiddenByAdmin: false,
           softDeleted: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          createdAt,
+          updatedAt: createdAt
         };
+
         const minimalPayload = {
           name,
           category,
@@ -979,21 +1387,48 @@ Use this as full add-place.html.
           lng,
           status: "pending"
         };
+
         const insertedRow = await insertPlaceWithFallback([
           snakePayload,
           camelPayload,
           minimalPayload
         ]);
+
         showMessage("Place submitted. Waiting for admin approval.", "success");
-        window.location.href = `places.html?placeId=${encodeURIComponent(insertedRow.id)}&source=nearby_places`;
+
+        window.location.href = `place.html?placeId=${encodeURIComponent(insertedRow.id)}&source=nearby_places`;
       } catch (err) {
         console.error(err);
         showMessage(err?.message || "Could not add place.", "error");
         saveBtn.disabled = false;
-        saveBtn.textContent = "Add Place";
+        saveBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          <span>Add Place</span>
+        `;
       }
     });
+
     loadCurrentUser();
+
+    /*
+      OWNSPACE ADD PLACE UPDATE:
+
+      FIXED / ADDED:
+      - BareWorld renamed to OwnSpace.
+      - UI matched nearby/place pages.
+      - Bottom nav changed to consistent 5 buttons.
+      - Inbox badge added.
+      - Inbox badge counts only:
+        pending message_requests + unread chat_messages.
+      - Redirect fixed:
+        place.html?placeId=...&source=nearby_places
+      - Storage bucket note fixed to media.
+      - Theme supports osTheme and old bwTheme.
+      - New places still save into nearby_places with pending approval.
+    */
   </script>
 </body>
 </html>
