@@ -38,6 +38,12 @@
     .ban{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
     .dismiss{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
     .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
+
+    @media(max-width:700px){
+      body{padding:10px}
+      .filters{grid-template-columns:1fr}
+      .topbar{align-items:flex-start}
+    }
   </style>
 </head>
 <body>
@@ -75,9 +81,7 @@
   </div>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -86,23 +90,147 @@
     const searchInput = document.getElementById("searchInput");
     const actionFilter = document.getElementById("actionFilter");
 
+    let currentUser = null;
     let allLogs = [];
+    let historyChannel = null;
+    let refreshTimer = null;
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
-      else window.location.href = "reports-admin.html";
+      else window.location.href = "admin.html";
     });
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().toLocaleString();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return new Date(value.seconds * 1000).toLocaleString();
+        }
+      } catch {}
+
+      try {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString();
+      } catch {
+        return "-";
+      }
+    }
+
+    function normalizeAction(rawAction = "") {
+      const action = String(rawAction || "").toLowerCase();
+
+      if (action.includes("warn")) return "warn";
+      if (action.includes("suspend")) return "suspend";
+      if (action.includes("ban")) return "ban";
+      if (action.includes("dismiss")) return "dismiss";
+      if (action.includes("resolve")) return "dismiss";
+      if (action.includes("reject")) return "dismiss";
+      if (action.includes("approved")) return "dismiss";
+      if (action.includes("hidden")) return "dismiss";
+      if (action.includes("delete")) return "ban";
+
+      return action || "action";
+    }
+
+    function normalizeLog(raw) {
+      const d = raw || {};
+      const actionRaw = getField(d, ["action_type", "actionType", "action"], "action");
+      const actionType = normalizeAction(actionRaw);
+
+      return {
+        id: getField(d, ["id"], ""),
+        actionRaw,
+        actionType,
+
+        targetUserId: getField(d, [
+          "target_user_id",
+          "targetUserId",
+          "reported_user_id",
+          "reportedUserId",
+          "user_id",
+          "userId"
+        ], ""),
+
+        sourceReportId: getField(d, [
+          "source_report_id",
+          "sourceReportId",
+          "report_id",
+          "reportId"
+        ], ""),
+
+        targetType: getField(d, ["target_type", "targetType"], ""),
+        targetId: getField(d, ["target_id", "targetId"], ""),
+        category: getField(d, ["category", "reason", "source"], ""),
+
+        durationDays: getField(d, [
+          "duration_days",
+          "durationDays",
+          "days"
+        ], ""),
+
+        activeUntil: d.active_until ?? d.activeUntil ?? d.warning_until ?? d.warningUntil ?? d.suspension_until ?? d.suspensionUntil ?? null,
+
+        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+
+        adminUid: getField(d, [
+          "admin_uid",
+          "adminUid",
+          "admin_id",
+          "adminId"
+        ], ""),
+
+        adminNote: getField(d, [
+          "admin_note",
+          "adminNote",
+          "note",
+          "message",
+          "description"
+        ], "")
+      };
     }
 
     function getFilteredLogs() {
@@ -110,16 +238,19 @@
       const action = actionFilter.value;
 
       return allLogs.filter(log => {
-        if (action !== "all" && (log.actionType || "") !== action) return false;
+        if (action !== "all" && log.actionType !== action) return false;
         if (!q) return true;
 
         const haystack = [
           log.targetUserId || "",
+          log.actionRaw || "",
           log.actionType || "",
           log.category || "",
           log.adminNote || "",
           log.targetType || "",
-          log.targetId || ""
+          log.targetId || "",
+          log.sourceReportId || "",
+          log.adminUid || ""
         ].join(" ").toLowerCase();
 
         return haystack.includes(q);
@@ -148,16 +279,21 @@
           log.actionType === "suspend" ? "suspend" :
           log.actionType === "ban" ? "ban" : "dismiss";
 
+        const durationText = log.durationDays === "" || log.durationDays == null
+          ? "-"
+          : `${log.durationDays} days`;
+
         card.innerHTML = `
-          <span class="badge ${badgeClass}">${escapeHtml((log.actionType || "action").toUpperCase())}</span>
+          <span class="badge ${badgeClass}">${escapeHtml(String(log.actionRaw || log.actionType || "action").toUpperCase())}</span>
           <div class="card-title">User: ${escapeHtml(log.targetUserId || "-")}</div>
           <div class="card-sub">
             Report: ${escapeHtml(log.sourceReportId || "-")}<br>
             Target: ${escapeHtml(log.targetType || "-")} • ${escapeHtml(log.targetId || "-")}<br>
             Category: ${escapeHtml(log.category || "-")}<br>
-            Duration: ${escapeHtml(String(log.durationDays || 0))} days<br>
+            Duration: ${escapeHtml(durationText)}<br>
             Active until: ${escapeHtml(formatDate(log.activeUntil))}<br>
-            Created: ${escapeHtml(formatDate(log.createdAt))}
+            Created: ${escapeHtml(formatDate(log.createdAt))}<br>
+            Admin: ${escapeHtml(log.adminUid || "-")}
           </div>
           <div class="note">${escapeHtml(log.adminNote || "No admin note")}</div>
         `;
@@ -169,30 +305,161 @@
     searchInput.addEventListener("input", renderLogs);
     actionFilter.addEventListener("change", renderLogs);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function checkAdminAccess(uid) {
+      const columns = ["id", "uid", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from("admins")
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return true;
+        } catch {}
+      }
+
+      return false;
+    }
+
+    async function loadHistory() {
+      loading.style.display = "block";
+      list.style.display = "none";
+      emptyBox.style.display = "none";
+
+      let rows = [];
+      let lastError = null;
+
+      try {
+        const { data, error } = await supabase
+          .from("moderation_history")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!error) {
+          rows = data || [];
+          lastError = null;
+        } else {
+          lastError = error;
+        }
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("moderation_history")
+            .select("*");
+
+          if (error) throw error;
+          rows = data || [];
+        } catch (err) {
+          console.error(err);
+          loading.textContent = "Could not load moderation history.";
+          return;
+        }
+      }
+
+      allLogs = rows
+        .map(normalizeLog)
+        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+
+      loading.style.display = "none";
+      renderLogs();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadHistory().catch(err => console.error("History refresh failed:", err));
+      }, 350);
+    }
+
+    function setupRealtime() {
+      if (historyChannel) {
+        try {
+          supabase.removeChannel(historyChannel);
+        } catch {}
+      }
+
+      historyChannel = supabase
+        .channel(`moderation-history-live-${currentUser.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "moderation_history" },
+          () => scheduleRefresh()
+        )
+        .subscribe();
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      try {
-        const adminSnap = await getDoc(doc(db, "admins", user.uid));
-        if (!adminSnap.exists()) {
-          loading.textContent = "Access denied. Admin only.";
-          return;
+      currentUser = data.user;
+
+      const isAdmin = await checkAdminAccess(currentUser.id);
+
+      if (!isAdmin) {
+        loading.textContent = "Access denied. Admin only.";
+        return;
+      }
+
+      await loadHistory();
+      setupRealtime();
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
         }
+      });
+    }
 
-        const snap = await getDocs(collection(db, "moderation_history"));
-        allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-        loading.style.display = "none";
-        renderLogs();
-      } catch (error) {
-        console.error(error);
-        loading.textContent = "Could not load moderation history.";
+    window.addEventListener("beforeunload", () => {
+      if (historyChannel) {
+        try {
+          supabase.removeChannel(historyChannel);
+        } catch {}
       }
     });
+
+    initPage().catch((error) => {
+      console.error(error);
+      loading.textContent = "Could not load moderation history.";
+    });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - admins: select
+      - moderation_history: select, realtime
+
+      IMPORTANT COLUMNS SUPPORTED:
+      moderation_history:
+      - id
+      - action OR action_type
+      - admin_uid
+      - target_user_id
+      - target_type
+      - target_id
+      - report_id
+      - source
+      - category
+      - admin_note
+      - duration_days
+      - active_until
+      - created_at
+
+      SHARE BUTTON:
+      - Not needed on this page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
