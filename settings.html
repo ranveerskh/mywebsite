@@ -985,10 +985,10 @@
 
                 <a href="search.html" class="quick-link">
                   <strong>Search Members</strong>
-                  <span>Find people by username or display name.</span>
+                  <span>Find people, posts, events and places.</span>
                 </a>
 
-                <a href="events.html" class="quick-link">
+                <a href="nearby-events.html" class="quick-link">
                   <strong>Events</strong>
                   <span>See events you can join or leave.</span>
                 </a>
@@ -1062,7 +1062,7 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
+    <a href="nearby-events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
@@ -1073,22 +1073,14 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import {
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     let currentUser = null;
     let currentUserData = {};
     let currentPublicData = {};
+    let currentProfile = {};
     let currentBlockedUsers = [];
+    let isCurrentUserAdmin = false;
 
     const backBtn = document.getElementById("backBtn");
     const pageStatus = document.getElementById("pageStatus");
@@ -1138,6 +1130,10 @@
     const deleteAccountBtn = document.getElementById("deleteAccountBtn");
     const deleteMessage = document.getElementById("deleteMessage");
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function setStatus(el, text, type = "") {
       if (!el) return;
       el.textContent = text;
@@ -1146,56 +1142,138 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
+        }
+      }
+      return fallback;
+    }
+
+    function getString(raw, names, fallback = "") {
+      const value = getField(raw, names, fallback);
+      return value === undefined || value === null ? fallback : String(value).trim();
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
+    function getArray(raw, names, fallback = []) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (Array.isArray(value)) return value;
+      }
+      return fallback;
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("column")
+      );
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        bio: d.bio || d.about || d.description || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        isPrivate: !!(d.isPrivate || d.privateProfile || d.private || d.accountPrivate),
-        isVerified: !!(d.isVerified || d.verified),
-        cityVisible: !!d.cityVisible,
-        genderVisible: !!d.genderVisible,
-        moderationStatus: d.moderationStatus || d.status || "",
-        blockedUsers: Array.isArray(d.blockedUsers) ? d.blockedUsers : [],
-        themePreference: d.themePreference || "dark",
-        showInNearby: !!d.showInNearby,
-        locationVisibility: d.locationVisibility || "hidden"
+        uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getString(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getString(d, ["username", "handle", "user_name", "userName"], ""),
+        bio: getString(d, ["bio", "about", "description"], ""),
+        photoURL: getString(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], ""),
+        isPrivate: getBool(d, ["is_private", "isPrivate", "private_profile", "privateProfile", "private", "account_private", "accountPrivate"], false),
+        isVerified: getBool(d, ["is_verified", "isVerified", "verified"], false),
+        cityVisible: getBool(d, ["city_visible", "cityVisible"], false),
+        genderVisible: getBool(d, ["gender_visible", "genderVisible"], false),
+        moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], ""),
+        warningUntil: d.warning_until ?? d.warningUntil ?? null,
+        suspensionUntil: d.suspension_until ?? d.suspensionUntil ?? d.suspend_until ?? d.suspendUntil ?? null,
+        blockedUsers: getArray(d, ["blocked_users", "blockedUsers"], []),
+        themePreference: getString(d, ["theme_preference", "themePreference"], "dark") || "dark",
+        showInNearby: getBool(d, ["show_in_nearby", "showInNearby"], false),
+        locationVisibility: getString(d, ["location_visibility", "locationVisibility"], "hidden") || "hidden",
+        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
+        isAdmin: getBool(d, ["is_admin", "isAdmin"], false),
+        role: getString(d, ["role"], "")
       };
     }
 
-    function formatDate(ts, authUser = null) {
-      if (ts?.toDate) {
-        try { return ts.toDate().toLocaleString(); } catch {}
-      }
-      if (ts instanceof Date) {
-        try { return ts.toLocaleString(); } catch {}
-      }
-      if (authUser?.metadata?.creationTime) return authUser.metadata.creationTime;
-      return "-";
-    }
-
-    function mergeProfiles(a, b, uid = "") {
+    function mergeProfiles(publicProfile, userProfile, uid = "") {
       return normalizeProfile(
-        { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
-        uid || b?.uid || a?.uid || ""
+        {
+          ...(publicProfile || {}),
+          ...(userProfile || {}),
+          uid: uid || userProfile?.uid || publicProfile?.uid || ""
+        },
+        uid || userProfile?.uid || publicProfile?.uid || ""
       );
     }
 
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value, authUser = null) {
+      const ms = toMillis(value);
+      if (ms) return new Date(ms).toLocaleString();
+
+      if (authUser?.created_at) {
+        try {
+          return new Date(authUser.created_at).toLocaleString();
+        } catch {}
+      }
+
+      if (authUser?.metadata?.creationTime) return authUser.metadata.creationTime;
+
+      return "-";
+    }
+
     function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
+      const cleanUrl = String(url || "").trim();
+
       if (!cleanUrl) {
         avatar.classList.add("hidden");
         avatar.removeAttribute("src");
         avatarPlaceholder.classList.remove("hidden");
         return;
       }
+
       avatar.src = cleanUrl;
       avatar.classList.remove("hidden");
       avatarPlaceholder.classList.add("hidden");
@@ -1217,7 +1295,7 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       const resolved = resolveTheme(themeValue);
       document.documentElement.setAttribute("data-theme", resolved);
     }
@@ -1228,56 +1306,27 @@
     }
 
     function setCheckedRadioValue(name, value) {
-      const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+      const fallback = value || "";
+      const radio = document.querySelector(`input[name="${name}"][value="${CSS.escape(fallback)}"]`);
       if (radio) radio.checked = true;
     }
 
-    async function saveSettingsPatch({
-      userPatch = {},
-      publicPatch = {},
-      successTarget = null,
-      successText = "Saved."
-    }) {
-      if (!currentUser) return;
+    applyTheme(getStoredTheme());
 
-      try {
-        await Promise.all([
-          setDoc(doc(db, "users", currentUser.uid), {
-            uid: currentUser.uid,
-            ...userPatch,
-            updatedAt: serverTimestamp()
-          }, { merge: true }),
-
-          setDoc(doc(db, "publicProfiles", currentUser.uid), {
-            uid: currentUser.uid,
-            ...publicPatch,
-            updatedAt: serverTimestamp()
-          }, { merge: true })
-        ]);
-
-        currentUserData = { ...currentUserData, ...userPatch };
-        currentPublicData = { ...currentPublicData, ...publicPatch };
-
-        setStatus(successTarget || pageStatus, successText, "success");
-      } catch (error) {
-        console.error(error);
-        setStatus(successTarget || pageStatus, "Could not save changes.", "error");
-      }
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (themeMediaQuery.addEventListener) {
+      themeMediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
     }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "profile.html";
-    });
-
-    applyTheme(getStoredTheme());
-
-    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
-
-    window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
     });
 
     function openAccordion(sectionId) {
@@ -1288,7 +1337,7 @@
     }
 
     function toggleAccordion(sectionId) {
-      const item = document.querySelector(`.accordion-item[data-section="${sectionId}"]`);
+      const item = document.querySelector(`.accordion-item[data-section="${CSS.escape(sectionId)}"]`);
       if (!item) return;
 
       const wasActive = item.classList.contains("active");
@@ -1297,6 +1346,7 @@
 
       if (!wasActive) {
         item.classList.add("active");
+
         setTimeout(() => {
           item.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 80);
@@ -1309,13 +1359,232 @@
       });
     });
 
+    async function selectByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Select failed ${table}.${column}:`, err?.message || err);
+        return null;
+      }
+    }
+
+    async function selectProfileFromTable(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return row;
+      }
+
+      return null;
+    }
+
+    async function loadUserRow(uid) {
+      return await selectProfileFromTable("users", uid);
+    }
+
+    async function loadPublicProfileRow(uid) {
+      return await selectProfileFromTable("public_profiles", uid);
+    }
+
+    async function loadProfileForUid(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
+      const [publicRow, userRow] = await Promise.all([
+        loadPublicProfileRow(uid),
+        loadUserRow(uid)
+      ]);
+
+      return mergeProfiles(
+        publicRow ? normalizeProfile(publicRow, uid) : null,
+        userRow ? normalizeProfile(userRow, uid) : null,
+        uid
+      );
+    }
+
+    async function loadVerificationRequest(uid) {
+      const attempts = [
+        ["verification_requests", "user_id"],
+        ["verification_requests", "uid"],
+        ["verification_requests", "id"],
+        ["verificationRequests", "userId"],
+        ["verificationRequests", "uid"],
+        ["verificationRequests", "id"]
+      ];
+
+      for (const [table, column] of attempts) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return row;
+      }
+
+      return null;
+    }
+
+    async function checkAdmin(uid) {
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return true;
+      }
+
+      return false;
+    }
+
+    async function upsertOrUpdateByUid(table, uid, payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .upsert({ uid, ...payload }, { onConflict: "uid" });
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("uid", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    function buildPatchVariants(snakePatch = {}, camelPatch = {}, minimalPatch = {}) {
+      const now = nowIso();
+
+      const variants = [];
+
+      if (Object.keys(snakePatch).length) {
+        variants.push({
+          ...snakePatch,
+          updated_at: now
+        });
+      }
+
+      if (Object.keys(camelPatch).length) {
+        variants.push({
+          ...camelPatch,
+          updatedAt: now
+        });
+      }
+
+      if (Object.keys(minimalPatch).length) {
+        variants.push(minimalPatch);
+      }
+
+      return variants;
+    }
+
+    async function saveSettingsPatch({
+      userSnakePatch = {},
+      userCamelPatch = {},
+      publicSnakePatch = {},
+      publicCamelPatch = {},
+      successTarget = null,
+      successText = "Saved."
+    }) {
+      if (!currentUser) return;
+
+      try {
+        const promises = [];
+
+        if (Object.keys(userSnakePatch).length || Object.keys(userCamelPatch).length) {
+          promises.push(
+            upsertOrUpdateByUid(
+              "users",
+              currentUser.id,
+              buildPatchVariants(userSnakePatch, userCamelPatch, userSnakePatch)
+            )
+          );
+        }
+
+        if (Object.keys(publicSnakePatch).length || Object.keys(publicCamelPatch).length) {
+          promises.push(
+            upsertOrUpdateByUid(
+              "public_profiles",
+              currentUser.id,
+              buildPatchVariants(publicSnakePatch, publicCamelPatch, publicSnakePatch)
+            )
+          );
+        }
+
+        await Promise.all(promises);
+
+        currentUserData = {
+          ...currentUserData,
+          ...userSnakePatch,
+          ...userCamelPatch
+        };
+
+        currentPublicData = {
+          ...currentPublicData,
+          ...publicSnakePatch,
+          ...publicCamelPatch
+        };
+
+        currentProfile = mergeProfiles(
+          normalizeProfile(currentPublicData, currentUser.id),
+          normalizeProfile(currentUserData, currentUser.id),
+          currentUser.id
+        );
+
+        setStatus(successTarget || pageStatus, successText, "success");
+      } catch (error) {
+        console.error(error);
+        setStatus(successTarget || pageStatus, error?.message || "Could not save changes.", "error");
+      }
+    }
+
     async function saveThemePreference(themeValue) {
       localStorage.setItem("bwTheme", themeValue);
       applyTheme(themeValue);
 
       await saveSettingsPatch({
-        userPatch: { themePreference: themeValue },
-        publicPatch: {},
+        userSnakePatch: { theme_preference: themeValue },
+        userCamelPatch: { themePreference: themeValue },
+        publicSnakePatch: {},
+        publicCamelPatch: {},
         successTarget: themeStatus,
         successText: "Theme updated."
       });
@@ -1335,8 +1604,26 @@
       const genderVisible = !!genderVisibleToggle.checked;
 
       await saveSettingsPatch({
-        userPatch: { isPrivate, cityVisible, genderVisible },
-        publicPatch: { isPrivate, cityVisible, genderVisible },
+        userSnakePatch: {
+          is_private: isPrivate,
+          city_visible: cityVisible,
+          gender_visible: genderVisible
+        },
+        userCamelPatch: {
+          isPrivate,
+          cityVisible,
+          genderVisible
+        },
+        publicSnakePatch: {
+          is_private: isPrivate,
+          city_visible: cityVisible,
+          gender_visible: genderVisible
+        },
+        publicCamelPatch: {
+          isPrivate,
+          cityVisible,
+          genderVisible
+        },
         successTarget: privacyStatus,
         successText: "Privacy settings updated."
       });
@@ -1354,8 +1641,22 @@
       const locationVisibility = getSelectedRadioValue("locationVisibility") || "hidden";
 
       await saveSettingsPatch({
-        userPatch: { showInNearby, locationVisibility },
-        publicPatch: { showInNearby, locationVisibility },
+        userSnakePatch: {
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility
+        },
+        userCamelPatch: {
+          showInNearby,
+          locationVisibility
+        },
+        publicSnakePatch: {
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility
+        },
+        publicCamelPatch: {
+          showInNearby,
+          locationVisibility
+        },
         successTarget: locationStatus,
         successText: "Nearby visibility updated."
       });
@@ -1369,12 +1670,10 @@
 
     async function fetchProfileForBlockedUser(uid) {
       try {
-        const publicSnap = await getDoc(doc(db, "publicProfiles", uid));
-        if (publicSnap.exists()) {
-          return normalizeProfile({ id: publicSnap.id, ...publicSnap.data() }, uid);
-        }
-      } catch {}
-      return normalizeProfile({ uid }, uid);
+        return await loadProfileForUid(uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
     }
 
     async function renderBlockedList() {
@@ -1417,6 +1716,13 @@
             </button>
           `;
 
+          const img = row.querySelector(".blocked-avatar");
+          if (img) {
+            img.addEventListener("error", () => {
+              img.outerHTML = `<div class="blocked-avatar-placeholder">No photo</div>`;
+            });
+          }
+
           blockedList.appendChild(row);
         });
 
@@ -1434,8 +1740,10 @@
               currentBlockedUsers = currentBlockedUsers.filter(item => item !== uid);
 
               await saveSettingsPatch({
-                userPatch: { blockedUsers: currentBlockedUsers },
-                publicPatch: {},
+                userSnakePatch: { blocked_users: currentBlockedUsers },
+                userCamelPatch: { blockedUsers: currentBlockedUsers },
+                publicSnakePatch: {},
+                publicCamelPatch: {},
                 successTarget: blockedStatus,
                 successText: "Account unblocked."
               });
@@ -1504,6 +1812,7 @@
       else adminBadge.classList.add("hidden");
 
       moderationBadge.classList.add("hidden");
+
       if (profile.moderationStatus === "banned") {
         moderationBadge.textContent = "Banned";
         moderationBadge.classList.remove("hidden");
@@ -1518,7 +1827,8 @@
 
     logoutBtn.addEventListener("click", async () => {
       try {
-        await signOut(auth);
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
         window.location.href = "login.html";
       } catch (error) {
         console.error(error);
@@ -1532,7 +1842,8 @@
       const ok = confirm("This will hide your account and sign you out. Continue?");
       if (!ok) return;
 
-      const typed = prompt('Type DELETE to confirm account removal.');
+      const typed = prompt("Type DELETE to confirm account removal.");
+
       if (typed !== "DELETE") {
         setStatus(deleteMessage, "Deletion cancelled.", "error");
         return;
@@ -1543,39 +1854,68 @@
 
       try {
         await Promise.all([
-          setDoc(doc(db, "users", currentUser.uid), {
-            uid: currentUser.uid,
-            softDeleted: true,
-            deletedBySelf: true,
-            deletedAt: serverTimestamp(),
-            showInNearby: false,
-            locationVisibility: "hidden",
-            isPrivate: true,
-            blockedUsers: [],
-            updatedAt: serverTimestamp()
-          }, { merge: true }),
+          upsertOrUpdateByUid("users", currentUser.id, [
+            {
+              soft_deleted: true,
+              deleted_by_self: true,
+              deleted_at: nowIso(),
+              show_in_nearby: false,
+              location_visibility: "hidden",
+              is_private: true,
+              blocked_users: [],
+              updated_at: nowIso()
+            },
+            {
+              softDeleted: true,
+              deletedBySelf: true,
+              deletedAt: nowIso(),
+              showInNearby: false,
+              locationVisibility: "hidden",
+              isPrivate: true,
+              blockedUsers: [],
+              updatedAt: nowIso()
+            }
+          ]),
 
-          setDoc(doc(db, "publicProfiles", currentUser.uid), {
-            uid: currentUser.uid,
-            softDeleted: true,
-            deletedBySelf: true,
-            deletedAt: serverTimestamp(),
-            displayName: "Deleted Account",
-            username: "",
-            bio: "",
-            photoURL: "",
-            showInNearby: false,
-            locationVisibility: "hidden",
-            cityVisible: false,
-            genderVisible: false,
-            isPrivate: true,
-            updatedAt: serverTimestamp()
-          }, { merge: true })
+          upsertOrUpdateByUid("public_profiles", currentUser.id, [
+            {
+              soft_deleted: true,
+              deleted_by_self: true,
+              deleted_at: nowIso(),
+              display_name: "Deleted Account",
+              username: "",
+              bio: "",
+              photo_url: "",
+              show_in_nearby: false,
+              location_visibility: "hidden",
+              city_visible: false,
+              gender_visible: false,
+              is_private: true,
+              updated_at: nowIso()
+            },
+            {
+              softDeleted: true,
+              deletedBySelf: true,
+              deletedAt: nowIso(),
+              displayName: "Deleted Account",
+              username: "",
+              bio: "",
+              photoURL: "",
+              showInNearby: false,
+              locationVisibility: "hidden",
+              cityVisible: false,
+              genderVisible: false,
+              isPrivate: true,
+              updatedAt: nowIso()
+            }
+          ])
         ]);
 
         setStatus(deleteMessage, "Account hidden. Signing out...", "success");
 
-        await signOut(auth);
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+
         window.location.href = "login.html";
       } catch (error) {
         console.error(error);
@@ -1585,59 +1925,70 @@
       }
     });
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function loadSettings() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
+
+      const uid = currentUser.id;
 
       try {
-        const [userSnap, publicSnap, verificationSnap, adminSnap] = await Promise.all([
-          getDoc(doc(db, "users", user.uid)),
-          getDoc(doc(db, "publicProfiles", user.uid)),
-          getDoc(doc(db, "verification_requests", user.uid)),
-          getDoc(doc(db, "admins", user.uid))
+        const [userRow, publicRow, verificationRow, adminStatus] = await Promise.all([
+          loadUserRow(uid),
+          loadPublicProfileRow(uid),
+          loadVerificationRequest(uid),
+          checkAdmin(uid)
         ]);
 
-        currentUserData = userSnap.exists() ? userSnap.data() : {};
-        currentPublicData = publicSnap.exists() ? publicSnap.data() : {};
+        currentUserData = userRow || {};
+        currentPublicData = publicRow || {};
 
-        const merged = mergeProfiles(
-          publicSnap.exists() ? publicSnap.data() : {},
-          userSnap.exists() ? userSnap.data() : {},
-          user.uid
+        currentProfile = mergeProfiles(
+          publicRow ? normalizeProfile(publicRow, uid) : {},
+          userRow ? normalizeProfile(userRow, uid) : {},
+          uid
         );
 
-        const isAdmin = adminSnap.exists() || currentUserData.isAdmin === true || currentUserData.role === "admin";
-        currentBlockedUsers = Array.isArray(merged.blockedUsers) ? merged.blockedUsers : [];
+        isCurrentUserAdmin =
+          adminStatus ||
+          currentProfile.isAdmin === true ||
+          currentProfile.role === "admin";
 
-        applyProfileHeader(merged, isAdmin);
+        currentBlockedUsers = Array.isArray(currentProfile.blockedUsers)
+          ? currentProfile.blockedUsers
+          : [];
 
-        emailEl.textContent = user.email || "-";
-        uidEl.textContent = user.uid || "-";
-        verifiedEl.textContent = merged.isVerified ? "Yes" : "No";
-        createdAtEl.textContent = formatDate(currentUserData.createdAt, user);
+        applyProfileHeader(currentProfile, isCurrentUserAdmin);
 
-        setCheckedRadioValue("themePreference", merged.themePreference || getStoredTheme() || "dark");
-        localStorage.setItem("bwTheme", merged.themePreference || getStoredTheme() || "dark");
-        applyTheme(merged.themePreference || getStoredTheme() || "dark");
+        emailEl.textContent = currentUser.email || "-";
+        uidEl.textContent = currentUser.id || "-";
+        verifiedEl.textContent = currentProfile.isVerified ? "Yes" : "No";
+        createdAtEl.textContent = formatDate(currentProfile.createdAt || currentUserData.created_at || currentUserData.createdAt, currentUser);
 
-        privateAccountToggle.checked = !!merged.isPrivate;
-        cityVisibleToggle.checked = !!merged.cityVisible;
-        genderVisibleToggle.checked = !!merged.genderVisible;
+        const themeValue = currentProfile.themePreference || getStoredTheme() || "dark";
+        setCheckedRadioValue("themePreference", themeValue);
+        localStorage.setItem("bwTheme", themeValue);
+        applyTheme(themeValue);
 
-        showInNearbyToggle.checked = !!merged.showInNearby;
-        setCheckedRadioValue("locationVisibility", merged.locationVisibility || "hidden");
+        privateAccountToggle.checked = !!currentProfile.isPrivate;
+        cityVisibleToggle.checked = !!currentProfile.cityVisible;
+        genderVisibleToggle.checked = !!currentProfile.genderVisible;
 
-        const requestStatus = verificationSnap.exists()
-          ? (verificationSnap.data().status || "pending")
+        showInNearbyToggle.checked = !!currentProfile.showInNearby;
+        setCheckedRadioValue("locationVisibility", currentProfile.locationVisibility || "hidden");
+
+        const requestStatus = verificationRow
+          ? getString(verificationRow, ["status"], "pending")
           : "not_requested";
 
-        setVerificationBadge(requestStatus, !!merged.isVerified);
+        setVerificationBadge(requestStatus, !!currentProfile.isVerified);
 
-        if (isAdmin) reportsAdminLink.classList.remove("hidden");
+        if (isCurrentUserAdmin) reportsAdminLink.classList.remove("hidden");
         else reportsAdminLink.classList.add("hidden");
 
         await renderBlockedList();
@@ -1650,7 +2001,87 @@
         loading.textContent = "Could not load settings.";
         setStatus(pageStatus, "Could not load settings.", "error");
       }
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    loadSettings();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - users: select, upsert, update
+      - public_profiles: select, upsert, update
+      - verification_requests: select
+      - admins: select
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS:
+      users:
+      - uid
+      - display_name
+      - username
+      - bio
+      - photo_url
+      - is_private
+      - city_visible
+      - gender_visible
+      - show_in_nearby
+      - location_visibility
+      - theme_preference
+      - blocked_users
+      - soft_deleted
+      - deleted_by_self
+      - deleted_at
+      - moderation_status
+      - is_admin
+      - role
+      - updated_at
+
+      public_profiles:
+      - uid
+      - display_name
+      - username
+      - bio
+      - photo_url
+      - is_private
+      - city_visible
+      - gender_visible
+      - show_in_nearby
+      - location_visibility
+      - soft_deleted
+      - deleted_by_self
+      - deleted_at
+      - moderation_status
+      - is_verified
+      - updated_at
+
+      verification_requests:
+      - id
+      - uid / user_id
+      - status
+
+      admins:
+      - id / uid / user_id
+
+      RLS IDEA:
+      - Users can select/update their own users row where uid = auth.uid()
+      - Users can select/update their own public_profiles row where uid = auth.uid()
+      - Public/authenticated users can select visible public_profiles
+      - Users can select their own verification_requests row
+      - Users can select admins only enough for admin check, or use an RPC later
+      - Only admins should manage moderation fields
+
+      SHARE BUTTON:
+      - Not needed on settings page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
