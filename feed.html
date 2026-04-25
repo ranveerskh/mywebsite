@@ -500,6 +500,11 @@
       background:rgba(167,139,250,.12);
       border-color:rgba(167,139,250,.18);
     }
+    .share-btn{
+      margin-left:auto;
+      background:rgba(61,220,132,.12);
+      border-color:rgba(61,220,132,.18);
+    }
     .icon-report-link{
       background:rgba(245,185,66,.14);
       border-color:rgba(245,185,66,.20);
@@ -679,6 +684,7 @@
       .feed-head-top{align-items:stretch}
       .write-btn{width:100%;justify-content:center}
       .remove-image-btn{width:100%}
+      .share-btn{margin-left:0}
     }
   </style>
 </head>
@@ -1641,10 +1647,31 @@
       `;
     }
 
+    async function sharePost(postId) {
+      const url = new URL("post.html", window.location.href);
+      url.searchParams.set("postId", postId);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: "Check this post on BareWorld",
+            text: "Check this post on BareWorld",
+            url: url.toString()
+          });
+        } else {
+          await navigator.clipboard.writeText(url.toString());
+          alert("Post link copied.");
+        }
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
+    }
+
     function attachPostActions(postId, postData) {
       const ownerId = postData.userId;
       const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
       const commentToggleBtn = document.querySelector(`.comment-toggle-btn[data-post-id="${postId}"]`);
+      const shareBtn = document.querySelector(`.share-btn[data-post-id="${postId}"]`);
       const commentWrap = document.querySelector(`.comments-wrap[data-post-id="${postId}"]`);
       const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
       const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
@@ -1653,6 +1680,12 @@
       if (relationBtn) {
         relationBtn.addEventListener("click", async () => {
           await handleTopRelationAction(ownerId, relationBtn);
+        });
+      }
+
+      if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+          await sharePost(postId);
         });
       }
 
@@ -1881,6 +1914,15 @@
             </button>
 
             ${reportButton}
+
+            <button class="icon-action-btn share-btn" data-post-id="${postId}" aria-label="Share">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
+                <path d="M12 16V4"></path>
+                <path d="M7 9l5-5 5 5"></path>
+              </svg>
+              <span>Share</span>
+            </button>
           </div>
 
           <div class="comments-wrap hidden" data-post-id="${postId}">
