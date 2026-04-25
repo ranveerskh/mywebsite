@@ -2077,25 +2077,49 @@
     }
 
     async function createSignedProofUrl(path) {
-      if (!path) throw new Error("Proof file missing.");
+  if (!path) throw new Error("Proof file missing.");
 
-      const { data, error } = await supabase.storage
-        .from(VERIFICATION_BUCKET)
-        .createSignedUrl(path, 300);
+  let cleanPath = String(path || "").trim();
 
-      if (error) throw error;
-      return data.signedUrl;
+  // If a full Supabase storage URL was saved by mistake, extract only the file path
+  if (cleanPath.includes("/storage/v1/object/")) {
+    const marker1 = "/verification/";
+    const marker2 = "/object/sign/verification/";
+    const marker3 = "/object/public/verification/";
+
+    if (cleanPath.includes(marker2)) {
+      cleanPath = cleanPath.split(marker2)[1].split("?")[0];
+    } else if (cleanPath.includes(marker3)) {
+      cleanPath = cleanPath.split(marker3)[1].split("?")[0];
+    } else if (cleanPath.includes(marker1)) {
+      cleanPath = cleanPath.split(marker1)[1].split("?")[0];
     }
+  }
 
-    async function openProof(path) {
-      try {
-        const signedUrl = await createSignedProofUrl(path);
-        window.open(signedUrl, "_blank", "noopener,noreferrer");
-      } catch (err) {
-        console.error(err);
-        setMessage("Could not open proof file.", "err");
-      }
-    }
+  if (cleanPath.startsWith("verification/")) {
+    cleanPath = cleanPath.replace("verification/", "");
+  }
+
+  cleanPath = decodeURIComponent(cleanPath);
+
+  const { data, error } = await supabase.storage
+    .from(VERIFICATION_BUCKET)
+    .createSignedUrl(cleanPath, 300);
+
+  if (error) throw error;
+
+  return data.signedUrl;
+}
+
+async function openProof(path) {
+  try {
+    const signedUrl = await createSignedProofUrl(path);
+    window.open(signedUrl, "_blank", "noopener,noreferrer");
+  } catch (err) {
+    console.error("Proof open failed:", err);
+    setMessage("Could not open proof file: " + (err.message || "Unknown error"), "err");
+  }
+}
 
     function getProofPaths(req) {
       return [
