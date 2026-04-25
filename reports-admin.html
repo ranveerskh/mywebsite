@@ -1,91 +1,376 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Reports Admin</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;--blue:#4cc9ff;--purple:#a78bfa;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --soft2:#0f1630;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --green:#3ddc84;
+      --red:#ff5d73;
+      --yellow:#f5b942;
+      --blue:#4cc9ff;
+      --purple:#a78bfa;
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --soft:#eef3fb;
+      --soft2:#f7f9fd;
+      --line:rgba(15,23,42,.08);
+      --text:#14213d;
+      --muted:#6b7893;
+      --green:#22b36c;
+      --red:#e74c66;
+      --yellow:#d59617;
+      --blue:#1f8fff;
+      --purple:#7f63ff;
+    }
+
     body{
       background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
-      color:var(--text);min-height:100vh;padding:14px 14px 92px;
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
     }
+    html[data-theme="light"] body{
+      background:linear-gradient(180deg,#eef4ff 0%,#f8fbff 100%);
+    }
+
     .app{max-width:980px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar,.panel{
-      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
     }
+    html[data-theme="light"] .topbar,
+    html[data-theme="light"] .panel{
+      background:rgba(255,255,255,.92);
+    }
+
     .topbar{
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
-      position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);flex-wrap:wrap
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter:blur(14px);
+      flex-wrap:wrap;
     }
+
     .left-wrap{display:flex;align-items:center;gap:10px}
-    .back-btn,.action-btn{
-      border:none;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .back-btn,.action-btn,.top-link{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
     }
-    .back-btn{background:var(--soft);color:#fff;border:1px solid var(--line)}
+
+    .back-btn,.top-link{
+      background:var(--soft);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
     .brand{font-size:22px;font-weight:800}
     .brand-sub{font-size:12px;color:var(--muted)}
+
     .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
     .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
-    .filters{display:grid;grid-template-columns:1fr 180px;gap:10px}
+
+    .filters{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:10px;
+    }
+
     input,select,textarea{
-      width:100%;border:none;outline:none;padding:13px 14px;border-radius:14px;background:#0f1630;color:#fff;
-      border:1px solid rgba(255,255,255,.07);font-size:14px
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 14px;
+      border-radius:14px;
+      background:var(--soft2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
     }
     select option{color:#000}
-    textarea{min-height:90px;resize:vertical}
+    textarea{min-height:90px;resize:vertical;line-height:1.55}
+
     .loading{text-align:center;color:var(--muted);padding:28px 10px}
     .list{display:grid;gap:14px}
-    .card{background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:14px}
-    .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-    .card-title{font-size:17px;font-weight:800;line-height:1.4}
-    .card-sub{color:var(--muted);font-size:13px;line-height:1.6;margin-top:4px;word-break:break-word}
-    .status-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
-    .status-pending{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
-    .status-actioned{background:rgba(61,220,132,.14);color:#c9f7dd;border:1px solid rgba(61,220,132,.20)}
-    .status-dismissed{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
-    .type-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-right:8px}
-    .type-post{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
-    .type-profile{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
+
+    .card{
+      background:var(--soft2);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+    }
+
+    .card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .card-title{
+      font-size:17px;
+      font-weight:800;
+      line-height:1.4;
+    }
+
+    .card-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-top:4px;
+      word-break:break-word;
+    }
+
+    .status-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .status-pending{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .status-actioned{
+      background:rgba(61,220,132,.14);
+      color:#c9f7dd;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .status-dismissed{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+
+    .type-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      margin-right:8px;
+      text-transform:uppercase;
+    }
+    .type-post{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .type-profile{
+      background:rgba(167,139,250,.14);
+      color:#e8defd;
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .type-place{
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .type-event{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+
     .reason-box,.info-box{
-      background:#111936;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:12px;margin-bottom:12px
+      background:rgba(255,255,255,.025);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:12px;
     }
-    .reason-box small,.info-box small{display:block;color:var(--muted);margin-bottom:6px;font-size:12px}
-    .reason-box div,.info-box div,.info-box a{color:#fff;font-size:14px;line-height:1.7;word-break:break-word}
+    .reason-box small,.info-box small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-size:12px;
+    }
+    .reason-box div,.info-box div,.info-box a{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.7;
+      word-break:break-word;
+    }
     .info-box a{text-decoration:none}
+
     .preview{
-      display:flex;gap:12px;align-items:flex-start;background:#111936;border:1px solid rgba(255,255,255,.05);
-      border-radius:14px;padding:12px;margin-bottom:12px
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:rgba(255,255,255,.025);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:12px;
     }
+
     .preview-img,.preview-empty{
-      width:82px;height:82px;border-radius:14px;flex-shrink:0;border:1px solid rgba(255,255,255,.08);background:#1b2445
+      width:82px;
+      height:82px;
+      border-radius:14px;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:#1b2445;
+    }
+    html[data-theme="light"] .preview-img,
+    html[data-theme="light"] .preview-empty{
+      background:#edf3ff;
     }
     .preview-img{object-fit:cover}
     .preview-empty{
-      display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;color:var(--muted);font-size:11px;line-height:1.3
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.3;
     }
+
     .preview-body{min-width:0;flex:1}
     .preview-title{font-size:15px;font-weight:800;margin-bottom:4px}
-    .preview-sub{font-size:12px;color:#8fdfff;font-weight:700;margin-bottom:6px}
-    .preview-text{font-size:13px;color:#d7def5;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-    .warn-btn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
-    .suspend-btn{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
-    .ban-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
-    .dismiss-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
-    .open-btn{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
-    .delete-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
-    .message{min-height:20px;font-size:14px;margin-top:10px}
-    .success{color:#9cf0bf}.error{color:#ffb3bd}
-    .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
-    .helper{color:var(--muted);font-size:12px;line-height:1.6;margin-top:6px}
+    .preview-sub{font-size:12px;color:var(--blue);font-weight:700;margin-bottom:6px}
+    .preview-text{
+      font-size:13px;
+      color:#d7def5;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    html[data-theme="light"] .preview-text{
+      color:#33415c;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .warn-btn{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .suspend-btn{
+      background:rgba(167,139,250,.14);
+      color:#e8defd;
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .ban-btn{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+    .dismiss-btn{
+      background:#182248;
+      color:#c9d5ff;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    html[data-theme="light"] .dismiss-btn{
+      background:#eef3fb;
+      color:#33415c;
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .open-btn{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .delete-btn{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.20);
+    }
+
+    .action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
+
+    .empty-box{
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:var(--soft2);
+      border-radius:18px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+    }
+
+    .helper{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+      margin-top:6px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+      color:#d7def5;
+      font-weight:700;
+    }
+    html[data-theme="light"] label{
+      color:#33415c;
+    }
+
     @media (max-width:700px){
+      body{padding:10px}
       .filters{grid-template-columns:1fr}
       .preview{flex-direction:column}
+      .top-actions{width:100%}
+      .top-actions .top-link{flex:1}
     }
   </style>
 </head>
@@ -99,11 +384,16 @@
           <div class="brand-sub">Reports admin</div>
         </div>
       </div>
+
+      <div class="top-actions">
+        <a href="settings.html" class="top-link">Settings</a>
+        <a href="moderation-history.html" class="top-link">History</a>
+      </div>
     </div>
 
     <div class="panel">
       <div class="section-title">Reports</div>
-      <div class="section-note">Warn, suspend, delete content, ban, or dismiss reports here.</div>
+      <div class="section-note">Warn, suspend, hide reported content, ban users, or dismiss reports here.</div>
 
       <div class="filters">
         <input type="text" id="searchInput" placeholder="Search by reason, note, user id, target id..." />
@@ -130,20 +420,7 @@
   </div>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      getDocs,
-      doc,
-      getDoc,
-      updateDoc,
-      setDoc,
-      addDoc,
-      query,
-      where,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -153,10 +430,54 @@
     const searchInput = document.getElementById("searchInput");
     const statusFilter = document.getElementById("statusFilter");
 
+    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+
+    let currentUser = null;
     let allReports = [];
+    let reportsChannel = null;
+    let refreshTimer = null;
+
     const userCache = new Map();
     const publicCache = new Map();
     const postCache = new Map();
+    const eventCache = new Map();
+    const placeCache = new Map();
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function thirtyDaysFromNowIso() {
+      return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    }
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -170,14 +491,8 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
-    }
-
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
     }
 
     function shortText(text = "", max = 220) {
@@ -185,43 +500,431 @@
       return s.length > max ? s.slice(0, max) + "…" : s;
     }
 
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("column")
+      );
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().toLocaleString();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return new Date(value.seconds * 1000).toLocaleString();
+        }
+      } catch {}
+
+      try {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: String(getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || ""),
+        displayName: String(getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member"),
+        username: String(getField(d, ["username", "handle", "user_name", "userName"], "") || ""),
+        bio: String(getField(d, ["bio", "about", "description"], "") || ""),
+        photoURL: String(getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], "") || ""),
+        moderationStatus: String(getField(d, ["moderation_status", "moderationStatus", "status"], "") || ""),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted)
+      };
+    }
+
+    function normalizePost(raw) {
+      const d = raw || {};
+      return {
+        id: String(getField(d, ["id"], "") || ""),
+        ownerId: String(getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"], "") || ""),
+        displayName: String(getField(d, ["display_name", "displayName", "name"], "Member") || "Member"),
+        caption: String(getField(d, ["caption", "text", "content"], "No caption") || "No caption"),
+        imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || "")
+      };
+    }
+
+    function normalizeEvent(raw) {
+      const d = raw || {};
+      return {
+        id: String(getField(d, ["id"], "") || ""),
+        ownerId: String(getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "owner_id", "ownerId", "uid"], "") || ""),
+        title: String(getField(d, ["title", "name"], "Reported event") || "Reported event"),
+        city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
+        date: String(getField(d, ["date"], "") || ""),
+        description: String(getField(d, ["description", "desc"], "No description") || "No description"),
+        imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || ""),
+        creatorName: String(getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"], "Member") || "Member")
+      };
+    }
+
+    function normalizePlace(raw, source = "") {
+      const d = raw || {};
+      return {
+        id: String(getField(d, ["id"], "") || ""),
+        source,
+        ownerId: String(getField(d, ["created_by", "createdBy", "creator_id", "creatorId", "user_id", "userId", "owner_id", "ownerId"], "") || ""),
+        name: String(getField(d, ["name", "title", "place_name", "placeName"], "Reported place") || "Reported place"),
+        category: String(getField(d, ["category", "topic"], "Place") || "Place"),
+        city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
+        description: String(getField(d, ["description", "desc", "notes"], "No description") || "No description"),
+        imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || "")
+      };
+    }
+
+    function normalizeReport(raw) {
+      const d = raw || {};
+
+      const createdAt = d.created_at ?? d.createdAt ?? d.created ?? null;
+
+      return {
+        id: String(getField(d, ["id"], "") || ""),
+
+        reporterId: String(getField(d, ["reporter_id", "reporterId"], "") || ""),
+        reporterName: String(getField(d, ["reporter_name", "reporterName"], "") || ""),
+
+        targetType: String(getField(d, ["target_type", "targetType"], "item") || "item").toLowerCase(),
+        targetId: String(getField(d, ["target_id", "targetId"], "") || ""),
+        targetOwnerId: String(getField(d, ["target_owner_id", "targetOwnerId", "target_user_id", "targetUserId"], "") || ""),
+        targetSource: String(getField(d, ["target_source", "targetSource", "source"], "") || ""),
+        targetTitle: String(getField(d, ["target_title", "targetTitle"], "") || ""),
+        targetPreview: String(getField(d, ["target_preview", "targetPreview"], "") || ""),
+        targetImageURL: String(getField(d, ["target_image_url", "targetImageURL", "targetImageUrl"], "") || ""),
+
+        reason: String(getField(d, ["reason"], "other") || "other"),
+        note: String(getField(d, ["note", "reporter_note", "reporterNote"], "") || ""),
+        status: String(getField(d, ["status"], "pending") || "pending").toLowerCase(),
+        actionType: String(getField(d, ["action_type", "actionType", "action"], "") || ""),
+        adminNote: String(getField(d, ["admin_note", "adminNote"], "") || ""),
+
+        reviewedAt: d.reviewed_at ?? d.reviewedAt ?? null,
+        createdAt,
+        createdAtMs: toMillis(createdAt)
+      };
+    }
+
+    async function selectByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Select failed ${table}.${column}:`, err?.message || err);
+        return null;
+      }
+    }
+
+    async function selectManyByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value);
+
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Select many failed ${table}.${column}:`, err?.message || err);
+        return [];
+      }
+    }
+
+    async function updateByIdWithFallback(table, id, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", id);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) throw lastError;
+      return false;
+    }
+
+    async function upsertByUidWithFallback(table, uid, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .upsert({ uid, ...payload }, { onConflict: "uid" });
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("uid", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) throw lastError;
+      return false;
+    }
+
+    async function checkAdminAccess(uid) {
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return true;
+      }
+
+      return false;
+    }
+
     async function getUser(uid) {
       if (!uid) return null;
       if (userCache.has(uid)) return userCache.get(uid);
-      try {
-        const snap = await getDoc(doc(db, "users", uid));
-        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        userCache.set(uid, data);
-        return data;
-      } catch {
-        return null;
-      }
+
+      const row =
+        await selectByColumn("users", "uid", uid) ||
+        await selectByColumn("users", "id", uid);
+
+      const profile = row ? normalizeProfile(row, uid) : null;
+      userCache.set(uid, profile);
+      return profile;
     }
 
     async function getPublicProfile(uid) {
       if (!uid) return null;
       if (publicCache.has(uid)) return publicCache.get(uid);
-      try {
-        const snap = await getDoc(doc(db, "publicProfiles", uid));
-        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        publicCache.set(uid, data);
-        return data;
-      } catch {
-        return null;
-      }
+
+      const row =
+        await selectByColumn("public_profiles", "uid", uid) ||
+        await selectByColumn("public_profiles", "id", uid);
+
+      const profile = row ? normalizeProfile(row, uid) : null;
+      publicCache.set(uid, profile);
+      return profile;
     }
 
     async function getPost(postId) {
       if (!postId) return null;
       if (postCache.has(postId)) return postCache.get(postId);
-      try {
-        const snap = await getDoc(doc(db, "posts", postId));
-        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        postCache.set(postId, data);
-        return data;
-      } catch {
-        return null;
+
+      const row = await selectByColumn("posts", "id", postId);
+      const post = row ? normalizePost({ id: row.id, ...row }) : null;
+      postCache.set(postId, post);
+      return post;
+    }
+
+    async function getEvent(eventId) {
+      if (!eventId) return null;
+      if (eventCache.has(eventId)) return eventCache.get(eventId);
+
+      const row = await selectByColumn("events", "id", eventId);
+      const event = row ? normalizeEvent({ id: row.id, ...row }) : null;
+      eventCache.set(eventId, event);
+      return event;
+    }
+
+    async function getPlace(placeId, source = "") {
+      if (!placeId) return null;
+
+      const cacheKey = `${source || "any"}:${placeId}`;
+      if (placeCache.has(cacheKey)) return placeCache.get(cacheKey);
+
+      const sources = source && PLACE_SOURCES.includes(source)
+        ? [source, ...PLACE_SOURCES.filter(s => s !== source)]
+        : PLACE_SOURCES;
+
+      for (const table of sources) {
+        const row = await selectByColumn(table, "id", placeId);
+        if (row) {
+          const place = normalizePlace({ id: row.id, ...row }, table);
+          placeCache.set(cacheKey, place);
+          return place;
+        }
       }
+
+      placeCache.set(cacheKey, null);
+      return null;
+    }
+
+    async function addModerationHistory({
+      userId = "",
+      actionType = "",
+      reason = "",
+      note = "",
+      reportId = "",
+      targetType = "",
+      targetId = "",
+      durationDays = "",
+      activeUntil = ""
+    }) {
+      const snakePayload = {
+        target_user_id: userId,
+        action_type: actionType,
+        reason,
+        admin_note: note,
+        source_report_id: reportId,
+        report_id: reportId,
+        target_type: targetType,
+        target_id: targetId,
+        duration_days: durationDays,
+        active_until: activeUntil || null,
+        admin_uid: currentUser?.id || "",
+        created_at: nowIso()
+      };
+
+      const camelPayload = {
+        targetUserId: userId,
+        actionType,
+        reason,
+        adminNote: note,
+        sourceReportId: reportId,
+        reportId,
+        targetType,
+        targetId,
+        durationDays,
+        activeUntil: activeUntil || null,
+        adminUid: currentUser?.id || "",
+        createdAt: nowIso()
+      };
+
+      const minimalPayload = {
+        user_id: userId,
+        action: actionType,
+        reason,
+        note,
+        report_id: reportId,
+        target_type: targetType,
+        target_id: targetId,
+        admin_id: currentUser?.id || "",
+        created_at: nowIso()
+      };
+
+      const payloads = [snakePayload, camelPayload, minimalPayload];
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase.from("moderation_history").insert(payload);
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      console.warn("Moderation history save failed:", lastError?.message || lastError);
+    }
+
+    async function updateReport(reportId, payloadVariants) {
+      const commonSnake = {
+        reviewed_at: nowIso(),
+        reviewed_by: currentUser?.id || "",
+        updated_at: nowIso()
+      };
+
+      const commonCamel = {
+        reviewedAt: nowIso(),
+        reviewedBy: currentUser?.id || "",
+        updatedAt: nowIso()
+      };
+
+      const variants = [];
+
+      payloadVariants.forEach(payload => {
+        variants.push({ ...payload, ...commonSnake });
+        variants.push({ ...payload, ...commonCamel });
+        variants.push(payload);
+      });
+
+      await updateByIdWithFallback("reports", reportId, variants);
     }
 
     function getFilteredReports() {
@@ -238,69 +941,175 @@
           item.targetId || "",
           item.targetOwnerId || "",
           item.reporterId || "",
+          item.reporterName || "",
           item.reason || "",
           item.note || "",
           item.adminNote || "",
-          item.actionType || ""
+          item.actionType || "",
+          item.targetTitle || "",
+          item.targetPreview || ""
         ].join(" ").toLowerCase();
 
         return haystack.includes(q);
       });
     }
 
-    async function addModerationHistory({
-      userId = "",
-      actionType = "",
-      reason = "",
-      note = "",
-      reportId = "",
-      targetType = "",
-      targetId = ""
-    }) {
-      try {
-        await addDoc(collection(db, "moderation_history"), {
-          userId,
-          actionType,
-          reason,
-          note,
-          reportId,
-          targetType,
-          targetId,
-          adminId: auth.currentUser?.uid || "",
-          createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.warn("Moderation history save failed:", err);
-      }
+    function targetTypeClass(type) {
+      if (type === "profile") return "type-profile";
+      if (type === "place") return "type-place";
+      if (type === "event") return "type-event";
+      return "type-post";
     }
 
-    async function updateReport(reportId, payload) {
-      await updateDoc(doc(db, "reports", reportId), {
-        ...payload,
-        reviewedAt: serverTimestamp()
-      });
+    function getStatusClass(status) {
+      if (status === "actioned") return "status-actioned";
+      if (status === "dismissed") return "status-dismissed";
+      return "status-pending";
+    }
+
+    function getOpenUrl(report) {
+      if (report.targetType === "profile") {
+        return `member.html?uid=${encodeURIComponent(report.targetId)}`;
+      }
+
+      if (report.targetType === "post") {
+        return `post.html?postId=${encodeURIComponent(report.targetId)}`;
+      }
+
+      if (report.targetType === "event") {
+        return `event.html?eventId=${encodeURIComponent(report.targetId)}`;
+      }
+
+      if (report.targetType === "place") {
+        const source = report.targetSource ? `&source=${encodeURIComponent(report.targetSource)}` : "";
+        return `place.html?placeId=${encodeURIComponent(report.targetId)}${source}`;
+      }
+
+      return "#";
+    }
+
+    async function buildPreview(report) {
+      if (report.targetTitle || report.targetPreview || report.targetImageURL) {
+        return {
+          title: report.targetTitle || `${report.targetType || "Item"} report`,
+          sub: report.targetOwnerId ? `Target user: ${report.targetOwnerId}` : "",
+          text: report.targetPreview || "",
+          image: report.targetImageURL || "",
+          openUrl: getOpenUrl(report)
+        };
+      }
+
+      if (report.targetType === "profile") {
+        const profile = await getPublicProfile(report.targetId);
+        return {
+          title: profile?.displayName || "Profile",
+          sub: profile?.username ? `@${profile.username}` : "",
+          text: profile?.bio || "No bio added yet.",
+          image: profile?.photoURL || "",
+          openUrl: getOpenUrl(report)
+        };
+      }
+
+      if (report.targetType === "post") {
+        const post = await getPost(report.targetId);
+        return {
+          title: "Reported post",
+          sub: post?.displayName || "",
+          text: post?.caption || "No caption",
+          image: post?.imageURL || "",
+          openUrl: getOpenUrl(report)
+        };
+      }
+
+      if (report.targetType === "place") {
+        const place = await getPlace(report.targetId, report.targetSource);
+        return {
+          title: place?.name || "Reported place",
+          sub: [place?.category, place?.city].filter(Boolean).join(" • "),
+          text: place?.description || "No description",
+          image: place?.imageURL || "",
+          openUrl: getOpenUrl({
+            ...report,
+            targetSource: report.targetSource || place?.source || ""
+          })
+        };
+      }
+
+      if (report.targetType === "event") {
+        const event = await getEvent(report.targetId);
+        return {
+          title: event?.title || "Reported event",
+          sub: [event?.creatorName, event?.city, event?.date].filter(Boolean).join(" • "),
+          text: event?.description || "No description",
+          image: event?.imageURL || "",
+          openUrl: getOpenUrl(report)
+        };
+      }
+
+      return {
+        title: "Unknown target",
+        sub: "",
+        text: "",
+        image: "",
+        openUrl: "#"
+      };
+    }
+
+    function getTargetUserForAction(report) {
+      return report.targetOwnerId || (report.targetType === "profile" ? report.targetId : "");
     }
 
     async function warnUser(targetUserId, adminNote, report) {
-      const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      if (!targetUserId) throw new Error("Target user missing.");
 
-      await setDoc(doc(db, "users", targetUserId), {
-        moderationStatus: "warned",
-        warningActive: true,
-        warningUntil: until,
-        moderationNote: adminNote || "",
-        moderationUpdatedAt: serverTimestamp()
-      }, { merge: true });
+      const until = thirtyDaysFromNowIso();
 
-      await setDoc(doc(db, "publicProfiles", targetUserId), {
-        accountState: "warned"
-      }, { merge: true });
+      await upsertByUidWithFallback("users", targetUserId, [
+        {
+          moderation_status: "warned",
+          warning_active: true,
+          warning_until: until,
+          moderation_note: adminNote || "",
+          moderation_updated_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          moderationStatus: "warned",
+          warningActive: true,
+          warningUntil: until,
+          moderationNote: adminNote || "",
+          moderationUpdatedAt: nowIso(),
+          updatedAt: nowIso()
+        }
+      ]);
 
-      await updateReport(report.id, {
-        status: "actioned",
-        actionType: "warn",
-        adminNote: adminNote || ""
-      });
+      await upsertByUidWithFallback("public_profiles", targetUserId, [
+        {
+          moderation_status: "warned",
+          warning_until: until,
+          account_state: "warned",
+          updated_at: nowIso()
+        },
+        {
+          moderationStatus: "warned",
+          warningUntil: until,
+          accountState: "warned",
+          updatedAt: nowIso()
+        }
+      ]);
+
+      await updateReport(report.id, [
+        {
+          status: "actioned",
+          action_type: "warn",
+          admin_note: adminNote || ""
+        },
+        {
+          status: "actioned",
+          actionType: "warn",
+          adminNote: adminNote || ""
+        }
+      ]);
 
       await addModerationHistory({
         userId: targetUserId,
@@ -309,31 +1118,68 @@
         note: adminNote || "",
         reportId: report.id,
         targetType: report.targetType,
-        targetId: report.targetId
+        targetId: report.targetId,
+        durationDays: 30,
+        activeUntil: until
       });
+
+      userCache.delete(targetUserId);
+      publicCache.delete(targetUserId);
     }
 
     async function suspendUser(targetUserId, adminNote, report) {
-      const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      if (!targetUserId) throw new Error("Target user missing.");
 
-      await setDoc(doc(db, "users", targetUserId), {
-        moderationStatus: "suspended",
-        suspended: true,
-        suspensionUntil: until,
-        suspendUntil: until,
-        moderationNote: adminNote || "",
-        moderationUpdatedAt: serverTimestamp()
-      }, { merge: true });
+      const until = thirtyDaysFromNowIso();
 
-      await setDoc(doc(db, "publicProfiles", targetUserId), {
-        accountState: "suspended"
-      }, { merge: true });
+      await upsertByUidWithFallback("users", targetUserId, [
+        {
+          moderation_status: "suspended",
+          suspended: true,
+          suspension_until: until,
+          suspend_until: until,
+          moderation_note: adminNote || "",
+          moderation_updated_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          moderationStatus: "suspended",
+          suspended: true,
+          suspensionUntil: until,
+          suspendUntil: until,
+          moderationNote: adminNote || "",
+          moderationUpdatedAt: nowIso(),
+          updatedAt: nowIso()
+        }
+      ]);
 
-      await updateReport(report.id, {
-        status: "actioned",
-        actionType: "suspend",
-        adminNote: adminNote || ""
-      });
+      await upsertByUidWithFallback("public_profiles", targetUserId, [
+        {
+          moderation_status: "suspended",
+          suspension_until: until,
+          account_state: "suspended",
+          updated_at: nowIso()
+        },
+        {
+          moderationStatus: "suspended",
+          suspensionUntil: until,
+          accountState: "suspended",
+          updatedAt: nowIso()
+        }
+      ]);
+
+      await updateReport(report.id, [
+        {
+          status: "actioned",
+          action_type: "suspend",
+          admin_note: adminNote || ""
+        },
+        {
+          status: "actioned",
+          actionType: "suspend",
+          adminNote: adminNote || ""
+        }
+      ]);
 
       await addModerationHistory({
         userId: targetUserId,
@@ -342,27 +1188,131 @@
         note: adminNote || "",
         reportId: report.id,
         targetType: report.targetType,
-        targetId: report.targetId
+        targetId: report.targetId,
+        durationDays: 30,
+        activeUntil: until
       });
+
+      userCache.delete(targetUserId);
+      publicCache.delete(targetUserId);
+    }
+
+    async function hidePost(postId, reason = "Policy violation") {
+      await updateByIdWithFallback("posts", postId, [
+        {
+          hidden: true,
+          hidden_by_admin: true,
+          hidden_reason: reason,
+          hidden_at: nowIso(),
+          moderated_by: currentUser?.id || "",
+          updated_at: nowIso()
+        },
+        {
+          hidden: true,
+          hiddenByAdmin: true,
+          hiddenReason: reason,
+          hiddenAt: nowIso(),
+          moderatedBy: currentUser?.id || "",
+          updatedAt: nowIso()
+        },
+        {
+          hidden: true
+        }
+      ]);
+
+      postCache.delete(postId);
+    }
+
+    async function hideEvent(eventId, reason = "Policy violation") {
+      await updateByIdWithFallback("events", eventId, [
+        {
+          hidden: true,
+          hidden_by_admin: true,
+          hidden_reason: reason,
+          hidden_at: nowIso(),
+          moderated_by: currentUser?.id || "",
+          updated_at: nowIso()
+        },
+        {
+          hidden: true,
+          hiddenByAdmin: true,
+          hiddenReason: reason,
+          hiddenAt: nowIso(),
+          moderatedBy: currentUser?.id || "",
+          updatedAt: nowIso()
+        },
+        {
+          hidden: true
+        }
+      ]);
+
+      eventCache.delete(eventId);
+    }
+
+    async function hidePlace(placeId, source = "", reason = "Policy violation") {
+      const sources = source && PLACE_SOURCES.includes(source)
+        ? [source, ...PLACE_SOURCES.filter(s => s !== source)]
+        : PLACE_SOURCES;
+
+      let lastError = null;
+
+      for (const table of sources) {
+        try {
+          await updateByIdWithFallback(table, placeId, [
+            {
+              hidden: true,
+              hidden_by_admin: true,
+              hidden_reason: reason,
+              hidden_at: nowIso(),
+              moderated_by: currentUser?.id || "",
+              updated_at: nowIso()
+            },
+            {
+              hidden: true,
+              hiddenByAdmin: true,
+              hiddenReason: reason,
+              hiddenAt: nowIso(),
+              moderatedBy: currentUser?.id || "",
+              updatedAt: nowIso()
+            },
+            {
+              hidden: true
+            }
+          ]);
+
+          placeCache.clear();
+          return;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) throw lastError;
     }
 
     async function deleteReportedContent(report, adminNote) {
-      if (report.targetType !== "post") throw new Error("Delete content only works for post reports.");
+      if (report.targetType === "post") {
+        await hidePost(report.targetId, report.reason || "Policy violation");
+      } else if (report.targetType === "place") {
+        await hidePlace(report.targetId, report.targetSource, report.reason || "Policy violation");
+      } else if (report.targetType === "event") {
+        await hideEvent(report.targetId, report.reason || "Policy violation");
+      } else {
+        throw new Error("Hide content is only available for post, place, or event reports.");
+      }
 
-      await updateDoc(doc(db, "posts", report.targetId), {
-        hidden: true,
-        hiddenByAdmin: true,
-        hiddenReason: report.reason || "Policy violation",
-        hiddenAt: serverTimestamp(),
-        moderatedBy: auth.currentUser?.uid || "",
-        updatedAt: serverTimestamp()
-      });
-
-      await updateReport(report.id, {
-        status: "actioned",
-        actionType: "delete_content",
-        adminNote: adminNote || ""
-      });
+      await updateReport(report.id, [
+        {
+          status: "actioned",
+          action_type: "delete_content",
+          admin_note: adminNote || ""
+        },
+        {
+          status: "actioned",
+          actionType: "delete_content",
+          adminNote: adminNote || ""
+        }
+      ]);
 
       await addModerationHistory({
         userId: report.targetOwnerId || "",
@@ -373,45 +1323,103 @@
         targetType: report.targetType,
         targetId: report.targetId
       });
+    }
 
-      postCache.delete(report.targetId);
+    async function hideUserPosts(targetUserId) {
+      const rowsA = await selectManyByColumn("posts", "user_id", targetUserId);
+      const rowsB = await selectManyByColumn("posts", "userId", targetUserId);
+      const rowsC = await selectManyByColumn("posts", "uid", targetUserId);
+
+      const rows = [...rowsA, ...rowsB, ...rowsC];
+      const ids = [...new Set(rows.map(r => r.id).filter(Boolean))];
+
+      await Promise.all(ids.map(id => hidePost(id, "Owner banned").catch(() => {})));
+    }
+
+    async function hideUserEvents(targetUserId) {
+      const rowsA = await selectManyByColumn("events", "creator_id", targetUserId);
+      const rowsB = await selectManyByColumn("events", "creatorId", targetUserId);
+      const rowsC = await selectManyByColumn("events", "user_id", targetUserId);
+      const rowsD = await selectManyByColumn("events", "userId", targetUserId);
+
+      const rows = [...rowsA, ...rowsB, ...rowsC, ...rowsD];
+      const ids = [...new Set(rows.map(r => r.id).filter(Boolean))];
+
+      await Promise.all(ids.map(id => hideEvent(id, "Owner banned").catch(() => {})));
+    }
+
+    async function hideUserPlaces(targetUserId) {
+      const ownerColumns = ["created_by", "createdBy", "creator_id", "creatorId", "user_id", "userId", "owner_id", "ownerId"];
+
+      for (const table of PLACE_SOURCES) {
+        const collected = [];
+
+        for (const column of ownerColumns) {
+          const rows = await selectManyByColumn(table, column, targetUserId);
+          collected.push(...rows);
+        }
+
+        const ids = [...new Set(collected.map(r => r.id).filter(Boolean))];
+
+        await Promise.all(ids.map(id => hidePlace(id, table, "Owner banned").catch(() => {})));
+      }
     }
 
     async function banUser(targetUserId, adminNote, report) {
-      await setDoc(doc(db, "users", targetUserId), {
-        banned: true,
-        moderationStatus: "banned",
-        moderationNote: adminNote || "",
-        bannedAt: serverTimestamp(),
-        moderationUpdatedAt: serverTimestamp()
-      }, { merge: true });
+      if (!targetUserId) throw new Error("Target user missing.");
 
-      await setDoc(doc(db, "publicProfiles", targetUserId), {
-        accountState: "banned",
-        isHiddenByAdmin: true
-      }, { merge: true });
+      await upsertByUidWithFallback("users", targetUserId, [
+        {
+          banned: true,
+          moderation_status: "banned",
+          moderation_note: adminNote || "",
+          banned_at: nowIso(),
+          moderation_updated_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          banned: true,
+          moderationStatus: "banned",
+          moderationNote: adminNote || "",
+          bannedAt: nowIso(),
+          moderationUpdatedAt: nowIso(),
+          updatedAt: nowIso()
+        }
+      ]);
 
-      try {
-        const postsSnap = await getDocs(query(collection(db, "posts"), where("userId", "==", targetUserId)));
-        await Promise.all(postsSnap.docs.map(d =>
-          updateDoc(doc(db, "posts", d.id), {
-            hidden: true,
-            hiddenByAdmin: true,
-            hiddenReason: "Owner banned",
-            hiddenAt: serverTimestamp(),
-            moderatedBy: auth.currentUser?.uid || "",
-            updatedAt: serverTimestamp()
-          }).catch(() => {})
-        ));
-      } catch (err) {
-        console.warn("Could not hide all banned user posts:", err);
-      }
+      await upsertByUidWithFallback("public_profiles", targetUserId, [
+        {
+          account_state: "banned",
+          moderation_status: "banned",
+          is_hidden_by_admin: true,
+          updated_at: nowIso()
+        },
+        {
+          accountState: "banned",
+          moderationStatus: "banned",
+          isHiddenByAdmin: true,
+          updatedAt: nowIso()
+        }
+      ]);
 
-      await updateReport(report.id, {
-        status: "actioned",
-        actionType: "ban",
-        adminNote: adminNote || ""
-      });
+      await Promise.all([
+        hideUserPosts(targetUserId),
+        hideUserEvents(targetUserId),
+        hideUserPlaces(targetUserId)
+      ]);
+
+      await updateReport(report.id, [
+        {
+          status: "actioned",
+          action_type: "ban",
+          admin_note: adminNote || ""
+        },
+        {
+          status: "actioned",
+          actionType: "ban",
+          adminNote: adminNote || ""
+        }
+      ]);
 
       await addModerationHistory({
         userId: targetUserId,
@@ -425,14 +1433,24 @@
 
       userCache.delete(targetUserId);
       publicCache.delete(targetUserId);
+      postCache.clear();
+      eventCache.clear();
+      placeCache.clear();
     }
 
     async function dismissReport(report, adminNote) {
-      await updateReport(report.id, {
-        status: "dismissed",
-        actionType: "dismiss",
-        adminNote: adminNote || ""
-      });
+      await updateReport(report.id, [
+        {
+          status: "dismissed",
+          action_type: "dismiss",
+          admin_note: adminNote || ""
+        },
+        {
+          status: "dismissed",
+          actionType: "dismiss",
+          adminNote: adminNote || ""
+        }
+      ]);
 
       await addModerationHistory({
         userId: report.targetOwnerId || report.targetId || "",
@@ -443,38 +1461,6 @@
         targetType: report.targetType,
         targetId: report.targetId
       });
-    }
-
-    async function buildPreview(report) {
-      if (report.targetType === "profile") {
-        const profile = await getPublicProfile(report.targetId);
-        return {
-          title: profile?.displayName || "Profile",
-          sub: profile?.username ? `@${profile.username}` : "",
-          text: profile?.bio || "No bio added yet.",
-          image: profile?.photoURL || "",
-          openUrl: `member.html?uid=${encodeURIComponent(report.targetId)}`
-        };
-      }
-
-      if (report.targetType === "post") {
-        const post = await getPost(report.targetId);
-        return {
-          title: "Reported post",
-          sub: post?.displayName || "",
-          text: post?.caption || post?.text || post?.content || "No caption",
-          image: post?.imageURL || post?.imageUrl || post?.photoURL || post?.mediaUrl || "",
-          openUrl: `post.html?postId=${encodeURIComponent(report.targetId)}`
-        };
-      }
-
-      return {
-        title: "Unknown target",
-        sub: "",
-        text: "",
-        image: "",
-        openUrl: "#"
-      };
     }
 
     async function renderReports() {
@@ -491,30 +1477,39 @@
       list.classList.remove("hidden");
 
       const cards = await Promise.all(items.map(async (item) => {
-        const reporter = await getUser(item.reporterId || "");
+        const reporter =
+          await getUser(item.reporterId) ||
+          await getPublicProfile(item.reporterId);
+
         const preview = await buildPreview(item);
 
-        const reporterName = reporter?.displayName || reporter?.name || reporter?.username || item.reporterName || item.reporterId || "Member";
+        const reporterName =
+          reporter?.displayName ||
+          item.reporterName ||
+          item.reporterId ||
+          "Member";
+
         const status = item.status || "pending";
-        const statusClass = status === "actioned"
-          ? "status-actioned"
-          : status === "dismissed"
-          ? "status-dismissed"
-          : "status-pending";
+        const statusClass = getStatusClass(status);
+        const typeClass = targetTypeClass(item.targetType);
+        const targetUser = getTargetUserForAction(item);
+
+        const canHideContent = ["post", "place", "event"].includes(item.targetType);
 
         return `
-          <div class="card" data-id="${item.id}">
+          <div class="card" data-id="${escapeHtml(item.id)}">
             <div class="card-head">
               <div>
                 <div class="card-title">
-                  <span class="type-badge ${item.targetType === "post" ? "type-post" : "type-profile"}">${escapeHtml((item.targetType || "item").toUpperCase())}</span>
+                  <span class="type-badge ${typeClass}">${escapeHtml(item.targetType || "item")}</span>
                   Report
                 </div>
                 <div class="card-sub">
                   Reporter: ${escapeHtml(reporterName)}<br>
                   Reporter ID: ${escapeHtml(item.reporterId || "-")}<br>
-                  Target user: ${escapeHtml(item.targetOwnerId || item.targetId || "-")}<br>
+                  Target user: ${escapeHtml(targetUser || "-")}<br>
                   Target ID: ${escapeHtml(item.targetId || "-")}<br>
+                  Source: ${escapeHtml(item.targetSource || "-")}<br>
                   Created: ${escapeHtml(formatDate(item.createdAt))}
                 </div>
               </div>
@@ -536,28 +1531,34 @@
                 ? `<img class="preview-img" src="${escapeHtml(preview.image)}" alt="Preview">`
                 : `<div class="preview-empty">No preview</div>`
               }
+
               <div class="preview-body">
-                <div class="preview-title">${escapeHtml(preview.title)}</div>
-                <div class="preview-sub">${escapeHtml(preview.sub)}</div>
-                <div class="preview-text">${escapeHtml(shortText(preview.text, 260))}</div>
+                <div class="preview-title">${escapeHtml(preview.title || "Target")}</div>
+                <div class="preview-sub">${escapeHtml(preview.sub || "")}</div>
+                <div class="preview-text">${escapeHtml(shortText(preview.text || "", 260))}</div>
               </div>
             </div>
 
             <div class="field">
-              <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
-              <textarea class="admin-note-input" data-id="${item.id}" placeholder="Write admin note...">${escapeHtml(item.adminNote || "")}</textarea>
+              <label>Admin Note</label>
+              <textarea class="admin-note-input" data-id="${escapeHtml(item.id)}" placeholder="Write admin note...">${escapeHtml(item.adminNote || "")}</textarea>
             </div>
 
             <div class="actions">
-              <a class="action-btn open-btn" href="${escapeHtml(preview.openUrl)}" target="_blank">Open</a>
-              <button class="action-btn warn-btn" data-action="warn" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Warn</button>
-              <button class="action-btn suspend-btn" data-action="suspend" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Suspend</button>
-              ${item.targetType === "post"
-                ? `<button class="action-btn delete-btn" data-action="delete_content" data-id="${item.id}" data-user="${item.targetOwnerId || ""}">Delete Content</button>`
+              <a class="action-btn open-btn" href="${escapeHtml(preview.openUrl || getOpenUrl(item))}" target="_blank" rel="noopener noreferrer">Open</a>
+
+              <button class="action-btn warn-btn" data-action="warn" data-id="${escapeHtml(item.id)}" data-user="${escapeHtml(targetUser || "")}">Warn</button>
+
+              <button class="action-btn suspend-btn" data-action="suspend" data-id="${escapeHtml(item.id)}" data-user="${escapeHtml(targetUser || "")}">Suspend</button>
+
+              ${canHideContent
+                ? `<button class="action-btn delete-btn" data-action="delete_content" data-id="${escapeHtml(item.id)}" data-user="${escapeHtml(targetUser || "")}">Hide Content</button>`
                 : ""
               }
-              <button class="action-btn ban-btn" data-action="ban" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Ban</button>
-              <button class="action-btn dismiss-btn" data-action="dismiss" data-id="${item.id}" data-user="${item.targetOwnerId || item.targetId || ""}">Dismiss</button>
+
+              <button class="action-btn ban-btn" data-action="ban" data-id="${escapeHtml(item.id)}" data-user="${escapeHtml(targetUser || "")}">Ban</button>
+
+              <button class="action-btn dismiss-btn" data-action="dismiss" data-id="${escapeHtml(item.id)}" data-user="${escapeHtml(targetUser || "")}">Dismiss</button>
             </div>
           </div>
         `;
@@ -565,21 +1566,28 @@
 
       list.innerHTML = cards.join("");
 
+      list.querySelectorAll(".preview-img").forEach(img => {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="preview-empty">No preview</div>`;
+        });
+      });
+
       list.querySelectorAll("button[data-action]").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const reportId = btn.getAttribute("data-id");
           const targetUserId = btn.getAttribute("data-user");
           const action = btn.getAttribute("data-action");
-          const noteEl = list.querySelector(`.admin-note-input[data-id="${reportId}"]`);
+          const noteEl = list.querySelector(`.admin-note-input[data-id="${CSS.escape(reportId)}"]`);
           const adminNote = noteEl ? noteEl.value.trim() : "";
           const report = allReports.find(x => x.id === reportId);
+
           if (!report) return;
 
           const labelMap = {
-            warn: "warn this user",
+            warn: "warn this user for 30 days",
             suspend: "suspend this user for 30 days",
-            delete_content: "delete this content",
-            ban: "ban this user",
+            delete_content: "hide this content",
+            ban: "ban this user and hide their content",
             dismiss: "dismiss this report"
           };
 
@@ -613,7 +1621,8 @@
               allReports[idx].actionType = action;
               allReports[idx].adminNote = adminNote;
             }
-            renderReports();
+
+            await loadReports(false);
           } catch (error) {
             console.error(error);
             setMessage(error?.message || "Action failed.", "error");
@@ -626,31 +1635,221 @@
     searchInput.addEventListener("input", renderReports);
     statusFilter.addEventListener("change", renderReports);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function loadReports(showLoading = true) {
+      if (showLoading) {
+        loading.classList.remove("hidden");
+        list.classList.add("hidden");
+        emptyBox.classList.add("hidden");
+      }
+
+      let rows = [];
+      let lastError = null;
+
+      try {
+        const { data, error } = await supabase
+          .from("reports")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!error) {
+          rows = data || [];
+          lastError = null;
+        } else {
+          lastError = error;
+        }
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("reports")
+            .select("*")
+            .order("createdAt", { ascending: false });
+
+          if (!error) {
+            rows = data || [];
+            lastError = null;
+          } else {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("reports")
+            .select("*");
+
+          if (error) throw error;
+          rows = data || [];
+        } catch (err) {
+          console.error(err);
+          loading.textContent = "Could not load reports.";
+          return;
+        }
+      }
+
+      allReports = rows
+        .map(row => normalizeReport({ id: row.id, ...row }))
+        .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+      loading.classList.add("hidden");
+      await renderReports();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadReports(false).catch(err => console.error("Reports refresh failed:", err));
+      }, 350);
+    }
+
+    function setupRealtime() {
+      if (reportsChannel) {
+        try {
+          supabase.removeChannel(reportsChannel);
+        } catch {}
+      }
+
+      reportsChannel = supabase
+        .channel(`reports-admin-live-${currentUser.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "reports" },
+          () => scheduleRefresh()
+        )
+        .subscribe();
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      try {
-        const adminSnap = await getDoc(doc(db, "admins", user.uid));
-        if (!adminSnap.exists()) {
-          loading.textContent = "Access denied. Admin only.";
-          return;
+      currentUser = data.user;
+
+      const isAdmin = await checkAdminAccess(currentUser.id);
+
+      if (!isAdmin) {
+        loading.textContent = "Access denied. Admin only.";
+        return;
+      }
+
+      await loadReports(true);
+      setupRealtime();
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
         }
+      });
+    }
 
-        const reportsSnap = await getDocs(collection(db, "reports"));
-        allReports = reportsSnap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-        loading.classList.add("hidden");
-        renderReports();
-      } catch (error) {
-        console.error(error);
-        loading.textContent = "Could not load reports.";
+    window.addEventListener("beforeunload", () => {
+      if (reportsChannel) {
+        try {
+          supabase.removeChannel(reportsChannel);
+        } catch {}
       }
     });
+
+    initPage().catch((error) => {
+      console.error(error);
+      loading.textContent = "Could not load reports.";
+    });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - admins: select
+      - reports: select, update, realtime
+      - users: select, upsert, update
+      - public_profiles: select, upsert, update
+      - posts: select, update
+      - events: select, update
+      - nearby_places: select, update
+      - places: select, update
+      - nudist_places: select, update
+      - moderation_history: insert
+
+      AUTH:
+      - logged-in user required
+      - admin user required
+
+      IMPORTANT COLUMNS:
+      reports:
+      - id
+      - reporter_id
+      - reporter_name
+      - target_type
+      - target_id
+      - target_owner_id
+      - target_source
+      - target_title
+      - target_preview
+      - target_image_url
+      - reason
+      - note
+      - status
+      - action_type
+      - admin_note
+      - reviewed_at
+      - reviewed_by
+      - created_at
+      - updated_at
+
+      users:
+      - uid
+      - moderation_status
+      - warning_active
+      - warning_until
+      - suspended
+      - suspension_until
+      - banned
+      - moderation_note
+      - moderation_updated_at
+
+      public_profiles:
+      - uid
+      - moderation_status
+      - warning_until
+      - suspension_until
+      - account_state
+      - is_hidden_by_admin
+
+      moderation_history:
+      - id
+      - target_user_id
+      - action_type
+      - reason
+      - admin_note
+      - source_report_id
+      - target_type
+      - target_id
+      - duration_days
+      - active_until
+      - admin_uid
+      - created_at
+
+      RLS IDEA:
+      - Only admins can select/update reports
+      - Only admins can update users/public_profiles moderation fields
+      - Only admins can hide posts/events/places
+      - Only admins can insert moderation_history
+      - Reports should be realtime enabled if you want live admin updates
+
+      SHARE BUTTON:
+      - Not needed on reports admin because it does not display public post cards.
+    */
   </script>
 </body>
 </html>
