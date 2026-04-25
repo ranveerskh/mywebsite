@@ -448,22 +448,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      query,
-      where,
-      getDocs,
-      getDoc,
-      onSnapshot,
-      doc,
-      setDoc,
-      deleteDoc,
-      addDoc,
-      serverTimestamp,
-      limit
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -473,7 +458,12 @@
 
     let currentUser = null;
     let myName = "Someone";
-    let unsubscribeRequests = null;
+    let requestsChannel = null;
+    let refreshTimer = null;
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -515,38 +505,93 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().toLocaleString();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return new Date(value.seconds * 1000).toLocaleString();
+        }
+      } catch {}
+
+      try {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        bio: d.bio || "",
-        verified: !!(d.verified || d.isVerified)
+        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified)
       };
     }
 
+    function normalizeRequest(raw) {
+      const d = raw || {};
+      return {
+        id: getField(d, ["id"]),
+        requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "from_uid", "fromUid"]),
+        targetId: getField(d, ["target_id", "targetId", "to_user_id", "toUserId", "to_uid", "toUid"]),
+        createdAt: d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
     async function loadMergedProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
       try {
-        const [publicSnap, userSnap] = await Promise.all([
-          getDoc(doc(db, "publicProfiles", uid)),
-          getDoc(doc(db, "users", uid))
+        const [publicRow, userRow] = await Promise.all([
+          selectProfileRow("public_profiles", uid),
+          selectProfileRow("users", uid)
         ]);
 
         return normalizeProfile({
-          ...(publicSnap.exists() ? publicSnap.data() : {}),
-          ...(userSnap.exists() ? userSnap.data() : {}),
+          ...(publicRow || {}),
+          ...(userRow || {}),
           uid
         }, uid);
       } catch {
@@ -554,77 +599,223 @@
       }
     }
 
-    async function sendNotificationSafe(toUserId, payload) {
-      try {
-        await addDoc(collection(db, "notifications", toUserId, "items"), payload);
-      } catch (err) {
-        console.warn("Notification failed:", err);
-      }
-    }
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
 
-    async function deleteAllMatchingRequests(requesterId, targetId) {
-      const q = query(
-        collection(db, "follow_requests"),
-        where("requesterId", "==", requesterId),
-        where("targetId", "==", targetId)
-      );
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
 
-      const snap = await getDocs(q);
-      await Promise.all(
-        snap.docs.map(d => deleteDoc(doc(db, "follow_requests", d.id)))
-      );
-    }
-
-    async function acceptRequest(requestDoc) {
-      const data = requestDoc.data();
-      const followId = `${data.requesterId}__${data.targetId}`;
-
-      const existingFollowSnap = await getDocs(
-        query(
-          collection(db, "follows"),
-          where("followerId", "==", data.requesterId),
-          where("followingId", "==", data.targetId),
-          limit(1)
-        )
-      );
-
-      if (existingFollowSnap.empty) {
-        await setDoc(doc(db, "follows", followId), {
-          followerId: data.requesterId,
-          followingId: data.targetId,
-          createdAt: serverTimestamp()
-        });
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
       }
 
-      await sendNotificationSafe(data.requesterId, {
-        type: "follow_accept",
-        title: "Follow request accepted",
-        text: `${myName} accepted your follow request.`,
-        fromUserId: data.targetId,
-        toUserId: data.requesterId,
-        createdAt: serverTimestamp(),
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function sendNotificationSafe(toUserId, payload = {}) {
+      if (!toUserId || toUserId === currentUser?.id) return;
+
+      const snakePayload = {
+        type: payload.type || "notification",
+        title: payload.title || "",
+        text: payload.text || "",
+        from_user_id: payload.from_user_id || payload.fromUserId || currentUser?.id || "",
+        to_user_id: toUserId,
+        created_at: nowIso(),
+        is_read: false
+      };
+
+      const camelPayload = {
+        type: payload.type || "notification",
+        title: payload.title || "",
+        text: payload.text || "",
+        fromUserId: payload.from_user_id || payload.fromUserId || currentUser?.id || "",
+        toUserId: toUserId,
+        createdAt: nowIso(),
         isRead: false
-      });
+      };
 
-      await deleteAllMatchingRequests(data.requesterId, data.targetId);
+      try {
+        await insertWithFallback("notifications", [
+          snakePayload,
+          camelPayload,
+          {
+            type: snakePayload.type,
+            text: snakePayload.text,
+            to_user_id: toUserId,
+            created_at: nowIso()
+          }
+        ]);
+      } catch (err) {
+        console.warn("Notification failed:", err?.message || err);
+      }
     }
 
-    async function declineRequest(requestDoc) {
-      const data = requestDoc.data();
-      await deleteAllMatchingRequests(data.requesterId, data.targetId);
-    }
-
-    async function renderRequests(snapshot) {
-      loading.classList.add("hidden");
+    async function loadFollowRequests() {
+      loading.classList.remove("hidden");
+      list.classList.add("hidden");
+      emptyBox.classList.add("hidden");
       list.innerHTML = "";
 
-      if (snapshot.empty) {
-        list.classList.add("hidden");
+      let rows = [];
+      let lastError = null;
+
+      const targetColumns = ["target_id", "targetId", "to_user_id", "toUserId"];
+
+      for (const column of targetColumns) {
+        try {
+          const { data, error } = await supabase
+            .from("follow_requests")
+            .select("*")
+            .eq(column, currentUser.id)
+            .order("created_at", { ascending: false });
+
+          if (!error) {
+            rows = data || [];
+            lastError = null;
+            break;
+          }
+
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) {
+        console.error("Load requests failed:", lastError);
+        loading.classList.add("hidden");
         emptyBox.classList.remove("hidden");
+        emptyBox.textContent = "Could not load follow requests.";
         return;
       }
 
-      const requesterIds = [...new Set(snapshot.docs.map(d => d.data().requesterId).filter(Boolean))];
+      const requests = rows.map(normalizeRequest).filter(r => r.requesterId && r.targetId === currentUser.id);
+
+      await renderRequests(requests);
+    }
+
+    async function deleteAllMatchingRequests(requesterId, targetId) {
+      const variants = [
+        { requesterCol: "requester_id", targetCol: "target_id" },
+        { requesterCol: "requesterId", targetCol: "targetId" },
+        { requesterCol: "from_user_id", targetCol: "to_user_id" },
+        { requesterCol: "fromUserId", targetCol: "toUserId" }
+      ];
+
+      let deletedAny = false;
+      let lastError = null;
+
+      for (const v of variants) {
+        try {
+          const { error } = await supabase
+            .from("follow_requests")
+            .delete()
+            .eq(v.requesterCol, requesterId)
+            .eq(v.targetCol, targetId);
+
+          if (!error) {
+            deletedAny = true;
+          } else {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (!deletedAny && lastError) throw lastError;
+    }
+
+    async function findExistingFollow(requesterId, targetId) {
+      const variants = [
+        { followerCol: "follower_id", followingCol: "following_id" },
+        { followerCol: "followerId", followingCol: "followingId" }
+      ];
+
+      for (const v of variants) {
+        try {
+          const { data, error } = await supabase
+            .from("follows")
+            .select("*")
+            .eq(v.followerCol, requesterId)
+            .eq(v.followingCol, targetId)
+            .limit(1);
+
+          if (!error && data && data.length) return data[0];
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function acceptRequest(request) {
+      const requesterId = request.requesterId;
+      const targetId = request.targetId;
+
+      if (!requesterId || !targetId) {
+        throw new Error("Invalid follow request.");
+      }
+
+      const existingFollow = await findExistingFollow(requesterId, targetId);
+
+      if (!existingFollow) {
+        await insertWithFallback("follows", [
+          {
+            follower_id: requesterId,
+            following_id: targetId,
+            created_at: nowIso()
+          },
+          {
+            followerId: requesterId,
+            followingId: targetId,
+            createdAt: nowIso()
+          }
+        ]);
+      }
+
+      await sendNotificationSafe(requesterId, {
+        type: "follow_accept",
+        title: "Follow request accepted",
+        text: `${myName} accepted your follow request.`,
+        from_user_id: targetId,
+        to_user_id: requesterId
+      });
+
+      await deleteAllMatchingRequests(requesterId, targetId);
+    }
+
+    async function declineRequest(request) {
+      const requesterId = request.requesterId;
+      const targetId = request.targetId;
+
+      if (!requesterId || !targetId) {
+        throw new Error("Invalid follow request.");
+      }
+
+      await deleteAllMatchingRequests(requesterId, targetId);
+    }
+
+    async function renderRequests(requests) {
+      loading.classList.add("hidden");
+      list.innerHTML = "";
+
+      if (!requests.length) {
+        list.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        emptyBox.textContent = "No pending follow requests.";
+        return;
+      }
+
+      const requesterIds = [...new Set(requests.map(r => r.requesterId).filter(Boolean))];
 
       const profileEntries = await Promise.all(
         requesterIds.map(async (uid) => {
@@ -638,9 +829,8 @@
       emptyBox.classList.add("hidden");
       list.classList.remove("hidden");
 
-      snapshot.docs.forEach((requestDoc) => {
-        const data = requestDoc.data();
-        const profile = profilesMap.get(data.requesterId) || {};
+      requests.forEach((request) => {
+        const profile = profilesMap.get(request.requesterId) || {};
         const displayName = profile.displayName || "Member";
         const username = profile.username || "";
         const bio = profile.bio?.trim() ? profile.bio : "No bio added yet.";
@@ -660,7 +850,7 @@
             <div class="body">
               <div class="name-row">
                 <div class="name">
-                  <a href="member.html?uid=${encodeURIComponent(data.requesterId)}">${escapeHtml(displayName)}</a>
+                  <a href="member.html?uid=${encodeURIComponent(request.requesterId)}">${escapeHtml(displayName)}</a>
                 </div>
                 ${verified ? `<span class="verified-dot">✓</span>` : ""}
               </div>
@@ -669,15 +859,15 @@
 
               <div class="meta-row">
                 <span class="meta-badge meta-purple">Requested</span>
-                <span class="meta-badge meta-blue">${escapeHtml(formatDate(data.createdAt))}</span>
+                <span class="meta-badge meta-blue">${escapeHtml(formatDate(request.createdAt))}</span>
               </div>
 
               <div class="bio">${escapeHtml(bio)}</div>
 
               <div class="actions">
-                <a class="view-btn" href="member.html?uid=${encodeURIComponent(data.requesterId)}">View Profile</a>
-                <button class="accept-btn" data-id="${requestDoc.id}">Accept</button>
-                <button class="decline-btn" data-id="${requestDoc.id}">Decline</button>
+                <a class="view-btn" href="member.html?uid=${encodeURIComponent(request.requesterId)}">View Profile</a>
+                <button class="accept-btn" data-id="${escapeHtml(request.id)}">Accept</button>
+                <button class="decline-btn" data-id="${escapeHtml(request.id)}">Decline</button>
               </div>
             </div>
           </div>
@@ -699,8 +889,9 @@
           setMessage("");
 
           try {
-            await acceptRequest(requestDoc);
+            await acceptRequest(request);
             setMessage("Follow request accepted.", "success");
+            await loadFollowRequests();
           } catch (err) {
             console.error("Accept failed:", err);
             setMessage(err?.message || "Could not accept request.", "error");
@@ -715,8 +906,9 @@
           setMessage("");
 
           try {
-            await declineRequest(requestDoc);
+            await declineRequest(request);
             setMessage("Follow request declined.", "success");
+            await loadFollowRequests();
           } catch (err) {
             console.error("Decline failed:", err);
             setMessage(err?.message || "Could not decline request.", "error");
@@ -729,50 +921,106 @@
       });
     }
 
-    function startRequestsListener() {
-      if (unsubscribeRequests) unsubscribeRequests();
-
-      const q = query(
-        collection(db, "follow_requests"),
-        where("targetId", "==", currentUser.uid)
-      );
-
-      unsubscribeRequests = onSnapshot(q, async (snapshot) => {
-        try {
-          await renderRequests(snapshot);
-        } catch (err) {
-          console.error("Render requests failed:", err);
-          loading.classList.add("hidden");
-          list.classList.add("hidden");
-          emptyBox.classList.remove("hidden");
-          emptyBox.textContent = "Could not load follow requests.";
-        }
-      }, (err) => {
-        console.error("Follow requests listener failed:", err);
-        loading.classList.add("hidden");
-        list.classList.add("hidden");
-        emptyBox.classList.remove("hidden");
-        emptyBox.textContent = "Could not load follow requests.";
-      });
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadFollowRequests().catch(err => {
+          console.error("Refresh failed:", err);
+        });
+      }, 350);
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    function startRequestsRealtime() {
+      if (requestsChannel) {
+        try {
+          supabase.removeChannel(requestsChannel);
+        } catch {}
+      }
+
+      requestsChannel = supabase
+        .channel(`follow-requests-live-${currentUser.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "follow_requests" },
+          () => scheduleRefresh()
+        )
+        .subscribe();
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
 
       try {
-        const myProfile = await loadMergedProfile(user.uid);
-        myName = myProfile.displayName || user.displayName || "Someone";
-        startRequestsListener();
+        const myProfile = await loadMergedProfile(currentUser.id);
+        myName = myProfile.displayName || currentUser.user_metadata?.display_name || "Someone";
+
+        await loadFollowRequests();
+        startRequestsRealtime();
       } catch (err) {
         console.error("Follow requests load failed:", err);
         loading.textContent = "Could not load follow requests.";
       }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      if (requestsChannel) {
+        try {
+          supabase.removeChannel(requestsChannel);
+        } catch {}
+      }
     });
+
+    initPage();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - users: select
+      - public_profiles: select
+      - follow_requests: select, delete, realtime
+      - follows: select, insert
+      - notifications: insert
+
+      IMPORTANT COLUMNS:
+      follow_requests:
+      - id
+      - requester_id
+      - target_id
+      - created_at
+
+      follows:
+      - id
+      - follower_id
+      - following_id
+      - created_at
+
+      notifications:
+      - id
+      - type
+      - title
+      - text
+      - from_user_id
+      - to_user_id
+      - created_at
+      - is_read
+
+      SHARE BUTTON:
+      - Not needed on this page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
