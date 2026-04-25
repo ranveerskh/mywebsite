@@ -3,116 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>BareWorld - Chat</title>
+  <title>OwnSpace - Chat</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
     html[data-theme="dark"]{
-      --bg:#08111f;
-      --surface:#0c1628;
-      --surface-2:#122035;
-      --surface-3:#192b44;
-      --line:rgba(255,255,255,.07);
-      --line-soft:rgba(255,255,255,.04);
-      --text:#f5f8ff;
-      --muted:#91a0be;
-      --blue:#65c7ff;
-      --green:#39d39f;
-      --green-soft:rgba(57,211,159,.14);
-      --other:#162233;
-      --mine:#113845;
-      --red:#ff7286;
-      --yellow:#f3c461;
-      --purple:#9e8cff;
-      --shadow:0 20px 40px rgba(0,0,0,.22);
-      --topbar-bg:rgba(9,16,30,.88);
-      --composer-bg:rgba(9,16,30,.92);
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+      --mine:#123c4c;
+      --other:#121f39;
+      --topbar-bg:rgba(9,15,31,.92);
+      --composer-bg:rgba(9,15,31,.96);
+      --shadow:0 22px 44px rgba(0,0,0,.22);
+      --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
     }
 
     html[data-theme="light"]{
-      --bg:#eef2f8;
+      --bg:#f3f6fb;
       --surface:#ffffff;
       --surface-2:#f7f9fd;
-      --surface-3:#eef3fb;
-      --line:rgba(20,33,61,.08);
-      --line-soft:rgba(20,33,61,.04);
-      --text:#1c2743;
-      --muted:#73809d;
-      --blue:#228fff;
-      --green:#25b97a;
-      --green-soft:rgba(37,185,122,.14);
-      --other:#f1f4f9;
-      --mine:#dff4ef;
-      --red:#e65d72;
-      --yellow:#d89a1e;
-      --purple:#8267ff;
-      --shadow:0 16px 28px rgba(20,33,61,.08);
-      --topbar-bg:rgba(255,255,255,.92);
-      --composer-bg:rgba(255,255,255,.95);
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --red:#e74c66;
+      --purple:#7f63ff;
+      --mine:#dcf8f0;
+      --other:#f1f5fb;
+      --topbar-bg:rgba(255,255,255,.94);
+      --composer-bg:rgba(255,255,255,.96);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
+    }
+
+    html,
+    body{
+      min-height:100%;
     }
 
     body{
       background:
-        radial-gradient(circle at 15% 10%, rgba(101,199,255,.08), transparent 26%),
-        radial-gradient(circle at 85% 15%, rgba(57,211,159,.08), transparent 24%),
-        linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 85%, #000 15%) 100%);
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.12), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(61,220,132,.10), transparent 25%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 88%, #000 12%));
       color:var(--text);
       min-height:100vh;
-      padding:12px 12px calc(14px + var(--safe-bottom));
+      overflow:hidden;
     }
 
     .app{
-      max-width:760px;
+      width:min(860px, 100%);
       margin:0 auto;
-      min-height:calc(100vh - 26px - var(--safe-bottom));
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      height:100vh;
+      height:100dvh;
+      padding:calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom));
+      display:grid;
+      grid-template-rows:auto auto 1fr auto;
+      gap:10px;
     }
 
     .hidden{display:none!important}
 
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:40;
-      display:grid;
-      grid-template-columns:48px 1fr 48px;
-      gap:10px;
-      align-items:center;
-      padding:10px;
-      border-radius:22px;
       background:var(--topbar-bg);
-      backdrop-filter:blur(16px);
       border:1px solid var(--line-soft);
       box-shadow:var(--shadow);
+      backdrop-filter:blur(16px);
+      border-radius:22px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:46px 1fr 46px;
+      gap:8px;
+      align-items:center;
+      min-height:64px;
     }
 
     .top-icon-btn{
-      width:48px;
-      height:48px;
+      width:46px;
+      height:46px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border-radius:16px;
-      cursor:pointer;
       border:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
+      cursor:pointer;
       text-decoration:none;
-      flex-shrink:0;
+      position:relative;
     }
-    .top-icon-btn svg{width:20px;height:20px;display:block}
+
+    .top-icon-btn svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
 
     .chat-head{
+      min-width:0;
       display:flex;
       align-items:center;
       gap:10px;
-      min-width:0;
     }
 
     .chat-avatar,
@@ -120,9 +131,9 @@
       width:46px;
       height:46px;
       border-radius:50%;
-      flex-shrink:0;
       border:1px solid var(--line);
       background:var(--surface-3);
+      flex-shrink:0;
     }
 
     .chat-avatar{
@@ -136,7 +147,7 @@
       color:var(--muted);
       font-size:10px;
       text-align:center;
-      padding:5px;
+      padding:6px;
     }
 
     .chat-head-text{
@@ -149,43 +160,46 @@
       align-items:center;
       gap:7px;
       min-width:0;
-      flex-wrap:wrap;
     }
 
     .chat-title{
+      font-size:16px;
+      font-weight:900;
       color:var(--text);
       text-decoration:none;
-      font-size:17px;
-      font-weight:800;
-      line-height:1.2;
-      max-width:100%;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      line-height:1.2;
+      min-width:0;
     }
 
     .chat-title:hover{text-decoration:underline}
 
-    .verified-dot{
+    .verified-badge{
+      width:19px;
+      height:19px;
+      border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:18px;
-      height:18px;
-      border-radius:999px;
-      background:rgba(57,211,159,.14);
-      color:#dfffee;
-      border:1px solid rgba(57,211,159,.2);
-      font-size:10px;
-      font-weight:900;
+      background:rgba(61,220,132,.14);
+      color:#8cffb4;
+      border:1px solid rgba(61,220,132,.25);
       flex-shrink:0;
     }
 
+    .verified-badge svg{
+      width:13px;
+      height:13px;
+      display:block;
+    }
+
     .chat-subline{
+      margin-top:4px;
       display:flex;
       align-items:center;
-      gap:8px;
-      margin-top:3px;
+      gap:7px;
       min-width:0;
       flex-wrap:wrap;
     }
@@ -193,49 +207,75 @@
     .chat-username{
       color:var(--blue);
       font-size:12px;
-      font-weight:700;
-      max-width:100%;
+      font-weight:800;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      max-width:160px;
     }
 
     .chat-state{
       color:var(--muted);
       font-size:12px;
-      font-weight:600;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .state-dot{
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:var(--green);
+      display:inline-block;
+      flex-shrink:0;
     }
 
     .page-message{
       min-height:18px;
       font-size:13px;
+      line-height:1.5;
       padding:0 4px;
+      color:var(--muted);
     }
+
     .page-message.ok{color:#86efac}
     .page-message.err{color:#fda4af}
 
-    .utility-hidden{
-      display:none;
+    .chat-stage{
+      min-height:0;
+      display:grid;
+      grid-template-rows:1fr;
+      position:relative;
     }
 
-    .request-panel,
-    .blocked-panel{
+    .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:14px;
+      border-radius:24px;
       box-shadow:var(--shadow);
+      overflow:hidden;
+      min-height:0;
     }
 
-    .request-box,
-    .blocked-box{
+    .blocked-panel,
+    .request-panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:14px;
+      align-self:start;
+    }
+
+    .blocked-box,
+    .request-box{
       background:var(--surface-2);
       border:1px dashed var(--line);
       border-radius:18px;
-      padding:16px 14px;
+      padding:16px;
       color:var(--muted);
       text-align:center;
-      line-height:1.65;
+      line-height:1.6;
       font-size:14px;
       white-space:pre-wrap;
       word-break:break-word;
@@ -243,9 +283,10 @@
 
     .request-actions{
       display:flex;
-      gap:10px;
+      gap:8px;
       flex-wrap:wrap;
       margin-top:12px;
+      justify-content:center;
     }
 
     .action-btn{
@@ -253,53 +294,94 @@
       border-radius:14px;
       padding:11px 14px;
       font-size:13px;
-      font-weight:800;
-      text-decoration:none;
+      font-weight:900;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:8px;
       cursor:pointer;
       min-height:42px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-    }
-    .btn-primary{
-      background:rgba(101,199,255,.14);
-      border-color:rgba(101,199,255,.2);
-    }
-    .btn-green{
-      background:rgba(57,211,159,.14);
-      border-color:rgba(57,211,159,.2);
-    }
-    .btn-red{
-      background:rgba(255,114,134,.14);
-      border-color:rgba(255,114,134,.2);
+      text-decoration:none;
     }
 
-    .chat-stage{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+    .action-btn svg{
+      width:16px;
+      height:16px;
+      display:block;
+    }
+
+    .action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.22);
     }
 
     .messages-panel{
-      flex:1;
-      min-height:300px;
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:26px;
-      overflow:hidden;
-      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-rows:auto 1fr;
+      min-height:0;
+    }
+
+    .messages-toolbar{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line-soft);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0));
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .toolbar-title{
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .toolbar-chip{
+      font-size:11px;
+      font-weight:900;
+      color:var(--text);
+      background:rgba(76,201,255,.12);
+      border:1px solid rgba(76,201,255,.18);
+      border-radius:999px;
+      padding:6px 9px;
+      white-space:nowrap;
+    }
+
+    .messages-body{
+      min-height:0;
+      overflow:auto;
+      padding:14px;
       display:flex;
       flex-direction:column;
+      gap:10px;
+      scroll-behavior:smooth;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(76,201,255,.05), transparent 24%),
+        radial-gradient(circle at 85% 15%, rgba(61,220,132,.05), transparent 24%),
+        linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, #000 12%), var(--surface));
     }
 
     .messages-loading,
     .messages-empty{
-      margin:14px;
+      margin:auto;
+      width:min(420px, 100%);
       padding:18px 14px;
       border-radius:18px;
       border:1px dashed var(--line);
@@ -310,38 +392,57 @@
       line-height:1.6;
     }
 
-    .messages-shell{
-      flex:1;
-      min-height:0;
-      overflow:auto;
-      padding:14px;
-      display:grid;
+    .day-divider{
+      display:flex;
+      align-items:center;
       gap:10px;
-      background:
-        radial-gradient(circle at 20% 10%, rgba(101,199,255,.05), transparent 25%),
-        radial-gradient(circle at 78% 18%, rgba(57,211,159,.05), transparent 22%),
-        linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, #000 12%) 0%, var(--surface) 100%);
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      margin:6px 0;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .day-divider::before,
+    .day-divider::after{
+      content:"";
+      height:1px;
+      background:var(--line);
+      flex:1;
     }
 
     .bubble-row{
-      display:flex;
       width:100%;
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
     }
-    .bubble-row.mine{justify-content:flex-end}
-    .bubble-row.other{justify-content:flex-start}
+
+    .bubble-row.mine{
+      justify-content:flex-end;
+    }
+
+    .bubble-row.other{
+      justify-content:flex-start;
+    }
 
     .bubble{
-      max-width:min(76%, 520px);
-      border-radius:22px;
-      padding:12px 13px 10px;
+      max-width:min(76%, 560px);
       border:1px solid var(--line);
-      box-shadow:0 10px 20px rgba(0,0,0,.06);
+      border-radius:22px;
+      padding:11px 12px 9px;
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      position:relative;
     }
+
     .bubble.mine{
-      background:linear-gradient(180deg, color-mix(in srgb, var(--mine) 92%, #fff 8%), var(--mine));
-      border-color:rgba(101,199,255,.14);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mine) 92%, #fff 8%), var(--mine));
+      border-color:rgba(76,201,255,.16);
       border-bottom-right-radius:8px;
     }
+
     .bubble.other{
       background:var(--other);
       border-color:var(--line);
@@ -351,46 +452,47 @@
     .bubble-text{
       color:var(--text);
       font-size:15px;
-      line-height:1.55;
+      line-height:1.5;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
     .bubble-meta{
+      margin-top:7px;
       display:flex;
       justify-content:flex-end;
-      margin-top:7px;
-    }
-
-    .bubble-time{
+      align-items:center;
+      gap:6px;
       color:var(--muted);
       font-size:10.5px;
-      letter-spacing:.1px;
       white-space:nowrap;
-      opacity:.95;
+    }
+
+    .read-tick{
+      color:var(--green);
+      font-weight:900;
+      letter-spacing:-.08em;
     }
 
     .composer-panel{
-      position:sticky;
-      bottom:calc(10px + var(--safe-bottom));
-      z-index:30;
       background:var(--composer-bg);
       border:1px solid var(--line);
-      border-radius:24px;
-      padding:12px;
-      backdrop-filter:blur(16px);
       box-shadow:var(--shadow);
+      backdrop-filter:blur(16px);
+      border-radius:24px;
+      padding:10px;
+      min-height:76px;
     }
 
     .composer{
       display:grid;
-      gap:10px;
+      gap:7px;
     }
 
     .input-row{
       display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
+      grid-template-columns:1fr 52px;
+      gap:8px;
       align-items:end;
     }
 
@@ -405,77 +507,74 @@
       color:var(--text);
       border:1px solid var(--line);
       font-size:15px;
-      min-height:56px;
+      min-height:52px;
       max-height:132px;
       line-height:1.45;
     }
+
     .input::placeholder{color:var(--muted)}
 
     .send-btn{
-      width:56px;
-      height:56px;
+      width:52px;
+      height:52px;
       border:none;
       border-radius:18px;
-      background:linear-gradient(180deg, rgba(57,211,159,.18), rgba(57,211,159,.12));
+      background:linear-gradient(180deg, rgba(61,220,132,.20), rgba(61,220,132,.12));
       color:var(--text);
-      border:1px solid rgba(57,211,159,.22);
+      border:1px solid rgba(61,220,132,.25);
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      flex-shrink:0;
     }
-    .send-btn svg{width:20px;height:20px;display:block}
+
+    .send-btn svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
     .send-btn:disabled{
-      opacity:.7;
+      opacity:.65;
       cursor:not-allowed;
     }
 
     .form-message{
-      min-height:18px;
-      font-size:13px;
+      min-height:16px;
+      font-size:12px;
+      line-height:1.35;
       padding:0 4px;
+      color:var(--muted);
     }
+
     .form-message.ok{color:#86efac}
     .form-message.err{color:#fda4af}
 
     .composer-note{
       color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
+      font-size:11.5px;
+      line-height:1.35;
       padding:0 4px;
     }
 
+    .utility-hidden{
+      display:none;
+    }
+
     @media (max-width:700px){
-      body{
-        padding:10px 10px calc(12px + var(--safe-bottom));
+      .app{
+        padding:calc(8px + var(--safe-top)) 8px calc(8px + var(--safe-bottom));
+        gap:8px;
       }
 
       .topbar{
-        grid-template-columns:46px 1fr 46px;
-        padding:9px;
+        border-radius:20px;
+        grid-template-columns:44px 1fr 44px;
       }
 
-      .chat-title{
-        font-size:16px;
-      }
-
-      .messages-shell{
-        padding:12px;
-      }
-
-      .bubble{
-        max-width:82%;
-      }
-
-      .input-row{
-        grid-template-columns:1fr auto;
-      }
-    }
-
-    @media (max-width:420px){
-      .bubble{
-        max-width:86%;
+      .top-icon-btn{
+        width:44px;
+        height:44px;
       }
 
       .chat-avatar,
@@ -484,13 +583,43 @@
         height:42px;
       }
 
-      .send-btn{
-        width:52px;
-        height:52px;
+      .chat-title{
+        font-size:15px;
+      }
+
+      .chat-username{
+        max-width:125px;
+      }
+
+      .messages-body{
+        padding:11px;
+      }
+
+      .bubble{
+        max-width:84%;
+      }
+
+      .composer-panel{
+        border-radius:22px;
+      }
+    }
+
+    @media (max-width:390px){
+      .bubble{
+        max-width:88%;
+      }
+
+      .chat-username{
+        max-width:95px;
+      }
+
+      .chat-state{
+        font-size:11px;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -506,18 +635,23 @@
 
         <div class="chat-head-text">
           <div class="chat-title-row">
-            <a id="targetNameLink" href="#" class="chat-title">Member</a>
-            <span id="verifiedDot" class="verified-dot hidden">✓</span>
+            <a id="targetNameLink" href="#" class="chat-title">OwnSpace Chat</a>
+            <span id="verifiedDot" class="verified-badge hidden" title="Verified">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </span>
           </div>
 
           <div class="chat-subline">
             <span id="targetUsername" class="chat-username hidden">@username</span>
-            <span id="topSub" class="chat-state">Chat</span>
+            <span class="state-dot" aria-hidden="true"></span>
+            <span id="topSub" class="chat-state">Loading...</span>
           </div>
         </div>
       </div>
 
-      <a id="profileBtn" href="profile.html" class="top-icon-btn" aria-label="Profile">
+      <a id="profileBtn" href="profile.html" class="top-icon-btn" aria-label="View profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 21a8 8 0 0 0-16 0"></path>
           <circle cx="12" cy="7" r="4"></circle>
@@ -529,53 +663,72 @@
 
     <div class="utility-hidden">
       <span id="modeChip">Chat</span>
-      <span id="statusChip">Loading...</span>
+      <span id="statusChip">Loading</span>
       <a id="memberProfileBtn" href="#">Profile</a>
       <div id="targetBio"></div>
     </div>
 
-    <div id="blockedPanel" class="blocked-panel hidden">
-      <div id="blockedText" class="blocked-box">
-        This conversation is not available.
-      </div>
-    </div>
-
-    <div id="requestInfoPanel" class="request-panel hidden">
-      <div id="requestInfoBox" class="request-box">
-        You can send one request message. They must accept it before chat opens.
-      </div>
-
-      <div id="requestActionRow" class="request-actions hidden">
-        <button id="acceptRequestBtn" class="action-btn btn-green" type="button">Accept Request</button>
-        <button id="declineRequestBtn" class="action-btn btn-red" type="button">Decline Request</button>
-      </div>
-
-      <div id="requestPreviewBox" class="request-box hidden" style="margin-top:12px;"></div>
-    </div>
-
     <div class="chat-stage">
-      <div id="messagesPanel" class="messages-panel hidden">
-        <div id="messagesLoading" class="messages-loading hidden">Loading messages...</div>
-        <div id="messagesList" class="messages-shell hidden"></div>
-        <div id="messagesEmpty" class="messages-empty hidden">No messages yet.</div>
+      <div id="blockedPanel" class="blocked-panel hidden">
+        <div id="blockedText" class="blocked-box">
+          This conversation is not available.
+        </div>
       </div>
 
-      <div id="composerPanel" class="composer-panel hidden">
-        <div class="composer">
-          <div class="input-row">
-            <textarea id="messageInput" class="input" placeholder="Write your message..."></textarea>
-
-            <button id="sendBtn" class="send-btn" type="button" aria-label="Send">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M22 2 11 13"></path>
-                <path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div id="formMessage" class="form-message"></div>
-          <div id="composerNote" class="composer-note"></div>
+      <div id="requestInfoPanel" class="request-panel hidden">
+        <div id="requestInfoBox" class="request-box">
+          You can send one message request. They must accept it before full chat opens.
         </div>
+
+        <div id="requestActionRow" class="request-actions hidden">
+          <button id="acceptRequestBtn" class="action-btn btn-green" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            Accept Request
+          </button>
+
+          <button id="declineRequestBtn" class="action-btn btn-red" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+            Decline
+          </button>
+        </div>
+
+        <div id="requestPreviewBox" class="request-box hidden" style="margin-top:12px;"></div>
+      </div>
+
+      <div id="messagesPanel" class="messages-panel panel hidden">
+        <div class="messages-toolbar">
+          <div class="toolbar-title">Conversation</div>
+          <div id="toolbarChip" class="toolbar-chip">Secure chat</div>
+        </div>
+
+        <div id="messagesBody" class="messages-body">
+          <div id="messagesLoading" class="messages-loading hidden">Loading messages...</div>
+          <div id="messagesEmpty" class="messages-empty hidden">No messages yet. Say hello.</div>
+          <div id="messagesList" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="composerPanel" class="composer-panel hidden">
+      <div class="composer">
+        <div class="input-row">
+          <textarea id="messageInput" class="input" placeholder="Write your message..."></textarea>
+
+          <button id="sendBtn" class="send-btn" type="button" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 2 11 13"></path>
+              <path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div id="formMessage" class="form-message"></div>
+        <div id="composerNote" class="composer-note"></div>
       </div>
     </div>
   </div>
@@ -585,6 +738,7 @@
 
     const backBtn = document.getElementById("backBtn");
     const topSub = document.getElementById("topSub");
+    const toolbarChip = document.getElementById("toolbarChip");
     const profileBtn = document.getElementById("profileBtn");
 
     const avatar = document.getElementById("avatar");
@@ -603,6 +757,7 @@
     const blockedText = document.getElementById("blockedText");
 
     const messagesPanel = document.getElementById("messagesPanel");
+    const messagesBody = document.getElementById("messagesBody");
     const messagesLoading = document.getElementById("messagesLoading");
     const messagesList = document.getElementById("messagesList");
     const messagesEmpty = document.getElementById("messagesEmpty");
@@ -628,14 +783,16 @@
     let currentThreadData = null;
     let currentMode = "loading";
     let requestDocModel = null;
+
     let messageChannel = null;
     let requestChannel = null;
     let threadChannel = null;
+
     let iBlockedTarget = false;
     let targetBlockedMe = false;
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
@@ -645,14 +802,14 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -678,45 +835,82 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
-    }
-
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try {
-        const d = new Date(ts);
-        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-      } catch {
-        return "Just now";
-      }
-    }
-
-    function getField(raw, names) {
-      for (const name of names) {
-        const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
-      }
-      return "";
     }
 
     function nowIso() {
       return new Date().toISOString();
     }
 
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return String(value).trim();
+        }
+      }
+      return "";
+    }
+
     function getSortedPair(a, b) {
       return [a, b].sort((x, y) => x.localeCompare(y));
     }
 
+    function tsMs(ts) {
+      if (!ts) return 0;
+      const n = new Date(ts).getTime();
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatTime(ts) {
+      if (!ts) return "Just now";
+      try {
+        const d = new Date(ts);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      } catch {
+        return "Just now";
+      }
+    }
+
+    function formatDay(ts) {
+      if (!ts) return "Today";
+
+      try {
+        const d = new Date(ts);
+        if (Number.isNaN(d.getTime())) return "Today";
+
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        const key = d.toDateString();
+
+        if (key === today.toDateString()) return "Today";
+        if (key === yesterday.toDateString()) return "Yesterday";
+
+        return d.toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          year: d.getFullYear() === today.getFullYear() ? undefined : "numeric"
+        });
+      } catch {
+        return "Today";
+      }
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "userName"]),
-        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
         verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        bio: getField(d, ["bio"]),
+        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
+        bio: getField(d, ["bio", "about"]),
         blockedUsers: Array.isArray(d.blocked_users)
           ? d.blocked_users
           : Array.isArray(d.blockedUsers)
@@ -730,6 +924,7 @@
 
     function normalizeThread(raw, fallbackId = "") {
       const d = raw || {};
+
       return {
         id: d.id || fallbackId || "",
         type: getField(d, ["type"]) || "direct",
@@ -749,12 +944,13 @@
 
     function normalizeRequest(raw, fallbackId = "") {
       const d = raw || {};
+
       return {
         id: d.id || fallbackId || "",
-        requesterId: getField(d, ["requester_id", "requesterId"]),
-        targetId: getField(d, ["target_id", "targetId"]),
+        requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "sender_id", "senderId"]),
+        targetId: getField(d, ["target_id", "targetId", "to_user_id", "toUserId", "receiver_id", "receiverId", "recipient_id", "recipientId"]),
         text: getField(d, ["text", "message", "starter_text", "starterText"]),
-        status: getField(d, ["status"]) || "pending",
+        status: getField(d, ["status", "request_status", "requestStatus"]) || "pending",
         createdAt: d.created_at ?? d.createdAt ?? null,
         updatedAt: d.updated_at ?? d.updatedAt ?? null
       };
@@ -762,39 +958,61 @@
 
     function normalizeMessage(raw, fallbackId = "") {
       const d = raw || {};
+
       return {
         id: d.id || fallbackId || "",
         threadId: getField(d, ["thread_id", "threadId"]),
-        senderId: getField(d, ["sender_id", "senderId"]),
+        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
         text: getField(d, ["text", "message", "body"]),
-        createdAt: d.created_at ?? d.createdAt ?? null
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenAt: d.seen_at ?? d.seenAt ?? d.read_at ?? d.readAt ?? null,
+        isRead: d.is_read ?? d.read ?? null
       };
     }
 
+    async function selectMaybeSingle(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch {}
+
+      return null;
+    }
+
     async function loadFullProfile(uid) {
-      const [userRes, publicRes] = await Promise.all([
-        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
-        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
+      if (!uid) return normalizeProfile({}, "");
+
+      const [publicByUid, publicById, publicByUserId, userByUid, userById, userByUserId] = await Promise.all([
+        selectMaybeSingle("public_profiles", "uid", uid),
+        selectMaybeSingle("public_profiles", "id", uid),
+        selectMaybeSingle("public_profiles", "user_id", uid),
+        selectMaybeSingle("users", "uid", uid),
+        selectMaybeSingle("users", "id", uid),
+        selectMaybeSingle("users", "user_id", uid)
       ]);
 
-      if (userRes.error) throw userRes.error;
-      if (publicRes.error) throw publicRes.error;
-
       return normalizeProfile({
-        ...(publicRes.data || {}),
-        ...(userRes.data || {}),
+        ...(publicByUid || publicById || publicByUserId || {}),
+        ...(userByUid || userById || userByUserId || {}),
         uid
       }, uid);
     }
 
     function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
+      const cleanUrl = String(url || "").trim();
+
       if (!cleanUrl) {
         avatar.classList.add("hidden");
         avatar.removeAttribute("src");
         avatarPlaceholder.classList.remove("hidden");
         return;
       }
+
       avatar.src = cleanUrl;
       avatar.classList.remove("hidden");
       avatarPlaceholder.classList.add("hidden");
@@ -821,7 +1039,7 @@
       if (profile.verified) verifiedDot.classList.remove("hidden");
       else verifiedDot.classList.add("hidden");
 
-      targetBio.textContent = profile.bio?.trim() ? profile.bio : "BareWorld member";
+      targetBio.textContent = profile.bio?.trim() ? profile.bio : "OwnSpace member";
       showAvatar(profile.photoURL || "");
     }
 
@@ -830,6 +1048,7 @@
         try { supabase.removeChannel(messageChannel); } catch {}
         messageChannel = null;
       }
+
       if (threadChannel) {
         try { supabase.removeChannel(threadChannel); } catch {}
         threadChannel = null;
@@ -854,6 +1073,7 @@
       messagesPanel.classList.add("hidden");
       requestInfoPanel.classList.add("hidden");
       composerPanel.classList.add("hidden");
+      topSub.textContent = "Unavailable";
     }
 
     function hideBlocked() {
@@ -875,15 +1095,18 @@
       if (mode === "chat") {
         modeChip.textContent = "Chat";
         statusChip.textContent = "Accepted";
+        toolbarChip.textContent = "Direct chat";
         messagesPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
-        composerNote.textContent = "This is a direct chat.";
-        topSub.textContent = "Chat";
+        composerNote.textContent = "Be respectful. Messages should follow OwnSpace community rules.";
+        topSub.textContent = "Direct chat";
+        messageInput.placeholder = "Write your message...";
       }
 
       if (mode === "direct_new") {
         modeChip.textContent = "Chat";
-        statusChip.textContent = "Ready to start";
+        statusChip.textContent = "Ready";
+        toolbarChip.textContent = "New chat";
         messagesPanel.classList.remove("hidden");
         messagesEmpty.classList.remove("hidden");
         messagesList.classList.add("hidden");
@@ -891,6 +1114,7 @@
         composerPanel.classList.remove("hidden");
         composerNote.textContent = "Your first message will start the chat.";
         topSub.textContent = "New chat";
+        messageInput.placeholder = "Start the conversation...";
       }
 
       if (mode === "request_compose") {
@@ -898,9 +1122,10 @@
         statusChip.textContent = "One message allowed";
         requestInfoPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
-        requestInfoBox.textContent = "You are not a follower yet. Send one message request. They must accept it before full chat opens.";
+        requestInfoBox.textContent = "You can send one message request. They must accept it before full chat opens.";
         composerNote.textContent = "Only one request message is allowed until accepted.";
         topSub.textContent = "Message request";
+        messageInput.placeholder = "Write one request message...";
       }
 
       if (mode === "request_outgoing_pending") {
@@ -917,14 +1142,14 @@
 
       if (mode === "request_incoming_pending") {
         modeChip.textContent = "Request";
-        statusChip.textContent = "Incoming request";
+        statusChip.textContent = "Incoming";
         requestInfoPanel.classList.remove("hidden");
         requestActionRow.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
         requestPreviewBox.textContent = requestDocModel?.text
           ? `Request message:\n\n${requestDocModel.text}`
           : "No request message.";
-        requestInfoBox.textContent = "This person is not an approved chat yet. Accept to open full chat.";
+        requestInfoBox.textContent = "This person sent you a message request. Accept to open full chat.";
         topSub.textContent = "Incoming request";
       }
 
@@ -939,26 +1164,80 @@
 
     function scrollMessagesToBottom() {
       requestAnimationFrame(() => {
-        messagesList.scrollTop = messagesList.scrollHeight + 200;
+        messagesBody.scrollTop = messagesBody.scrollHeight + 300;
       });
     }
 
     async function fetchMessages(threadId) {
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("thread_id", threadId)
-        .order("created_at", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("thread_id", threadId)
+          .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      return (data || []).map(row => normalizeMessage(row, row.id));
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("threadId", threadId)
+          .order("createdAt", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      return [];
+    }
+
+    async function markMessagesSeen(threadId) {
+      if (!threadId || !currentUser) return;
+
+      const updates = [
+        { seen_at: nowIso() },
+        { read_at: nowIso() },
+        { seenAt: nowIso() },
+        { readAt: nowIso() },
+        { is_read: true },
+        { read: true }
+      ];
+
+      for (const payload of updates) {
+        try {
+          const firstKey = Object.keys(payload)[0];
+
+          const { error } = await supabase
+            .from("chat_messages")
+            .update(payload)
+            .eq("thread_id", threadId)
+            .neq("sender_id", currentUser.id)
+            .is(firstKey, null);
+
+          if (!error) return;
+        } catch {}
+      }
+
+      for (const payload of updates) {
+        try {
+          const { error } = await supabase
+            .from("chat_messages")
+            .update(payload)
+            .eq("thread_id", threadId)
+            .neq("sender_id", currentUser.id);
+
+          if (!error) return;
+        } catch {}
+      }
     }
 
     function renderMessages(messages) {
       messagesLoading.classList.add("hidden");
       messagesList.innerHTML = "";
+      messagesList.className = "";
 
-      const finalMessages = [...messages];
+      const finalMessages = [...messages].sort((a, b) => tsMs(a.createdAt) - tsMs(b.createdAt));
 
       if (!finalMessages.length && currentThreadData?.starterText) {
         finalMessages.push({
@@ -979,7 +1258,19 @@
       messagesEmpty.classList.add("hidden");
       messagesList.classList.remove("hidden");
 
+      let lastDay = "";
+
       finalMessages.forEach(msg => {
+        const day = formatDay(msg.createdAt);
+
+        if (day !== lastDay) {
+          lastDay = day;
+          const divider = document.createElement("div");
+          divider.className = "day-divider";
+          divider.textContent = day;
+          messagesList.appendChild(divider);
+        }
+
         const mine = msg.senderId === currentUser.id;
 
         const row = document.createElement("div");
@@ -989,7 +1280,8 @@
           <div class="bubble ${mine ? "mine" : "other"}">
             <div class="bubble-text">${escapeHtml(msg.text || "")}</div>
             <div class="bubble-meta">
-              <div class="bubble-time">${escapeHtml(formatDate(msg.createdAt))}</div>
+              <span>${escapeHtml(formatTime(msg.createdAt))}</span>
+              ${mine ? `<span class="read-tick">✓✓</span>` : ""}
             </div>
           </div>
         `;
@@ -1004,6 +1296,7 @@
       try {
         const messages = await fetchMessages(threadId);
         renderMessages(messages);
+        await markMessagesSeen(threadId);
       } catch (err) {
         console.error(err);
         messagesLoading.classList.add("hidden");
@@ -1024,7 +1317,7 @@
       refreshMessages(threadId);
 
       messageChannel = supabase
-        .channel(`chat-messages-${threadId}`)
+        .channel(`ownspace-chat-messages-${threadId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
@@ -1033,7 +1326,7 @@
         .subscribe();
 
       threadChannel = supabase
-        .channel(`chat-thread-${threadId}`)
+        .channel(`ownspace-chat-thread-${threadId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "chat_threads", filter: `id=eq.${threadId}` },
@@ -1050,60 +1343,94 @@
     }
 
     async function findExistingThreadByUsers(uidA, uidB) {
-      const { data: first, error: firstError } = await supabase
-        .from("chat_threads")
-        .select("*")
-        .eq("participant_a", uidA)
-        .eq("participant_b", uidB)
-        .limit(1);
+      const attempts = [
+        ["participant_a", uidA, "participant_b", uidB],
+        ["participant_a", uidB, "participant_b", uidA],
+        ["participantA", uidA, "participantB", uidB],
+        ["participantA", uidB, "participantB", uidA]
+      ];
 
-      if (firstError) throw firstError;
-      if (first && first.length) return normalizeThread(first[0], first[0].id);
+      for (const [colA, valA, colB, valB] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq(colA, valA)
+            .eq(colB, valB)
+            .limit(1);
 
-      const { data: second, error: secondError } = await supabase
-        .from("chat_threads")
-        .select("*")
-        .eq("participant_a", uidB)
-        .eq("participant_b", uidA)
-        .limit(1);
-
-      if (secondError) throw secondError;
-      if (second && second.length) return normalizeThread(second[0], second[0].id);
+          if (!error && data && data.length) {
+            return normalizeThread(data[0], data[0].id);
+          }
+        } catch {}
+      }
 
       return null;
     }
 
     async function loadRequestBetween(requesterId, targetId) {
-      const { data, error } = await supabase
-        .from("message_requests")
-        .select("*")
-        .eq("requester_id", requesterId)
-        .eq("target_id", targetId)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      const attempts = [
+        ["requester_id", requesterId, "target_id", targetId],
+        ["requesterId", requesterId, "targetId", targetId],
+        ["from_user_id", requesterId, "to_user_id", targetId],
+        ["sender_id", requesterId, "receiver_id", targetId]
+      ];
 
-      if (error) throw error;
-      if (!data || !data.length) return null;
-      return normalizeRequest(data[0], data[0].id);
+      for (const [colA, valA, colB, valB] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("message_requests")
+            .select("*")
+            .eq(colA, valA)
+            .eq(colB, valB)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (!error && data && data.length) return normalizeRequest(data[0], data[0].id);
+        } catch {}
+      }
+
+      return null;
     }
 
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.id) return;
-      try {
-        await supabase.from("notifications").insert(payload);
-      } catch {}
+
+      const variants = [
+        payload,
+        { ...payload, user_id: targetUid },
+        { ...payload, toUserId: targetUid, fromUserId: currentUser.id }
+      ];
+
+      for (const item of variants) {
+        try {
+          const { error } = await supabase.from("notifications").insert(item);
+          if (!error) return;
+        } catch {}
+      }
     }
 
     async function checkFollowing(viewerUid, targetUid) {
-      const { data, error } = await supabase
-        .from("follows")
-        .select("id")
-        .eq("follower_id", viewerUid)
-        .eq("following_id", targetUid)
-        .limit(1);
+      const attempts = [
+        ["follower_id", viewerUid, "following_id", targetUid],
+        ["followerId", viewerUid, "followingId", targetUid],
+        ["from_user_id", viewerUid, "to_user_id", targetUid]
+      ];
 
-      if (error) return false;
-      return !!(data && data.length);
+      for (const [colA, valA, colB, valB] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("follows")
+            .select("id")
+            .eq(colA, valA)
+            .eq(colB, valB)
+            .limit(1);
+
+          if (!error) return !!(data && data.length);
+        } catch {}
+      }
+
+      return false;
     }
 
     async function openThread(threadModel) {
@@ -1114,20 +1441,19 @@
       currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
       currentTargetProfile = await loadFullProfile(currentTargetUid);
 
+      setHeader(currentTargetProfile);
+
       if (
         currentTargetProfile.softDeleted ||
         currentTargetProfile.isHiddenByAdmin ||
         currentTargetProfile.moderationStatus === "banned"
       ) {
-        setHeader(currentTargetProfile);
         showBlocked("This account is not available for chat.");
         return;
       }
 
       iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
       targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.id);
-
-      setHeader(currentTargetProfile);
 
       if (iBlockedTarget || targetBlockedMe) {
         showBlocked(
@@ -1146,7 +1472,7 @@
       clearRequestListener();
 
       requestChannel = supabase
-        .channel(`message-request-${requestId}`)
+        .channel(`ownspace-message-request-${requestId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "message_requests", filter: `id=eq.${requestId}` },
@@ -1158,8 +1484,7 @@
                 .eq("id", requestId)
                 .maybeSingle();
 
-              if (error) return;
-              if (!data) return;
+              if (error || !data) return;
 
               requestDocModel = normalizeRequest(data, data.id);
 
@@ -1181,12 +1506,6 @@
 
               if (requestDocModel.status === "declined") {
                 setModeUI("request_declined");
-                if (direction === "outgoing") {
-                  requestPreviewBox.classList.remove("hidden");
-                  requestPreviewBox.textContent = requestDocModel.text
-                    ? `Your request message:\n\n${requestDocModel.text}`
-                    : "Request declined.";
-                }
                 return;
               }
 
@@ -1228,6 +1547,7 @@
       }
 
       const existingThread = await findExistingThreadByUsers(currentUser.id, targetUid);
+
       if (existingThread && existingThread.status === "accepted") {
         await openThread(existingThread);
         return;
@@ -1275,7 +1595,8 @@
         }
       }
 
-      let existing = await findExistingThreadByUsers(currentUser.id, currentTargetUid);
+      const existing = await findExistingThreadByUsers(currentUser.id, currentTargetUid);
+
       if (existing) {
         currentThreadId = existing.id;
         currentThreadData = existing;
@@ -1283,6 +1604,7 @@
       }
 
       const pair = getSortedPair(currentUser.id, currentTargetUid);
+
       const { data, error } = await supabase
         .from("chat_threads")
         .insert({
@@ -1309,6 +1631,7 @@
 
     async function sendDirectMessage(text) {
       const thread = await ensureDirectThread();
+      const createdAt = nowIso();
 
       const { error: messageError } = await supabase
         .from("chat_messages")
@@ -1316,17 +1639,29 @@
           thread_id: thread.id,
           sender_id: currentUser.id,
           text,
-          created_at: nowIso()
+          created_at: createdAt,
+          seen_at: null
         });
 
-      if (messageError) throw messageError;
+      if (messageError) {
+        const { error: fallbackError } = await supabase
+          .from("chat_messages")
+          .insert({
+            thread_id: thread.id,
+            sender_id: currentUser.id,
+            text,
+            created_at: createdAt
+          });
+
+        if (fallbackError) throw fallbackError;
+      }
 
       const { error: threadError } = await supabase
         .from("chat_threads")
         .update({
           status: "accepted",
           last_message_text: text,
-          last_message_at: nowIso(),
+          last_message_at: createdAt,
           last_sender_id: currentUser.id
         })
         .eq("id", thread.id);
@@ -1340,7 +1675,7 @@
         from_user_id: currentUser.id,
         to_user_id: currentTargetUid,
         thread_id: thread.id,
-        created_at: nowIso(),
+        created_at: createdAt,
         is_read: false
       });
 
@@ -1360,6 +1695,8 @@
         return;
       }
 
+      const createdAt = nowIso();
+
       const { data, error } = await supabase
         .from("message_requests")
         .insert({
@@ -1367,8 +1704,8 @@
           target_id: currentTargetUid,
           text,
           status: "pending",
-          created_at: nowIso(),
-          updated_at: nowIso()
+          created_at: createdAt,
+          updated_at: createdAt
         })
         .select("*")
         .single();
@@ -1384,12 +1721,64 @@
         from_user_id: currentUser.id,
         to_user_id: currentTargetUid,
         request_id: requestDocModel.id,
-        created_at: nowIso(),
+        created_at: createdAt,
         is_read: false
       });
 
       setModeUI("request_outgoing_pending");
       await listenToPendingRequest(requestDocModel.id, "outgoing");
+    }
+
+    async function updateMessageRequestStatus(requestId, status) {
+      const payloads = status === "accepted"
+        ? [
+            {
+              status: "accepted",
+              accepted_at: nowIso(),
+              accepted_by: currentUser.id,
+              updated_at: nowIso()
+            },
+            {
+              status: "accepted",
+              acceptedAt: nowIso(),
+              acceptedBy: currentUser.id,
+              updatedAt: nowIso()
+            },
+            { status: "accepted" }
+          ]
+        : [
+            {
+              status: "declined",
+              declined_at: nowIso(),
+              declined_by: currentUser.id,
+              updated_at: nowIso()
+            },
+            {
+              status: "declined",
+              declinedAt: nowIso(),
+              declinedBy: currentUser.id,
+              updatedAt: nowIso()
+            },
+            { status: "declined" }
+          ];
+
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from("message_requests")
+            .update(payload)
+            .eq("id", requestId);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not update request.");
     }
 
     async function acceptIncomingRequest() {
@@ -1400,22 +1789,14 @@
       setPageMessage("");
 
       try {
-        const { error: requestError } = await supabase
-          .from("message_requests")
-          .update({
-            status: "accepted",
-            accepted_at: nowIso(),
-            accepted_by: currentUser.id,
-            updated_at: nowIso()
-          })
-          .eq("id", requestDocModel.id);
-
-        if (requestError) throw requestError;
+        await updateMessageRequestStatus(requestDocModel.id, "accepted");
 
         let thread = await findExistingThreadByUsers(requestDocModel.requesterId, requestDocModel.targetId);
 
         if (!thread) {
           const pair = getSortedPair(requestDocModel.requesterId, requestDocModel.targetId);
+          const createdAt = nowIso();
+
           const { data: threadRow, error: threadInsertError } = await supabase
             .from("chat_threads")
             .insert({
@@ -1427,9 +1808,9 @@
               accepted_from_request_id: requestDocModel.id,
               starter_text: requestDocModel.text || "",
               starter_from: requestDocModel.requesterId || "",
-              created_at: nowIso(),
+              created_at: createdAt,
               last_message_text: requestDocModel.text || "",
-              last_message_at: nowIso(),
+              last_message_at: createdAt,
               last_sender_id: requestDocModel.requesterId || ""
             })
             .select("*")
@@ -1488,18 +1869,7 @@
       setPageMessage("");
 
       try {
-        const { error } = await supabase
-          .from("message_requests")
-          .update({
-            status: "declined",
-            declined_at: nowIso(),
-            declined_by: currentUser.id,
-            updated_at: nowIso()
-          })
-          .eq("id", requestDocModel.id);
-
-        if (error) throw error;
-
+        await updateMessageRequestStatus(requestDocModel.id, "declined");
         setModeUI("request_declined");
         setPageMessage("Request declined.", "ok");
       } catch (err) {
@@ -1510,9 +1880,15 @@
       }
     }
 
-    sendBtn.addEventListener("click", async () => {
+    async function handleSend() {
       const text = messageInput.value.trim();
       if (!text) return;
+
+      if (text.length > 2000) {
+        setFormMessage("Message is too long. Keep it under 2000 characters.", "err");
+        return;
+      }
+
       if (!currentUser || !currentTargetUid) return;
       if (iBlockedTarget || targetBlockedMe) return;
 
@@ -1521,24 +1897,28 @@
 
       try {
         if (currentMode === "chat" || currentMode === "direct_new") {
+          messageInput.value = "";
+          autoResizeMessageBox();
           await sendDirectMessage(text);
-          messageInput.value = "";
-          autoResizeMessageBox();
-          setFormMessage("Message sent.", "ok");
+          setFormMessage("Sent.", "ok");
         } else if (currentMode === "request_compose") {
-          await sendRequestMessage(text);
           messageInput.value = "";
           autoResizeMessageBox();
+          await sendRequestMessage(text);
           setFormMessage("Request sent.", "ok");
         }
       } catch (err) {
         console.error(err);
         setFormMessage(err?.message || "Could not send message.", "err");
+        messageInput.value = text;
+        autoResizeMessageBox();
       }
 
       sendBtn.disabled = false;
-    });
+      messageInput.focus();
+    }
 
+    sendBtn.addEventListener("click", handleSend);
     acceptRequestBtn.addEventListener("click", acceptIncomingRequest);
     declineRequestBtn.addEventListener("click", declineIncomingRequest);
 
@@ -1548,12 +1928,19 @@
     });
 
     function autoResizeMessageBox() {
-      messageInput.style.height = "56px";
+      messageInput.style.height = "52px";
       const nextHeight = Math.min(messageInput.scrollHeight, 132);
       messageInput.style.height = nextHeight + "px";
     }
 
     messageInput.addEventListener("input", autoResizeMessageBox);
+
+    messageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
 
     async function initPage() {
       const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -1568,8 +1955,8 @@
       currentViewerProfile = await loadFullProfile(currentUser.id);
 
       const params = new URLSearchParams(window.location.search);
-      const threadIdParam = (params.get("threadId") || "").trim();
-      const uidParam = (params.get("uid") || "").trim();
+      const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
+      const uidParam = (params.get("uid") || params.get("userId") || params.get("user_id") || "").trim();
 
       if (!threadIdParam && !uidParam) {
         showBlocked("No conversation selected.");
@@ -1585,6 +1972,7 @@
             .maybeSingle();
 
           if (error) throw error;
+
           if (!data) {
             showBlocked("Chat not found.");
             return;
@@ -1654,6 +2042,39 @@
     });
 
     initPage();
+
+    /*
+      OWNSPACE / SUPABASE NOTES FOR THIS PAGE:
+
+      MAJOR UI UPGRADE:
+      - BareWorld renamed to OwnSpace.
+      - Cleaner mobile-first full-screen chat layout.
+      - Better top profile header.
+      - Cleaner verified SVG badge.
+      - Better message bubbles, day dividers, and composer.
+      - Enter sends message, Shift+Enter adds a new line.
+      - Better request/blocked state panels.
+
+      IMPORTANT INBOX BADGE FIX:
+      - This page now marks incoming messages as seen/read when a thread opens or refreshes.
+      - It tries these read fields:
+        seen_at, read_at, seenAt, readAt, is_read, read.
+      - This supports the updated inbox.html badge logic.
+
+      TABLES USED:
+      - users
+      - public_profiles
+      - follows
+      - chat_threads
+      - chat_messages
+      - message_requests
+      - notifications
+
+      STILL FINALIZED LATER IN SQL/RLS PASS:
+      - Message request notification trigger.
+      - Chat message notification trigger.
+      - Final RLS cleanup.
+    */
   </script>
 </body>
 </html>
