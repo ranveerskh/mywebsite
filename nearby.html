@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Nearby People</title>
+  <title>OwnSpace - Nearby People</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -47,10 +48,13 @@
     }
 
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:8px 8px 108px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -64,21 +68,22 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
+      padding:7px 9px;
       margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
       gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -86,18 +91,24 @@
       justify-content:center;
       text-decoration:none;
       flex-shrink:0;
+      position:relative;
     }
+
     .top-icon-btn svg{
-      width:18px;
-      height:18px;
+      width:19px;
+      height:19px;
       display:block;
     }
+
     .top-center{text-align:center;min-width:0}
+
     .brand{
       font-size:18px;
-      font-weight:800;
+      font-weight:950;
       line-height:1.05;
+      letter-spacing:-.02em;
     }
+
     .brand-sub{
       font-size:10px;
       color:var(--muted);
@@ -107,29 +118,35 @@
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:13px;
+      border-radius:22px;
+      padding:12px;
       margin-bottom:10px;
       box-shadow:var(--shadow);
     }
 
     .chip-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:7px 11px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:800;
+      padding:7px 5px;
+      border-radius:12px;
+      font-size:10.5px;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
+      min-height:32px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
@@ -137,105 +154,115 @@
     .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
     .top-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+      margin-top:9px;
     }
+
     .action-btn{
       border:none;
       border-radius:12px;
-      padding:9px 12px;
+      padding:9px 10px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:6px;
       cursor:pointer;
       min-height:38px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
+      white-space:nowrap;
     }
-    .btn-primary{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
     }
-    .btn-green{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.20);
-    }
-    .btn-purple{
-      background:rgba(167,139,250,.14);
-      border-color:rgba(167,139,250,.20);
-    }
-    .btn-yellow{
-      background:rgba(245,185,66,.14);
-      border-color:rgba(245,185,66,.20);
-    }
-    .btn-red{
-      background:rgba(255,93,115,.14);
-      border-color:rgba(255,93,115,.20);
+
+    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+
+    .action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
     }
 
     .status-text{
       min-height:18px;
-      font-size:13px;
+      font-size:12.5px;
       margin-top:8px;
+      line-height:1.45;
+      color:var(--muted);
     }
-    .status-ok{color:#86efac}
-    .status-err{color:#fda4af}
+
+    .status-ok{color:#9cf0bf}
+    .status-err{color:#ffb3bd}
 
     .tabs{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:8px;
+      gap:6px;
       margin-bottom:10px;
     }
+
     .tab-link{
       text-decoration:none;
       color:var(--text);
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:11px 8px;
-      min-height:44px;
+      padding:9px 6px;
+      min-height:38px;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-      font-size:13px;
-      font-weight:800;
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
     }
+
     .tab-link.active{
       background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
 
     .search-wrap{
       position:relative;
       margin-bottom:10px;
     }
+
     .search-box{
       width:100%;
       border:none;
       outline:none;
       padding:13px 44px 13px 14px;
-      border-radius:15px;
+      border-radius:16px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       font-size:14px;
     }
+
     .search-box::placeholder{color:var(--muted)}
+
     .clear-btn{
       position:absolute;
-      right:8px;
+      right:7px;
       top:50%;
       transform:translateY(-50%);
-      width:30px;
-      height:30px;
+      width:32px;
+      height:32px;
       border:none;
       border-radius:10px;
       background:var(--surface-3);
@@ -245,8 +272,8 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:13px;
-      font-weight:800;
+      font-size:14px;
+      font-weight:950;
     }
 
     .list{
@@ -271,6 +298,7 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
+      overflow:hidden;
     }
 
     .person-card{
@@ -278,15 +306,19 @@
       gap:10px;
       align-items:center;
     }
-    .person-avatar,.person-avatar-placeholder{
-      width:52px;
-      height:52px;
+
+    .person-avatar,
+    .person-avatar-placeholder{
+      width:54px;
+      height:54px;
       border-radius:50%;
       flex-shrink:0;
       border:1px solid var(--line);
       background:var(--surface-3);
     }
+
     .person-avatar{object-fit:cover}
+
     .person-avatar-placeholder{
       display:flex;
       align-items:center;
@@ -301,50 +333,68 @@
       min-width:0;
       flex:1;
     }
+
     .person-head{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:8px;
     }
+
     .person-main{
       min-width:0;
       flex:1;
     }
+
     .person-name{
       font-size:15px;
-      font-weight:800;
+      font-weight:950;
       line-height:1.25;
       display:flex;
       align-items:center;
       gap:7px;
       flex-wrap:wrap;
     }
+
     .person-name a{
       color:var(--text);
       text-decoration:none;
+      word-break:break-word;
     }
+
     .person-name a:hover{text-decoration:underline}
-    .verified-dot{
+
+    .verified-badge{
+      width:21px;
+      height:21px;
+      border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:18px;
-      height:18px;
-      border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-      font-size:10px;
-      font-weight:900;
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 3px rgba(32,199,111,.18),
+        0 8px 18px rgba(32,199,111,.22);
+      flex-shrink:0;
     }
+
+    .verified-badge svg{
+      width:13px;
+      height:13px;
+      display:block;
+      stroke-width:3;
+    }
+
     .person-username{
       font-size:12px;
       color:var(--blue);
-      font-weight:700;
+      font-weight:850;
       margin-top:2px;
       word-break:break-word;
     }
+
     .person-meta{
       font-size:12px;
       color:var(--muted);
@@ -361,13 +411,15 @@
       justify-content:center;
       padding:5px 8px;
       border-radius:999px;
-      font-size:10px;
-      font-weight:800;
+      font-size:10.5px;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-3);
       color:var(--text);
       flex-shrink:0;
+      white-space:nowrap;
     }
+
     .pill-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
@@ -375,9 +427,14 @@
 
     .card-actions{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       margin-top:10px;
+      align-items:center;
+    }
+
+    .share-btn{
+      margin-left:auto;
     }
 
     .bottom-nav{
@@ -392,11 +449,12 @@
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
       overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -405,20 +463,22 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
       position:relative;
     }
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
+
     .icon-svg{
       width:20px;
       height:20px;
@@ -427,11 +487,13 @@
       justify-content:center;
       line-height:1;
     }
+
     .icon-svg svg{
       width:20px;
       height:20px;
       display:block;
     }
+
     .nav-badge{
       position:absolute;
       top:5px;
@@ -443,22 +505,69 @@
       background:var(--red);
       color:#fff;
       font-size:10px;
-      font-weight:800;
+      font-weight:950;
       display:flex;
       align-items:center;
       justify-content:center;
       line-height:1;
+      border:2px solid var(--nav-bg);
     }
 
     @media (max-width:700px){
-      body{padding:10px 10px 108px}
-      .brand{font-size:18px}
-      .tabs{grid-template-columns:repeat(3,1fr)}
-      .tab-link{font-size:12px;padding:10px 4px}
-      .person-meta{white-space:normal;overflow:visible;text-overflow:clip}
+      .brand{font-size:17px}
+
+      .chip-row{
+        grid-template-columns:repeat(2,1fr);
+        gap:5px;
+      }
+
+      .chip{
+        font-size:10px;
+      }
+
+      .top-actions{
+        grid-template-columns:1fr;
+      }
+
+      .tab-link{
+        font-size:11.5px;
+        padding:8px 3px;
+      }
+
+      .person-meta{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+      }
+
+      .share-btn{
+        margin-left:0;
+      }
+
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
+    }
+
+    @media(max-width:390px){
+      .action-btn{
+        font-size:11.5px;
+        padding:8px 9px;
+      }
+
+      .tab-link{
+        font-size:10.8px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -473,29 +582,45 @@
       </button>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Nearby people</div>
       </div>
 
       <a href="edit-profile.html#location" class="top-icon-btn" aria-label="Location settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </a>
     </div>
 
     <div class="panel">
       <div class="chip-row">
-        <span id="locationChip" class="chip chip-blue">Location: -</span>
-        <span id="modeChip" class="chip chip-purple">Mode: -</span>
-        <span id="browserChip" class="chip chip-yellow">Browser GPS off</span>
-        <span id="countChip" class="chip chip-green">People: 0</span>
+        <span id="locationChip" class="chip chip-blue">Location -</span>
+        <span id="modeChip" class="chip chip-purple">Mode -</span>
+        <span id="browserChip" class="chip chip-yellow">GPS off</span>
+        <span id="countChip" class="chip chip-green">People 0</span>
       </div>
 
       <div class="top-actions">
-        <a href="edit-profile.html#location" class="action-btn btn-primary">Location Settings</a>
-        <button id="gpsBtn2" class="action-btn btn-green" type="button">Use GPS</button>
+        <a href="edit-profile.html#location" class="action-btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+            <circle cx="12" cy="9" r="2.5"></circle>
+          </svg>
+          <span>Location Settings</span>
+        </a>
+
+        <button id="gpsBtn2" class="action-btn btn-green" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 2v3"></path>
+            <path d="M12 19v3"></path>
+            <path d="M2 12h3"></path>
+            <path d="M19 12h3"></path>
+          </svg>
+          <span>Use GPS</span>
+        </button>
       </div>
 
       <div id="pageStatus" class="status-text"></div>
@@ -509,8 +634,8 @@
       </div>
 
       <div class="search-wrap">
-        <input id="searchInput" class="search-box" type="text" placeholder="Search people, city, province, country..." />
-        <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
+        <input id="searchInput" class="search-box" type="text" placeholder="Search nearby people, city, province..." />
+        <button id="clearBtn" class="clear-btn hidden" type="button">×</button>
       </div>
 
       <div id="listLoading" class="loading-box">Loading nearby people...</div>
@@ -524,7 +649,8 @@
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 10.5 12 3l9 7.5"></path>
-          <path d="M5 9.5V21h14V9.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
         </svg>
       </span>
       <span>Feed</span>
@@ -533,8 +659,8 @@
     <a href="nearby.html" class="nav-link active">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </span>
       <span>Nearby</span>
@@ -553,8 +679,7 @@
     <a href="inbox.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 6h16v12H4z"></path>
-          <path d="M4 7l8 6 8-6"></path>
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       </span>
       <span>Inbox</span>
@@ -564,8 +689,8 @@
     <a href="profile.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </span>
       <span>Profile</span>
@@ -600,8 +725,32 @@
     let followMap = new Map();
     let requestMap = new Map();
 
+    const ICONS = {
+      verified: `
+        <span class="verified-badge" title="Verified">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </span>
+      `,
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `
+    };
+
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
@@ -611,14 +760,14 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -635,7 +784,7 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
@@ -720,13 +869,18 @@
 
     function kmDistance(lat1, lng1, lat2, lng2) {
       if ([lat1, lng1, lat2, lng2].some(v => v === null || v === undefined)) return null;
+
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLng = (lng2 - lng1) * Math.PI / 180;
+
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
@@ -740,11 +894,12 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "userName"]),
-        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "fullName", "full_name", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "userName", "user_name"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "avatar_url", "user_photo_url", "userPhotoURL"]),
         bio: getField(d, ["bio", "about", "description"]),
         isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
         verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
@@ -773,35 +928,97 @@
       const city = titleText(viewerProfile.city);
       const province = titleText(viewerProfile.province);
       const country = titleText(viewerProfile.country);
-
       const parts = [city, province, country].filter(Boolean);
-      locationChip.textContent = `Location: ${parts.length ? parts.join(", ") : "Not set"}`;
-      modeChip.textContent = `Mode: ${viewerProfile.locationVisibility || "city"}`;
-      countChip.textContent = "People: 0";
+
+      locationChip.textContent = parts.length ? parts.join(", ") : "Location not set";
+      modeChip.textContent = `Mode ${viewerProfile.locationVisibility || "city"}`;
+      countChip.textContent = "People 0";
 
       if (!browserCoords) {
-        browserChip.textContent = "Browser GPS off";
+        browserChip.textContent = "GPS off";
         browserChip.className = "chip chip-yellow";
       }
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
     }
 
     async function loadInboxBadge() {
       if (!currentUser) return;
 
       try {
-        const { data, error } = await supabase
-          .from("notifications")
-          .select("id")
-          .eq("to_user_id", currentUser.id)
-          .eq("is_read", false);
+        const [requests, unreadMessages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
 
-        if (error) throw error;
+        const total = Number(requests || 0) + Number(unreadMessages || 0);
 
-        const count = (data || []).length;
-        if (!count) {
+        if (!total) {
           inboxBadge.classList.add("hidden");
         } else {
-          inboxBadge.textContent = count > 99 ? "99+" : String(count);
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
           inboxBadge.classList.remove("hidden");
         }
       } catch {
@@ -812,14 +1029,15 @@
     async function requestBrowserLocation() {
       if (!navigator.geolocation) {
         browserCoords = null;
-        browserChip.textContent = "Browser GPS unsupported";
+        browserChip.textContent = "GPS unsupported";
         browserChip.className = "chip chip-red";
         renderPeople();
         return;
       }
 
-      browserChip.textContent = "Checking browser GPS...";
+      browserChip.textContent = "Checking GPS...";
       browserChip.className = "chip chip-yellow";
+      setPageStatus("Checking browser location...", "");
 
       await new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
@@ -829,7 +1047,7 @@
               lng: position.coords.longitude
             };
 
-            browserChip.textContent = "Browser GPS on";
+            browserChip.textContent = "GPS on";
             browserChip.className = "chip chip-green";
 
             try {
@@ -837,7 +1055,8 @@
                 .from("users")
                 .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng
+                  lng: browserCoords.lng,
+                  updated_at: nowIso()
                 })
                 .eq("uid", currentUser.id);
 
@@ -845,28 +1064,37 @@
                 .from("public_profiles")
                 .update({
                   lat: browserCoords.lat,
-                  lng: browserCoords.lng
+                  lng: browserCoords.lng,
+                  updated_at: nowIso()
                 })
                 .eq("uid", currentUser.id);
 
               viewerProfile.lat = browserCoords.lat;
               viewerProfile.lng = browserCoords.lng;
+
               renderViewerLocation();
-              setPageStatus("Browser GPS enabled for better distance sorting.", "status-ok");
+              browserChip.textContent = "GPS on";
+              browserChip.className = "chip chip-green";
+              setPageStatus("GPS enabled. Nearby people are sorted better now.", "status-ok");
             } catch (err) {
               console.error(err);
+              setPageStatus("GPS worked, but saved location could not be updated.", "status-err");
             }
 
             resolve();
           },
           () => {
             browserCoords = null;
-            browserChip.textContent = "Browser GPS off";
+            browserChip.textContent = "GPS off";
             browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved location instead.", "status-err");
+            setPageStatus("Could not use browser GPS. Using saved profile location.", "status-err");
             resolve();
           },
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000
+          }
         );
       });
 
@@ -885,14 +1113,14 @@
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
-      countChip.textContent = "People: 0";
+      countChip.textContent = "People 0";
     }
 
     function showList(count) {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
-      countChip.textContent = `People: ${count}`;
+      countChip.textContent = `People ${count}`;
     }
 
     function canUseProfile(profile) {
@@ -910,6 +1138,7 @@
 
       const profile = peopleData.find(p => p.uid === profileUid);
       if (profile?.isPrivate) return "request";
+
       return "follow";
     }
 
@@ -940,7 +1169,13 @@
           const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
 
           let distanceKm = null;
-          if (viewerCoords.lat !== null && viewerCoords.lng !== null && profile.lat !== null && profile.lng !== null) {
+
+          if (
+            viewerCoords.lat !== null &&
+            viewerCoords.lng !== null &&
+            profile.lat !== null &&
+            profile.lng !== null
+          ) {
             distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, profile.lat, profile.lng);
           }
 
@@ -981,6 +1216,7 @@
 
           const aHasDistance = a.distanceKm !== null;
           const bHasDistance = b.distanceKm !== null;
+
           if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
           if (aHasDistance && !bHasDistance) return -1;
           if (bHasDistance && !aHasDistance) return 1;
@@ -999,20 +1235,41 @@
       if (row.relation === "following") {
         return `<button class="action-btn btn-red relation-btn" data-action="unfollow" data-uid="${escapeHtml(row.uid)}" type="button">Unfollow</button>`;
       }
+
       if (row.relation === "requested") {
         return `<button class="action-btn btn-yellow relation-btn" data-action="cancel" data-uid="${escapeHtml(row.uid)}" type="button">Requested</button>`;
       }
+
       if (row.relation === "request") {
         return `<button class="action-btn btn-purple relation-btn" data-action="request" data-uid="${escapeHtml(row.uid)}" type="button">Request</button>`;
       }
+
       return `<button class="action-btn btn-green relation-btn" data-action="follow" data-uid="${escapeHtml(row.uid)}" type="button">Follow</button>`;
     }
 
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.id) return;
-      try {
-        await supabase.from("notifications").insert(payload);
-      } catch {}
+
+      const variants = [
+        payload,
+        {
+          type: payload.type || "notification",
+          title: payload.title || "",
+          text: payload.text || "",
+          fromUserId: payload.from_user_id || currentUser.id,
+          toUserId: targetUid,
+          createdAt: nowIso(),
+          isRead: false,
+          read: false
+        }
+      ];
+
+      for (const item of variants) {
+        try {
+          const { error } = await supabase.from("notifications").insert(item);
+          if (!error) return;
+        } catch {}
+      }
     }
 
     async function followPerson(row) {
@@ -1039,7 +1296,11 @@
       const rowId = followMap.get(row.uid);
 
       if (rowId) {
-        const { error } = await supabase.from("follows").delete().eq("id", rowId);
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("id", rowId);
+
         if (error) throw error;
         return;
       }
@@ -1057,8 +1318,11 @@
       const { error } = await supabase.from("follow_requests").insert({
         requester_id: currentUser.id,
         target_id: row.uid,
+        from_user_id: currentUser.id,
+        to_user_id: row.uid,
         status: "pending",
-        created_at: nowIso()
+        created_at: nowIso(),
+        updated_at: nowIso()
       });
 
       if (error) throw error;
@@ -1078,7 +1342,11 @@
       const rowId = requestMap.get(row.uid);
 
       if (rowId) {
-        const { error } = await supabase.from("follow_requests").delete().eq("id", rowId);
+        const { error } = await supabase
+          .from("follow_requests")
+          .delete()
+          .eq("id", rowId);
+
         if (error) throw error;
         return;
       }
@@ -1090,6 +1358,31 @@
         .eq("target_id", row.uid);
 
       if (error) throw error;
+    }
+
+    function buildProfileShareUrl(uid) {
+      const url = new URL("member.html", window.location.href);
+      url.searchParams.set("uid", uid);
+      return url.toString();
+    }
+
+    async function shareProfile(row) {
+      const url = buildProfileShareUrl(row.uid);
+      const title = `${row.displayName || "Member"} on OwnSpace`;
+      const text = `Check ${row.displayName || "this member"} on OwnSpace.`;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, text, url });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          alert("Profile link copied.");
+        } else {
+          prompt("Copy this profile link:", url);
+        }
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
     }
 
     function renderPeople() {
@@ -1120,37 +1413,49 @@
           : `<div class="person-avatar-placeholder">No photo</div>`;
 
         const metaParts = [];
+
         if (row.placeLabel) metaParts.push(row.placeLabel);
         if (row.distanceLabel) metaParts.push(row.distanceLabel);
         else if (row.sameCity) metaParts.push("Same city");
 
         let topPill = "";
-        if (followMap.has(row.uid)) topPill = `<span class="small-pill pill-blue">Following</span>`;
-        else if (row.verified) topPill = `<span class="small-pill pill-green">Verified</span>`;
-        else if (row.isPrivate) topPill = `<span class="small-pill pill-yellow">Private</span>`;
-        else if (row.distanceLabel) topPill = `<span class="small-pill pill-purple">${escapeHtml(row.distanceLabel)}</span>`;
+
+        if (followMap.has(row.uid)) {
+          topPill = `<span class="small-pill pill-blue">Following</span>`;
+        } else if (row.verified) {
+          topPill = `<span class="small-pill pill-green">Verified</span>`;
+        } else if (row.isPrivate) {
+          topPill = `<span class="small-pill pill-yellow">Private</span>`;
+        } else if (row.distanceLabel) {
+          topPill = `<span class="small-pill pill-purple">${escapeHtml(row.distanceLabel)}</span>`;
+        }
 
         const card = document.createElement("div");
         card.className = "card";
+
         card.innerHTML = `
           <div class="person-card">
             ${avatarHtml}
+
             <div class="person-body">
               <div class="person-head">
                 <div class="person-main">
                   <div class="person-name">
                     <a href="member.html?uid=${encodeURIComponent(row.uid)}">${escapeHtml(row.displayName)}</a>
-                    ${row.verified ? `<span class="verified-dot">✓</span>` : ""}
+                    ${row.verified ? ICONS.verified : ""}
                   </div>
+
                   ${row.username ? `<div class="person-username">@${escapeHtml(row.username)}</div>` : ""}
                   <div class="person-meta">${escapeHtml(metaParts.join(" • ") || "Nearby member")}</div>
                 </div>
+
                 ${topPill}
               </div>
 
               <div class="card-actions">
-                <a href="member.html?uid=${encodeURIComponent(row.uid)}" class="action-btn btn-primary">Open</a>
+                <a href="member.html?uid=${encodeURIComponent(row.uid)}" class="action-btn btn-primary">${ICONS.open}<span>Open</span></a>
                 ${buildRelationButton(row)}
+                <button class="action-btn btn-green share-btn" data-share-uid="${escapeHtml(row.uid)}" type="button">${ICONS.share}<span>Share</span></button>
               </div>
             </div>
           </div>
@@ -1171,6 +1476,7 @@
           const uid = btn.getAttribute("data-uid");
           const action = btn.getAttribute("data-action");
           const row = rows.find(r => r.uid === uid);
+
           if (!row) return;
 
           btn.disabled = true;
@@ -1191,12 +1497,21 @@
               request: "Follow request sent.",
               cancel: "Follow request cancelled."
             };
+
             setPageStatus(messages[action] || "Updated.", "status-ok");
           } catch (err) {
             console.error(err);
             setPageStatus("Could not update follow state.", "status-err");
             btn.disabled = false;
           }
+        });
+      });
+
+      listWrap.querySelectorAll(".share-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.getAttribute("data-share-uid");
+          const row = rows.find(r => r.uid === uid);
+          if (row) await shareProfile(row);
         });
       });
 
@@ -1223,9 +1538,13 @@
     }
 
     async function loadPeople() {
-      const { data, error } = await supabase.from("public_profiles").select("*");
+      const { data, error } = await supabase
+        .from("public_profiles")
+        .select("*");
+
       if (error) throw error;
-      peopleData = (data || []).map(row => normalizeProfile(row, row.uid));
+
+      peopleData = (data || []).map(row => normalizeProfile(row, row.uid || row.id || row.user_id));
     }
 
     async function loadRelations() {
@@ -1241,25 +1560,25 @@
       if (requestsRes.error) throw requestsRes.error;
 
       (followsRes.data || []).forEach(row => {
-        if (row.following_id) {
-          followMap.set(row.following_id, row.id);
-        }
+        const uid = row.following_id || row.followingId;
+        if (uid) followMap.set(uid, row.id);
       });
 
       (requestsRes.data || []).forEach(row => {
-        if (row.target_id) {
-          requestMap.set(row.target_id, row.id);
-        }
+        const uid = row.target_id || row.targetId;
+        if (uid) requestMap.set(uid, row.id);
       });
     }
 
     async function refreshAll() {
       openLoading();
+
       await Promise.all([
         loadPeople(),
         loadRelations(),
         loadInboxBadge()
       ]);
+
       renderViewerLocation();
       renderPeople();
     }
@@ -1305,6 +1624,23 @@
     }
 
     initPage();
+
+    /*
+      OWNSPACE NEARBY PEOPLE UPDATE:
+
+      FIXED / ADDED:
+      - BareWorld renamed to OwnSpace.
+      - Cleaner OwnSpace gradient UI.
+      - Visible bright green verified badge.
+      - People / Events / Places tabs stay aligned in one row.
+      - Location chips are more compact.
+      - Follow / Request / Unfollow buttons cleaned.
+      - Added Share Profile button.
+      - Bottom nav icons cleaned.
+      - Inbox badge now counts only:
+        pending message_requests + unread chat_messages.
+      - Theme supports osTheme and old bwTheme.
+    */
   </script>
 </body>
 </html>
