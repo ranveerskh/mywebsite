@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Post</title>
+  <title>OwnSpace - Post</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -47,11 +48,15 @@
     }
 
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:8px 8px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
 
@@ -63,21 +68,22 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
+      padding:7px 9px;
       margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -86,10 +92,27 @@
       text-decoration:none;
       position:relative;
     }
-    .top-icon-btn svg{width:19px;height:19px;display:block}
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:18px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
 
     .shell{
       background:var(--surface);
@@ -99,10 +122,12 @@
       box-shadow:var(--shadow);
       margin-bottom:12px;
     }
+
     .section{
       padding:14px;
       border-bottom:1px solid var(--line-soft);
     }
+
     .section:last-child{border-bottom:none}
 
     .loading{
@@ -111,21 +136,25 @@
       padding:28px 10px;
       font-size:14px;
     }
+
     .message{
       min-height:20px;
-      font-size:14px;
+      font-size:13px;
       margin-top:10px;
+      line-height:1.45;
     }
+
     .success{color:#9cf0bf}
     .error{color:#ffb3bd}
 
     .post-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:start;
       gap:12px;
       margin-bottom:12px;
     }
+
     .post-left{
       display:flex;
       gap:12px;
@@ -134,75 +163,91 @@
       flex:1;
     }
 
-    .avatar{
-      width:56px;
-      height:56px;
+    .avatar,
+    .avatar-placeholder{
+      width:54px;
+      height:54px;
       border-radius:50%;
-      object-fit:cover;
       border:1px solid var(--line);
       background:var(--surface-3);
       flex-shrink:0;
     }
+
+    .avatar{
+      object-fit:cover;
+    }
+
     .avatar-placeholder{
-      width:56px;
-      height:56px;
-      border-radius:50%;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
       padding:6px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
       color:var(--muted);
       font-size:10px;
-      flex-shrink:0;
+      line-height:1.3;
     }
 
     .post-top-text{min-width:0}
+
     .post-name-row{
       display:flex;
       align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .post-name{
-      font-size:18px;
-      font-weight:800;
-      line-height:1.25;
-      display:flex;
-      align-items:center;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       min-width:0;
     }
+
+    .post-name{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.25;
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+      min-width:0;
+    }
+
     .post-name a{
       color:var(--text);
       text-decoration:none;
+      word-break:break-word;
     }
+
     .post-name a:hover{text-decoration:underline}
 
-    .verified-dot{
+    .verified-badge{
+      width:22px;
+      height:22px;
+      border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:20px;
-      height:20px;
-      border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-      font-size:11px;
-      font-weight:900;
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 3px rgba(32,199,111,.18),
+        0 8px 18px rgba(32,199,111,.22);
+      flex-shrink:0;
+    }
+
+    .verified-badge svg{
+      width:14px;
+      height:14px;
+      display:block;
+      stroke-width:3;
     }
 
     .post-username{
       color:var(--blue);
       font-size:13px;
-      font-weight:700;
+      font-weight:850;
       margin-top:2px;
       word-break:break-word;
     }
+
     .post-date{
       color:var(--muted);
       font-size:12px;
@@ -211,60 +256,67 @@
 
     .post-top-actions{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       justify-content:flex-end;
       align-items:center;
       flex-shrink:0;
     }
 
-    .top-follow-btn,.delete-btn,.mini-report-btn{
+    .top-follow-btn,
+    .delete-btn{
       border:none;
-      border-radius:10px;
+      border-radius:12px;
       padding:8px 10px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       cursor:pointer;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:6px;
       min-height:36px;
+      white-space:nowrap;
+      color:var(--text);
     }
+
     .top-follow-btn.follow{
       background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
+      border:1px solid rgba(76,201,255,.22);
     }
+
     .top-follow-btn.unfollow{
       background:rgba(255,93,115,.14);
-      color:var(--text);
-      border:1px solid rgba(255,93,115,.20);
+      border:1px solid rgba(255,93,115,.22);
     }
+
     .top-follow-btn.request{
       background:rgba(167,139,250,.14);
-      color:var(--text);
-      border:1px solid rgba(167,139,250,.20);
+      border:1px solid rgba(167,139,250,.22);
     }
+
     .top-follow-btn.requested{
       background:var(--surface-2);
-      color:var(--text);
       border:1px solid var(--line);
     }
-    .top-follow-btn:disabled,.delete-btn:disabled,.icon-action-btn:disabled{
+
+    .top-follow-btn:disabled,
+    .delete-btn:disabled,
+    .icon-action-btn:disabled{
       opacity:.7;
       cursor:not-allowed;
     }
+
     .delete-btn{
       background:rgba(255,93,115,.14);
-      color:var(--text);
-      border:1px solid rgba(255,93,115,.20);
+      border:1px solid rgba(255,93,115,.22);
     }
-    .delete-btn svg,.mini-report-btn svg{width:14px;height:14px;display:block}
-    .mini-report-btn{
-      background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
+
+    .delete-btn svg{
+      width:14px;
+      height:14px;
+      display:block;
     }
 
     .meta-row{
@@ -273,23 +325,30 @@
       flex-wrap:wrap;
       margin-bottom:12px;
     }
+
     .badge{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       padding:6px 10px;
       border-radius:999px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
+      line-height:1;
     }
+
     .badge-private{
       background:rgba(245,185,66,.14);
       color:var(--text);
       border:1px solid rgba(245,185,66,.20);
     }
+
     .badge-banned{
       background:rgba(255,93,115,.14);
       color:var(--text);
       border:1px solid rgba(255,93,115,.20);
     }
+
     .badge-verified{
       background:rgba(61,220,132,.14);
       color:var(--text);
@@ -298,12 +357,13 @@
 
     .post-caption{
       color:var(--text);
-      line-height:1.75;
+      line-height:1.72;
       font-size:15px;
       white-space:pre-wrap;
       word-break:break-word;
       margin-bottom:12px;
     }
+
     .post-image{
       width:100%;
       max-height:620px;
@@ -317,54 +377,83 @@
 
     .actions{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       align-items:center;
       margin-top:4px;
     }
-    .icon-action-btn,.icon-report-link{
+
+    .icon-action-btn,
+    .icon-report-link{
       border:none;
       cursor:pointer;
-      font-weight:800;
+      font-weight:950;
       border-radius:12px;
-      padding:10px 12px;
-      font-size:14px;
+      padding:9px 11px;
+      font-size:13px;
       display:inline-flex;
       align-items:center;
-      gap:8px;
+      justify-content:center;
+      gap:7px;
       text-decoration:none;
       color:var(--text);
+      min-height:38px;
+      border:1px solid var(--line);
+      background:var(--surface-2);
     }
-    .icon-action-btn svg,.icon-report-link svg{width:18px;height:18px;display:block;flex-shrink:0}
+
+    .icon-action-btn svg,
+    .icon-report-link svg{
+      width:17px;
+      height:17px;
+      display:block;
+      flex-shrink:0;
+    }
+
     .like-btn{
       background:rgba(76,201,255,.14);
-      border:1px solid rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
+
+    .like-btn[data-liked="yes"]{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.22);
+    }
+
+    .like-btn[data-liked="yes"] svg{
+      fill:currentColor;
+      color:var(--red);
+    }
+
     .comment-anchor-btn{
       background:rgba(167,139,250,.14);
-      border:1px solid rgba(167,139,250,.20);
+      border-color:rgba(167,139,250,.22);
     }
+
+    .icon-report-link{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.22);
+    }
+
     .share-btn{
       margin-left:auto;
       background:rgba(61,220,132,.14);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .icon-report-link{
-      background:rgba(245,185,66,.14);
-      border:1px solid rgba(245,185,66,.20);
+      border-color:rgba(61,220,132,.22);
     }
 
     .comments-panel-title{
       font-size:18px;
-      font-weight:800;
+      font-weight:950;
       margin-bottom:12px;
     }
+
     .comment-form{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       margin-bottom:12px;
     }
+
     .comment-input{
       flex:1;
       min-width:220px;
@@ -377,10 +466,12 @@
       border:1px solid var(--line);
       font-size:15px;
     }
+
     .comment-input::placeholder{color:var(--muted)}
+
     .comment-submit{
       background:rgba(61,220,132,.16);
-      border:1px solid rgba(61,220,132,.20);
+      border:1px solid rgba(61,220,132,.22);
       color:var(--text);
     }
 
@@ -388,12 +479,14 @@
       display:grid;
       gap:10px;
     }
+
     .comment-item{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
     }
+
     .comment-top{
       display:flex;
       justify-content:space-between;
@@ -401,22 +494,61 @@
       gap:10px;
       margin-bottom:8px;
     }
+
+    .comment-left{
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      min-width:0;
+    }
+
+    .comment-avatar,
+    .comment-avatar-placeholder{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      flex-shrink:0;
+    }
+
+    .comment-avatar{
+      object-fit:cover;
+    }
+
+    .comment-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:var(--muted);
+      font-size:9px;
+      padding:5px;
+    }
+
+    .comment-info{
+      min-width:0;
+    }
+
     .comment-author{
-      font-weight:800;
+      font-weight:950;
       font-size:14px;
       color:var(--text);
     }
+
     .comment-username{
       color:var(--blue);
       font-size:12px;
-      font-weight:700;
+      font-weight:850;
       margin-top:2px;
     }
+
     .comment-date{
       color:var(--muted);
       font-size:12px;
       margin-top:2px;
     }
+
     .comment-text{
       color:var(--text);
       line-height:1.6;
@@ -424,6 +556,7 @@
       white-space:pre-wrap;
       word-break:break-word;
     }
+
     .comment-delete-btn{
       border:none;
       background:rgba(255,93,115,.14);
@@ -431,7 +564,7 @@
       border-radius:10px;
       padding:7px 9px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       cursor:pointer;
       flex-shrink:0;
       border:1px solid rgba(255,93,115,.20);
@@ -444,16 +577,19 @@
       border-radius:18px;
       border:1px dashed var(--line);
     }
+
     .lock-title{
       font-size:18px;
-      font-weight:800;
+      font-weight:950;
       margin-bottom:8px;
     }
+
     .lock-text{
       color:var(--muted);
       font-size:14px;
       line-height:1.7;
     }
+
     .lock-action-wrap{
       margin-top:14px;
       display:flex;
@@ -469,6 +605,8 @@
       background:var(--surface-2);
       border-radius:18px;
       border:1px dashed var(--line);
+      line-height:1.55;
+      font-size:14px;
     }
 
     .bottom-nav{
@@ -483,10 +621,12 @@
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -495,27 +635,126 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
+      position:relative;
     }
-    .nav-link .icon{font-size:18px;line-height:1;display:block}
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
 
     @media (max-width:700px){
-      body{padding:10px 10px 108px}
-      .brand{font-size:18px}
-      .comment-form{flex-direction:column}
-      .post-top{flex-direction:column}
-      .post-top-actions{width:100%;justify-content:flex-start}
-      .share-btn{margin-left:0}
+      .brand{font-size:17px}
+
+      .section{
+        padding:12px;
+      }
+
+      .post-top{
+        grid-template-columns:1fr;
+      }
+
+      .post-top-actions{
+        width:100%;
+        justify-content:flex-start;
+      }
+
+      .avatar,
+      .avatar-placeholder{
+        width:50px;
+        height:50px;
+      }
+
+      .post-name{
+        font-size:16px;
+      }
+
+      .comment-form{
+        flex-direction:column;
+      }
+
+      .comment-input{
+        min-width:0;
+      }
+
+      .share-btn{
+        margin-left:0;
+      }
+
+      .actions{
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:6px;
+      }
+
+      .icon-action-btn,
+      .icon-report-link{
+        padding:8px 5px;
+        font-size:11.5px;
+        gap:5px;
+      }
+
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
+    }
+
+    @media(max-width:390px){
+      .actions{
+        grid-template-columns:repeat(2,1fr);
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -526,7 +765,7 @@
       </button>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Post detail</div>
       </div>
 
@@ -553,23 +792,21 @@
                 <div class="post-name-row">
                   <div class="post-name">
                     <a id="ownerLink" href="#">Member</a>
-                    <span id="verifiedDot" class="verified-dot hidden">✓</span>
+
+                    <span id="verifiedDot" class="verified-badge hidden" title="Verified">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5"></path>
+                      </svg>
+                    </span>
                   </div>
                 </div>
+
                 <div id="ownerUsername" class="post-username hidden">@username</div>
                 <div id="postDate" class="post-date">Just now</div>
               </div>
             </div>
 
             <div class="post-top-actions">
-              <a id="topReportBtn" class="mini-report-btn hidden" href="#">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M5 3v18"></path>
-                  <path d="M5 4h10l-2.5 4L15 12H5"></path>
-                </svg>
-                <span>Report</span>
-              </a>
-
               <button id="topRelationBtn" class="top-follow-btn follow hidden" type="button">Follow</button>
 
               <button id="deleteBtn" class="delete-btn hidden" type="button">
@@ -590,7 +827,7 @@
           <div class="actions">
             <button id="likeBtn" class="icon-action-btn like-btn" aria-label="Like" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 21s-6.7-4.4-9.2-8C.8 10.5 2 6.8 5.7 6c2.1-.4 3.7.5 4.8 1.8C11.6 6.5 13.2 5.6 15.3 6 19 6.8 20.2 10.5 21.2 13c-2.5 3.6-9.2 8-9.2 8z"></path>
+                <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"></path>
               </svg>
               <span id="likeCount">0</span>
             </button>
@@ -602,11 +839,22 @@
               <span id="commentCount">0</span>
             </button>
 
+            <a id="reportBtn" class="icon-report-link hidden" href="#" aria-label="Report">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 9v4"></path>
+                <path d="M12 17h.01"></path>
+                <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+              </svg>
+              <span>Report</span>
+            </a>
+
             <button id="shareBtn" class="icon-action-btn share-btn" aria-label="Share" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
-                <path d="M12 16V4"></path>
-                <path d="M7 9l5-5 5 5"></path>
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <path d="m8.6 13.5 6.8 4"></path>
+                <path d="m15.4 6.5-6.8 4"></path>
               </svg>
               <span>Share</span>
             </button>
@@ -620,6 +868,7 @@
           <div id="lockedText" class="lock-text">
             You need to follow this member to view this post.
           </div>
+
           <div class="lock-action-wrap">
             <button id="lockedRelationBtn" class="top-follow-btn follow hidden" type="button">Follow</button>
           </div>
@@ -631,6 +880,7 @@
 
         <form id="commentForm" class="comment-form">
           <input id="commentInput" class="comment-input" type="text" placeholder="Write a comment..." maxlength="1000" />
+
           <button type="submit" class="icon-action-btn comment-submit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M22 2L11 13"></path>
@@ -649,23 +899,53 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
-    </a>
+
     <a href="search.html" class="nav-link">
-      <span class="icon">⌕</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
       <span>Search</span>
     </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
     <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -694,8 +974,8 @@
     const commentAnchorBtn = document.getElementById("commentAnchorBtn");
     const commentCount = document.getElementById("commentCount");
     const shareBtn = document.getElementById("shareBtn");
+    const reportBtn = document.getElementById("reportBtn");
     const deleteBtn = document.getElementById("deleteBtn");
-    const topReportBtn = document.getElementById("topReportBtn");
     const topRelationBtn = document.getElementById("topRelationBtn");
     const lockedTitle = document.getElementById("lockedTitle");
     const lockedText = document.getElementById("lockedText");
@@ -706,6 +986,7 @@
     const formMessage = document.getElementById("formMessage");
     const commentsList = document.getElementById("commentsList");
     const commentsEmpty = document.getElementById("commentsEmpty");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     let currentUser = null;
     let currentUserProfile = null;
@@ -726,7 +1007,7 @@
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
@@ -743,7 +1024,7 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -801,6 +1082,7 @@
           return String(value).trim();
         }
       }
+
       return fallback;
     }
 
@@ -831,27 +1113,29 @@
       if (!value) return "Just now";
 
       try {
-        if (typeof value === "object" && typeof value.toDate === "function") {
-          return value.toDate().toLocaleString();
-        }
-      } catch {}
-
-      try {
-        if (typeof value === "object" && typeof value.seconds === "number") {
-          return new Date(value.seconds * 1000).toLocaleString();
-        }
-      } catch {}
-
-      try {
         const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+        if (Number.isNaN(d.getTime())) return "Just now";
+
+        const now = Date.now();
+        const diff = now - d.getTime();
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
+
+        if (diff < minute) return "Now";
+        if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+        if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+        if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
+
+        return d.toLocaleString();
       } catch {
         return "Just now";
       }
     }
 
     function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
+      const cleanUrl = String(url || "").trim();
+
       if (!cleanUrl) {
         avatar.classList.add("hidden");
         avatarPlaceholder.classList.remove("hidden");
@@ -1211,14 +1495,18 @@
             {
               requester_id: currentUser.id,
               target_id: ownerUid,
+              from_user_id: currentUser.id,
+              to_user_id: ownerUid,
               status: "pending",
-              created_at: nowIso()
+              created_at: nowIso(),
+              updated_at: nowIso()
             },
             {
               requesterId: currentUser.id,
               targetId: ownerUid,
               status: "pending",
-              createdAt: nowIso()
+              createdAt: nowIso(),
+              updatedAt: nowIso()
             }
           ]);
 
@@ -1364,40 +1652,40 @@
 
     function buildCommentElement(comment) {
       const canDelete = comment.userId === currentUser.id || ownerUid === currentUser.id;
-
       const wrap = document.createElement("div");
       wrap.className = "comment-item";
 
-      const top = document.createElement("div");
-      top.className = "comment-top";
+      const avatarHtml = comment.userPhotoURL
+        ? `<img class="comment-avatar" src="${escapeHtml(comment.userPhotoURL)}" alt="Comment user photo">`
+        : `<div class="comment-avatar-placeholder">No photo</div>`;
 
-      const left = document.createElement("div");
+      wrap.innerHTML = `
+        <div class="comment-top">
+          <div class="comment-left">
+            ${avatarHtml}
 
-      const author = document.createElement("div");
-      author.className = "comment-author";
-      author.textContent = comment.displayName || "Member";
-      left.appendChild(author);
+            <div class="comment-info">
+              <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+              ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
+              <div class="comment-date">${escapeHtml(formatDate(comment.createdAt))}</div>
+            </div>
+          </div>
 
-      if (comment.username) {
-        const username = document.createElement("div");
-        username.className = "comment-username";
-        username.textContent = "@" + comment.username;
-        left.appendChild(username);
+          ${canDelete ? `<button class="comment-delete-btn" type="button">Delete</button>` : ""}
+        </div>
+
+        <div class="comment-text">${escapeHtml(comment.text || "")}</div>
+      `;
+
+      const img = wrap.querySelector(".comment-avatar");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="comment-avatar-placeholder">No photo</div>`;
+        });
       }
 
-      const date = document.createElement("div");
-      date.className = "comment-date";
-      date.textContent = formatDate(comment.createdAt);
-      left.appendChild(date);
-
-      top.appendChild(left);
-
-      if (canDelete) {
-        const delBtn = document.createElement("button");
-        delBtn.className = "comment-delete-btn";
-        delBtn.type = "button";
-        delBtn.textContent = "Delete";
-
+      const delBtn = wrap.querySelector(".comment-delete-btn");
+      if (delBtn) {
         delBtn.addEventListener("click", async () => {
           const ok = confirm("Delete this comment?");
           if (!ok) return;
@@ -1410,16 +1698,7 @@
             setFormMessage("Could not delete comment.", "error");
           }
         });
-
-        top.appendChild(delBtn);
       }
-
-      const text = document.createElement("div");
-      text.className = "comment-text";
-      text.textContent = comment.text || "";
-
-      wrap.appendChild(top);
-      wrap.appendChild(text);
 
       return wrap;
     }
@@ -1482,16 +1761,104 @@
       try {
         if (navigator.share) {
           await navigator.share({
-            title: "Check this post on BareWorld",
-            text: "Check this post on BareWorld",
+            title: "Check this post on OwnSpace",
+            text: "Check this post on OwnSpace.",
             url: url.toString()
           });
-        } else {
+        } else if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(url.toString());
           alert("Post link copied.");
+        } else {
+          prompt("Copy this post link:", url.toString());
         }
       } catch (err) {
         console.error("Share failed:", err);
+      }
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadgeCount() {
+      if (!currentUser) return;
+
+      try {
+        const [requests, unreadMessages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(unreadMessages || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
       }
     }
 
@@ -1505,7 +1872,6 @@
 
       try {
         currentUserProfile = await getViewerProfile(currentUser.id);
-
         currentPostData = await getPostById(currentPostId);
 
         if (!currentPostData) {
@@ -1560,14 +1926,11 @@
         setVisibilityMode(true);
 
         showAvatar(ownerProfile?.photoURL || currentPostData.userPhotoURL || "");
+
         ownerLink.textContent = ownerProfile?.displayName || currentPostData.displayName || "Member";
         ownerLink.href = `member.html?uid=${encodeURIComponent(ownerUid)}`;
 
-        if (ownerProfile?.verified) {
-          verifiedDot.classList.remove("hidden");
-        } else {
-          verifiedDot.classList.add("hidden");
-        }
+        verifiedDot.classList.toggle("hidden", !ownerProfile?.verified);
 
         const ownerHandle = ownerProfile?.username || currentPostData.username || "";
         if (ownerHandle) {
@@ -1598,15 +1961,16 @@
 
         if (currentUser.id === ownerUid) {
           deleteBtn.classList.remove("hidden");
-          topReportBtn.classList.add("hidden");
+          reportBtn.classList.add("hidden");
         } else {
           deleteBtn.classList.add("hidden");
-          topReportBtn.classList.remove("hidden");
-          topReportBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
+          reportBtn.classList.remove("hidden");
+          reportBtn.href = `report.html?type=post&targetId=${encodeURIComponent(currentPostId)}&targetUserId=${encodeURIComponent(ownerUid)}`;
         }
 
         await refreshLikeUI();
         await refreshCommentsUI();
+        await loadInboxBadgeCount();
 
         loading.classList.add("hidden");
       } catch (error) {
@@ -1772,7 +2136,6 @@
       }
 
       currentUser = data.user;
-
       await loadPostPage();
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -1788,77 +2151,21 @@
     });
 
     /*
-      SUPABASE NEEDS FOR THIS PAGE:
+      OWNSPACE POST PAGE UPDATE:
 
-      TABLES:
-      - users: select
-      - public_profiles: select
-      - posts: select, delete, update fallback
-      - post_likes: select, insert, delete
-      - post_comments: select, insert, delete
-      - follows: select, insert, delete
-      - follow_requests: select, insert, delete
-      - notifications: insert
-
-      IMPORTANT COLUMNS:
-      posts:
-      - id
-      - user_id
-      - display_name
-      - username
-      - user_photo_url
-      - caption
-      - image_url
-      - hidden
-      - hidden_by_admin
-      - soft_deleted
-      - created_at
-      - updated_at
-
-      post_likes:
-      - id
-      - post_id
-      - user_id
-      - created_at
-
-      post_comments:
-      - id
-      - post_id
-      - user_id
-      - display_name
-      - username
-      - user_photo_url
-      - text
-      - created_at
-
-      follows:
-      - id
-      - follower_id
-      - following_id
-      - created_at
-
-      follow_requests:
-      - id
-      - requester_id
-      - target_id
-      - status
-      - created_at
-
-      notifications:
-      - id
-      - type
-      - title
-      - text
-      - from_user_id
-      - to_user_id
-      - post_id
-      - created_at
-      - is_read
-
-      SHARE BUTTON:
-      - Added on post detail action row.
-      - Uses native share sheet on mobile.
-      - Desktop fallback copies post.html?postId=POST_ID.
+      FIXED / IMPROVED:
+      - BareWorld renamed to OwnSpace.
+      - Green verified badge is now bright and visible.
+      - Header/profile area is cleaner.
+      - Report moved into the bottom action row.
+      - Like / Comment / Report / Share actions are aligned better.
+      - Share button stays on the right when space allows.
+      - Like heart icon is cleaned up and fills when liked.
+      - Comments now show cleaner cards and profile photo when available.
+      - Bottom navigation uses clean SVG icons.
+      - Added Inbox badge counting only:
+        pending message_requests + unread chat_messages.
+      - Share text updated to OwnSpace.
     */
   </script>
 </body>
