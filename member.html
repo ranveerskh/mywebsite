@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Member</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -20,11 +21,11 @@
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
-      --purple:#a78bfa;
       --red:#ff5d73;
+      --purple:#a78bfa;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 18px 36px rgba(0,0,0,.18);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
 
     html[data-theme="light"]{
@@ -39,18 +40,18 @@
       --blue:#1f8fff;
       --green:#22b36c;
       --yellow:#d59617;
-      --purple:#7f63ff;
       --red:#e74c66;
+      --purple:#7f63ff;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 28px rgba(20,33,61,.08);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
     body{
       background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:12px 12px 112px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -65,13 +66,14 @@
       border:1px solid var(--line-soft);
       border-radius:18px;
       padding:8px 10px;
-      margin-bottom:10px;
+      margin-bottom:12px;
       display:grid;
       grid-template-columns:44px 1fr 44px;
       align-items:center;
       gap:10px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
       width:44px;
       height:44px;
@@ -87,251 +89,182 @@
       text-decoration:none;
       position:relative;
     }
+
     .top-icon-btn svg{width:19px;height:19px;display:block}
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:18px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .brand{font-size:20px;font-weight:800;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
 
-    .shell{
+    .panel{
       background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      overflow:hidden;
-      box-shadow:var(--shadow);
-      margin-bottom:12px;
-    }
-    .section{
       padding:14px;
-      border-bottom:1px solid var(--line-soft);
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
     }
-    .section:last-child{border-bottom:none}
 
-    .loading{
+    .loading-box,.empty-box{
       text-align:center;
       color:var(--muted);
-      padding:24px 10px;
-      font-size:14px;
+      padding:22px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
     }
 
     .profile-head{
       display:grid;
-      grid-template-columns:76px 1fr;
-      gap:12px;
+      grid-template-columns:86px 1fr;
+      gap:14px;
       align-items:start;
     }
-    .avatar{
-      width:76px;
-      height:76px;
+
+    .avatar,.avatar-placeholder{
+      width:86px;
+      height:86px;
       border-radius:50%;
-      object-fit:cover;
-      background:var(--surface-3);
       border:1px solid var(--line);
+      background:var(--surface-2);
+      flex-shrink:0;
     }
+
+    .avatar{object-fit:cover}
+
     .avatar-placeholder{
-      width:76px;
-      height:76px;
-      border-radius:50%;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-      padding:8px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
       color:var(--muted);
-      font-size:11px;
+      font-size:12px;
+      padding:8px;
       line-height:1.3;
     }
 
-    .name-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:3px;
-    }
-    .name-inline{
+    .name-line{
       display:flex;
       align-items:center;
       gap:8px;
       flex-wrap:wrap;
-      min-width:0;
+      margin-bottom:3px;
     }
+
     .display-name{
-      font-size:22px;
-      font-weight:800;
-      line-height:1.1;
+      font-size:24px;
+      font-weight:900;
+      line-height:1.15;
       word-break:break-word;
     }
 
     .verified-dot{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
       width:20px;
       height:20px;
       border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       background:rgba(61,220,132,.14);
       color:#d9ffe8;
       border:1px solid rgba(61,220,132,.20);
       font-size:11px;
       font-weight:900;
-      flex-shrink:0;
-    }
-
-    .moderation-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:22px;
-      height:22px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:900;
-      flex-shrink:0;
-    }
-    .moderation-warn{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .moderation-ban{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
     }
 
     .username{
       color:var(--blue);
       font-size:13px;
-      font-weight:700;
+      font-weight:800;
       margin-bottom:8px;
       word-break:break-word;
     }
 
     .bio{
       color:var(--text);
-      line-height:1.58;
       font-size:14px;
+      line-height:1.55;
       white-space:pre-wrap;
       word-break:break-word;
+      margin-bottom:10px;
     }
 
-    .links-wrap{
-      display:grid;
-      gap:8px;
-      margin-top:10px;
-    }
-    .profile-link{
+    .link-row{
       display:flex;
-      align-items:center;
+      flex-wrap:wrap;
       gap:8px;
-      min-width:0;
-      text-decoration:none;
+      margin-bottom:10px;
+    }
+
+    .bio-link{
       color:var(--text);
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:9px 10px;
-      font-size:13px;
-      font-weight:700;
-    }
-    .profile-link svg{
-      width:15px;
-      height:15px;
-      display:block;
-      flex-shrink:0;
-      color:var(--blue);
-    }
-    .profile-link span{
-      min-width:0;
-      white-space:nowrap;
+      text-decoration:none;
+      font-size:12px;
+      font-weight:800;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(76,201,255,.20);
+      background:rgba(76,201,255,.12);
+      max-width:100%;
       overflow:hidden;
       text-overflow:ellipsis;
-    }
-
-    .head-actions{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      flex-wrap:wrap;
-      flex-shrink:0;
-    }
-    .mini-btn{
-      border:none;
-      border-radius:10px;
-      padding:6px 9px;
-      font-size:10px;
-      font-weight:800;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:30px;
-      color:var(--text);
       white-space:nowrap;
     }
-    .mini-report{
-      background:rgba(245,185,66,.14);
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .mini-block{
-      background:rgba(255,93,115,.14);
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .mini-unblock{
-      background:rgba(61,220,132,.14);
-      border:1px solid rgba(61,220,132,.20);
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin:12px 0;
     }
 
-    .profile-meta{
+    .stat{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 8px;
+      text-align:center;
+      cursor:pointer;
+      text-decoration:none;
+      color:var(--text);
+    }
+
+    .stat strong{
+      display:block;
+      font-size:18px;
+      line-height:1.1;
+    }
+
+    .stat span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:800;
+      margin-top:4px;
+    }
+
+    .badge-row{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-top:10px;
+      margin:10px 0;
     }
-    .meta-chip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+
+    .badge{
       padding:6px 10px;
       border-radius:999px;
       font-size:11px;
-      font-weight:800;
+      font-weight:900;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
-      line-height:1.3;
     }
-    .meta-chip.public{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
-    }
-    .meta-chip.private{
-      background:rgba(245,185,66,.14);
-      border-color:rgba(245,185,66,.20);
-    }
-    .meta-chip.verified{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.20);
-    }
-    .meta-chip.not-verified{
-      background:var(--surface-2);
-      border-color:var(--line);
-    }
-    .meta-chip.location{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
-    }
-    .meta-chip.gender{
-      background:rgba(167,139,250,.14);
-      border-color:rgba(167,139,250,.20);
-    }
-    .meta-chip.blocked{
-      background:rgba(255,93,115,.14);
-      border-color:rgba(255,93,115,.20);
-    }
+
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
 
     .action-row{
       display:flex;
@@ -339,434 +272,158 @@
       flex-wrap:wrap;
       margin-top:12px;
     }
+
     .action-btn{
       border:none;
-      border-radius:12px;
-      padding:10px 13px;
+      border-radius:13px;
+      padding:11px 13px;
       font-size:13px;
-      font-weight:800;
-      cursor:pointer;
+      font-weight:900;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:40px;
-      color:var(--text);
-    }
-    .follow-btn{
-      background:rgba(76,201,255,.14);
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .unfollow-btn{
-      background:rgba(255,93,115,.14);
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .request-btn{
-      background:rgba(167,139,250,.14);
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .cancel-btn{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-    }
-    .message-btn{
-      background:rgba(61,220,132,.14);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .self-btn{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      cursor:not-allowed;
-    }
-    .action-message{
-      min-height:18px;
-      font-size:13px;
-      margin-top:10px;
-    }
-    .action-message.ok{color:#86efac}
-    .action-message.err{color:#fda4af}
-
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:8px;
-      margin-top:14px;
-    }
-    .stat{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 8px;
-      text-align:center;
       cursor:pointer;
+      min-height:42px;
+      color:var(--text);
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      flex:1;
     }
-    .stat-value{
-      font-size:16px;
-      font-weight:800;
-      margin-bottom:3px;
-      line-height:1.1;
-    }
-    .stat-label{
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.25;
+
+    .btn-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
     }
 
     .tabs{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
+      display:flex;
       gap:8px;
+      overflow-x:auto;
+      padding-bottom:2px;
     }
+
     .tab-btn{
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:11px 8px;
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
+      border-radius:999px;
+      padding:10px 13px;
+      font-size:12px;
+      font-weight:900;
       white-space:nowrap;
+      cursor:pointer;
     }
+
     .tab-btn.active{
       background:rgba(76,201,255,.14);
-      color:var(--text);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
 
-    .empty-box{
-      text-align:center;
-      padding:22px 10px;
-      color:var(--muted);
-      background:var(--surface-2);
-      border-radius:16px;
-      border:1px dashed var(--line);
-      line-height:1.55;
-      font-size:14px;
-    }
-
-    .lock-box{
-      text-align:center;
-      padding:24px 14px;
-      background:var(--surface-2);
-      border-radius:18px;
-      border:1px dashed var(--line);
-    }
-    .lock-title{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:8px;
-    }
-    .lock-text{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.65;
-    }
-
-    .dashboard-list{
+    .list{
       display:grid;
       gap:12px;
     }
-    .dashboard-card{
-      display:block;
-      color:inherit;
+
+    .post-card,.info-card{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
+      overflow:hidden;
     }
-    .dashboard-post-link{
+
+    .post-img{
+      width:100%;
+      max-height:520px;
+      object-fit:cover;
       display:block;
-      text-decoration:none;
-      color:inherit;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      margin-bottom:10px;
     }
-    .dashboard-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-    }
-    .dashboard-label{
-      font-size:12px;
-      font-weight:800;
-      color:var(--blue);
-    }
-    .dashboard-time{
-      font-size:11px;
-      color:var(--muted);
-      flex-shrink:0;
-    }
-    .dashboard-text{
+
+    .post-caption,.desc{
       color:var(--text);
       font-size:14px;
-      line-height:1.58;
+      line-height:1.6;
       white-space:pre-wrap;
       word-break:break-word;
       margin-bottom:10px;
     }
-    .dashboard-image{
-      width:100%;
-      max-height:340px;
-      object-fit:cover;
-      border-radius:14px;
-      display:block;
-      background:var(--surface-3);
-      border:1px solid var(--line-soft);
-    }
-    .dashboard-actions{
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      gap:8px;
-      margin-top:10px;
-    }
-    .dashboard-share-btn{
-      border:none;
-      cursor:pointer;
-      font-weight:800;
-      border-radius:10px;
-      padding:8px 10px;
-      font-size:11px;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      text-decoration:none;
-      background:rgba(61,220,132,.12);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.18);
-      margin-left:auto;
-    }
-    .dashboard-share-btn svg{
-      width:15px;
-      height:15px;
-      display:block;
-      flex-shrink:0;
-    }
 
-    .show-more-wrap{
-      margin-top:14px;
-      display:flex;
-      justify-content:center;
-    }
-    .show-more-btn{
-      border:none;
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-      border-radius:12px;
-      padding:10px 14px;
+    .mini-meta{
+      color:var(--muted);
       font-size:12px;
-      font-weight:800;
-      cursor:pointer;
-      min-height:40px;
+      line-height:1.5;
+      margin-bottom:8px;
     }
 
-    .photos-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:8px;
-    }
-    .photo-tile{
-      aspect-ratio:1/1;
-      border-radius:16px;
-      overflow:hidden;
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      display:block;
-      text-decoration:none;
-    }
-    .photo-tile img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .events-grid,.places-grid{
-      display:grid;
-      gap:12px;
-    }
-    .event-card,.place-card{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-    }
-    .event-title,.place-title{
+    .card-title{
       font-size:16px;
-      font-weight:800;
-      margin-bottom:10px;
+      font-weight:900;
       line-height:1.4;
+      margin-bottom:6px;
     }
-    .badge-row{
+
+    .card-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-    }
-    .badge-private{
-      background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .badge-created{
-      background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .badge-joined{
-      background:rgba(167,139,250,.14);
-      color:var(--text);
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .badge-visited{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .badge-explored{
-      background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .badge-added{
-      background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .event-meta,.place-meta{
-      display:grid;
-      gap:6px;
-      color:var(--text);
-      font-size:13px;
-      line-height:1.55;
-      margin-bottom:10px;
-    }
-    .event-desc,.place-desc{
-      color:var(--text);
-      line-height:1.58;
-      font-size:14px;
-      white-space:pre-wrap;
-      word-break:break-word;
+      align-items:center;
     }
 
-    .network-shell{
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:22px;
-      overflow:hidden;
-      box-shadow:var(--shadow);
-      margin-bottom:12px;
-    }
-    .network-head{
-      padding:14px;
-      border-bottom:1px solid var(--line-soft);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .network-head-title{
-      font-size:17px;
-      font-weight:800;
-    }
-    .network-close{
-      width:36px;
-      height:36px;
+    .mini-btn{
       border:none;
-      background:var(--surface-2);
+      background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:11px;
-      display:flex;
+      border-radius:12px;
+      padding:9px 11px;
+      font-size:12px;
+      font-weight:900;
+      text-decoration:none;
+      cursor:pointer;
+      min-height:38px;
+      display:inline-flex;
       align-items:center;
       justify-content:center;
+    }
+
+    .share-btn{margin-left:auto}
+
+    .show-more{
+      margin-top:12px;
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:13px;
+      font-weight:900;
+      color:var(--text);
+      background:rgba(76,201,255,.14);
+      border:1px solid rgba(76,201,255,.22);
       cursor:pointer;
     }
-    .network-close svg{
-      width:16px;
-      height:16px;
-      display:block;
-    }
-    .network-body{
-      padding:14px;
-      display:grid;
-      gap:18px;
-    }
-    .network-title{
-      font-size:15px;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-    .network-list{
-      display:grid;
-      gap:10px;
+
+    .message-line{
+      margin-top:10px;
+      min-height:20px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.5;
     }
 
-    .person-card{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-    .person-avatar,.person-avatar-placeholder{
-      width:48px;
-      height:48px;
-      border-radius:50%;
-      flex-shrink:0;
-      border:1px solid var(--line);
-      background:var(--surface-3);
-    }
-    .person-avatar{object-fit:cover}
-    .person-avatar-placeholder{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      font-size:10px;
-      text-align:center;
-      padding:6px;
-    }
-    .person-body{
-      min-width:0;
-      flex:1;
-    }
-    .person-name{
-      font-size:15px;
-      font-weight:800;
-      line-height:1.3;
-    }
-    .person-name a{
-      color:var(--text);
-      text-decoration:none;
-    }
-    .person-name a:hover{text-decoration:underline}
-    .person-username{
-      font-size:12px;
-      color:var(--blue);
-      font-weight:700;
-      margin-top:3px;
-    }
-    .person-sub{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-      margin-top:4px;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
+    .success{color:#9cf0bf}
+    .error{color:#ffb3bd}
 
     .bottom-nav{
       position:fixed;
@@ -783,8 +440,8 @@
       gap:8px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
-      overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -803,211 +460,156 @@
       cursor:pointer;
       position:relative;
     }
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
+
     .icon-svg{
       width:20px;
       height:20px;
       display:flex;
       align-items:center;
       justify-content:center;
-      line-height:1;
     }
+
     .icon-svg svg{
       width:20px;
       height:20px;
       display:block;
     }
 
-    @media (max-width:700px){
-      body{padding:10px 10px 108px}
-      .brand{font-size:18px}
-      .profile-head{grid-template-columns:72px 1fr}
-      .avatar,.avatar-placeholder{width:72px;height:72px}
-      .display-name{font-size:20px}
-      .photos-grid{grid-template-columns:repeat(3,1fr)}
-      .tab-btn{font-size:12px;padding:10px 5px}
-      .name-row{align-items:flex-start}
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
     }
 
-    @media (max-width:420px){
-      .display-name{font-size:19px}
-      .photos-grid{grid-template-columns:repeat(3,1fr)}
+    @media(max-width:700px){
+      body{padding:10px 10px 112px}
+      .brand{font-size:18px}
+      .profile-head{grid-template-columns:72px 1fr;gap:12px}
+      .avatar,.avatar-placeholder{width:72px;height:72px}
+      .display-name{font-size:21px}
       .stats{gap:6px}
-      .stat{padding:9px 6px}
-      .stat-value{font-size:15px}
-      .stat-label{font-size:10px}
-      .tab-btn{font-size:11px;padding:10px 4px}
+      .action-row .action-btn{flex:1 1 calc(50% - 8px)}
+      .share-btn{margin-left:0}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="feed.html" class="top-icon-btn" aria-label="Back to feed">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
-      </a>
+      </button>
 
       <div class="top-center">
         <div class="brand">BareWorld</div>
         <div class="brand-sub">Member profile</div>
       </div>
 
-      <a href="profile.html" class="top-icon-btn" aria-label="My profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0"></path>
-          <circle cx="12" cy="7" r="4"></circle>
+      <a href="search.html" class="top-icon-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
         </svg>
       </a>
     </div>
 
-    <div class="shell">
-      <div class="section">
-        <div id="loading" class="loading">Loading member profile...</div>
+    <div id="loadingPanel" class="panel">
+      <div class="loading-box">Loading member...</div>
+    </div>
 
-        <div id="content" class="hidden">
-          <div class="profile-head">
-            <img id="avatar" class="avatar hidden" alt="Profile Photo" />
-            <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
+    <div id="profilePanel" class="panel hidden">
+      <div class="profile-head">
+        <img id="avatar" class="avatar hidden" alt="Profile photo" />
+        <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
 
-            <div>
-              <div class="name-row">
-                <div>
-                  <div class="name-inline">
-                    <div class="display-name" id="displayName">Member</div>
-                    <span id="verifiedDot" class="verified-dot hidden">✓</span>
-                    <span id="moderationBadge" class="moderation-badge hidden">!</span>
-                  </div>
-                </div>
+        <div>
+          <div class="name-line">
+            <div id="displayName" class="display-name">Member</div>
+            <span id="verifiedDot" class="verified-dot hidden">✓</span>
+          </div>
 
-                <div id="headActions" class="head-actions"></div>
-              </div>
+          <div id="username" class="username hidden">@username</div>
+          <div id="bio" class="bio">No bio added yet.</div>
 
-              <div id="usernameText" class="username hidden">@username</div>
-              <div class="bio" id="bio">No bio added yet.</div>
+          <div id="linksRow" class="link-row hidden"></div>
 
-              <div id="linksWrap" class="links-wrap hidden"></div>
-
-              <div id="profileMeta" class="profile-meta hidden"></div>
-
-              <div class="action-row" id="followArea"></div>
-              <div id="actionMessage" class="action-message"></div>
-
-              <div id="statsBlock" class="stats">
-                <div class="stat" id="postsStat">
-                  <div class="stat-value" id="postsCount">0</div>
-                  <div class="stat-label">Posts</div>
-                </div>
-                <div class="stat" id="followersStat">
-                  <div class="stat-value" id="followersCount">0</div>
-                  <div class="stat-label">Followers</div>
-                </div>
-                <div class="stat" id="followingStat">
-                  <div class="stat-value" id="followingCount">0</div>
-                  <div class="stat-label">Following</div>
-                </div>
-              </div>
-            </div>
+          <div class="badge-row">
+            <span id="privacyBadge" class="badge badge-blue">Public</span>
+            <span id="followStateBadge" class="badge badge-purple hidden">Following</span>
+            <span id="moderationBadge" class="badge badge-red hidden">Restricted</span>
           </div>
         </div>
       </div>
 
-      <div id="lockedSection" class="section hidden">
-        <div class="lock-box">
-          <div class="lock-title" id="lockedTitle">Private Profile</div>
-          <div class="lock-text" id="lockedText">Follow this member to see their posts and connections.</div>
+      <div class="stats">
+        <a id="followersStat" href="#" class="stat">
+          <strong id="followersCount">0</strong>
+          <span>Followers</span>
+        </a>
+        <a id="followingStat" href="#" class="stat">
+          <strong id="followingCount">0</strong>
+          <span>Following</span>
+        </a>
+        <div class="stat">
+          <strong id="postsCount">0</strong>
+          <span>Posts</span>
         </div>
       </div>
 
-      <div id="tabsSection" class="section hidden">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="dashboardTab">Dashboard</button>
-          <button class="tab-btn" data-tab="photosTab">Photos</button>
-          <button class="tab-btn" data-tab="eventsTab">Events</button>
-          <button class="tab-btn" data-tab="placesTab">Places</button>
-        </div>
+      <div class="action-row">
+        <button id="followBtn" class="action-btn btn-blue" type="button">Follow</button>
+        <button id="messageBtn" class="action-btn btn-green" type="button">Message</button>
+        <button id="reportBtn" class="action-btn btn-red" type="button">Report</button>
       </div>
 
-      <div id="dashboardTab" class="section hidden">
-        <div id="dashboardList" class="dashboard-list hidden"></div>
-        <div id="dashboardEmpty" class="empty-box hidden">No posts yet.</div>
-        <div id="showMoreWrap" class="show-more-wrap hidden">
-          <button id="showMoreBtn" class="show-more-btn" type="button">Show More</button>
-        </div>
-      </div>
+      <div id="profileMessage" class="message-line"></div>
+    </div>
 
-      <div id="photosTab" class="section hidden">
-        <div id="photosGrid" class="photos-grid hidden"></div>
-        <div id="photosEmpty" class="empty-box hidden">No photo posts yet.</div>
-      </div>
-
-      <div id="eventsTab" class="section hidden">
-        <div style="display:grid;gap:18px;">
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Created Events</div>
-            <div id="createdEventsGrid" class="events-grid hidden"></div>
-            <div id="createdEmpty" class="empty-box hidden">No created events yet.</div>
-          </div>
-
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Joined Events</div>
-            <div id="joinedEventsGrid" class="events-grid hidden"></div>
-            <div id="joinedEmpty" class="empty-box hidden">No joined events yet.</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="placesTab" class="section hidden">
-        <div style="display:grid;gap:18px;">
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Added Places</div>
-            <div id="addedPlacesGrid" class="places-grid hidden"></div>
-            <div id="addedPlacesEmpty" class="empty-box hidden">No added places yet.</div>
-          </div>
-
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Visited Places</div>
-            <div id="visitedPlacesGrid" class="places-grid hidden"></div>
-            <div id="visitedPlacesEmpty" class="empty-box hidden">No visited places yet.</div>
-          </div>
-        </div>
+    <div id="privatePanel" class="panel hidden">
+      <div class="empty-box">
+        This profile is private. Follow this member to see posts, photos, events and places.
       </div>
     </div>
 
-    <div id="networkShell" class="network-shell hidden">
-      <div class="network-head">
-        <div class="network-head-title">Network</div>
-        <button id="closeNetworkBtn" class="network-close" type="button" aria-label="Close network">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M18 6L6 18"></path>
-            <path d="M6 6l12 12"></path>
-          </svg>
-        </button>
+    <div id="tabsPanel" class="panel hidden">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="tab-btn" data-tab="photos">Photos</button>
+        <button class="tab-btn" data-tab="events">Events</button>
+        <button class="tab-btn" data-tab="places">Places</button>
       </div>
+    </div>
 
-      <div class="network-body">
-        <div class="network-section" id="followersSection">
-          <div class="network-title">Followers</div>
-          <div id="followersList" class="network-list hidden"></div>
-          <div id="followersEmpty" class="empty-box hidden">No followers yet.</div>
-        </div>
-
-        <div class="network-section" id="followingSection">
-          <div class="network-title">Following</div>
-          <div id="followingList" class="network-list hidden"></div>
-          <div id="followingEmpty" class="empty-box hidden">Not following anyone yet.</div>
-        </div>
-      </div>
+    <div id="contentPanel" class="panel hidden">
+      <div id="contentList" class="list"></div>
+      <button id="showMoreBtn" class="show-more hidden" type="button">Show More</button>
+      <div id="contentEmpty" class="empty-box hidden">Nothing to show yet.</div>
     </div>
   </div>
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
+      <span class="icon-svg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 10.5 12 3l9 7.5"></path>
           <path d="M5 9.5V21h14V9.5"></path>
@@ -1017,7 +619,7 @@
     </a>
 
     <a href="nearby.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
+      <span class="icon-svg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
           <circle cx="12" cy="10" r="2.5"></circle>
@@ -1027,7 +629,7 @@
     </a>
 
     <a href="search.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
+      <span class="icon-svg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="6"></circle>
           <path d="M20 20l-4.2-4.2"></path>
@@ -1037,17 +639,18 @@
     </a>
 
     <a href="inbox.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
+      <span class="icon-svg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 6h16v12H4z"></path>
           <path d="M4 7l8 6 8-6"></path>
         </svg>
       </span>
       <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
 
     <a href="profile.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
+      <span class="icon-svg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="4"></circle>
           <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
@@ -1060,77 +663,54 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
-    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+    const backBtn = document.getElementById("backBtn");
 
-    const loading = document.getElementById("loading");
-    const content = document.getElementById("content");
+    const loadingPanel = document.getElementById("loadingPanel");
+    const profilePanel = document.getElementById("profilePanel");
+    const privatePanel = document.getElementById("privatePanel");
+    const tabsPanel = document.getElementById("tabsPanel");
+    const contentPanel = document.getElementById("contentPanel");
 
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const displayNameEl = document.getElementById("displayName");
     const verifiedDot = document.getElementById("verifiedDot");
-    const moderationBadge = document.getElementById("moderationBadge");
-    const usernameText = document.getElementById("usernameText");
+    const usernameEl = document.getElementById("username");
     const bioEl = document.getElementById("bio");
-    const linksWrap = document.getElementById("linksWrap");
-    const profileMeta = document.getElementById("profileMeta");
-    const headActions = document.getElementById("headActions");
-    const followArea = document.getElementById("followArea");
-    const actionMessage = document.getElementById("actionMessage");
+    const linksRow = document.getElementById("linksRow");
 
-    const statsBlock = document.getElementById("statsBlock");
-    const postsCountEl = document.getElementById("postsCount");
-    const followersCountEl = document.getElementById("followersCount");
-    const followingCountEl = document.getElementById("followingCount");
+    const privacyBadge = document.getElementById("privacyBadge");
+    const followStateBadge = document.getElementById("followStateBadge");
+    const moderationBadge = document.getElementById("moderationBadge");
 
-    const tabsSection = document.getElementById("tabsSection");
-    const lockedSection = document.getElementById("lockedSection");
-    const lockedTitle = document.getElementById("lockedTitle");
-    const lockedText = document.getElementById("lockedText");
+    const followersCount = document.getElementById("followersCount");
+    const followingCount = document.getElementById("followingCount");
+    const postsCount = document.getElementById("postsCount");
 
-    const dashboardList = document.getElementById("dashboardList");
-    const dashboardEmpty = document.getElementById("dashboardEmpty");
-    const showMoreWrap = document.getElementById("showMoreWrap");
+    const followBtn = document.getElementById("followBtn");
+    const messageBtn = document.getElementById("messageBtn");
+    const reportBtn = document.getElementById("reportBtn");
+    const profileMessage = document.getElementById("profileMessage");
+
+    const contentList = document.getElementById("contentList");
+    const contentEmpty = document.getElementById("contentEmpty");
     const showMoreBtn = document.getElementById("showMoreBtn");
 
-    const photosGrid = document.getElementById("photosGrid");
-    const photosEmpty = document.getElementById("photosEmpty");
+    const inboxBadge = document.getElementById("inboxBadge");
 
-    const createdEventsGrid = document.getElementById("createdEventsGrid");
-    const createdEmpty = document.getElementById("createdEmpty");
-    const joinedEventsGrid = document.getElementById("joinedEventsGrid");
-    const joinedEmpty = document.getElementById("joinedEmpty");
-
-    const addedPlacesGrid = document.getElementById("addedPlacesGrid");
-    const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
-    const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
-    const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
-
-    const followersList = document.getElementById("followersList");
-    const followersEmpty = document.getElementById("followersEmpty");
-    const followingList = document.getElementById("followingList");
-    const followingEmpty = document.getElementById("followingEmpty");
-    const networkShell = document.getElementById("networkShell");
-    const closeNetworkBtn = document.getElementById("closeNetworkBtn");
-
-    const postsStat = document.getElementById("postsStat");
-    const followersStat = document.getElementById("followersStat");
-    const followingStat = document.getElementById("followingStat");
-
-    let dashboardPosts = [];
-    let dashboardVisibleCount = 10;
-
-    let relationshipInfo = {
-      relationship: "none",
-      followDocId: null,
-      requestDocId: null
-    };
-
-    let currentViewerBlockedUsers = [];
-    let currentMemberUid = "";
-    let currentMemberProfile = null;
-    let currentViewerPublicProfile = null;
     let currentUser = null;
+    let targetUid = "";
+    let targetProfile = null;
+    let viewerProfile = null;
+
+    let isFollowing = false;
+    let hasPendingRequest = false;
+    let activeTab = "dashboard";
+    let visibleLimit = 10;
+
+    let postsData = [];
+    let eventsData = [];
+    let placesData = [];
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -1143,14 +723,14 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -1160,215 +740,523 @@
       });
     }
 
-    function setActionMessage(text = "", type = "") {
-      actionMessage.textContent = text;
-      actionMessage.className = `action-message ${type}`;
-    }
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function normalizeHref(url) {
+    function setMessage(text, type = "") {
+      profileMessage.textContent = text || "";
+      profileMessage.className = `message-line ${type}`;
+    }
+
+    function isValidUuid(value) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+    }
+
+    function getParamUid() {
+      const params = new URLSearchParams(window.location.search);
+      return (
+        params.get("uid") ||
+        params.get("userId") ||
+        params.get("id") ||
+        ""
+      ).trim();
+    }
+
+    function normalizeUrl(url) {
       const value = String(url || "").trim();
       if (!value) return "";
       if (/^https?:\/\//i.test(value)) return value;
       return "https://" + value;
     }
 
-    function getField(raw, names) {
+    function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
-      }
-      return "";
-    }
-
-    function getArrayField(raw, names) {
-      for (const name of names) {
-        const value = raw?.[name];
-        if (Array.isArray(value)) return value;
-      }
-      return [];
-    }
-
-    function nowIso() {
-      return new Date().toISOString();
-    }
-
-    function extractProfileLinks(raw) {
-      const found = [];
-
-      const addLink = (url, label) => {
-        const clean = String(url || "").trim();
-        if (!clean) return;
-        found.push({
-          url: clean,
-          href: normalizeHref(clean),
-          label: String(label || clean).trim()
-        });
-      };
-
-      addLink(
-        getField(raw, ["link1", "url1", "website1", "site1", "social1"]),
-        getField(raw, ["link1Label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
-      );
-
-      addLink(
-        getField(raw, ["link2", "url2", "website2", "site2", "social2"]),
-        getField(raw, ["link2Label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
-      );
-
-      const maybeArray = raw?.links;
-      if (Array.isArray(maybeArray)) {
-        maybeArray.slice(0, 2).forEach(entry => {
-          if (typeof entry === "string") {
-            addLink(entry, entry);
-          } else if (entry && typeof entry === "object") {
-            addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
-          }
-        });
-      }
-
-      const unique = [];
-      const seen = new Set();
-      for (const item of found) {
-        const key = item.href.toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(item);
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
         }
       }
-
-      return unique.slice(0, 2);
+      return fallback;
     }
 
-    function getParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        uid: (params.get("uid") || "").trim(),
-        memberId: (params.get("memberId") || "").trim(),
-        id: (params.get("id") || "").trim(),
-        userId: (params.get("userId") || "").trim(),
-        username: (params.get("username") || "").trim()
-      };
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
     }
 
-    function getMemberKey() {
-      const p = getParams();
-      return p.uid || p.memberId || p.id || p.userId || p.username || "";
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-      const city = getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]);
-      const province = getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]);
-      const country = getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]);
-      const genderMode = getField(d, ["gender"]);
-      const genderCustom = getField(d, ["gender_custom", "genderCustom"]);
-      const genderValue = genderMode === "self_describe" ? genderCustom : genderMode;
-
-      return {
-        uid: getField(d, ["uid", "user_id", "userId", "id"]) || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "user_name", "userName"]),
-        bio: getField(d, ["bio", "about", "description"]),
-        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
-        isPrivate: !!(d.is_private || d.isPrivate || d.private_profile || d.privateProfile || d.private || d.account_private || d.accountPrivate),
-        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
-        warningUntil: d.warning_until || d.warningUntil || null,
-        verified: !!(d.verified || d.is_verified || d.isVerified),
-        isHiddenByAdmin: !!(d.is_hidden_by_admin || d.isHiddenByAdmin),
-        softDeleted: !!(d.soft_deleted || d.softDeleted),
-        blockedUsers: getArrayField(d, ["blocked_users", "blockedUsers"]),
-        links: extractProfileLinks(d),
-        city,
-        province,
-        country,
-        cityVisible: !!(d.city_visible || d.cityVisible),
-        gender: genderValue,
-        genderVisible: !!(d.gender_visible || d.genderVisible)
-      };
-    }
-
-    function normalizePlace(raw, fallbackId = "") {
+    function normalizeProfile(raw = {}, fallbackUid = "") {
       const d = raw || {};
       return {
-        id: getField(d, ["id"]) || fallbackId || "",
-        name: getField(d, ["name", "title"]) || "Untitled Place",
-        category: getField(d, ["category"]) || "General",
-        city: getField(d, ["city"]),
-        description: getField(d, ["description", "desc"]),
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.status === "deleted"),
-        creatorId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "owner_id", "ownerId"])
+        uid: String(getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || ""),
+        displayName: String(getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member"),
+        username: String(getField(d, ["username", "handle", "user_name", "userName"], "") || ""),
+        bio: String(getField(d, ["bio", "about", "description"], "") || ""),
+        photoURL: String(getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], "") || ""),
+        link1: String(getField(d, ["link1", "website1", "bio_link_1", "bioLink1"], "") || ""),
+        link2: String(getField(d, ["link2", "website2", "bio_link_2", "bioLink2"], "") || ""),
+        isPrivate: getBool(d, ["is_private", "isPrivate", "private_profile", "privateProfile", "private", "account_private", "accountPrivate"], false),
+        isVerified: getBool(d, ["is_verified", "isVerified", "verified"], false),
+        moderationStatus: String(getField(d, ["moderation_status", "moderationStatus", "status"], "") || ""),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false),
+        city: String(getField(d, ["city", "location_city", "locationCity"], "") || "")
       };
     }
 
-    function normalizeFollowRow(raw) {
+    function normalizePost(raw = {}) {
+      const d = raw || {};
       return {
-        id: raw.id,
-        followerId: getField(raw, ["follower_id", "followerId"]),
-        followingId: getField(raw, ["following_id", "followingId"])
+        id: String(getField(d, ["id"], "") || ""),
+        userId: String(getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"], "") || ""),
+        caption: String(getField(d, ["caption", "text", "content"], "") || ""),
+        imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || ""),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        createdAt: d.created_at || d.createdAt || null,
+        createdAtMs: getDateMs(d.created_at || d.createdAt)
       };
     }
 
-    function normalizePostRow(raw) {
+    function normalizeEvent(raw = {}) {
+      const d = raw || {};
       return {
-        ...raw,
-        id: raw.id,
-        userId: getField(raw, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
-        caption: getField(raw, ["caption", "text", "content"]),
-        imageURL: getField(raw, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        hidden: !!(raw.hidden || raw.hidden_by_admin || raw.hiddenByAdmin || raw.soft_deleted || raw.softDeleted),
-        createdAt: raw.created_at || raw.createdAt || raw.timestamp || null
+        id: String(getField(d, ["id"], "") || ""),
+        creatorId: String(getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"], "") || ""),
+        title: String(getField(d, ["title", "name"], "Untitled Event") || "Untitled Event"),
+        description: String(getField(d, ["description", "desc"], "") || ""),
+        city: String(getField(d, ["city"], "") || ""),
+        date: String(getField(d, ["date"], "") || ""),
+        time: String(getField(d, ["time"], "") || ""),
+        eventAt: d.event_at || d.eventAt || d.start_time || d.startTime || null,
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted)
       };
     }
 
-    function normalizeEventRow(raw) {
+    function normalizePlace(raw = {}, source = "") {
+      const d = raw || {};
       return {
-        ...raw,
-        id: raw.id,
-        title: getField(raw, ["title", "name"]) || "Untitled Event",
-        description: getField(raw, ["description", "desc"]),
-        city: getField(raw, ["city", "location_city", "locationCity"]),
-        date: getField(raw, ["date"]),
-        time: getField(raw, ["time"]),
-        visibility: getField(raw, ["visibility", "event_visibility", "eventVisibility"]) || "public",
-        creatorId: getField(raw, ["creator_id", "creatorId", "user_id", "userId", "uid"]),
-        creatorName: getField(raw, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
-        hidden: !!(raw.hidden || raw.hidden_by_admin || raw.hiddenByAdmin || raw.soft_deleted || raw.softDeleted)
+        id: String(getField(d, ["id"], "") || ""),
+        source,
+        createdBy: String(getField(d, ["created_by", "createdBy", "creator_id", "creatorId", "user_id", "userId", "uid"], "") || ""),
+        name: String(getField(d, ["name", "title", "place_name", "placeName"], "Unnamed Place") || "Unnamed Place"),
+        city: String(getField(d, ["city"], "") || ""),
+        category: String(getField(d, ["category", "topic"], "Place") || "Place"),
+        description: String(getField(d, ["description", "desc", "notes"], "") || ""),
+        approved: d.approved === true || d.verified === true || ["approved","active","verified"].includes(String(d.status || "").toLowerCase()),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted)
       };
     }
 
-    function getCreatedMs(value) {
+    function getDateMs(value) {
       if (!value) return 0;
       const ms = new Date(value).getTime();
-      return Number.isNaN(ms) ? 0 : ms;
+      return Number.isFinite(ms) ? ms : 0;
     }
 
     function formatDate(value) {
-      if (!value) return "Just now";
-      try {
-        const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-      } catch {
-        return "Just now";
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleDateString();
+    }
+
+    function canViewFullProfile() {
+      if (!targetProfile) return false;
+      if (targetProfile.uid === currentUser.id) return true;
+      if (targetProfile.isHiddenByAdmin || targetProfile.softDeleted || targetProfile.moderationStatus === "banned") return false;
+      if (!targetProfile.isPrivate) return true;
+      return isFollowing;
+    }
+
+    async function selectProfile(uid) {
+      const [publicRes, userRes] = await Promise.all([
+        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle(),
+        supabase.from("users").select("*").eq("uid", uid).maybeSingle()
+      ]);
+
+      if (publicRes.error && publicRes.error.code !== "PGRST116") throw publicRes.error;
+      if (userRes.error && userRes.error.code !== "PGRST116") throw userRes.error;
+
+      return normalizeProfile({
+        ...(publicRes.data || {}),
+        ...(userRes.data || {}),
+        uid
+      }, uid);
+    }
+
+    async function loadProfile() {
+      targetUid = getParamUid();
+
+      if (!isValidUuid(targetUid)) {
+        loadingPanel.innerHTML = `<div class="empty-box">Invalid or missing member ID.</div>`;
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+
+      if (targetUid === currentUser.id) {
+        window.location.href = "profile.html";
+        return;
+      }
+
+      viewerProfile = await selectProfile(currentUser.id);
+      targetProfile = await selectProfile(targetUid);
+
+      if (!targetProfile || !targetProfile.uid) {
+        loadingPanel.innerHTML = `<div class="empty-box">Member not found.</div>`;
+        return;
+      }
+
+      await Promise.all([
+        checkFollowState(),
+        loadCounts(),
+        loadContent(),
+        loadInboxBadgeCount()
+      ]);
+
+      renderProfile();
+      renderCurrentTab();
+
+      loadingPanel.classList.add("hidden");
+      profilePanel.classList.remove("hidden");
+
+      if (canViewFullProfile()) {
+        privatePanel.classList.add("hidden");
+        tabsPanel.classList.remove("hidden");
+        contentPanel.classList.remove("hidden");
+      } else {
+        privatePanel.classList.remove("hidden");
+        tabsPanel.classList.add("hidden");
+        contentPanel.classList.add("hidden");
       }
     }
 
-    function getPostOwnerId(post) {
-      return post?.userId || "";
+    async function checkFollowState() {
+      const followRes = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", currentUser.id)
+        .eq("following_id", targetUid)
+        .maybeSingle();
+
+      isFollowing = !!followRes.data;
+
+      const requestRes = await supabase
+        .from("follow_requests")
+        .select("id,status")
+        .eq("requester_id", currentUser.id)
+        .eq("target_id", targetUid)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      hasPendingRequest = !!requestRes.data;
     }
 
-    function getPostImage(post) {
-      return post?.imageURL || "";
+    async function loadCounts() {
+      const [followersRes, followingRes, postsRes] = await Promise.all([
+        supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", targetUid),
+        supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", targetUid),
+        supabase.from("posts").select("id", { count: "exact", head: true }).eq("user_id", targetUid).eq("hidden", false)
+      ]);
+
+      followersCount.textContent = followersRes.count || 0;
+      followingCount.textContent = followingRes.count || 0;
+      postsCount.textContent = postsRes.count || 0;
     }
 
-    function getPostCaption(post) {
-      return post?.caption || "";
+    async function loadContent() {
+      const [postsRes, eventsRes] = await Promise.all([
+        supabase.from("posts").select("*").eq("user_id", targetUid).order("created_at", { ascending:false }),
+        supabase.from("events").select("*").or(`creator_id.eq.${targetUid},created_by.eq.${targetUid},user_id.eq.${targetUid}`)
+      ]);
+
+      postsData = (postsRes.data || []).map(normalizePost).filter(p => !p.hidden);
+      eventsData = (eventsRes.data || []).map(normalizeEvent).filter(e => !e.hidden);
+
+      const placeSources = ["nearby_places", "places", "nudist_places"];
+      const allPlaces = [];
+
+      for (const source of placeSources) {
+        try {
+          const { data } = await supabase
+            .from(source)
+            .select("*")
+            .eq("created_by", targetUid);
+
+          (data || []).forEach(row => allPlaces.push(normalizePlace(row, source)));
+        } catch {}
+      }
+
+      placesData = allPlaces.filter(p => !p.hidden);
+    }
+
+    function renderProfile() {
+      displayNameEl.textContent = targetProfile.displayName || "Member";
+
+      if (targetProfile.isVerified) verifiedDot.classList.remove("hidden");
+      else verifiedDot.classList.add("hidden");
+
+      if (targetProfile.username) {
+        usernameEl.textContent = "@" + targetProfile.username;
+        usernameEl.classList.remove("hidden");
+      } else {
+        usernameEl.classList.add("hidden");
+      }
+
+      bioEl.textContent = targetProfile.bio || "No bio added yet.";
+
+      if (targetProfile.photoURL) {
+        avatar.src = targetProfile.photoURL;
+        avatar.classList.remove("hidden");
+        avatarPlaceholder.classList.add("hidden");
+      } else {
+        avatar.classList.add("hidden");
+        avatarPlaceholder.classList.remove("hidden");
+      }
+
+      const profileLinks = [targetProfile.link1, targetProfile.link2].filter(Boolean);
+      linksRow.innerHTML = "";
+
+      profileLinks.forEach((link, index) => {
+        const a = document.createElement("a");
+        a.className = "bio-link";
+        a.href = normalizeUrl(link);
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = index === 0 ? "Link 1" : "Link 2";
+        linksRow.appendChild(a);
+      });
+
+      linksRow.classList.toggle("hidden", !profileLinks.length);
+
+      privacyBadge.textContent = targetProfile.isPrivate ? "Private" : "Public";
+      privacyBadge.className = `badge ${targetProfile.isPrivate ? "badge-yellow" : "badge-blue"}`;
+
+      if (isFollowing) {
+        followStateBadge.textContent = "Following";
+        followStateBadge.className = "badge badge-green";
+        followStateBadge.classList.remove("hidden");
+      } else if (hasPendingRequest) {
+        followStateBadge.textContent = "Requested";
+        followStateBadge.className = "badge badge-yellow";
+        followStateBadge.classList.remove("hidden");
+      } else {
+        followStateBadge.classList.add("hidden");
+      }
+
+      if (targetProfile.moderationStatus && targetProfile.moderationStatus !== "active") {
+        moderationBadge.textContent = targetProfile.moderationStatus;
+        moderationBadge.classList.remove("hidden");
+      } else {
+        moderationBadge.classList.add("hidden");
+      }
+
+      if (isFollowing) {
+        followBtn.textContent = "Unfollow";
+        followBtn.className = "action-btn btn-yellow";
+      } else if (hasPendingRequest) {
+        followBtn.textContent = "Requested";
+        followBtn.className = "action-btn btn-yellow";
+      } else if (targetProfile.isPrivate) {
+        followBtn.textContent = "Request Follow";
+        followBtn.className = "action-btn btn-blue";
+      } else {
+        followBtn.textContent = "Follow";
+        followBtn.className = "action-btn btn-blue";
+      }
+    }
+
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    async function handleFollowClick() {
+      if (!isValidUuid(targetUid)) {
+        setMessage("Invalid member ID.", "error");
+        return;
+      }
+
+      followBtn.disabled = true;
+      setMessage("");
+
+      try {
+        if (isFollowing) {
+          await supabase
+            .from("follows")
+            .delete()
+            .eq("follower_id", currentUser.id)
+            .eq("following_id", targetUid);
+
+          isFollowing = false;
+          setMessage("Unfollowed.", "success");
+        } else if (hasPendingRequest) {
+          const { error } = await supabase
+            .from("follow_requests")
+            .delete()
+            .eq("requester_id", currentUser.id)
+            .eq("target_id", targetUid)
+            .eq("status", "pending");
+
+          if (error) throw error;
+
+          hasPendingRequest = false;
+          setMessage("Follow request cancelled.", "success");
+        } else if (targetProfile.isPrivate) {
+          const { error } = await supabase
+            .from("follow_requests")
+            .insert({
+              requester_id: currentUser.id,
+              target_id: targetUid,
+              from_user_id: currentUser.id,
+              to_user_id: targetUid,
+              status: "pending",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (error) throw error;
+
+          hasPendingRequest = true;
+          setMessage("Follow request sent.", "success");
+        } else {
+          const { error } = await supabase
+            .from("follows")
+            .insert({
+              follower_id: currentUser.id,
+              following_id: targetUid,
+              created_at: new Date().toISOString()
+            });
+
+          if (error) throw error;
+
+          isFollowing = true;
+          setMessage("Following.", "success");
+        }
+
+        await Promise.all([checkFollowState(), loadCounts(), loadContent()]);
+        renderProfile();
+        renderCurrentTab();
+
+        if (canViewFullProfile()) {
+          privatePanel.classList.add("hidden");
+          tabsPanel.classList.remove("hidden");
+          contentPanel.classList.remove("hidden");
+        } else {
+          privatePanel.classList.remove("hidden");
+          tabsPanel.classList.add("hidden");
+          contentPanel.classList.add("hidden");
+        }
+      } catch (err) {
+        console.error(err);
+        setMessage(err.message || "Follow action failed.", "error");
+      }
+
+      followBtn.disabled = false;
+    }
+
+    async function handleMessageClick() {
+      if (!currentUser) return;
+
+      const cleanTargetUid = String(targetUid || "").trim();
+
+      if (!isValidUuid(cleanTargetUid)) {
+        alert("Cannot message this user. Missing user ID.");
+        return;
+      }
+
+      if (cleanTargetUid === currentUser.id) {
+        alert("You cannot message yourself.");
+        return;
+      }
+
+      messageBtn.disabled = true;
+      setMessage("");
+
+      try {
+        const { data: existingThreads, error: threadFindError } = await supabase
+          .from("chat_threads")
+          .select("*")
+          .or(
+            `and(participant_a.eq.${currentUser.id},participant_b.eq.${cleanTargetUid}),and(participant_a.eq.${cleanTargetUid},participant_b.eq.${currentUser.id})`
+          )
+          .limit(1);
+
+        if (threadFindError) throw threadFindError;
+
+        if (Array.isArray(existingThreads) && existingThreads.length) {
+          window.location.href = `chat.html?threadId=${encodeURIComponent(existingThreads[0].id)}`;
+          return;
+        }
+
+        const text = prompt("Write your first message request:");
+
+        if (!text || !text.trim()) {
+          messageBtn.disabled = false;
+          return;
+        }
+
+        const { data: existingRequests, error: requestFindError } = await supabase
+          .from("message_requests")
+          .select("*")
+          .eq("requester_id", currentUser.id)
+          .eq("target_id", cleanTargetUid)
+          .eq("status", "pending")
+          .limit(1);
+
+        if (requestFindError) throw requestFindError;
+
+        if (Array.isArray(existingRequests) && existingRequests.length) {
+          setMessage("Message request already sent.", "success");
+          messageBtn.disabled = false;
+          return;
+        }
+
+        const { error: requestError } = await supabase
+          .from("message_requests")
+          .insert({
+            requester_id: currentUser.id,
+            target_id: cleanTargetUid,
+            text: text.trim(),
+            status: "pending",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (requestError) throw requestError;
+
+        setMessage("Message request sent.", "success");
+      } catch (err) {
+        console.error("Message failed:", err);
+        alert("Unable to message: " + (err.message || "Unknown error"));
+      }
+
+      messageBtn.disabled = false;
+    }
+
+    function handleReportClick() {
+      if (!isValidUuid(targetUid)) {
+        setMessage("Invalid member ID.", "error");
+        return;
+      }
+
+      window.location.href = `report.html?type=profile&targetId=${encodeURIComponent(targetUid)}&targetUserId=${encodeURIComponent(targetUid)}`;
     }
 
     async function sharePost(postId) {
@@ -1391,1170 +1279,189 @@
       }
     }
 
-    function applyModerationBadge(status, warningUntil) {
-      moderationBadge.className = "moderation-badge hidden";
-      moderationBadge.textContent = "!";
-
-      if (status === "banned") {
-        moderationBadge.className = "moderation-badge moderation-ban";
-        return;
-      }
-
-      if (status === "warned" && warningUntil) {
-        const untilMs = new Date(warningUntil).getTime();
-        if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
-          moderationBadge.className = "moderation-badge moderation-warn";
-        }
-      }
-    }
-
-    function showAvatar(url) {
-      const cleanUrl = (url || "").trim();
-      if (!cleanUrl) {
-        avatar.classList.add("hidden");
-        avatar.removeAttribute("src");
-        avatarPlaceholder.classList.remove("hidden");
-        return;
-      }
-      avatar.src = cleanUrl;
-      avatar.classList.remove("hidden");
-      avatarPlaceholder.classList.add("hidden");
-    }
-
-    avatar.addEventListener("error", () => {
-      avatar.classList.add("hidden");
-      avatarPlaceholder.classList.remove("hidden");
-    });
-
-    function renderLinks(links, canShow) {
-      linksWrap.innerHTML = "";
-
-      if (!canShow || !Array.isArray(links) || !links.length) {
-        linksWrap.classList.add("hidden");
-        return;
-      }
-
-      links.forEach(item => {
-        const a = document.createElement("a");
-        a.className = "profile-link";
-        a.href = item.href;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
-            <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
-          </svg>
-          <span>${escapeHtml(item.label)}</span>
-        `;
-        linksWrap.appendChild(a);
-      });
-
-      linksWrap.classList.remove("hidden");
-    }
-
-    function renderProfileMeta(profile, canShowExtendedInfo, isBlockedByViewer) {
-      const chips = [];
-
-      chips.push(`
-        <span class="meta-chip ${profile.isPrivate ? "private" : "public"}">
-          ${profile.isPrivate ? "Private" : "Public"}
-        </span>
-      `);
-
-      chips.push(`
-        <span class="meta-chip ${profile.verified ? "verified" : "not-verified"}">
-          ${profile.verified ? "Verified" : "Not Verified"}
-        </span>
-      `);
-
-      if (canShowExtendedInfo) {
-        const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
-        if (profile.cityVisible && locationParts.length) {
-          chips.push(`<span class="meta-chip location">${escapeHtml(locationParts.join(", "))}</span>`);
-        }
-
-        if (profile.genderVisible && String(profile.gender || "").trim()) {
-          chips.push(`<span class="meta-chip gender">${escapeHtml(profile.gender)}</span>`);
-        }
-      }
-
-      if (isBlockedByViewer) {
-        chips.push(`<span class="meta-chip blocked">Blocked</span>`);
-      }
-
-      profileMeta.innerHTML = chips.join("");
-      profileMeta.classList.toggle("hidden", !chips.length);
-    }
-
-    function openTab(tabId) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
-
-      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-      if (btn) btn.classList.add("active");
-
-      const panel = document.getElementById(tabId);
-      if (panel) panel.classList.remove("hidden");
-    }
-
-    function openNetwork(sectionId) {
-      if (networkShell.classList.contains("hidden")) {
-        networkShell.classList.remove("hidden");
-      }
-      setTimeout(() => {
-        const target = document.getElementById(sectionId);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 60);
-    }
-
-    function closeNetwork() {
-      networkShell.classList.add("hidden");
-    }
-
-    closeNetworkBtn.addEventListener("click", closeNetwork);
-    postsStat.addEventListener("click", () => openTab("dashboardTab"));
-    followersStat.addEventListener("click", () => openNetwork("followersSection"));
-    followingStat.addEventListener("click", () => openNetwork("followingSection"));
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => openTab(btn.dataset.tab));
-    });
-
-    function setLockedMode(isLocked, title = "", text = "") {
-      statsBlock.classList.toggle("hidden", isLocked);
-      tabsSection.classList.toggle("hidden", isLocked);
-      lockedSection.classList.toggle("hidden", !isLocked);
-
-      if (isLocked) {
-        lockedTitle.textContent = title || "Private Profile";
-        lockedText.textContent = text || "Follow this member to see their posts and connections.";
-        document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
-        closeNetwork();
-      }
-    }
-
-    function renderDashboardPosts() {
-      dashboardList.innerHTML = "";
-
-      if (!dashboardPosts.length) {
-        dashboardList.classList.add("hidden");
-        dashboardEmpty.classList.remove("hidden");
-        showMoreWrap.classList.add("hidden");
-        return;
-      }
-
-      dashboardEmpty.classList.add("hidden");
-      dashboardList.classList.remove("hidden");
-
-      const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
-
-      visiblePosts.forEach(post => {
-        const card = document.createElement("div");
-        card.className = "dashboard-card";
-
-        const caption = getPostCaption(post);
-        const imageUrl = getPostImage(post);
-        const postId = post.id || "";
-
-        card.innerHTML = `
-          <a class="dashboard-post-link" href="post.html?postId=${encodeURIComponent(postId)}">
-            <div class="dashboard-top">
-              <div class="dashboard-label">Recent Post</div>
-              <div class="dashboard-time">${escapeHtml(formatDate(post.createdAt))}</div>
-            </div>
-            ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
-            ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
-          </a>
-
-          <div class="dashboard-actions">
-            <button class="dashboard-share-btn" data-post-id="${escapeHtml(postId)}" type="button" aria-label="Share post">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
-                <path d="M12 16V4"></path>
-                <path d="M7 9l5-5 5 5"></path>
-              </svg>
-              <span>Share</span>
-            </button>
-          </div>
-        `;
-
-        const img = card.querySelector(".dashboard-image");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.style.display = "none";
-          });
-        }
-
-        const shareBtn = card.querySelector(".dashboard-share-btn");
-        if (shareBtn) {
-          shareBtn.addEventListener("click", async () => {
-            await sharePost(postId);
-          });
-        }
-
-        dashboardList.appendChild(card);
-      });
-
-      if (dashboardPosts.length > dashboardVisibleCount) {
-        showMoreWrap.classList.remove("hidden");
-      } else {
-        showMoreWrap.classList.add("hidden");
-      }
-    }
-
-    showMoreBtn.addEventListener("click", () => {
-      dashboardVisibleCount += 10;
-      renderDashboardPosts();
-    });
-
-    function renderPhotos(posts) {
-      photosGrid.innerHTML = "";
-
-      if (!posts.length) {
-        photosGrid.classList.add("hidden");
-        photosEmpty.classList.remove("hidden");
-        return;
-      }
-
-      photosEmpty.classList.add("hidden");
-      photosGrid.classList.remove("hidden");
-
-      posts.forEach(post => {
-        const imageUrl = getPostImage(post);
-        if (!imageUrl) return;
-
-        const tile = document.createElement("a");
-        tile.className = "photo-tile";
-        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
-        tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
-
-        const img = tile.querySelector("img");
-        img.addEventListener("error", () => {
-          tile.remove();
-          if (!photosGrid.children.length) {
-            photosGrid.classList.add("hidden");
-            photosEmpty.classList.remove("hidden");
-          }
-        });
-
-        photosGrid.appendChild(tile);
-      });
-
-      if (!photosGrid.children.length) {
-        photosGrid.classList.add("hidden");
-        photosEmpty.classList.remove("hidden");
-      }
-    }
-
-    function renderEvents(list, container, emptyEl, typeLabel) {
-      container.innerHTML = "";
-
-      if (!list.length) {
-        container.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      container.classList.remove("hidden");
-
-      list.forEach(event => {
-        const card = document.createElement("div");
-        card.className = "event-card";
-
-        card.innerHTML = `
-          <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
-
-          <div class="badge-row">
-            ${event.visibility === "private" ? `<span class="badge badge-private">Private</span>` : ``}
-            <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
-          </div>
-
-          <div class="event-meta">
-            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
-            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
-            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
-            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
-          </div>
-
-          <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
-        `;
-
-        container.appendChild(card);
-      });
-    }
-
-    function renderPlaces(list, container, emptyEl, type) {
-      container.innerHTML = "";
-
-      if (!list.length) {
-        container.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      container.classList.remove("hidden");
-
-      list.forEach(place => {
-        const card = document.createElement("div");
-        card.className = "place-card";
-
-        const statusBadge = type === "added"
-          ? `<span class="badge badge-added">Added</span>`
-          : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
-
-        card.innerHTML = `
-          <div class="place-title">${escapeHtml(place.name || "Untitled Place")}</div>
-
-          <div class="badge-row">
-            ${statusBadge}
-            ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
-          </div>
-
-          <div class="place-meta">
-            <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
-          </div>
-
-          <div class="place-desc">${escapeHtml(place.description || "No description added.")}</div>
-        `;
-
-        container.appendChild(card);
-      });
-    }
-
-    async function renderPeople(ids, profilesMap, blockedUsers, listEl, emptyEl, emptyText) {
-      listEl.innerHTML = "";
-
-      const uniqueIds = [...new Set(ids.filter(Boolean))]
-        .filter(uid => !blockedUsers.includes(uid));
-
-      if (!uniqueIds.length) {
-        emptyEl.textContent = emptyText;
-        listEl.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      const usable = uniqueIds.filter(uid => {
-        const p = profilesMap.get(uid) || {};
-        return !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned";
-      });
-
-      if (!usable.length) {
-        emptyEl.textContent = emptyText;
-        listEl.classList.add("hidden");
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      listEl.classList.remove("hidden");
-
-      usable.forEach(uid => {
-        const p = profilesMap.get(uid) || {};
-        const card = document.createElement("div");
-        card.className = "person-card";
-
-        const avatarHtml = p.photoURL
-          ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
-          : `<div class="person-avatar-placeholder">No photo</div>`;
-
-        card.innerHTML = `
-          ${avatarHtml}
-          <div class="person-body">
-            <div class="person-name">
-              <a href="member.html?uid=${encodeURIComponent(uid)}">
-                ${escapeHtml(p.displayName || "Member")}
-              </a>
-            </div>
-            ${p.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
-            ${p.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
-          </div>
-        `;
-
-        const img = card.querySelector(".person-avatar");
-        if (img) {
-          img.addEventListener("error", () => {
-            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
-          });
-        }
-
-        listEl.appendChild(card);
-      });
-    }
-
-    async function trySingle(builder) {
-      try {
-        const { data, error } = await builder();
-        if (error) throw error;
-        return data || null;
-      } catch {
-        return null;
-      }
-    }
-
-    async function tryMany(builder) {
-      try {
-        const { data, error } = await builder();
-        if (error) throw error;
-        return data || [];
-      } catch {
-        return [];
-      }
-    }
-
-    async function fetchProfileRowByUidOrId(table, uid) {
-      let row = await trySingle(() => supabase.from(table).select("*").eq("uid", uid).maybeSingle());
-      if (row) return row;
-
-      row = await trySingle(() => supabase.from(table).select("*").eq("id", uid).maybeSingle());
-      if (row) return row;
-
-      return null;
-    }
-
-    async function getProfileFromPublicProfilesByKey(key) {
-      if (!key) return null;
-
-      let row = await trySingle(() => supabase.from("public_profiles").select("*").eq("uid", key).maybeSingle());
-      if (row) return normalizeProfile(row, row.uid || row.id);
-
-      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("id", key).maybeSingle());
-      if (row) return normalizeProfile(row, row.uid || row.id);
-
-      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("username", key).maybeSingle());
-      if (row) return normalizeProfile(row, row.uid || row.id);
-
-      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("handle", key).maybeSingle());
-      if (row) return normalizeProfile(row, row.uid || row.id);
-
-      row = await trySingle(() => supabase.from("public_profiles").select("*").eq("user_name", key).maybeSingle());
-      if (row) return normalizeProfile(row, row.uid || row.id);
-
-      return null;
-    }
-
-    async function getFollowsByFollower(viewerUid) {
-      let rows = await tryMany(() => supabase.from("follows").select("*").eq("follower_id", viewerUid));
-      if (rows.length) return rows.map(normalizeFollowRow);
-
-      rows = await tryMany(() => supabase.from("follows").select("*").eq("followerId", viewerUid));
-      return rows.map(normalizeFollowRow);
-    }
-
-    async function getFollowsByFollowing(viewerUid) {
-      let rows = await tryMany(() => supabase.from("follows").select("*").eq("following_id", viewerUid));
-      if (rows.length) return rows.map(normalizeFollowRow);
-
-      rows = await tryMany(() => supabase.from("follows").select("*").eq("followingId", viewerUid));
-      return rows.map(normalizeFollowRow);
-    }
-
-    async function getRequestsByRequester(viewerUid) {
-      let rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("requester_id", viewerUid));
-      if (rows.length) return rows;
-
-      rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("requesterId", viewerUid));
-      return rows;
-    }
-
-    async function getRequestsByTarget(viewerUid) {
-      let rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("target_id", viewerUid));
-      if (rows.length) return rows;
-
-      rows = await tryMany(() => supabase.from("follow_requests").select("*").eq("targetId", viewerUid));
-      return rows;
-    }
-
-    async function getRelationship(viewerUid, memberUid) {
-      let followDocId = null;
-      let requestDocId = null;
-
-      const followRowsA = await getFollowsByFollower(viewerUid);
-      const followFound = followRowsA.find(r => r.followingId === memberUid);
-      if (followFound) followDocId = followFound.id;
-
-      const reqRowsA = await getRequestsByRequester(viewerUid);
-      const reqFound = reqRowsA.find(r => getField(r, ["target_id", "targetId"]) === memberUid);
-      if (reqFound) requestDocId = reqFound.id;
-
-      let relationship = "none";
-      if (followDocId) relationship = "following";
-      else if (requestDocId) relationship = "requested";
-
-      return { relationship, followDocId, requestDocId };
-    }
-
-    function getActorName(profileData, authUser) {
-      return profileData?.displayName || authUser?.user_metadata?.display_name || authUser?.email || "Someone";
-    }
-
-    async function createNotificationSafe(memberUid, payload) {
-      try {
-        await supabase.from("notifications").insert(payload);
-      } catch {}
-    }
-
-    async function removeExistingRelations(viewerUid, memberUid) {
-      const attempts = [
-        () => supabase.from("follows").delete().eq("follower_id", viewerUid).eq("following_id", memberUid),
-        () => supabase.from("follows").delete().eq("followerId", viewerUid).eq("followingId", memberUid),
-        () => supabase.from("follows").delete().eq("follower_id", memberUid).eq("following_id", viewerUid),
-        () => supabase.from("follows").delete().eq("followerId", memberUid).eq("followingId", viewerUid),
-        () => supabase.from("follow_requests").delete().eq("requester_id", viewerUid).eq("target_id", memberUid),
-        () => supabase.from("follow_requests").delete().eq("requesterId", viewerUid).eq("targetId", memberUid),
-        () => supabase.from("follow_requests").delete().eq("requester_id", memberUid).eq("target_id", viewerUid),
-        () => supabase.from("follow_requests").delete().eq("requesterId", memberUid).eq("targetId", viewerUid)
-      ];
-
-      for (const fn of attempts) {
-        try { await fn(); } catch {}
-      }
-    }
-
-    async function upsertUserBlockedList(viewerUid, blockedUsers) {
-      const payload = {
-        uid: viewerUid,
-        blocked_users: blockedUsers,
-        updated_at: nowIso()
-      };
-
-      try {
-        const { error } = await supabase.from("users").upsert(payload, { onConflict: "uid" });
-        if (error) throw error;
-      } catch (err) {
-        const altPayload = {
-          uid: viewerUid,
-          blockedUsers,
-          updated_at: nowIso()
-        };
-        const { error } = await supabase.from("users").upsert(altPayload, { onConflict: "uid" });
-        if (error) throw error;
-      }
-    }
-
-    async function blockUser(viewerUid, memberUid) {
-      const next = [...new Set([...(currentViewerBlockedUsers || []), memberUid])];
-      await upsertUserBlockedList(viewerUid, next);
-      currentViewerBlockedUsers = next;
-      await removeExistingRelations(viewerUid, memberUid);
-    }
-
-    async function unblockUser(viewerUid, memberUid) {
-      const next = (currentViewerBlockedUsers || []).filter(uid => uid !== memberUid);
-      await upsertUserBlockedList(viewerUid, next);
-      currentViewerBlockedUsers = next;
-    }
-
-    function renderHeadActions(viewerUid, memberUid, isBlockedByViewer) {
-      headActions.innerHTML = "";
-
-      if (viewerUid === memberUid) return;
-
-      const reportBtn = document.createElement("a");
-      reportBtn.href = `report.html?type=profile&targetId=${encodeURIComponent(memberUid)}&targetUserId=${encodeURIComponent(memberUid)}`;
-      reportBtn.className = "mini-btn mini-report";
-      reportBtn.textContent = "Report";
-      headActions.appendChild(reportBtn);
-
-      const blockBtn = document.createElement("button");
-      blockBtn.className = `mini-btn ${isBlockedByViewer ? "mini-unblock" : "mini-block"}`;
-      blockBtn.textContent = isBlockedByViewer ? "Unblock" : "Block";
-
-      blockBtn.addEventListener("click", async () => {
-        blockBtn.disabled = true;
-        setActionMessage("");
-
-        try {
-          if (isBlockedByViewer) {
-            await unblockUser(viewerUid, memberUid);
-          } else {
-            const ok = confirm("Block this member? They will disappear from your feed, nearby and profile flow.");
-            if (!ok) {
-              blockBtn.disabled = false;
-              return;
-            }
-            await blockUser(viewerUid, memberUid);
-          }
-          window.location.reload();
-        } catch (err) {
-          console.error(err);
-          setActionMessage(err?.message || `Could not ${isBlockedByViewer ? "unblock" : "block"} this member.`, "err");
-          blockBtn.disabled = false;
-        }
-      });
-
-      headActions.appendChild(blockBtn);
-    }
-
-    function createMessageButton(memberUid) {
-      const link = document.createElement("a");
-      link.className = "action-btn message-btn";
-      link.href = `chat.html?uid=${encodeURIComponent(memberUid)}`;
-      link.textContent = "Message";
-      return link;
-    }
-
-    async function deleteFollowById(id) {
-      if (!id) return;
-      let done = false;
-
-      try {
-        const { error } = await supabase.from("follows").delete().eq("id", id);
-        if (!error) done = true;
-      } catch {}
-
-      if (done) return;
-      throw new Error("Could not remove follow.");
-    }
-
-    async function deleteRequestById(id) {
-      if (!id) return;
-      let done = false;
-
-      try {
-        const { error } = await supabase.from("follow_requests").delete().eq("id", id);
-        if (!error) done = true;
-      } catch {}
-
-      if (done) return;
-      throw new Error("Could not remove request.");
-    }
-
-    async function renderActions(viewerUid, memberUid, actorName, isPrivate, relationship, isBlockedByViewer, isBanned) {
-      followArea.innerHTML = "";
-      setActionMessage("");
-
-      if (viewerUid === memberUid) {
-        const selfBtn = document.createElement("button");
-        selfBtn.className = "action-btn self-btn";
-        selfBtn.disabled = true;
-        selfBtn.textContent = "This is you";
-        followArea.appendChild(selfBtn);
-        return;
-      }
-
-      if (isBlockedByViewer || isBanned) return;
-
-      if (relationship === "following") {
-        const btn = document.createElement("button");
-        btn.className = "action-btn unfollow-btn";
-        btn.textContent = "Unfollow";
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          setActionMessage("");
-
-          try {
-            await deleteFollowById(relationshipInfo.followDocId);
-            window.location.reload();
-          } catch (err) {
-            console.error(err);
-            setActionMessage(err?.message || "Could not unfollow.", "err");
-            btn.disabled = false;
-          }
-        });
-        followArea.appendChild(btn);
-        followArea.appendChild(createMessageButton(memberUid));
-        return;
-      }
-
-      if (isPrivate && relationship === "requested") {
-        const btn = document.createElement("button");
-        btn.className = "action-btn cancel-btn";
-        btn.textContent = "Requested";
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          setActionMessage("");
-
-          try {
-            await deleteRequestById(relationshipInfo.requestDocId);
-            window.location.reload();
-          } catch (err) {
-            console.error(err);
-            setActionMessage(err?.message || "Could not cancel request.", "err");
-            btn.disabled = false;
-          }
-        });
-        followArea.appendChild(btn);
-        followArea.appendChild(createMessageButton(memberUid));
-        return;
-      }
-
-      if (isPrivate) {
-        const btn = document.createElement("button");
-        btn.className = "action-btn request-btn";
-        btn.textContent = "Request";
-
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          setActionMessage("");
-
-          try {
-            let inserted = false;
-
-            try {
-              const { error } = await supabase.from("follow_requests").insert({
-                requester_id: viewerUid,
-                target_id: memberUid,
-                created_at: nowIso()
-              });
-              if (!error) inserted = true;
-            } catch {}
-
-            if (!inserted) {
-              const { error } = await supabase.from("follow_requests").insert({
-                requesterId: viewerUid,
-                targetId: memberUid,
-                createdAt: nowIso()
-              });
-              if (error) throw error;
-            }
-
-            await createNotificationSafe(memberUid, {
-              type: "follow_request",
-              title: "Follow request",
-              text: `${actorName} sent you a follow request.`,
-              from_user_id: viewerUid,
-              to_user_id: memberUid,
-              created_at: nowIso(),
-              is_read: false
-            });
-
-            window.location.reload();
-          } catch (err) {
-            console.error(err);
-            setActionMessage(err?.message || "Could not send follow request.", "err");
-            btn.disabled = false;
-          }
-        });
-
-        followArea.appendChild(btn);
-        followArea.appendChild(createMessageButton(memberUid));
-        return;
-      }
-
-      const btn = document.createElement("button");
-      btn.className = "action-btn follow-btn";
-      btn.textContent = "Follow";
-
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        setActionMessage("");
-
-        try {
-          let inserted = false;
-
-          try {
-            const { error } = await supabase.from("follows").insert({
-              follower_id: viewerUid,
-              following_id: memberUid,
-              created_at: nowIso()
-            });
-            if (!error) inserted = true;
-          } catch {}
-
-          if (!inserted) {
-            const { error } = await supabase.from("follows").insert({
-              followerId: viewerUid,
-              followingId: memberUid,
-              createdAt: nowIso()
-            });
-            if (error) throw error;
-          }
-
-          await createNotificationSafe(memberUid, {
-            type: "follow",
-            title: "New follower",
-            text: `${actorName} started following you.`,
-            from_user_id: viewerUid,
-            to_user_id: memberUid,
-            created_at: nowIso(),
-            is_read: false
-          });
-
-          window.location.reload();
-        } catch (err) {
-          console.error(err);
-          setActionMessage(err?.message || "Could not follow this member.", "err");
-          btn.disabled = false;
-        }
-      });
-
-      followArea.appendChild(btn);
-      followArea.appendChild(createMessageButton(memberUid));
-    }
-
-    async function getEventMembershipRowsForUser(uid) {
-      const attempts = [
-        () => supabase.from("event_members").select("*").eq("user_id", uid),
-        () => supabase.from("event_members").select("*").eq("userId", uid),
-        () => supabase.from("event_members").select("*").eq("member_id", uid),
-        () => supabase.from("event_members").select("*").eq("memberId", uid),
-        () => supabase.from("event_participants").select("*").eq("user_id", uid),
-        () => supabase.from("event_participants").select("*").eq("userId", uid),
-        () => supabase.from("event_attendees").select("*").eq("user_id", uid),
-        () => supabase.from("event_attendees").select("*").eq("userId", uid)
-      ];
-
-      for (const fn of attempts) {
-        try {
-          const { data, error } = await fn();
-          if (!error) return data || [];
-        } catch {}
-      }
-
+    function getCurrentRows() {
+      if (activeTab === "dashboard") return postsData;
+      if (activeTab === "photos") return postsData.filter(p => p.imageURL);
+      if (activeTab === "events") return eventsData;
+      if (activeTab === "places") return placesData;
       return [];
     }
 
-    function getJoinedEventIdsFromEventRows(events, uid) {
-      const ids = new Set();
+    function renderCurrentTab() {
+      contentList.innerHTML = "";
+      contentEmpty.classList.add("hidden");
+      showMoreBtn.classList.add("hidden");
 
-      events.forEach(event => {
-        const joinedArrays = [
-          event.joined_users,
-          event.joinedUsers,
-          event.members,
-          event.member_ids,
-          event.memberIds,
-          event.attendees,
-          event.attendee_ids,
-          event.attendeeIds
-        ];
+      if (!canViewFullProfile()) return;
 
-        for (const arr of joinedArrays) {
-          if (Array.isArray(arr) && arr.includes(uid)) {
-            ids.add(event.id);
-            break;
-          }
-        }
+      const rows = getCurrentRows();
+      const shown = rows.slice(0, visibleLimit);
 
-        const joinedMaps = [event.member_statuses, event.memberStatuses, event.joined_map, event.joinedMap];
-        for (const obj of joinedMaps) {
-          if (obj && typeof obj === "object" && obj[uid]) {
-            ids.add(event.id);
-            break;
-          }
-        }
-      });
+      if (!shown.length) {
+        contentEmpty.textContent =
+          activeTab === "photos" ? "No photos yet." :
+          activeTab === "events" ? "No events yet." :
+          activeTab === "places" ? "No places yet." :
+          "No posts yet.";
+        contentEmpty.classList.remove("hidden");
+        return;
+      }
 
-      return ids;
+      if (activeTab === "events") {
+        shown.forEach(renderEventCard);
+      } else if (activeTab === "places") {
+        shown.forEach(renderPlaceCard);
+      } else {
+        shown.forEach(renderPostCard);
+      }
+
+      if (rows.length > visibleLimit) {
+        showMoreBtn.classList.remove("hidden");
+      }
     }
 
-    async function fetchAllProfilesMap() {
-      const rows = await tryMany(() => supabase.from("public_profiles").select("*"));
-      const map = new Map();
+    function renderPostCard(post) {
+      const card = document.createElement("div");
+      card.className = "post-card";
 
-      rows.forEach(row => {
-        const p = normalizeProfile(row, row.uid || row.id);
-        const key = p.uid || row.id;
-        if (key) map.set(key, p);
-      });
+      card.innerHTML = `
+        ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Post image">` : ""}
+        <div class="post-caption">${escapeHtml(post.caption || "No caption.")}</div>
+        <div class="mini-meta">${post.createdAt ? escapeHtml(formatDate(post.createdAt)) : ""}</div>
+        <div class="card-actions">
+          <a href="post.html?postId=${encodeURIComponent(post.id)}" class="mini-btn btn-blue">Open</a>
+          <button class="mini-btn share-btn btn-green" type="button">Share</button>
+          <a href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.userId)}" class="mini-btn btn-red">Report</a>
+        </div>
+      `;
 
-      return map;
-    }
-
-    async function fetchAllPlaces() {
-      const all = [];
-
-      for (const source of PLACE_SOURCES) {
-        const rows = await tryMany(() => supabase.from(source).select("*"));
-        rows.forEach(row => {
-          const place = normalizePlace(row, row.id);
-          place.source = source;
-          all.push(place);
+      const img = card.querySelector(".post-img");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.style.display = "none";
         });
       }
 
-      return all;
-    }
-
-    async function fetchPlaceVisitsForUser(uid) {
-      let rows = await tryMany(() => supabase.from("place_visits").select("*").eq("user_id", uid));
-      if (rows.length) return rows;
-
-      rows = await tryMany(() => supabase.from("place_visits").select("*").eq("userId", uid));
-      return rows;
-    }
-
-    function buildVisitedPlaces(uid, allPlaces, visitRows) {
-      const byId = new Map(allPlaces.map(p => [p.id, p]));
-      const result = [];
-
-      visitRows.forEach(raw => {
-        const placeId = getField(raw, ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId", "id"]);
-        const statusRaw = String(raw.status || raw.type || "").toLowerCase();
-
-        let userStatus = "";
-        if (statusRaw.includes("explor")) userStatus = "explored";
-        else if (statusRaw.includes("visit")) userStatus = "visited";
-        else if (raw.explored === true) userStatus = "explored";
-        else userStatus = "visited";
-
-        const base = byId.get(placeId);
-        if (base) {
-          result.push({
-            ...base,
-            userStatus
-          });
-        } else {
-          result.push({
-            id: placeId || raw.id,
-            name: getField(raw, ["place_name", "placeName", "name"]) || "Visited Place",
-            category: getField(raw, ["category"]) || "",
-            city: getField(raw, ["city"]) || "",
-            description: "",
-            userStatus
-          });
-        }
+      card.querySelector(".share-btn").addEventListener("click", () => {
+        sharePost(post.id);
       });
 
-      const unique = new Map();
-      result.forEach(item => {
-        const key = item.id || `${item.name}-${item.city}`;
-        unique.set(key, item);
-      });
-
-      return Array.from(unique.values());
+      contentList.appendChild(card);
     }
 
-    async function initPage() {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+    function renderEventCard(event) {
+      const card = document.createElement("div");
+      card.className = "info-card";
 
-      if (authError || !authData?.user) {
-        window.location.href = "login.html";
-        return;
-      }
+      card.innerHTML = `
+        <div class="card-title">${escapeHtml(event.title)}</div>
+        <div class="mini-meta">
+          ${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" • ") || "Event")}
+        </div>
+        <div class="desc">${escapeHtml(event.description || "No description.")}</div>
+        <div class="card-actions">
+          <a href="nearby-events.html" class="mini-btn btn-blue">Open Events</a>
+          <a href="report.html?type=event&targetId=${encodeURIComponent(event.id)}&targetUserId=${encodeURIComponent(event.creatorId)}" class="mini-btn btn-red">Report</a>
+        </div>
+      `;
 
-      currentUser = authData.user;
+      contentList.appendChild(card);
+    }
 
-      const memberKey = getMemberKey();
-      if (!memberKey) {
-        loading.textContent = "No member selected.";
-        return;
-      }
+    function renderPlaceCard(place) {
+      const card = document.createElement("div");
+      card.className = "info-card";
 
+      card.innerHTML = `
+        <div class="card-title">${escapeHtml(place.name)}</div>
+        <div class="mini-meta">
+          ${escapeHtml([place.category, place.city].filter(Boolean).join(" • ") || "Place")}
+        </div>
+        <div class="desc">${escapeHtml(place.description || "No description.")}</div>
+        <div class="card-actions">
+          <a href="place.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source)}" class="mini-btn btn-blue">Open Place</a>
+          <a href="report.html?type=place&targetId=${encodeURIComponent(place.id)}&targetUserId=${encodeURIComponent(place.createdBy)}&source=${encodeURIComponent(place.source)}" class="mini-btn btn-red">Report</a>
+        </div>
+      `;
+
+      contentList.appendChild(card);
+    }
+
+    async function loadInboxBadgeCount() {
       try {
-        const profile = await getProfileFromPublicProfilesByKey(memberKey);
+        let unreadTotal = 0;
 
-        if (!profile || !profile.uid) {
-          loading.textContent = "Member profile not found.";
-          return;
-        }
+        const { count: requestCount } = await supabase
+          .from("message_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("target_id", currentUser.id)
+          .eq("status", "pending");
 
-        currentMemberUid = profile.uid;
-        currentMemberProfile = profile;
+        if (requestCount) unreadTotal += requestCount;
 
-        const memberUid = profile.uid;
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${currentUser.id},participant_b.eq.${currentUser.id}`);
 
-        const [
-          viewerPublicRow,
-          viewerUserRow,
-          postsRows,
-          eventRows,
-          followRowsByFollower,
-          followRowsByFollowing,
-          profilesMap,
-          relationship,
-          allPlaces,
-          placeVisitRows,
-          eventMembershipRows
-        ] = await Promise.all([
-          fetchProfileRowByUidOrId("public_profiles", currentUser.id),
-          fetchProfileRowByUidOrId("users", currentUser.id),
-          tryMany(() => supabase.from("posts").select("*")),
-          tryMany(() => supabase.from("events").select("*")),
-          getFollowsByFollower(currentUser.id),
-          getFollowsByFollowing(currentUser.id),
-          fetchAllProfilesMap(),
-          getRelationship(currentUser.id, memberUid),
-          fetchAllPlaces(),
-          fetchPlaceVisitsForUser(memberUid),
-          getEventMembershipRowsForUser(memberUid)
-        ]);
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
 
-        currentViewerPublicProfile = viewerPublicRow ? normalizeProfile(viewerPublicRow, currentUser.id) : null;
-        currentViewerBlockedUsers = viewerUserRow ? normalizeProfile(viewerUserRow, currentUser.id).blockedUsers : [];
+          if (threadIds.length) {
+            const { count: messageCount } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", currentUser.id)
+              .is("seen_at", null);
 
-        relationshipInfo = relationship;
-
-        const isSelf = currentUser.id === memberUid;
-        const isPrivate = !!profile.isPrivate;
-        const isBanned = profile.moderationStatus === "banned" || profile.isHiddenByAdmin || profile.softDeleted;
-        const isBlockedByViewer = currentViewerBlockedUsers.includes(memberUid);
-
-        const alreadyFollowing = relationship.relationship === "following";
-        const canViewFull = !isBanned && !isBlockedByViewer && (isSelf || !isPrivate || alreadyFollowing);
-        const canShowExtendedInfo = !isBanned && !isBlockedByViewer && (canViewFull || !isPrivate);
-
-        displayNameEl.textContent = profile.displayName || "Member";
-
-        if (profile.verified) verifiedDot.classList.remove("hidden");
-        else verifiedDot.classList.add("hidden");
-
-        if (profile.username) {
-          usernameText.textContent = "@" + profile.username;
-          usernameText.classList.remove("hidden");
-        } else {
-          usernameText.classList.add("hidden");
-        }
-
-        showAvatar(profile.photoURL || "");
-        applyModerationBadge(profile.moderationStatus, profile.warningUntil);
-
-        if (isBanned) {
-          bioEl.textContent = "This account was removed for policy violation.";
-        } else if (isBlockedByViewer) {
-          bioEl.textContent = "You blocked this member.";
-        } else if (canShowExtendedInfo) {
-          bioEl.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
-        } else {
-          bioEl.textContent = "This profile is private.";
-        }
-
-        renderLinks(profile.links || [], canShowExtendedInfo);
-        renderProfileMeta(profile, canShowExtendedInfo, isBlockedByViewer);
-        renderHeadActions(currentUser.id, memberUid, isBlockedByViewer);
-
-        await renderActions(
-          currentUser.id,
-          memberUid,
-          getActorName(currentViewerPublicProfile, currentUser),
-          isPrivate,
-          relationship.relationship,
-          isBlockedByViewer,
-          isBanned
-        );
-
-        const allFollows = [...followRowsByFollower, ...followRowsByFollowing];
-        const followers = allFollows.filter(f => f.followingId === memberUid).map(f => f.followerId);
-        const following = allFollows.filter(f => f.followerId === memberUid).map(f => f.followingId);
-
-        followersCountEl.textContent = String(followers.filter(id => !currentViewerBlockedUsers.includes(id)).length);
-        followingCountEl.textContent = String(following.filter(id => !currentViewerBlockedUsers.includes(id)).length);
-
-        if (canViewFull) {
-          setLockedMode(false);
-
-          dashboardPosts = postsRows
-            .map(normalizePostRow)
-            .filter(p => getPostOwnerId(p) === memberUid && !p.hidden)
-            .sort((a, b) => getCreatedMs(b.createdAt) - getCreatedMs(a.createdAt));
-
-          dashboardVisibleCount = 10;
-          postsCountEl.textContent = String(dashboardPosts.length);
-          renderDashboardPosts();
-
-          const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
-          renderPhotos(photoPosts);
-
-          const allEvents = eventRows
-            .map(normalizeEventRow)
-            .filter(e => !e.hidden);
-
-          const createdEvents = allEvents.filter(e => e.creatorId === memberUid);
-
-          const joinedFromRows = new Set(
-            eventMembershipRows.map(r => getField(r, ["event_id", "eventId"]))
-          );
-          const joinedFromEvents = getJoinedEventIdsFromEventRows(allEvents, memberUid);
-          const joinedIds = new Set([...joinedFromRows, ...joinedFromEvents]);
-
-          const joinedEvents = allEvents.filter(e => joinedIds.has(e.id) && e.creatorId !== memberUid);
-
-          renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
-          renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
-
-          await Promise.all([
-            renderPeople(followers, profilesMap, currentViewerBlockedUsers, followersList, followersEmpty, "No followers yet."),
-            renderPeople(following, profilesMap, currentViewerBlockedUsers, followingList, followingEmpty, "Not following anyone yet.")
-          ]);
-
-          const addedPlaces = allPlaces
-            .filter(place => !place.hidden && place.creatorId === memberUid)
-            .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-          const visitedPlaces = buildVisitedPlaces(memberUid, allPlaces, placeVisitRows)
-            .filter(place => place.creatorId !== memberUid || place.userStatus)
-            .sort((a, b) => {
-              if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
-              if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
-              return (a.name || "").localeCompare(b.name || "");
-            });
-
-          renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
-          renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
-
-          openTab("dashboardTab");
-          closeNetwork();
-        } else {
-          dashboardPosts = [];
-          dashboardVisibleCount = 10;
-          dashboardList.innerHTML = "";
-          photosGrid.innerHTML = "";
-          createdEventsGrid.innerHTML = "";
-          joinedEventsGrid.innerHTML = "";
-          addedPlacesGrid.innerHTML = "";
-          visitedPlacesGrid.innerHTML = "";
-          followersList.innerHTML = "";
-          followingList.innerHTML = "";
-
-          postsCountEl.textContent = "0";
-
-          if (isBanned) {
-            setLockedMode(true, "Account Removed", "This account was removed for policy violation.");
-          } else if (isBlockedByViewer) {
-            setLockedMode(true, "Blocked Member", "Unblock this member to view their posts, followers and following again.");
-          } else {
-            setLockedMode(
-              true,
-              "Private Profile",
-              relationship.relationship === "requested"
-                ? "Your follow request is pending approval."
-                : "Follow this member to see their posts, photos, events and places."
-            );
+            if (messageCount) unreadTotal += messageCount;
           }
         }
 
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
-
-        supabase.auth.onAuthStateChange((event, session) => {
-          if (!session?.user) {
-            window.location.href = "login.html";
-          }
-        });
-      } catch (err) {
-        console.error("Member page load failed:", err);
-        loading.textContent = "Could not load member profile.";
+        if (!unreadTotal) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
       }
     }
 
-    initPage();
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeTab = btn.dataset.tab;
+        visibleLimit = 10;
 
-    /*
-      SUPABASE NEEDS FOR THIS PAGE:
+        document.querySelectorAll(".tab-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.tab === activeTab);
+        });
 
-      TABLES:
-      - public_profiles: select
-      - users: select, upsert for blocked_users
-      - follows: select, insert, delete
-      - follow_requests: select, insert, delete
-      - notifications: insert
-      - posts: select
-      - events: select
-      - event_members: select
-      - place_visits: select
-      - nearby_places: select
-      - places: select
-      - nudist_places: select
+        renderCurrentTab();
+      });
+    });
 
-      SHARE BUTTON:
-      - Added on dashboard post cards.
-      - Share opens native mobile share sheet when available.
-      - Desktop fallback copies post.html?postId=POST_ID to clipboard.
-    */
+    showMoreBtn.addEventListener("click", () => {
+      visibleLimit += 10;
+      renderCurrentTab();
+    });
+
+    followBtn.addEventListener("click", handleFollowClick);
+    messageBtn.addEventListener("click", handleMessageClick);
+    reportBtn.addEventListener("click", handleReportClick);
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (!session?.user) {
+        window.location.href = "login.html";
+      }
+    });
+
+    loadProfile().catch(err => {
+      console.error(err);
+      loadingPanel.innerHTML = `<div class="empty-box">Could not load member profile.<br>${escapeHtml(err.message || "")}</div>`;
+    });
   </script>
 </body>
 </html>
