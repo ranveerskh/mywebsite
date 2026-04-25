@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OwnSpace - Communities</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
+    }
+
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
+      align-items:center;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      position:relative;
+    }
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:13px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero{
+      display:grid;
+      gap:10px;
+    }
+
+    .hero-title{
+      font-size:20px;
+      line-height:1.18;
+      font-weight:950;
+      letter-spacing:-.03em;
+    }
+
+    .hero-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .chip svg{
+      width:13px;
+      height:13px;
+      flex-shrink:0;
+    }
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      cursor:pointer;
+      min-height:40px;
+      color:var(--text);
+      border:1px solid var(--line);
+      background:var(--surface-2);
+    }
+
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      flex-shrink:0;
+    }
+
+    .action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .btn-primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .btn-purple{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.22);
+    }
+
+    .btn-yellow{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.22);
+    }
+
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.22);
+    }
+
+    .status-text{
+      min-height:18px;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .status-ok{color:#86efac}
+    .status-err{color:#fda4af}
+
+    .tools{
+      display:grid;
+      gap:10px;
+    }
+
+    .search-wrap{
+      position:relative;
+    }
+
+    .search-box{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:13px 44px 13px 14px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .search-box::placeholder{color:var(--muted)}
+
+    .clear-btn{
+      position:absolute;
+      right:8px;
+      top:50%;
+      transform:translateY(-50%);
+      width:30px;
+      height:30px;
+      border:none;
+      border-radius:10px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:950;
+    }
+
+    .filter-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .filter-btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 11px;
+      font-size:12px;
+      font-weight:950;
+      cursor:pointer;
+    }
+
+    .filter-btn.active{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+    }
+
+    .loading-box,
+    .empty-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.55;
+    }
+
+    .community-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .cover{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      display:block;
+      border-radius:16px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      margin-bottom:11px;
+    }
+
+    .community-top{
+      display:grid;
+      gap:8px;
+    }
+
+    .community-title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .community-title{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.28;
+      letter-spacing:-.02em;
+      word-break:break-word;
+    }
+
+    .small-count{
+      flex-shrink:0;
+      padding:7px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.22);
+      background:rgba(167,139,250,.14);
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      padding:6px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .badge svg{
+      width:12px;
+      height:12px;
+      flex-shrink:0;
+    }
+
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .desc{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.58;
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin-top:2px;
+    }
+
+    .meta-grid{
+      display:grid;
+      gap:6px;
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text);
+    }
+
+    .meta-line{
+      display:flex;
+      gap:6px;
+      align-items:flex-start;
+      min-width:0;
+    }
+
+    .meta-line strong{
+      color:var(--muted);
+      flex-shrink:0;
+    }
+
+    .creator-card{
+      margin-top:10px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .creator-avatar,
+    .creator-placeholder{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+    }
+
+    .creator-avatar{
+      object-fit:cover;
+    }
+
+    .creator-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:9px;
+      text-align:center;
+      padding:5px;
+      line-height:1.2;
+    }
+
+    .creator-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .creator-name{
+      font-size:13px;
+      font-weight:950;
+      line-height:1.25;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .creator-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+
+    .creator-name a:hover{text-decoration:underline}
+
+    .verified-dot{
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:0 0 0 3px rgba(32,199,111,.16);
+      flex-shrink:0;
+    }
+
+    .verified-dot svg{
+      width:11px;
+      height:11px;
+      stroke-width:3;
+    }
+
+    .creator-username{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:850;
+      margin-top:2px;
+      word-break:break-word;
+    }
+
+    .card-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:11px;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:9px 5px;
+      border-radius:14px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 108px}
+      .brand{font-size:17px}
+      .panel{border-radius:20px;padding:11px}
+      .hero-title{font-size:19px}
+      .community-title{font-size:17px}
+      .action-row .action-btn,
+      .card-actions .action-btn{flex:1}
+      .community-title-row{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+      .small-count{
+        width:max-content;
+      }
+    }
+
+    @media (max-width:390px){
+      .filter-btn{
+        font-size:11px;
+        padding:8px 10px;
+      }
+
+      .nav-link{
+        font-size:9.8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="feed.html" class="top-icon-btn" aria-label="Back to Feed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Communities</div>
+      </div>
+
+      <a href="create-community.html" class="top-icon-btn" aria-label="Create Community">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div class="panel">
+      <div class="hero">
+        <div>
+          <div class="hero-title">Communities</div>
+          <div class="hero-sub">
+            Find groups, join trusted spaces, follow featured communities, and build your own OwnSpace circles.
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <span id="communityCountChip" class="chip chip-blue">Communities: 0</span>
+          <span id="joinedCountChip" class="chip chip-green">Joined: 0</span>
+          <span id="featuredCountChip" class="chip chip-purple">Featured: 0</span>
+          <span id="statusChip" class="chip chip-yellow">Loading</span>
+        </div>
+
+        <div class="action-row">
+          <a href="create-community.html" class="action-btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            Create Community
+          </a>
+
+          <a href="ownspace-hub.html" class="action-btn btn-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14.5"></path>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M8 7h8"></path>
+              <path d="M8 11h6"></path>
+            </svg>
+            OwnSpace Hub
+          </a>
+
+          <button id="refreshBtn" class="action-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+              <path d="M21 3v6h-6"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div id="pageStatus" class="status-text"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tools">
+        <div class="search-wrap">
+          <input id="searchInput" class="search-box" type="text" placeholder="Search communities, category, city..." />
+          <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
+        </div>
+
+        <div class="filter-row">
+          <button class="filter-btn active" type="button" data-filter="all">All</button>
+          <button class="filter-btn" type="button" data-filter="featured">Featured</button>
+          <button class="filter-btn" type="button" data-filter="new">New</button>
+          <button class="filter-btn" type="button" data-filter="popular">Popular</button>
+          <button class="filter-btn" type="button" data-filter="joined">My Joined</button>
+          <button class="filter-btn" type="button" data-filter="created">My Created</button>
+        </div>
+
+        <div id="listLoading" class="loading-box">Loading communities...</div>
+        <div id="listWrap" class="list hidden"></div>
+        <div id="emptyBox" class="empty-box hidden">No communities found.</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
+      <span>Feed</span>
+    </a>
+
+    <a href="nearby.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
+      <span>Nearby</span>
+    </a>
+
+    <a href="communities.html" class="nav-link active">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 19a4 4 0 0 1 8 0"></path>
+          <circle cx="11" cy="9" r="3"></circle>
+          <path d="M17 11a3 3 0 0 1 3 3v5"></path>
+          <path d="M4 11a3 3 0 0 0-3 3v5"></path>
+        </svg>
+      </span>
+      <span>Community</span>
+    </a>
+
+    <a href="search.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
+      <span>Search</span>
+    </a>
+
+    <a href="profile.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const communityCountChip = document.getElementById("communityCountChip");
+    const joinedCountChip = document.getElementById("joinedCountChip");
+    const featuredCountChip = document.getElementById("featuredCountChip");
+    const statusChip = document.getElementById("statusChip");
+    const pageStatus = document.getElementById("pageStatus");
+
+    const refreshBtn = document.getElementById("refreshBtn");
+    const searchInput = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearBtn");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+
+    const listLoading = document.getElementById("listLoading");
+    const listWrap = document.getElementById("listWrap");
+    const emptyBox = document.getElementById("emptyBox");
+
+    let currentUser = null;
+    let currentProfile = null;
+    let currentFilter = "all";
+
+    let communitiesData = [];
+    let membershipsData = [];
+    let joinedCommunityIds = new Set();
+    let memberCountMap = new Map();
+    let creatorProfileCache = new Map();
+
+    let realtimeChannels = [];
+    let refreshTimer = null;
+
+    const COMMUNITY_TABLE = "communities";
+    const MEMBER_TABLES = ["community_members", "communityMembers", "communities_members"];
+
+    const ICONS = {
+      check: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      `,
+      star: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.9l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"></path>
+        </svg>
+      `,
+      lock: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+          <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+        </svg>
+      `,
+      globe: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18"></path>
+          <path d="M12 3a14 14 0 0 1 0 18"></path>
+          <path d="M12 3a14 14 0 0 0 0 18"></path>
+        </svg>
+      `,
+      users: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 19a4 4 0 0 1 8 0"></path>
+          <circle cx="11" cy="9" r="3"></circle>
+          <path d="M17 11a3 3 0 0 1 3 3v5"></path>
+        </svg>
+      `,
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `,
+      plus: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+      `
+    };
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    function setPageStatus(text = "", type = "") {
+      pageStatus.textContent = text;
+      pageStatus.className = `status-text ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text == null ? "" : String(text);
+      return div.innerHTML;
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function getString(raw, names, fallback = "") {
+      const value = getField(raw, names, fallback);
+      return value === undefined || value === null ? fallback : String(value).trim();
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
+    function getNumber(raw, names, fallback = 0) {
+      const value = getField(raw, names, fallback);
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDateShort(ms) {
+      if (!ms) return "";
+
+      try {
+        return new Date(ms).toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        });
+      } catch {
+        return "";
+      }
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("relation") && msg.includes("does not exist")
+      );
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+
+      return {
+        uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getString(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getString(d, ["username", "handle", "user_name", "userName"], ""),
+        photoURL: getString(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], ""),
+        bio: getString(d, ["bio", "about", "description"], ""),
+        verified: getBool(d, ["verified", "is_verified", "isVerified"], false),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
+        moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], "")
+      };
+    }
+
+    function normalizeCommunity(raw, fallbackId = "") {
+      const d = raw || {};
+      const status = normalizeText(d.status || d.community_status || d.communityStatus || "");
+
+      const privacy = normalizeText(
+        getString(d, ["privacy", "visibility", "community_privacy", "communityPrivacy"], "public")
+      ) || "public";
+
+      const rejected =
+        status === "rejected" ||
+        getBool(d, ["rejected", "is_rejected", "isRejected"], false);
+
+      const explicitlyPending =
+        status === "pending" ||
+        getBool(d, ["pending", "is_pending", "isPending"], false);
+
+      const explicitlyApproved =
+        getBool(d, ["approved", "is_approved", "isApproved"], false) ||
+        ["active", "approved", "published", "public"].includes(status);
+
+      const approved =
+        explicitlyApproved ||
+        (!explicitlyPending && !rejected && getField(d, ["approved", "is_approved", "isApproved"], null) === null);
+
+      const createdAt =
+        d.created_at ??
+        d.createdAt ??
+        d.timestamp ??
+        d.created ??
+        null;
+
+      const coverURL = getString(d, [
+        "cover_url",
+        "coverURL",
+        "coverUrl",
+        "image_url",
+        "imageURL",
+        "imageUrl",
+        "photo_url",
+        "photoURL",
+        "media_url",
+        "mediaUrl"
+      ], "");
+
+      return {
+        id: getString(d, ["id"], fallbackId) || fallbackId || "",
+        name: getString(d, ["name", "title", "community_name", "communityName"], "Untitled Community") || "Untitled Community",
+        description: getString(d, ["description", "desc", "about", "summary"], ""),
+        category: getString(d, ["category", "topic", "type"], "General") || "General",
+        privacy,
+        city: getString(d, ["city", "location_city", "locationCity"], ""),
+        province: getString(d, ["province", "state", "region", "location_province", "locationProvince"], ""),
+        country: getString(d, ["country", "location_country", "locationCountry"], ""),
+        coverURL,
+        creatorId: getString(d, ["creator_id", "creatorId", "created_by", "createdBy", "owner_id", "ownerId", "user_id", "userId", "uid"], ""),
+        creatorName: getString(d, ["creator_name", "creatorName", "display_name", "displayName", "owner_name", "ownerName"], "Member") || "Member",
+        creatorUsername: getString(d, ["creator_username", "creatorUsername", "owner_username", "ownerUsername"], ""),
+        memberCount: getNumber(d, ["member_count", "memberCount", "members_count", "membersCount"], 0),
+        postCount: getNumber(d, ["post_count", "postCount", "posts_count", "postsCount"], 0),
+        featured: getBool(d, ["featured", "is_featured", "isFeatured"], false),
+        pinned: getBool(d, ["pinned", "is_pinned", "isPinned"], false),
+        approved,
+        pending: explicitlyPending && !approved,
+        rejected,
+        hidden: !!(
+          d.hidden ||
+          d.hidden_by_admin ||
+          d.hiddenByAdmin ||
+          d.soft_deleted ||
+          d.softDeleted
+        ) || status === "deleted",
+        createdAt,
+        createdAtMs: toMillis(createdAt),
+        searchable: ""
+      };
+    }
+
+    function normalizeMembership(raw) {
+      const d = raw || {};
+
+      return {
+        id: getString(d, ["id"], ""),
+        communityId: getString(d, ["community_id", "communityId", "group_id", "groupId"], ""),
+        userId: getString(d, ["user_id", "userId", "uid", "member_id", "memberId"], ""),
+        role: getString(d, ["role"], "member") || "member",
+        status: normalizeText(getString(d, ["status", "member_status", "memberStatus"], "active") || "active"),
+        joinedAt: d.joined_at ?? d.joinedAt ?? d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function loadMergedProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
+      if (creatorProfileCache.has(uid)) {
+        return creatorProfileCache.get(uid);
+      }
+
+      try {
+        const [publicRow, userRow] = await Promise.all([
+          selectProfileRow("public_profiles", uid),
+          selectProfileRow("users", uid)
+        ]);
+
+        const profile = normalizeProfile({
+          ...(publicRow || {}),
+          ...(userRow || {}),
+          uid
+        }, uid);
+
+        creatorProfileCache.set(uid, profile);
+        return profile;
+      } catch {
+        const fallback = normalizeProfile({ uid }, uid);
+        creatorProfileCache.set(uid, fallback);
+        return fallback;
+      }
+    }
+
+    async function selectMemberRowsFromTable(tableName) {
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("*");
+
+        if (error) throw error;
+
+        return {
+          table: tableName,
+          rows: (data || []).map(row => ({
+            ...normalizeMembership(row),
+            __raw: row,
+            __table: tableName
+          }))
+        };
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`Community member source failed: ${tableName}`, err?.message || err);
+        }
+
+        return { table: tableName, rows: [] };
+      }
+    }
+
+    async function findWritableMemberTable() {
+      for (const table of MEMBER_TABLES) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .select("id")
+            .limit(1);
+
+          if (!error) return table;
+        } catch {}
+      }
+
+      return MEMBER_TABLES[0];
+    }
+
+    async function loadCommunities() {
+      try {
+        const { data, error } = await supabase
+          .from(COMMUNITY_TABLE)
+          .select("*");
+
+        if (error) throw error;
+
+        communitiesData = (data || [])
+          .map(row => {
+            const model = normalizeCommunity(row, row.id);
+            model.searchable = [
+              model.name,
+              model.description,
+              model.category,
+              model.city,
+              model.province,
+              model.country,
+              model.creatorName,
+              model.privacy
+            ].filter(Boolean).join(" ").toLowerCase();
+            return model;
+          });
+
+        statusChip.textContent = "Live";
+        statusChip.className = "chip chip-green";
+      } catch (err) {
+        console.error("Communities load failed:", err);
+
+        communitiesData = [];
+
+        if (isMissingSchemaError(err)) {
+          statusChip.textContent = "Table missing";
+          statusChip.className = "chip chip-red";
+          setPageStatus("Communities table not found yet. Create the communities table first.", "status-err");
+        } else {
+          statusChip.textContent = "Load failed";
+          statusChip.className = "chip chip-red";
+          setPageStatus("Could not load communities.", "status-err");
+        }
+      }
+    }
+
+    async function loadMemberships() {
+      membershipsData = [];
+      joinedCommunityIds = new Set();
+      memberCountMap = new Map();
+
+      const results = await Promise.all(MEMBER_TABLES.map(selectMemberRowsFromTable));
+      const allRows = [];
+
+      results.forEach(result => {
+        result.rows.forEach(row => allRows.push(row));
+      });
+
+      membershipsData = allRows.filter(row => row.communityId && row.userId);
+
+      membershipsData.forEach(row => {
+        const inactive = ["left", "removed", "declined", "rejected", "banned"].includes(row.status);
+        if (inactive) return;
+
+        memberCountMap.set(row.communityId, (memberCountMap.get(row.communityId) || 0) + 1);
+
+        if (row.userId === currentUser.id) {
+          joinedCommunityIds.add(row.communityId);
+        }
+      });
+    }
+
+    function isMine(model) {
+      return model.creatorId === currentUser?.id;
+    }
+
+    function isJoined(model) {
+      return joinedCommunityIds.has(model.id);
+    }
+
+    function isVisibleCommunity(model) {
+      if (model.hidden || model.rejected) return false;
+
+      const mine = isMine(model);
+      const joined = isJoined(model);
+
+      if (!model.approved && !mine && !joined) return false;
+
+      if (model.privacy === "private" && !mine && !joined) return false;
+
+      return true;
+    }
+
+    function getCommunityMemberCount(model) {
+      const liveCount = memberCountMap.get(model.id) || 0;
+      return Math.max(Number(model.memberCount || 0), liveCount);
+    }
+
+    function getFilteredCommunities() {
+      const q = searchInput.value.trim().toLowerCase();
+
+      return communitiesData
+        .filter(isVisibleCommunity)
+        .map(model => ({
+          ...model,
+          mine: isMine(model),
+          joined: isJoined(model),
+          liveMemberCount: getCommunityMemberCount(model)
+        }))
+        .filter(model => {
+          if (q && !model.searchable.includes(q)) return false;
+
+          if (currentFilter === "featured") return model.featured;
+          if (currentFilter === "joined") return model.joined && !model.mine;
+          if (currentFilter === "created") return model.mine;
+
+          return true;
+        })
+        .sort((a, b) => {
+          if (currentFilter === "new") {
+            return b.createdAtMs - a.createdAtMs;
+          }
+
+          if (currentFilter === "popular") {
+            return b.liveMemberCount - a.liveMemberCount || b.createdAtMs - a.createdAtMs;
+          }
+
+          if (a.pinned && !b.pinned) return -1;
+          if (b.pinned && !a.pinned) return 1;
+
+          if (a.featured && !b.featured) return -1;
+          if (b.featured && !a.featured) return 1;
+
+          if (a.mine && !b.mine) return -1;
+          if (b.mine && !a.mine) return 1;
+
+          if (b.liveMemberCount !== a.liveMemberCount) return b.liveMemberCount - a.liveMemberCount;
+
+          return b.createdAtMs - a.createdAtMs || a.name.localeCompare(b.name);
+        });
+    }
+
+    function updateCounts() {
+      const visible = communitiesData.filter(isVisibleCommunity);
+      const joined = visible.filter(model => isJoined(model) && !isMine(model));
+      const featured = visible.filter(model => model.featured);
+
+      communityCountChip.textContent = `Communities: ${visible.length}`;
+      joinedCountChip.textContent = `Joined: ${joined.length}`;
+      featuredCountChip.textContent = `Featured: ${featured.length}`;
+
+      if (!visible.length && statusChip.textContent !== "Table missing") {
+        statusChip.textContent = "Ready";
+        statusChip.className = "chip chip-yellow";
+      } else if (visible.length) {
+        statusChip.textContent = "Live";
+        statusChip.className = "chip chip-green";
+      }
+    }
+
+    function openLoading() {
+      listLoading.classList.remove("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.add("hidden");
+      listWrap.innerHTML = "";
+    }
+
+    function showEmpty(text) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.remove("hidden");
+      emptyBox.textContent = text;
+    }
+
+    function showList() {
+      listLoading.classList.add("hidden");
+      listWrap.classList.remove("hidden");
+      emptyBox.classList.add("hidden");
+    }
+
+    function updateClearButton() {
+      clearBtn.classList.toggle("hidden", !searchInput.value.trim());
+    }
+
+    function buildCommunityUrl(model) {
+      return `community.html?communityId=${encodeURIComponent(model.id)}`;
+    }
+
+    async function shareCommunity(model, button) {
+      const shareUrl = new URL("community.html", window.location.href);
+      shareUrl.searchParams.set("communityId", model.id);
+
+      button.disabled = true;
+      setPageStatus("");
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: `${model.name} on OwnSpace`,
+            text: `Check out ${model.name} on OwnSpace.`,
+            url: shareUrl.toString()
+          });
+
+          setPageStatus("Community shared.", "status-ok");
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl.toString());
+          setPageStatus("Community link copied.", "status-ok");
+        } else {
+          prompt("Copy this community link:", shareUrl.toString());
+          setPageStatus("Copy the community link.", "status-ok");
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          console.error(err);
+          setPageStatus("Could not share community.", "status-err");
+        }
+      }
+
+      button.disabled = false;
+    }
+
+    async function insertCommunityMember(model) {
+      const table = await findWritableMemberTable();
+
+      const displayName =
+        currentProfile?.displayName ||
+        currentUser?.user_metadata?.display_name ||
+        currentUser?.email ||
+        "Member";
+
+      const username = currentProfile?.username || "";
+
+      const payloads = [
+        {
+          community_id: model.id,
+          user_id: currentUser.id,
+          display_name: displayName,
+          username,
+          role: "member",
+          status: "active",
+          joined_at: nowIso(),
+          created_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          communityId: model.id,
+          userId: currentUser.id,
+          displayName,
+          username,
+          role: "member",
+          status: "active",
+          joinedAt: nowIso(),
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        },
+        {
+          community_id: model.id,
+          user_id: currentUser.id,
+          joined_at: nowIso()
+        }
+      ];
+
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase.from(table).insert(payload);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not join community.");
+    }
+
+    async function deleteCommunityMember(model) {
+      const variants = [
+        { communityCol: "community_id", userCol: "user_id" },
+        { communityCol: "communityId", userCol: "userId" },
+        { communityCol: "community_id", userCol: "uid" },
+        { communityCol: "communityId", userCol: "uid" },
+        { communityCol: "group_id", userCol: "user_id" },
+        { communityCol: "groupId", userCol: "userId" }
+      ];
+
+      let deletedAny = false;
+      let lastError = null;
+
+      for (const table of MEMBER_TABLES) {
+        for (const v of variants) {
+          try {
+            const { error } = await supabase
+              .from(table)
+              .delete()
+              .eq(v.communityCol, model.id)
+              .eq(v.userCol, currentUser.id);
+
+            if (!error) {
+              deletedAny = true;
+            } else if (!isMissingSchemaError(error)) {
+              lastError = error;
+            }
+          } catch (err) {
+            lastError = err;
+          }
+        }
+      }
+
+      if (!deletedAny && lastError) throw lastError;
+    }
+
+    async function joinCommunity(model, button) {
+      if (!currentUser || !model?.id) return;
+
+      button.disabled = true;
+      setPageStatus("");
+
+      try {
+        await insertCommunityMember(model);
+        joinedCommunityIds.add(model.id);
+        memberCountMap.set(model.id, (memberCountMap.get(model.id) || 0) + 1);
+
+        updateCounts();
+        renderCommunities();
+
+        setPageStatus("Community joined.", "status-ok");
+      } catch (err) {
+        console.error(err);
+        setPageStatus(err?.message || "Could not join community.", "status-err");
+        button.disabled = false;
+      }
+    }
+
+    async function leaveCommunity(model, button) {
+      if (!currentUser || !model?.id) return;
+
+      const ok = confirm("Leave this community?");
+      if (!ok) return;
+
+      button.disabled = true;
+      setPageStatus("");
+
+      try {
+        await deleteCommunityMember(model);
+
+        joinedCommunityIds.delete(model.id);
+        memberCountMap.set(model.id, Math.max(0, (memberCountMap.get(model.id) || 1) - 1));
+
+        updateCounts();
+        renderCommunities();
+
+        setPageStatus("Left community.", "status-ok");
+      } catch (err) {
+        console.error(err);
+        setPageStatus(err?.message || "Could not leave community.", "status-err");
+        button.disabled = false;
+      }
+    }
+
+    async function renderCommunities() {
+      openLoading();
+      updateCounts();
+
+      const rows = getFilteredCommunities();
+
+      if (!rows.length) {
+        const q = searchInput.value.trim();
+
+        if (q) {
+          showEmpty("No communities matched your search.");
+        } else if (currentFilter === "featured") {
+          showEmpty("No featured communities yet.");
+        } else if (currentFilter === "joined") {
+          showEmpty("You have not joined any communities yet.");
+        } else if (currentFilter === "created") {
+          showEmpty("You have not created any communities yet.");
+        } else {
+          showEmpty("No communities yet. Create the first community.");
+        }
+
+        return;
+      }
+
+      const creatorIds = [...new Set(rows.map(row => row.creatorId).filter(Boolean))];
+
+      await Promise.all(
+        creatorIds.map(uid => loadMergedProfile(uid))
+      );
+
+      listWrap.innerHTML = "";
+
+      rows.forEach(model => {
+        const card = document.createElement("div");
+        card.className = "community-card";
+
+        const profile = creatorProfileCache.get(model.creatorId) || normalizeProfile({}, model.creatorId);
+
+        const coverHtml = model.coverURL
+          ? `<img class="cover" src="${escapeHtml(model.coverURL)}" alt="Community cover">`
+          : "";
+
+        const memberText = `${model.liveMemberCount || 0} member${Number(model.liveMemberCount || 0) === 1 ? "" : "s"}`;
+
+        const locationParts = [model.city, model.province, model.country].filter(Boolean);
+        const locationText = locationParts.length ? locationParts.join(", ") : "Not added";
+
+        const badges = [];
+
+        if (model.featured) {
+          badges.push(`<span class="badge badge-purple">${ICONS.star} Featured</span>`);
+        }
+
+        if (model.pinned) {
+          badges.push(`<span class="badge badge-yellow">${ICONS.star} Pinned</span>`);
+        }
+
+        badges.push(`
+          <span class="badge ${model.privacy === "private" ? "badge-yellow" : "badge-blue"}">
+            ${model.privacy === "private" ? ICONS.lock : ICONS.globe}
+            ${model.privacy === "private" ? "Private" : "Public"}
+          </span>
+        `);
+
+        if (model.mine) {
+          badges.push(`<span class="badge badge-green">${ICONS.check} Mine</span>`);
+        } else if (model.joined) {
+          badges.push(`<span class="badge badge-green">${ICONS.check} Joined</span>`);
+        }
+
+        if (model.pending) {
+          badges.push(`<span class="badge badge-yellow">Pending approval</span>`);
+        }
+
+        if (model.category) {
+          badges.push(`<span class="badge badge-blue">${escapeHtml(model.category)}</span>`);
+        }
+
+        const creatorAvatarHtml = profile.photoURL
+          ? `<img class="creator-avatar" src="${escapeHtml(profile.photoURL)}" alt="Creator photo">`
+          : `<div class="creator-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${coverHtml}
+
+          <div class="community-top">
+            <div class="community-title-row">
+              <div class="community-title">${escapeHtml(model.name)}</div>
+              <div class="small-count">${escapeHtml(memberText)}</div>
+            </div>
+
+            <div class="badge-row">${badges.join("")}</div>
+
+            <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
+
+            <div class="meta-grid">
+              <div class="meta-line">
+                <strong>Location:</strong>
+                <span>${escapeHtml(locationText)}</span>
+              </div>
+              <div class="meta-line">
+                <strong>Created:</strong>
+                <span>${escapeHtml(formatDateShort(model.createdAtMs) || "-")}</span>
+              </div>
+              <div class="meta-line">
+                <strong>Posts:</strong>
+                <span>${escapeHtml(String(model.postCount || 0))}</span>
+              </div>
+            </div>
+
+            <div class="creator-card">
+              ${creatorAvatarHtml}
+              <div class="creator-body">
+                <div class="creator-name">
+                  <a href="member.html?uid=${encodeURIComponent(model.creatorId)}">${escapeHtml(profile.displayName || model.creatorName || "Member")}</a>
+                  ${profile.verified ? `<span class="verified-dot">${ICONS.check}</span>` : ""}
+                </div>
+                ${profile.username ? `<div class="creator-username">@${escapeHtml(profile.username)}</div>` : ""}
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <a class="action-btn btn-primary" href="${buildCommunityUrl(model)}">
+                ${ICONS.open}
+                Open
+              </a>
+
+              ${
+                model.mine
+                  ? `<a class="action-btn btn-purple" href="${buildCommunityUrl(model)}">${ICONS.open} Manage</a>`
+                  : model.joined
+                  ? `<button class="action-btn btn-red leave-btn" type="button">${ICONS.check} Leave</button>`
+                  : `<button class="action-btn btn-green join-btn" type="button">${ICONS.plus} Join</button>`
+              }
+
+              <button class="action-btn share-btn" type="button">
+                ${ICONS.share}
+                Share
+              </button>
+            </div>
+          </div>
+        `;
+
+        const cover = card.querySelector(".cover");
+        if (cover) {
+          cover.addEventListener("error", () => {
+            cover.style.display = "none";
+          });
+        }
+
+        const creatorAvatar = card.querySelector(".creator-avatar");
+        if (creatorAvatar) {
+          creatorAvatar.addEventListener("error", () => {
+            creatorAvatar.outerHTML = `<div class="creator-placeholder">No photo</div>`;
+          });
+        }
+
+        const joinBtn = card.querySelector(".join-btn");
+        if (joinBtn) {
+          joinBtn.addEventListener("click", () => joinCommunity(model, joinBtn));
+        }
+
+        const leaveBtn = card.querySelector(".leave-btn");
+        if (leaveBtn) {
+          leaveBtn.addEventListener("click", () => leaveCommunity(model, leaveBtn));
+        }
+
+        const shareBtn = card.querySelector(".share-btn");
+        if (shareBtn) {
+          shareBtn.addEventListener("click", () => shareCommunity(model, shareBtn));
+        }
+
+        listWrap.appendChild(card);
+      });
+
+      showList();
+    }
+
+    async function refreshAll() {
+      openLoading();
+      setPageStatus("");
+
+      await loadCommunities();
+      await loadMemberships();
+
+      updateCounts();
+      await renderCommunities();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshAll().catch(err => {
+          console.error("Community refresh failed:", err);
+        });
+      }, 350);
+    }
+
+    function clearRealtimeChannels() {
+      realtimeChannels.forEach(channel => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      });
+
+      realtimeChannels = [];
+    }
+
+    function setupRealtime() {
+      clearRealtimeChannels();
+
+      try {
+        const communitiesChannel = supabase
+          .channel("communities-live")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: COMMUNITY_TABLE },
+            () => scheduleRefresh()
+          )
+          .subscribe();
+
+        realtimeChannels.push(communitiesChannel);
+      } catch {}
+
+      MEMBER_TABLES.forEach(tableName => {
+        try {
+          const memberChannel = supabase
+            .channel(`community-members-live-${tableName}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: tableName },
+              () => scheduleRefresh()
+            )
+            .subscribe();
+
+          realtimeChannels.push(memberChannel);
+        } catch {}
+      });
+    }
+
+    async function loadCurrentUserProfile() {
+      currentProfile = await loadMergedProfile(currentUser.id);
+    }
+
+    searchInput.addEventListener("input", () => {
+      updateClearButton();
+      renderCommunities();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      updateClearButton();
+      searchInput.focus();
+      renderCommunities();
+    });
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentFilter = btn.dataset.filter || "all";
+
+        filterButtons.forEach(item => item.classList.remove("active"));
+        btn.classList.add("active");
+
+        renderCommunities();
+      });
+    });
+
+    refreshBtn.addEventListener("click", () => {
+      refreshAll().catch(err => {
+        console.error(err);
+        setPageStatus("Could not refresh communities.", "status-err");
+      });
+    });
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+
+      try {
+        await loadCurrentUserProfile();
+        await refreshAll();
+        setupRealtime();
+      } catch (err) {
+        console.error(err);
+        showEmpty("Could not load communities.");
+        setPageStatus("Could not load communities.", "status-err");
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      clearRealtimeChannels();
+    });
+
+    initPage();
+
+    /*
+      OWNSPACE COMMUNITIES PAGE
+
+      PAGE:
+      - communities.html
+
+      LINKS:
+      - create-community.html
+      - community.html?communityId=COMMUNITY_ID
+      - ownspace-hub.html
+
+      TABLES USED:
+      - communities: select
+      - community_members / communityMembers / communities_members: select, insert, delete
+      - users: select
+      - public_profiles: select
+
+      SUPPORTED communities COLUMNS:
+      - id
+      - name / title / community_name / communityName
+      - description / desc / about / summary
+      - category / topic / type
+      - privacy / visibility
+      - city / province / country
+      - cover_url / coverURL / image_url / imageURL / photo_url / photoURL
+      - creator_id / creatorId / created_by / createdBy / owner_id / ownerId / user_id / userId / uid
+      - creator_name / creatorName
+      - creator_username / creatorUsername
+      - member_count / memberCount / members_count / membersCount
+      - post_count / postCount / posts_count / postsCount
+      - featured / is_featured / isFeatured
+      - pinned / is_pinned / isPinned
+      - approved / is_approved / isApproved
+      - pending / is_pending / isPending
+      - rejected / is_rejected / isRejected
+      - hidden / hidden_by_admin / hiddenByAdmin / soft_deleted / softDeleted
+      - status
+      - created_at / createdAt / timestamp
+
+      SUPPORTED community_members COLUMNS:
+      - id
+      - community_id / communityId / group_id / groupId
+      - user_id / userId / uid / member_id / memberId
+      - display_name / displayName
+      - username
+      - role
+      - status
+      - joined_at / joinedAt
+      - created_at / createdAt
+
+      RLS IDEA:
+      - Authenticated users can select visible communities.
+      - Users can insert/delete their own community_members rows.
+      - Community creator/admin can manage community details.
+      - Private communities should only expose details to creator, members, or approved viewers.
+    */
+  </script>
+</body>
+</html>
