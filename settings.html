@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Settings</title>
+  <title>OwnSpace - Settings</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -47,15 +48,27 @@
     }
 
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.09), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:12px 12px 110px;
+      padding:8px 8px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
     .muted{color:var(--muted)}
-    .status-message{min-height:20px;font-size:14px;margin-top:10px}
+
+    .status-message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
     .success{color:#9cf0bf}
     .error{color:#ffb3bd}
 
@@ -67,51 +80,125 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
-      margin-bottom:12px;
+      padding:7px 9px;
+      margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
       text-decoration:none;
+      position:relative;
     }
-    .top-icon-btn svg{width:19px;height:19px;display:block}
-    .top-center{text-align:center;min-width:0}
-    .brand{font-size:20px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
 
-    .menu-shell{
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .shell{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:20px;
+      border-radius:22px;
       padding:12px;
-      margin-bottom:12px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
     }
-    .menu-title{
-      font-size:16px;
-      font-weight:800;
+
+    .page-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
       margin-bottom:10px;
+    }
+
+    .page-title{
+      font-size:20px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      margin-bottom:4px;
+    }
+
+    .page-sub{
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.5;
+    }
+
+    .mini-status-row{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      margin-bottom:10px;
+    }
+
+    .mini-status{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:8px 6px;
+      min-height:42px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:3px;
+      min-width:0;
+    }
+
+    .mini-status small{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:850;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .mini-status strong{
+      color:var(--text);
+      font-size:11.5px;
+      font-weight:950;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .accordion-list{
       display:grid;
-      gap:10px;
+      gap:9px;
     }
+
     .accordion-item{
       background:var(--surface-2);
       border:1px solid var(--line);
@@ -119,269 +206,316 @@
       overflow:hidden;
       transition:.2s ease;
     }
+
     .accordion-item.active{
-      border-color:rgba(76,201,255,.20);
       background:rgba(76,201,255,.08);
+      border-color:rgba(76,201,255,.22);
     }
+
     .accordion-head{
       width:100%;
       border:none;
       background:transparent;
       color:var(--text);
-      padding:16px 14px;
+      padding:13px;
       text-align:left;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap:10px;
     }
+
+    .accordion-left{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width:0;
+    }
+
+    .section-icon{
+      width:36px;
+      height:36px;
+      border-radius:13px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      flex-shrink:0;
+    }
+
+    .section-icon svg{
+      width:18px;
+      height:18px;
+      display:block;
+    }
+
     .accordion-copy{min-width:0}
+
     .accordion-copy strong{
       display:block;
-      font-size:15px;
-      font-weight:800;
-      margin-bottom:5px;
+      font-size:14.5px;
+      font-weight:950;
+      margin-bottom:3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .accordion-copy span{
       display:block;
       color:var(--muted);
       font-size:12px;
-      font-weight:700;
-      line-height:1.45;
+      font-weight:750;
+      line-height:1.4;
     }
+
     .accordion-arrow{
       flex-shrink:0;
-      font-size:20px;
-      line-height:1;
       color:var(--muted);
       transition:transform .2s ease;
     }
+
+    .accordion-arrow svg{
+      width:18px;
+      height:18px;
+      display:block;
+    }
+
     .accordion-item.active .accordion-arrow{
       transform:rotate(180deg);
       color:var(--text);
     }
+
     .accordion-body{
       display:none;
-      padding:0 12px 12px;
+      padding:0 10px 10px;
     }
+
     .accordion-item.active .accordion-body{
       display:block;
     }
 
-    .inline-section{
+    .section-box{
       background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
+      border-radius:18px;
+      padding:12px;
     }
+
     .section-heading{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:6px;
+      font-size:17px;
+      font-weight:950;
+      margin-bottom:4px;
+      letter-spacing:-.01em;
     }
+
     .section-sub{
       color:var(--muted);
-      font-size:13px;
+      font-size:12.5px;
       line-height:1.55;
-      margin-bottom:14px;
+      margin-bottom:12px;
     }
+
     .setting-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      margin-bottom:12px;
+      border-radius:17px;
+      padding:12px;
+      margin-bottom:10px;
     }
+
     .setting-card:last-child{margin-bottom:0}
+
     .setting-title{
-      font-size:15px;
-      font-weight:800;
+      font-size:14.5px;
+      font-weight:950;
       margin-bottom:4px;
     }
+
     .setting-desc{
       color:var(--muted);
-      font-size:13px;
+      font-size:12.5px;
       line-height:1.5;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
+
     .divider{
       height:1px;
       background:var(--line-soft);
-      margin:12px 0;
+      margin:11px 0;
     }
 
     .profile-mini{
       display:grid;
-      grid-template-columns:76px 1fr;
-      gap:14px;
+      grid-template-columns:72px 1fr;
+      gap:12px;
       align-items:center;
     }
-    .avatar{
-      width:76px;
-      height:76px;
-      border-radius:50%;
-      object-fit:cover;
-      background:var(--surface-2);
-      border:1px solid var(--line);
-    }
+
+    .avatar,
     .avatar-placeholder{
-      width:76px;
-      height:76px;
+      width:72px;
+      height:72px;
       border-radius:50%;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      flex-shrink:0;
+    }
+
+    .avatar{
+      object-fit:cover;
+      display:block;
+    }
+
+    .avatar-placeholder{
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
       padding:8px;
-      background:var(--surface-2);
-      border:1px solid var(--line);
       color:var(--muted);
-      font-size:12px;
+      font-size:11px;
       line-height:1.3;
     }
+
     .mini-name{
-      font-size:22px;
-      font-weight:800;
+      font-size:20px;
+      font-weight:950;
       line-height:1.2;
       display:flex;
       align-items:center;
       gap:8px;
       flex-wrap:wrap;
+      word-break:break-word;
     }
+
     .verified-dot{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
       width:20px;
       height:20px;
       border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-      font-size:11px;
-      font-weight:900;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 3px rgba(32,199,111,.18),
+        0 8px 18px rgba(32,199,111,.22);
+      font-size:12px;
+      font-weight:950;
+      line-height:1;
+      flex-shrink:0;
     }
+
     .mini-username{
       color:var(--blue);
-      font-size:14px;
-      font-weight:700;
+      font-size:13px;
+      font-weight:850;
       margin-top:4px;
       word-break:break-word;
     }
+
     .mini-bio{
       color:var(--text);
       font-size:13px;
-      line-height:1.6;
-      margin-top:8px;
+      line-height:1.55;
+      margin-top:7px;
       white-space:pre-wrap;
       word-break:break-word;
     }
+
     .badge-row{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-top:10px;
+      margin-top:9px;
     }
+
     .status-badge{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       padding:6px 10px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-    }
-    .status-not-requested{
-      background:var(--surface-2);
-      color:var(--text);
+      font-size:11.5px;
+      font-weight:950;
       border:1px solid var(--line);
-    }
-    .status-pending{
-      background:rgba(245,185,66,.14);
+      background:var(--surface-3);
       color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
+      line-height:1;
     }
-    .status-approved{
-      background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .status-rejected{
-      background:rgba(255,93,115,.14);
-      color:var(--text);
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .status-private{
-      background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .status-public{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .status-admin{
-      background:rgba(167,139,250,.14);
-      color:var(--text);
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .status-danger{
-      background:rgba(255,93,115,.14);
-      color:var(--text);
-      border:1px solid rgba(255,93,115,.20);
-    }
+
+    .status-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .status-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .status-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .status-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .status-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
 
     .info-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:12px;
+      gap:8px;
     }
+
     .info-box{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
+      border-radius:15px;
+      padding:11px;
+      min-width:0;
     }
+
     .info-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:8px;
-      font-size:12px;
+      margin-bottom:5px;
+      font-size:11px;
+      font-weight:850;
     }
+
     .info-box span{
       color:var(--text);
-      font-size:14px;
-      font-weight:700;
+      font-size:13px;
+      font-weight:850;
       word-break:break-word;
-      line-height:1.6;
+      line-height:1.5;
     }
 
     .option-list{
       display:grid;
-      gap:10px;
+      gap:8px;
     }
+
     .option{
       display:flex;
       align-items:flex-start;
       gap:10px;
-      padding:12px;
-      background:var(--surface-2);
+      padding:11px;
+      background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:16px;
+      border-radius:15px;
       cursor:pointer;
     }
+
     .option input{
-      margin-top:2px;
+      margin-top:3px;
       accent-color:var(--blue);
+      flex-shrink:0;
     }
+
     .option-text strong{
       display:block;
-      font-size:14px;
-      margin-bottom:4px;
+      font-size:13.5px;
+      margin-bottom:3px;
+      font-weight:950;
     }
+
     .option-text span{
       color:var(--muted);
-      font-size:13px;
+      font-size:12.5px;
       line-height:1.45;
     }
 
@@ -390,19 +524,22 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      background:var(--surface-2);
+      background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px 14px;
+      border-radius:15px;
+      padding:11px;
     }
+
     .toggle-copy strong{
       display:block;
-      font-size:14px;
+      font-size:13.5px;
       margin-bottom:4px;
+      font-weight:950;
     }
+
     .toggle-copy span{
       color:var(--muted);
-      font-size:13px;
+      font-size:12.5px;
       line-height:1.45;
     }
 
@@ -412,11 +549,13 @@
       height:30px;
       flex-shrink:0;
     }
+
     .switch input{
       opacity:0;
       width:0;
       height:0;
     }
+
     .slider{
       position:absolute;
       inset:0;
@@ -426,6 +565,7 @@
       transition:.2s ease;
       cursor:pointer;
     }
+
     .slider:before{
       content:"";
       position:absolute;
@@ -437,165 +577,283 @@
       background:#fff;
       transition:.2s ease;
     }
+
     .switch input:checked + .slider{
       background:rgba(76,201,255,.25);
       border-color:rgba(76,201,255,.30);
     }
+
     .switch input:checked + .slider:before{
       transform:translateX(24px);
     }
 
-    .blocked-list{
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .textarea{
+      min-height:105px;
+      resize:vertical;
+      line-height:1.55;
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .form-grid{
       display:grid;
       gap:10px;
     }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .field{
+      display:grid;
+      gap:6px;
+    }
+
+    .label{
+      font-size:12px;
+      font-weight:950;
+      color:var(--text);
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      min-height:40px;
+      font-size:12.5px;
+      color:var(--text);
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+
+    .btn svg{
+      width:16px;
+      height:16px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+
+    .quick-links{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+    }
+
+    .quick-link{
+      text-decoration:none;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      color:var(--text);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      min-width:0;
+    }
+
+    .quick-link-icon{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+
+    .quick-link-icon svg{
+      width:17px;
+      height:17px;
+      display:block;
+    }
+
+    .quick-link strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:13.5px;
+      font-weight:950;
+    }
+
+    .quick-link span{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .blocked-list{
+      display:grid;
+      gap:9px;
+    }
+
     .blocked-item{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      background:var(--surface-2);
+      background:var(--surface-3);
       border:1px solid var(--line);
       border-radius:16px;
-      padding:12px;
+      padding:11px;
     }
+
     .blocked-left{
       display:flex;
       align-items:center;
       gap:10px;
       min-width:0;
     }
-    .blocked-avatar{
-      width:46px;
-      height:46px;
-      border-radius:50%;
-      object-fit:cover;
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      flex-shrink:0;
-    }
+
+    .blocked-avatar,
     .blocked-avatar-placeholder{
       width:46px;
       height:46px;
       border-radius:50%;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      flex-shrink:0;
+    }
+
+    .blocked-avatar{
+      object-fit:cover;
+      display:block;
+    }
+
+    .blocked-avatar-placeholder{
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
       padding:4px;
-      background:var(--surface-2);
-      border:1px solid var(--line);
       color:var(--muted);
       font-size:10px;
-      flex-shrink:0;
     }
+
     .blocked-name{
-      font-size:14px;
-      font-weight:800;
+      font-size:13.5px;
+      font-weight:950;
       line-height:1.3;
       color:var(--text);
       word-break:break-word;
     }
+
     .blocked-username{
       color:var(--blue);
       font-size:12px;
-      font-weight:700;
+      font-weight:850;
       margin-top:3px;
       word-break:break-word;
     }
+
     .empty-box{
       text-align:center;
-      padding:24px 12px;
+      padding:22px 12px;
       color:var(--muted);
-      background:var(--surface-2);
-      border-radius:18px;
-      border:1px dashed var(--line);
-    }
-
-    .quick-links{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:12px;
-    }
-    .quick-link{
-      text-decoration:none;
-      background:var(--surface-2);
-      border:1px solid var(--line);
+      background:var(--surface-3);
       border-radius:16px;
-      padding:14px;
-      color:var(--text);
-      display:block;
-    }
-    .quick-link strong{
-      display:block;
-      margin-bottom:6px;
-      font-size:15px;
-    }
-    .quick-link span{
-      color:var(--muted);
-      font-size:12px;
+      border:1px dashed var(--line);
+      font-size:13px;
       line-height:1.5;
     }
 
     .danger-box{
       background:rgba(255,93,115,.10);
-      border:1px solid rgba(255,93,115,.18);
+      border:1px solid rgba(255,93,115,.20);
       border-radius:18px;
-      padding:16px;
+      padding:13px;
+      margin-bottom:10px;
     }
+
+    .danger-box:last-child{margin-bottom:0}
+
     .danger-box h3{
-      font-size:18px;
-      margin-bottom:8px;
+      font-size:16px;
+      font-weight:950;
+      margin-bottom:6px;
     }
+
     .danger-box p{
       color:var(--text);
-      font-size:14px;
-      line-height:1.6;
-      margin-bottom:12px;
-    }
-    .danger-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .ghost-btn{
-      border:none;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
       font-size:13px;
-      font-weight:800;
-      cursor:pointer;
+      line-height:1.6;
+      margin-bottom:10px;
     }
-    .logout-btn{
-      border:none;
-      background:rgba(255,93,115,.18);
-      color:var(--text);
-      border-radius:12px;
-      padding:12px 16px;
-      font-size:14px;
-      font-weight:800;
-      cursor:pointer;
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .delete-account-btn{
-      border:none;
-      background:rgba(255,93,115,.28);
-      color:var(--text);
-      border-radius:12px;
-      padding:12px 16px;
-      font-size:14px;
-      font-weight:800;
-      cursor:pointer;
-      border:1px solid rgba(255,93,115,.26);
-    }
-    .delete-note{
+
+    .danger-note{
       color:var(--muted);
       font-size:12px;
       line-height:1.5;
+      margin-top:8px;
+    }
+
+    .confirm-box{
+      display:grid;
+      gap:8px;
       margin-top:10px;
+      padding:11px;
+      border-radius:15px;
+      background:rgba(0,0,0,.12);
+      border:1px solid var(--line);
+    }
+
+    .check-row{
+      display:flex;
+      align-items:flex-start;
+      gap:9px;
+      color:var(--text);
+      font-size:12.5px;
+      line-height:1.45;
+    }
+
+    .check-row input{
+      margin-top:2px;
+      accent-color:var(--red);
     }
 
     .bottom-nav{
@@ -610,10 +868,12 @@
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -622,28 +882,78 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
+      position:relative;
     }
-    .nav-link .icon{font-size:18px;line-height:1}
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
 
     @media (max-width:700px){
-      body{padding:10px 10px 110px}
-      .brand{font-size:18px}
-      .info-grid{grid-template-columns:1fr}
-      .quick-links{grid-template-columns:1fr}
+      .brand{font-size:17px}
+      .mini-status-row{grid-template-columns:repeat(2,1fr)}
+      .info-grid,
+      .quick-links,
+      .grid-2{grid-template-columns:1fr}
       .profile-mini{grid-template-columns:64px 1fr}
       .avatar,.avatar-placeholder{width:64px;height:64px}
-      .accordion-head{padding:15px 13px}
+      .accordion-head{padding:12px}
+      .quick-link{padding:11px}
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -654,7 +964,7 @@
       </button>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Settings</div>
       </div>
 
@@ -666,23 +976,63 @@
       </a>
     </div>
 
-    <div class="menu-shell">
-      <div class="menu-title">Quick sections</div>
+    <div class="shell">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-sub">Account, privacy, feedback, feature requests, and account removal options.</div>
+        </div>
+      </div>
+
+      <div class="mini-status-row">
+        <div class="mini-status">
+          <small>Account</small>
+          <strong id="statusAccount">Loading</strong>
+        </div>
+
+        <div class="mini-status">
+          <small>Privacy</small>
+          <strong id="statusPrivacy">-</strong>
+        </div>
+
+        <div class="mini-status">
+          <small>Nearby</small>
+          <strong id="statusNearby">-</strong>
+        </div>
+
+        <div class="mini-status">
+          <small>Theme</small>
+          <strong id="statusTheme">-</strong>
+        </div>
+      </div>
 
       <div class="accordion-list">
-        <div class="accordion-item active" data-section="overview">
-          <button class="accordion-head" type="button" data-section="overview">
-            <div class="accordion-copy">
-              <strong>Overview</strong>
-              <span>Account summary, badges and account info</span>
+        <div class="accordion-item active" data-section="account">
+          <button class="accordion-head" type="button" data-section="account">
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21a8 8 0 0 0-16 0"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Account Center</strong>
+                <span>Profile summary, verification and account info</span>
+              </div>
             </div>
-            <span class="accordion-arrow">⌄</span>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
           </button>
+
           <div class="accordion-body">
-            <div class="inline-section">
+            <div class="section-box">
               <div id="loading" class="muted" style="padding:8px 0 12px;">Loading settings...</div>
 
-              <div id="overviewContent" class="hidden">
+              <div id="accountContent" class="hidden">
                 <div class="profile-mini">
                   <img id="avatar" class="avatar hidden" alt="Profile Photo" />
                   <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
@@ -692,21 +1042,20 @@
                       <span id="displayName">Member</span>
                       <span id="verifiedDot" class="verified-dot hidden">✓</span>
                     </div>
+
                     <div id="usernameText" class="mini-username hidden">@username</div>
                     <div id="bioText" class="mini-bio">No bio added yet.</div>
 
                     <div class="badge-row">
-                      <span id="profileTypeBadge" class="status-badge status-public">Public</span>
-                      <span id="adminBadge" class="status-badge status-admin hidden">Admin</span>
-                      <span id="moderationBadge" class="status-badge status-danger hidden">Restricted</span>
+                      <span id="profileTypeBadge" class="status-badge status-blue">Public</span>
+                      <span id="accountStateBadge" class="status-badge status-green">Active</span>
+                      <span id="adminBadge" class="status-badge status-purple hidden">Admin</span>
+                      <span id="moderationBadge" class="status-badge status-red hidden">Restricted</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="divider"></div>
-
-                <div class="section-heading">Account Info</div>
-                <div class="section-sub">Your core account details and current profile status.</div>
 
                 <div class="info-grid">
                   <div class="info-box">
@@ -729,6 +1078,12 @@
                     <span id="createdAt">-</span>
                   </div>
                 </div>
+
+                <div class="btn-row">
+                  <a href="edit-profile.html" class="btn btn-primary">Edit Profile</a>
+                  <a href="verification.html" class="btn btn-purple">Verification</a>
+                  <a href="profile.html" class="btn">View Profile</a>
+                </div>
               </div>
             </div>
           </div>
@@ -736,31 +1091,47 @@
 
         <div class="accordion-item" data-section="appearance">
           <button class="accordion-head" type="button" data-section="appearance">
-            <div class="accordion-copy">
-              <strong>Appearance</strong>
-              <span>Dark, light or system theme</span>
-            </div>
-            <span class="accordion-arrow">⌄</span>
-          </button>
-          <div class="accordion-body">
-            <div class="inline-section">
-              <div class="section-heading">Appearance</div>
-              <div class="section-sub">
-                Choose how BareWorld looks on your device.
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2"></path>
+                  <path d="M12 20v2"></path>
+                  <path d="m4.93 4.93 1.41 1.41"></path>
+                  <path d="m17.66 17.66 1.41 1.41"></path>
+                  <path d="M2 12h2"></path>
+                  <path d="M20 12h2"></path>
+                  <path d="m6.34 17.66-1.41 1.41"></path>
+                  <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Appearance</strong>
+                <span>Dark, light or system theme</span>
               </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
+
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Appearance</div>
+              <div class="section-sub">Choose how OwnSpace looks on your device.</div>
 
               <div class="setting-card">
                 <div class="setting-title">Theme</div>
-                <div class="setting-desc">
-                  This applies instantly and is also saved to your account.
-                </div>
+                <div class="setting-desc">This applies instantly and is also saved to your account.</div>
 
                 <div class="option-list">
                   <label class="option">
                     <input type="radio" name="themePreference" value="dark" />
                     <div class="option-text">
                       <strong>Dark</strong>
-                      <span>Best for the current BareWorld look and low-light use.</span>
+                      <span>Best for the current OwnSpace look and low-light use.</span>
                     </div>
                   </label>
 
@@ -789,18 +1160,29 @@
 
         <div class="accordion-item" data-section="privacy">
           <button class="accordion-head" type="button" data-section="privacy">
-            <div class="accordion-copy">
-              <strong>Privacy</strong>
-              <span>Private account, city and gender visibility</span>
-            </div>
-            <span class="accordion-arrow">⌄</span>
-          </button>
-          <div class="accordion-body">
-            <div class="inline-section">
-              <div class="section-heading">Privacy</div>
-              <div class="section-sub">
-                Control who can see your account and profile details.
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Privacy & Nearby</strong>
+                <span>Private account, profile visibility and location</span>
               </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
+
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Privacy & Nearby</div>
+              <div class="section-sub">Control who can see your account and whether you appear in nearby discovery.</div>
 
               <div class="setting-card">
                 <div class="toggle-row">
@@ -843,28 +1225,8 @@
                   </label>
                 </div>
 
-                <div id="privacyStatus" class="status-message"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+                <div class="divider"></div>
 
-        <div class="accordion-item" data-section="location">
-          <button class="accordion-head" type="button" data-section="location">
-            <div class="accordion-copy">
-              <strong>Nearby & Location</strong>
-              <span>Nearby visibility and location detail level</span>
-            </div>
-            <span class="accordion-arrow">⌄</span>
-          </button>
-          <div class="accordion-body">
-            <div class="inline-section">
-              <div class="section-heading">Nearby & Location</div>
-              <div class="section-sub">
-                Decide whether people can discover you in Nearby and how much location detail is shown.
-              </div>
-
-              <div class="setting-card">
                 <div class="toggle-row">
                   <div class="toggle-copy">
                     <strong>Show me in Nearby</strong>
@@ -880,16 +1242,14 @@
                 <div class="divider"></div>
 
                 <div class="setting-title">Location visibility</div>
-                <div class="setting-desc">
-                  Pick how much location detail others can see when Nearby is enabled.
-                </div>
+                <div class="setting-desc">Pick how much location detail others can see when Nearby is enabled.</div>
 
                 <div class="option-list">
                   <label class="option">
                     <input type="radio" name="locationVisibility" value="hidden" />
                     <div class="option-text">
                       <strong>Hidden</strong>
-                      <span>Use location only for your own browsing, not for showing you to others.</span>
+                      <span>Use location privately and do not show your location to others.</span>
                     </div>
                   </label>
 
@@ -910,7 +1270,116 @@
                   </label>
                 </div>
 
-                <div id="locationStatus" class="status-message"></div>
+                <div id="privacyStatus" class="status-message"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item" data-section="safety">
+          <button class="accordion-head" type="button" data-section="safety">
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Feedback & Feature Request</strong>
+                <span>Send feedback or request new features</span>
+              </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
+
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Feedback</div>
+              <div class="section-sub">Tell us what feels confusing, broken, missing, or good.</div>
+
+              <div class="setting-card">
+                <form id="feedbackForm" class="form-grid">
+                  <div class="grid-2">
+                    <div class="field">
+                      <label class="label" for="feedbackType">Type</label>
+                      <select id="feedbackType" class="select">
+                        <option value="general">General feedback</option>
+                        <option value="bug">Bug / issue</option>
+                        <option value="safety">Safety concern</option>
+                        <option value="ui">UI / design feedback</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label class="label" for="feedbackRating">Rating</label>
+                      <select id="feedbackRating" class="select">
+                        <option value="">No rating</option>
+                        <option value="5">5 - Very good</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Okay</option>
+                        <option value="2">2 - Needs work</option>
+                        <option value="1">1 - Bad</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label" for="feedbackMessage">Message</label>
+                    <textarea id="feedbackMessage" class="textarea" placeholder="Write your feedback..." required></textarea>
+                  </div>
+
+                  <button id="sendFeedbackBtn" type="submit" class="btn btn-primary">Send Feedback</button>
+                  <div id="feedbackStatus" class="status-message"></div>
+                </form>
+              </div>
+
+              <div class="section-heading" style="margin-top:14px;">Feature Request</div>
+              <div class="section-sub">Suggest what OwnSpace should add next.</div>
+
+              <div class="setting-card">
+                <form id="featureForm" class="form-grid">
+                  <div class="field">
+                    <label class="label" for="featureTitle">Feature Title</label>
+                    <input id="featureTitle" class="input" type="text" placeholder="Example: Add community polls" required />
+                  </div>
+
+                  <div class="grid-2">
+                    <div class="field">
+                      <label class="label" for="featureCategory">Category</label>
+                      <select id="featureCategory" class="select">
+                        <option value="profile">Profile</option>
+                        <option value="feed">Feed / posts</option>
+                        <option value="messages">Messages</option>
+                        <option value="events">Events</option>
+                        <option value="places">Places</option>
+                        <option value="communities">Communities</option>
+                        <option value="safety">Safety / moderation</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label class="label" for="featurePriority">Priority</label>
+                      <select id="featurePriority" class="select">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label" for="featureDescription">Description</label>
+                    <textarea id="featureDescription" class="textarea" placeholder="Explain how this feature should work..." required></textarea>
+                  </div>
+
+                  <button id="sendFeatureBtn" type="submit" class="btn btn-purple">Request Feature</button>
+                  <div id="featureStatus" class="status-message"></div>
+                </form>
               </div>
             </div>
           </div>
@@ -918,18 +1387,29 @@
 
         <div class="accordion-item" data-section="blocked">
           <button class="accordion-head" type="button" data-section="blocked">
-            <div class="accordion-copy">
-              <strong>Blocked Accounts</strong>
-              <span>Review and unblock accounts</span>
-            </div>
-            <span class="accordion-arrow">⌄</span>
-          </button>
-          <div class="accordion-body">
-            <div class="inline-section">
-              <div class="section-heading">Blocked Accounts</div>
-              <div class="section-sub">
-                Accounts you block should stay out of your feed, profile flow and nearby discovery. You can unblock them here.
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m4.9 4.9 14.2 14.2"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Blocked Accounts</strong>
+                <span>Review and unblock accounts</span>
               </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
+
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Blocked Accounts</div>
+              <div class="section-sub">Accounts you block should stay out of your feed, profile flow, and nearby discovery.</div>
 
               <div class="setting-card">
                 <div id="blockedLoading" class="muted">Loading blocked accounts...</div>
@@ -941,104 +1421,220 @@
           </div>
         </div>
 
-        <div class="accordion-item" data-section="more">
-          <button class="accordion-head" type="button" data-section="more">
-            <div class="accordion-copy">
-              <strong>More</strong>
-              <span>Verification, quick links, logout and delete account</span>
-            </div>
-            <span class="accordion-arrow">⌄</span>
-          </button>
-          <div class="accordion-body">
-            <div class="inline-section">
-              <div class="section-heading">Verification</div>
-              <div class="section-sub">Manage your verification request on a separate page.</div>
-
-              <div class="setting-card">
-                <a href="verification.html" class="quick-link">
-                  <strong>Verification Page</strong>
-                  <span>Open verification request form and track status.</span>
-                  <div class="badge-row" style="margin-top:10px;">
-                    <span id="verificationStatusBadge" class="status-badge status-not-requested">Not requested</span>
-                  </div>
-                </a>
+        <div class="accordion-item" data-section="links">
+          <button class="accordion-head" type="button" data-section="links">
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"></path>
+                  <path d="M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Quick Links</strong>
+                <span>Important pages, verification and admin shortcuts</span>
               </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
 
-              <div class="section-heading" style="margin-top:14px;">Quick Links</div>
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Quick Links</div>
               <div class="section-sub">Useful shortcuts for the rest of the app.</div>
 
               <div class="quick-links">
-                <a href="feed.html" class="quick-link">
-                  <strong>Feed</strong>
-                  <span>See member updates and post something new.</span>
-                </a>
-
-                <a href="profile.html" class="quick-link">
-                  <strong>My Profile</strong>
-                  <span>View your profile, posts, and network.</span>
-                </a>
-
                 <a href="edit-profile.html" class="quick-link">
-                  <strong>Edit Profile</strong>
-                  <span>Change bio, username, city, gender, photo link, and privacy options.</span>
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Edit Profile</strong>
+                    <span>Change bio, username, location, links and privacy.</span>
+                  </span>
                 </a>
 
-                <a href="search.html" class="quick-link">
-                  <strong>Search Members</strong>
-                  <span>Find people, posts, events and places.</span>
-                </a>
-
-                <a href="nearby-events.html" class="quick-link">
-                  <strong>Events</strong>
-                  <span>See events you can join or leave.</span>
-                </a>
-
-                <a href="create-event.html" class="quick-link">
-                  <strong>Create Event</strong>
-                  <span>Create a new event from the event section.</span>
+                <a href="verification.html" class="quick-link">
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Verification</strong>
+                    <span id="verificationStatusText">Track verification status.</span>
+                  </span>
                 </a>
 
                 <a href="notifications.html" class="quick-link">
-                  <strong>Notifications</strong>
-                  <span>Check likes, comments, follows, and requests.</span>
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+                      <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Notifications</strong>
+                    <span>Check likes, comments, follows and requests.</span>
+                  </span>
                 </a>
 
                 <a href="follow-requests.html" class="quick-link">
-                  <strong>Follow Requests</strong>
-                  <span>Approve or decline private account requests.</span>
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M19 8v6"></path>
+                      <path d="M22 11h-6"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Follow Requests</strong>
+                    <span>Approve or decline private account requests.</span>
+                  </span>
+                </a>
+
+                <a href="nearby-events.html" class="quick-link">
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                      <path d="M16 3v4"></path>
+                      <path d="M8 3v4"></path>
+                      <path d="M3 11h18"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Events</strong>
+                    <span>See events you can join or manage.</span>
+                  </span>
+                </a>
+
+                <a href="nearby-places.html" class="quick-link">
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+                      <circle cx="12" cy="9" r="2.5"></circle>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Places</strong>
+                    <span>Explore or add nearby places.</span>
+                  </span>
                 </a>
 
                 <a id="reportsAdminLink" href="reports-admin.html" class="quick-link hidden">
-                  <strong>Reports Admin</strong>
-                  <span>Review user reports and take moderation actions.</span>
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 9v4"></path>
+                      <path d="M12 17h.01"></path>
+                      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Reports Admin</strong>
+                    <span>Review reports and moderation actions.</span>
+                  </span>
+                </a>
+
+                <a id="feedbackAdminLink" href="feedback-admin.html" class="quick-link hidden">
+                  <span class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+                    </svg>
+                  </span>
+                  <span>
+                    <strong>Feedback Admin</strong>
+                    <span>Review feedback and feature requests.</span>
+                  </span>
                 </a>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <div class="section-heading" style="margin-top:14px;">Account Actions</div>
-              <div class="section-sub">Sign out or remove your account from the app.</div>
+        <div class="accordion-item" data-section="danger">
+          <button class="accordion-head" type="button" data-section="danger">
+            <div class="accordion-left">
+              <span class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 9v4"></path>
+                  <path d="M12 17h.01"></path>
+                  <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+                </svg>
+              </span>
+              <div class="accordion-copy">
+                <strong>Account Actions</strong>
+                <span>Logout, temporary hide, reactivate, or permanent delete request</span>
+              </div>
+            </div>
+            <span class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </button>
 
-              <div class="danger-box" style="margin-bottom:12px;">
+          <div class="accordion-body">
+            <div class="section-box">
+              <div class="section-heading">Account Actions</div>
+              <div class="section-sub">Use temporary hide when you may return later. Permanent deletion is handled by admin review for safety.</div>
+
+              <div class="danger-box">
                 <h3>Logout</h3>
                 <p>Sign out from your current account on this device.</p>
-                <div class="danger-actions">
-                  <button id="logoutBtn" class="logout-btn">Logout</button>
-                </div>
-                <div id="message" class="status-message"></div>
+                <button id="logoutBtn" class="btn btn-red" type="button">Logout</button>
+                <div id="logoutMessage" class="status-message"></div>
               </div>
 
               <div class="danger-box">
-                <h3>Delete Account</h3>
+                <h3>Temporarily Hide Account</h3>
                 <p>
-                  This will hide your profile and account from the app, remove you from Nearby,
-                  and sign you out. This is a soft delete for now.
+                  Soft delete hides your profile from public areas, removes you from Nearby, makes your profile private,
+                  and keeps your account available for reactivation later.
                 </p>
-                <div class="danger-actions">
-                  <button id="deleteAccountBtn" class="delete-account-btn">Delete Account</button>
+
+                <div id="softDeleteActions">
+                  <button id="softDeleteBtn" class="btn btn-yellow" type="button">Temporarily Hide My Account</button>
+                  <button id="reactivateBtn" class="btn btn-green hidden" type="button">Reactivate My Account</button>
                 </div>
-                <div class="delete-note">
-                  You will need to type <strong>DELETE</strong> to confirm.
+
+                <div class="danger-note">This is reversible. Your data is not permanently deleted by this button.</div>
+                <div id="softDeleteMessage" class="status-message"></div>
+              </div>
+
+              <div class="danger-box">
+                <h3>Permanent Delete Request</h3>
+                <p>
+                  Permanent deletion cannot safely be completed from the browser. This sends a request for admin review.
+                  After approval, admin can delete your Auth user and related records from the server side.
+                </p>
+
+                <div class="confirm-box">
+                  <label class="check-row">
+                    <input id="deleteConfirmCheck" type="checkbox" />
+                    <span>I understand permanent deletion cannot be undone after admin approval.</span>
+                  </label>
+
+                  <input id="deleteConfirmText" class="input" type="text" placeholder="Type DELETE MY ACCOUNT" />
+
+                  <button id="permanentDeleteRequestBtn" class="btn btn-red" type="button">
+                    Request Permanent Account Delete
+                  </button>
                 </div>
-                <div id="deleteMessage" class="status-message"></div>
+
+                <div class="danger-note">
+                  This creates a pending request in <strong>account_delete_requests</strong>. It does not directly delete your Supabase Auth account.
+                </div>
+
+                <div id="permanentDeleteMessage" class="status-message"></div>
               </div>
             </div>
           </div>
@@ -1051,23 +1647,53 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
+
+    <a href="search.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
+      <span>Search</span>
     </a>
-    <a href="nearby-events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
-    <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+
+    <a href="profile.html" class="nav-link active">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -1085,11 +1711,16 @@
     const backBtn = document.getElementById("backBtn");
     const pageStatus = document.getElementById("pageStatus");
 
+    const statusAccount = document.getElementById("statusAccount");
+    const statusPrivacy = document.getElementById("statusPrivacy");
+    const statusNearby = document.getElementById("statusNearby");
+    const statusTheme = document.getElementById("statusTheme");
+
     const accordionButtons = document.querySelectorAll(".accordion-head");
     const accordionItems = document.querySelectorAll(".accordion-item");
 
     const loading = document.getElementById("loading");
-    const overviewContent = document.getElementById("overviewContent");
+    const accountContent = document.getElementById("accountContent");
 
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
@@ -1098,6 +1729,7 @@
     const usernameText = document.getElementById("usernameText");
     const bioText = document.getElementById("bioText");
     const profileTypeBadge = document.getElementById("profileTypeBadge");
+    const accountStateBadge = document.getElementById("accountStateBadge");
     const adminBadge = document.getElementById("adminBadge");
     const moderationBadge = document.getElementById("moderationBadge");
 
@@ -1111,24 +1743,46 @@
     const privateAccountToggle = document.getElementById("privateAccountToggle");
     const cityVisibleToggle = document.getElementById("cityVisibleToggle");
     const genderVisibleToggle = document.getElementById("genderVisibleToggle");
-    const privacyStatus = document.getElementById("privacyStatus");
-
     const showInNearbyToggle = document.getElementById("showInNearbyToggle");
-    const locationStatus = document.getElementById("locationStatus");
+    const privacyStatus = document.getElementById("privacyStatus");
 
     const blockedLoading = document.getElementById("blockedLoading");
     const blockedList = document.getElementById("blockedList");
     const blockedEmpty = document.getElementById("blockedEmpty");
     const blockedStatus = document.getElementById("blockedStatus");
 
-    const verificationStatusBadge = document.getElementById("verificationStatusBadge");
     const reportsAdminLink = document.getElementById("reportsAdminLink");
+    const feedbackAdminLink = document.getElementById("feedbackAdminLink");
+    const verificationStatusText = document.getElementById("verificationStatusText");
+
+    const feedbackForm = document.getElementById("feedbackForm");
+    const feedbackType = document.getElementById("feedbackType");
+    const feedbackRating = document.getElementById("feedbackRating");
+    const feedbackMessage = document.getElementById("feedbackMessage");
+    const sendFeedbackBtn = document.getElementById("sendFeedbackBtn");
+    const feedbackStatus = document.getElementById("feedbackStatus");
+
+    const featureForm = document.getElementById("featureForm");
+    const featureTitle = document.getElementById("featureTitle");
+    const featureCategory = document.getElementById("featureCategory");
+    const featurePriority = document.getElementById("featurePriority");
+    const featureDescription = document.getElementById("featureDescription");
+    const sendFeatureBtn = document.getElementById("sendFeatureBtn");
+    const featureStatus = document.getElementById("featureStatus");
 
     const logoutBtn = document.getElementById("logoutBtn");
-    const message = document.getElementById("message");
+    const logoutMessage = document.getElementById("logoutMessage");
 
-    const deleteAccountBtn = document.getElementById("deleteAccountBtn");
-    const deleteMessage = document.getElementById("deleteMessage");
+    const softDeleteBtn = document.getElementById("softDeleteBtn");
+    const reactivateBtn = document.getElementById("reactivateBtn");
+    const softDeleteMessage = document.getElementById("softDeleteMessage");
+
+    const deleteConfirmCheck = document.getElementById("deleteConfirmCheck");
+    const deleteConfirmText = document.getElementById("deleteConfirmText");
+    const permanentDeleteRequestBtn = document.getElementById("permanentDeleteRequestBtn");
+    const permanentDeleteMessage = document.getElementById("permanentDeleteMessage");
+
+    const inboxBadge = document.getElementById("inboxBadge");
 
     function nowIso() {
       return new Date().toISOString();
@@ -1149,10 +1803,12 @@
     function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
+
         if (value !== undefined && value !== null && String(value).trim() !== "") {
           return value;
         }
       }
+
       return fallback;
     }
 
@@ -1165,6 +1821,7 @@
       for (const name of names) {
         if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
       }
+
       return fallback;
     }
 
@@ -1173,57 +1830,8 @@
         const value = raw?.[name];
         if (Array.isArray(value)) return value;
       }
+
       return fallback;
-    }
-
-    function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-      return (
-        msg.includes("does not exist") ||
-        msg.includes("not found in the schema cache") ||
-        msg.includes("could not find the table") ||
-        msg.includes("could not find") ||
-        msg.includes("column")
-      );
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-
-      return {
-        uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
-        displayName: getString(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
-        username: getString(d, ["username", "handle", "user_name", "userName"], ""),
-        bio: getString(d, ["bio", "about", "description"], ""),
-        photoURL: getString(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], ""),
-        isPrivate: getBool(d, ["is_private", "isPrivate", "private_profile", "privateProfile", "private", "account_private", "accountPrivate"], false),
-        isVerified: getBool(d, ["is_verified", "isVerified", "verified"], false),
-        cityVisible: getBool(d, ["city_visible", "cityVisible"], false),
-        genderVisible: getBool(d, ["gender_visible", "genderVisible"], false),
-        moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], ""),
-        warningUntil: d.warning_until ?? d.warningUntil ?? null,
-        suspensionUntil: d.suspension_until ?? d.suspensionUntil ?? d.suspend_until ?? d.suspendUntil ?? null,
-        blockedUsers: getArray(d, ["blocked_users", "blockedUsers"], []),
-        themePreference: getString(d, ["theme_preference", "themePreference"], "dark") || "dark",
-        showInNearby: getBool(d, ["show_in_nearby", "showInNearby"], false),
-        locationVisibility: getString(d, ["location_visibility", "locationVisibility"], "hidden") || "hidden",
-        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
-        softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false),
-        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
-        isAdmin: getBool(d, ["is_admin", "isAdmin"], false),
-        role: getString(d, ["role"], "")
-      };
-    }
-
-    function mergeProfiles(publicProfile, userProfile, uid = "") {
-      return normalizeProfile(
-        {
-          ...(publicProfile || {}),
-          ...(userProfile || {}),
-          uid: uid || userProfile?.uid || publicProfile?.uid || ""
-        },
-        uid || userProfile?.uid || publicProfile?.uid || ""
-      );
     }
 
     function toMillis(value) {
@@ -1259,9 +1867,57 @@
         } catch {}
       }
 
-      if (authUser?.metadata?.creationTime) return authUser.metadata.creationTime;
-
       return "-";
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("column")
+      );
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+
+      return {
+        uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getString(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getString(d, ["username", "handle", "user_name", "userName"], ""),
+        bio: getString(d, ["bio", "about", "description"], ""),
+        photoURL: getString(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], ""),
+        isPrivate: getBool(d, ["is_private", "isPrivate", "private_profile", "privateProfile", "private", "account_private", "accountPrivate"], false),
+        isVerified: getBool(d, ["is_verified", "isVerified", "verified"], false),
+        cityVisible: getBool(d, ["city_visible", "cityVisible"], false),
+        genderVisible: getBool(d, ["gender_visible", "genderVisible"], false),
+        moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], ""),
+        blockedUsers: getArray(d, ["blocked_users", "blockedUsers"], []),
+        themePreference: getString(d, ["theme_preference", "themePreference"], getStoredTheme()) || getStoredTheme(),
+        showInNearby: getBool(d, ["show_in_nearby", "showInNearby"], false),
+        locationVisibility: getString(d, ["location_visibility", "locationVisibility"], "hidden") || "hidden",
+        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated", "is_deactivated", "isDeactivated"], false),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin", "hidden_by_admin", "hiddenByAdmin"], false),
+        deleteRequested: getBool(d, ["delete_requested", "deleteRequested"], false),
+        isAdmin: getBool(d, ["is_admin", "isAdmin"], false),
+        role: getString(d, ["role"], "")
+      };
+    }
+
+    function mergeProfiles(publicProfile, userProfile, uid = "") {
+      return normalizeProfile(
+        {
+          ...(publicProfile || {}),
+          ...(userProfile || {}),
+          uid: uid || userProfile?.uid || publicProfile?.uid || ""
+        },
+        uid || userProfile?.uid || publicProfile?.uid || ""
+      );
     }
 
     function showAvatar(url) {
@@ -1285,19 +1941,19 @@
     });
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
+
       return themeValue === "light" ? "light" : "dark";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
-      const resolved = resolveTheme(themeValue);
-      document.documentElement.setAttribute("data-theme", resolved);
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
     function getSelectedRadioValue(name) {
@@ -1306,14 +1962,15 @@
     }
 
     function setCheckedRadioValue(name, value) {
-      const fallback = value || "";
-      const radio = document.querySelector(`input[name="${name}"][value="${CSS.escape(fallback)}"]`);
-      if (radio) radio.checked = true;
+      document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+        radio.checked = radio.value === value;
+      });
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+
     if (themeMediaQuery.addEventListener) {
       themeMediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -1321,7 +1978,7 @@
     }
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     backBtn.addEventListener("click", () => {
@@ -1329,15 +1986,8 @@
       else window.location.href = "profile.html";
     });
 
-    function openAccordion(sectionId) {
-      accordionItems.forEach(item => {
-        const isMatch = item.dataset.section === sectionId;
-        item.classList.toggle("active", isMatch);
-      });
-    }
-
     function toggleAccordion(sectionId) {
-      const item = document.querySelector(`.accordion-item[data-section="${CSS.escape(sectionId)}"]`);
+      const item = [...accordionItems].find(acc => acc.dataset.section === sectionId);
       if (!item) return;
 
       const wasActive = item.classList.contains("active");
@@ -1354,9 +2004,7 @@
     }
 
     accordionButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        toggleAccordion(btn.dataset.section);
-      });
+      btn.addEventListener("click", () => toggleAccordion(btn.dataset.section));
     });
 
     async function selectByColumn(table, column, value) {
@@ -1491,21 +2139,20 @@
     }
 
     function buildPatchVariants(snakePatch = {}, camelPatch = {}, minimalPatch = {}) {
-      const now = nowIso();
-
+      const updatedAt = nowIso();
       const variants = [];
 
       if (Object.keys(snakePatch).length) {
         variants.push({
           ...snakePatch,
-          updated_at: now
+          updated_at: updatedAt
         });
       }
 
       if (Object.keys(camelPatch).length) {
         variants.push({
           ...camelPatch,
-          updatedAt: now
+          updatedAt
         });
       }
 
@@ -1569,6 +2216,9 @@
           currentUser.id
         );
 
+        applyProfileHeader(currentProfile, isCurrentUserAdmin);
+        updateMiniStatuses();
+
         setStatus(successTarget || pageStatus, successText, "success");
       } catch (error) {
         console.error(error);
@@ -1576,15 +2226,178 @@
       }
     }
 
+    async function insertWithFallback(table, payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
+
+          if (threadIds.length) {
+            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+            for (const field of seenFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .is(field, null);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+
+            const boolFields = ["is_read", "read"];
+
+            for (const field of boolFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .eq(field, false);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+          }
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadge() {
+      if (!currentUser) return;
+
+      try {
+        const [requests, unreadMessages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(unreadMessages || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
+    function updateMiniStatuses() {
+      statusAccount.textContent = currentProfile.softDeleted ? "Hidden" : currentProfile.deleteRequested ? "Delete pending" : "Active";
+      statusPrivacy.textContent = currentProfile.isPrivate ? "Private" : "Public";
+      statusNearby.textContent = currentProfile.showInNearby && !currentProfile.softDeleted ? "On" : "Off";
+      statusTheme.textContent = (currentProfile.themePreference || getStoredTheme() || "dark").replace(/^./, c => c.toUpperCase());
+
+      softDeleteBtn.classList.toggle("hidden", !!currentProfile.softDeleted);
+      reactivateBtn.classList.toggle("hidden", !currentProfile.softDeleted);
+    }
+
+    function applyProfileHeader(profile, isAdmin) {
+      displayNameEl.textContent = profile.softDeleted ? "Hidden Account" : profile.displayName || "Member";
+
+      if (profile.isVerified) verifiedDot.classList.remove("hidden");
+      else verifiedDot.classList.add("hidden");
+
+      if (profile.username && !profile.softDeleted) {
+        usernameText.textContent = "@" + profile.username;
+        usernameText.classList.remove("hidden");
+      } else {
+        usernameText.classList.add("hidden");
+      }
+
+      bioText.textContent = profile.softDeleted
+        ? "This account is temporarily hidden."
+        : profile.bio?.trim()
+          ? profile.bio
+          : "No bio added yet.";
+
+      showAvatar(profile.softDeleted ? "" : profile.photoURL || "");
+
+      profileTypeBadge.textContent = profile.isPrivate ? "Private" : "Public";
+      profileTypeBadge.className = `status-badge ${profile.isPrivate ? "status-yellow" : "status-blue"}`;
+
+      accountStateBadge.textContent = profile.softDeleted ? "Hidden" : profile.deleteRequested ? "Delete Requested" : "Active";
+      accountStateBadge.className = `status-badge ${profile.softDeleted || profile.deleteRequested ? "status-yellow" : "status-green"}`;
+
+      if (isAdmin) adminBadge.classList.remove("hidden");
+      else adminBadge.classList.add("hidden");
+
+      moderationBadge.classList.add("hidden");
+
+      if (profile.moderationStatus === "banned") {
+        moderationBadge.textContent = "Banned";
+        moderationBadge.classList.remove("hidden");
+      } else if (profile.moderationStatus === "suspended") {
+        moderationBadge.textContent = "Suspended";
+        moderationBadge.classList.remove("hidden");
+      } else if (profile.moderationStatus === "warned") {
+        moderationBadge.textContent = "Warned";
+        moderationBadge.classList.remove("hidden");
+      }
+
+      updateMiniStatuses();
+    }
+
     async function saveThemePreference(themeValue) {
+      localStorage.setItem("osTheme", themeValue);
       localStorage.setItem("bwTheme", themeValue);
       applyTheme(themeValue);
 
       await saveSettingsPatch({
         userSnakePatch: { theme_preference: themeValue },
         userCamelPatch: { themePreference: themeValue },
-        publicSnakePatch: {},
-        publicCamelPatch: {},
         successTarget: themeStatus,
         successText: "Theme updated."
       });
@@ -1598,74 +2411,60 @@
       });
     });
 
-    async function savePrivacyState() {
+    async function savePrivacyAndNearbyState() {
       const isPrivate = !!privateAccountToggle.checked;
       const cityVisible = !!cityVisibleToggle.checked;
       const genderVisible = !!genderVisibleToggle.checked;
-
-      await saveSettingsPatch({
-        userSnakePatch: {
-          is_private: isPrivate,
-          city_visible: cityVisible,
-          gender_visible: genderVisible
-        },
-        userCamelPatch: {
-          isPrivate,
-          cityVisible,
-          genderVisible
-        },
-        publicSnakePatch: {
-          is_private: isPrivate,
-          city_visible: cityVisible,
-          gender_visible: genderVisible
-        },
-        publicCamelPatch: {
-          isPrivate,
-          cityVisible,
-          genderVisible
-        },
-        successTarget: privacyStatus,
-        successText: "Privacy settings updated."
-      });
-
-      profileTypeBadge.textContent = isPrivate ? "Private" : "Public";
-      profileTypeBadge.className = `status-badge ${isPrivate ? "status-private" : "status-public"}`;
-    }
-
-    privateAccountToggle.addEventListener("change", savePrivacyState);
-    cityVisibleToggle.addEventListener("change", savePrivacyState);
-    genderVisibleToggle.addEventListener("change", savePrivacyState);
-
-    async function saveLocationState() {
-      const showInNearby = !!showInNearbyToggle.checked;
+      const showInNearby = !!showInNearbyToggle.checked && !currentProfile.softDeleted;
       const locationVisibility = getSelectedRadioValue("locationVisibility") || "hidden";
 
+      if (currentProfile.softDeleted && showInNearbyToggle.checked) {
+        showInNearbyToggle.checked = false;
+        setStatus(privacyStatus, "Reactivate your account before showing it in Nearby.", "error");
+        return;
+      }
+
       await saveSettingsPatch({
         userSnakePatch: {
+          is_private: isPrivate,
+          city_visible: cityVisible,
+          gender_visible: genderVisible,
           show_in_nearby: showInNearby,
           location_visibility: locationVisibility
         },
         userCamelPatch: {
+          isPrivate,
+          cityVisible,
+          genderVisible,
           showInNearby,
           locationVisibility
         },
         publicSnakePatch: {
+          is_private: isPrivate,
+          city_visible: cityVisible,
+          gender_visible: genderVisible,
           show_in_nearby: showInNearby,
           location_visibility: locationVisibility
         },
         publicCamelPatch: {
+          isPrivate,
+          cityVisible,
+          genderVisible,
           showInNearby,
           locationVisibility
         },
-        successTarget: locationStatus,
-        successText: "Nearby visibility updated."
+        successTarget: privacyStatus,
+        successText: "Privacy and nearby settings updated."
       });
     }
 
-    showInNearbyToggle.addEventListener("change", saveLocationState);
+    privateAccountToggle.addEventListener("change", savePrivacyAndNearbyState);
+    cityVisibleToggle.addEventListener("change", savePrivacyAndNearbyState);
+    genderVisibleToggle.addEventListener("change", savePrivacyAndNearbyState);
+    showInNearbyToggle.addEventListener("change", savePrivacyAndNearbyState);
 
     document.querySelectorAll('input[name="locationVisibility"]').forEach(radio => {
-      radio.addEventListener("change", saveLocationState);
+      radio.addEventListener("change", savePrivacyAndNearbyState);
     });
 
     async function fetchProfileForBlockedUser(uid) {
@@ -1711,12 +2510,13 @@
               </div>
             </div>
 
-            <button class="ghost-btn unblock-btn" type="button" data-uid="${escapeHtml(profile.uid)}">
+            <button class="btn btn-primary unblock-btn" type="button" data-uid="${escapeHtml(profile.uid)}">
               Unblock
             </button>
           `;
 
           const img = row.querySelector(".blocked-avatar");
+
           if (img) {
             img.addEventListener("error", () => {
               img.outerHTML = `<div class="blocked-avatar-placeholder">No photo</div>`;
@@ -1742,8 +2542,6 @@
               await saveSettingsPatch({
                 userSnakePatch: { blocked_users: currentBlockedUsers },
                 userCamelPatch: { blockedUsers: currentBlockedUsers },
-                publicSnakePatch: {},
-                publicCamelPatch: {},
                 successTarget: blockedStatus,
                 successText: "Account unblocked."
               });
@@ -1765,65 +2563,140 @@
       }
     }
 
-    function setVerificationBadge(status, isVerified) {
-      verificationStatusBadge.className = "status-badge";
+    feedbackForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      if (isVerified) {
-        verificationStatusBadge.classList.add("status-approved");
-        verificationStatusBadge.textContent = "Verified";
+      if (!currentUser) return;
+
+      const messageText = feedbackMessage.value.trim();
+
+      if (!messageText) {
+        setStatus(feedbackStatus, "Write your feedback first.", "error");
         return;
       }
 
-      if (status === "pending") {
-        verificationStatusBadge.classList.add("status-pending");
-        verificationStatusBadge.textContent = "Pending review";
-      } else if (status === "approved") {
-        verificationStatusBadge.classList.add("status-approved");
-        verificationStatusBadge.textContent = "Approved";
-      } else if (status === "rejected") {
-        verificationStatusBadge.classList.add("status-rejected");
-        verificationStatusBadge.textContent = "Rejected";
-      } else {
-        verificationStatusBadge.classList.add("status-not-requested");
-        verificationStatusBadge.textContent = "Not requested";
+      sendFeedbackBtn.disabled = true;
+      setStatus(feedbackStatus, "Sending feedback...", "");
+
+      try {
+        const createdAt = nowIso();
+        const ratingValue = feedbackRating.value ? Number(feedbackRating.value) : null;
+
+        await insertWithFallback("feedback", [
+          {
+            user_id: currentUser.id,
+            uid: currentUser.id,
+            name: currentProfile.displayName || currentUser.email || "Member",
+            email: currentUser.email || "",
+            type: feedbackType.value || "general",
+            message: messageText,
+            rating: ratingValue,
+            status: "pending",
+            created_at: createdAt,
+            updated_at: createdAt
+          },
+          {
+            userId: currentUser.id,
+            uid: currentUser.id,
+            name: currentProfile.displayName || currentUser.email || "Member",
+            email: currentUser.email || "",
+            type: feedbackType.value || "general",
+            message: messageText,
+            rating: ratingValue,
+            status: "pending",
+            createdAt: createdAt,
+            updatedAt: createdAt
+          },
+          {
+            user_id: currentUser.id,
+            message: messageText,
+            created_at: createdAt
+          }
+        ]);
+
+        feedbackMessage.value = "";
+        feedbackRating.value = "";
+        feedbackType.value = "general";
+        setStatus(feedbackStatus, "Feedback sent. Thank you.", "success");
+      } catch (err) {
+        console.error(err);
+        setStatus(feedbackStatus, err?.message || "Could not send feedback.", "error");
       }
-    }
 
-    function applyProfileHeader(profile, isAdmin) {
-      displayNameEl.textContent = profile.displayName || "Member";
+      sendFeedbackBtn.disabled = false;
+    });
 
-      if (profile.isVerified) verifiedDot.classList.remove("hidden");
-      else verifiedDot.classList.add("hidden");
+    featureForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      if (profile.username) {
-        usernameText.textContent = "@" + profile.username;
-        usernameText.classList.remove("hidden");
-      } else {
-        usernameText.classList.add("hidden");
+      if (!currentUser) return;
+
+      const title = featureTitle.value.trim();
+      const description = featureDescription.value.trim();
+
+      if (!title) {
+        setStatus(featureStatus, "Feature title is required.", "error");
+        return;
       }
 
-      bioText.textContent = profile.bio?.trim() ? profile.bio : "No bio added yet.";
-      showAvatar(profile.photoURL || "");
-
-      profileTypeBadge.textContent = profile.isPrivate ? "Private" : "Public";
-      profileTypeBadge.className = `status-badge ${profile.isPrivate ? "status-private" : "status-public"}`;
-
-      if (isAdmin) adminBadge.classList.remove("hidden");
-      else adminBadge.classList.add("hidden");
-
-      moderationBadge.classList.add("hidden");
-
-      if (profile.moderationStatus === "banned") {
-        moderationBadge.textContent = "Banned";
-        moderationBadge.classList.remove("hidden");
-      } else if (profile.moderationStatus === "suspended") {
-        moderationBadge.textContent = "Suspended";
-        moderationBadge.classList.remove("hidden");
-      } else if (profile.moderationStatus === "warned") {
-        moderationBadge.textContent = "Warned";
-        moderationBadge.classList.remove("hidden");
+      if (!description) {
+        setStatus(featureStatus, "Feature description is required.", "error");
+        return;
       }
-    }
+
+      sendFeatureBtn.disabled = true;
+      setStatus(featureStatus, "Sending feature request...", "");
+
+      try {
+        const createdAt = nowIso();
+
+        await insertWithFallback("feature_requests", [
+          {
+            user_id: currentUser.id,
+            uid: currentUser.id,
+            name: currentProfile.displayName || currentUser.email || "Member",
+            email: currentUser.email || "",
+            title,
+            description,
+            category: featureCategory.value || "other",
+            priority: featurePriority.value || "normal",
+            status: "pending",
+            created_at: createdAt,
+            updated_at: createdAt
+          },
+          {
+            userId: currentUser.id,
+            uid: currentUser.id,
+            name: currentProfile.displayName || currentUser.email || "Member",
+            email: currentUser.email || "",
+            title,
+            description,
+            category: featureCategory.value || "other",
+            priority: featurePriority.value || "normal",
+            status: "pending",
+            createdAt: createdAt,
+            updatedAt: createdAt
+          },
+          {
+            user_id: currentUser.id,
+            title,
+            description,
+            created_at: createdAt
+          }
+        ]);
+
+        featureTitle.value = "";
+        featureDescription.value = "";
+        featureCategory.value = "profile";
+        featurePriority.value = "normal";
+        setStatus(featureStatus, "Feature request submitted.", "success");
+      } catch (err) {
+        console.error(err);
+        setStatus(featureStatus, err?.message || "Could not send feature request.", "error");
+      }
+
+      sendFeatureBtn.disabled = false;
+    });
 
     logoutBtn.addEventListener("click", async () => {
       try {
@@ -1832,98 +2705,280 @@
         window.location.href = "login.html";
       } catch (error) {
         console.error(error);
-        setStatus(message, "Could not log out.", "error");
+        setStatus(logoutMessage, "Could not log out.", "error");
       }
     });
 
-    deleteAccountBtn.addEventListener("click", async () => {
+    async function refreshCurrentRows() {
       if (!currentUser) return;
 
-      const ok = confirm("This will hide your account and sign you out. Continue?");
+      const [userRow, publicRow] = await Promise.all([
+        loadUserRow(currentUser.id),
+        loadPublicProfileRow(currentUser.id)
+      ]);
+
+      currentUserData = userRow || currentUserData || {};
+      currentPublicData = publicRow || currentPublicData || {};
+
+      currentProfile = mergeProfiles(
+        normalizeProfile(currentPublicData, currentUser.id),
+        normalizeProfile(currentUserData, currentUser.id),
+        currentUser.id
+      );
+
+      applyProfileHeader(currentProfile, isCurrentUserAdmin);
+      updateInputsFromProfile();
+    }
+
+    softDeleteBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      const ok = confirm("Temporarily hide your account? You can reactivate it later from this settings page.");
       if (!ok) return;
 
-      const typed = prompt("Type DELETE to confirm account removal.");
-
-      if (typed !== "DELETE") {
-        setStatus(deleteMessage, "Deletion cancelled.", "error");
-        return;
-      }
-
-      deleteAccountBtn.disabled = true;
-      logoutBtn.disabled = true;
+      softDeleteBtn.disabled = true;
+      setStatus(softDeleteMessage, "Hiding account...", "");
 
       try {
+        const deletedAt = nowIso();
+
         await Promise.all([
           upsertOrUpdateByUid("users", currentUser.id, [
             {
               soft_deleted: true,
-              deleted_by_self: true,
-              deleted_at: nowIso(),
+              deactivated: true,
+              deactivated_at: deletedAt,
+              hidden: true,
               show_in_nearby: false,
               location_visibility: "hidden",
               is_private: true,
-              blocked_users: [],
-              updated_at: nowIso()
+              updated_at: deletedAt
             },
             {
               softDeleted: true,
-              deletedBySelf: true,
-              deletedAt: nowIso(),
+              deactivated: true,
+              deactivatedAt: deletedAt,
+              hidden: true,
               showInNearby: false,
               locationVisibility: "hidden",
               isPrivate: true,
-              blockedUsers: [],
-              updatedAt: nowIso()
+              updatedAt: deletedAt
             }
           ]),
 
           upsertOrUpdateByUid("public_profiles", currentUser.id, [
             {
               soft_deleted: true,
-              deleted_by_self: true,
-              deleted_at: nowIso(),
-              display_name: "Deleted Account",
-              username: "",
-              bio: "",
-              photo_url: "",
+              deactivated: true,
+              deactivated_at: deletedAt,
+              hidden: true,
               show_in_nearby: false,
               location_visibility: "hidden",
-              city_visible: false,
-              gender_visible: false,
               is_private: true,
-              updated_at: nowIso()
+              updated_at: deletedAt
             },
             {
               softDeleted: true,
-              deletedBySelf: true,
-              deletedAt: nowIso(),
-              displayName: "Deleted Account",
-              username: "",
-              bio: "",
-              photoURL: "",
+              deactivated: true,
+              deactivatedAt: deletedAt,
+              hidden: true,
               showInNearby: false,
               locationVisibility: "hidden",
-              cityVisible: false,
-              genderVisible: false,
               isPrivate: true,
-              updatedAt: nowIso()
+              updatedAt: deletedAt
             }
           ])
         ]);
 
-        setStatus(deleteMessage, "Account hidden. Signing out...", "success");
-
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-
-        window.location.href = "login.html";
+        await refreshCurrentRows();
+        setStatus(softDeleteMessage, "Your account is temporarily hidden. You can reactivate it here.", "success");
       } catch (error) {
         console.error(error);
-        setStatus(deleteMessage, "Could not delete account.", "error");
-        deleteAccountBtn.disabled = false;
-        logoutBtn.disabled = false;
+        setStatus(softDeleteMessage, error?.message || "Could not hide account.", "error");
       }
+
+      softDeleteBtn.disabled = false;
     });
+
+    reactivateBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      const ok = confirm("Reactivate your account?");
+      if (!ok) return;
+
+      reactivateBtn.disabled = true;
+      setStatus(softDeleteMessage, "Reactivating account...", "");
+
+      try {
+        const updatedAt = nowIso();
+
+        await Promise.all([
+          upsertOrUpdateByUid("users", currentUser.id, [
+            {
+              soft_deleted: false,
+              deactivated: false,
+              reactivated_at: updatedAt,
+              hidden: false,
+              is_private: false,
+              updated_at: updatedAt
+            },
+            {
+              softDeleted: false,
+              deactivated: false,
+              reactivatedAt: updatedAt,
+              hidden: false,
+              isPrivate: false,
+              updatedAt
+            }
+          ]),
+
+          upsertOrUpdateByUid("public_profiles", currentUser.id, [
+            {
+              soft_deleted: false,
+              deactivated: false,
+              reactivated_at: updatedAt,
+              hidden: false,
+              is_private: false,
+              updated_at: updatedAt
+            },
+            {
+              softDeleted: false,
+              deactivated: false,
+              reactivatedAt: updatedAt,
+              hidden: false,
+              isPrivate: false,
+              updatedAt
+            }
+          ])
+        ]);
+
+        await refreshCurrentRows();
+        setStatus(softDeleteMessage, "Account reactivated.", "success");
+      } catch (error) {
+        console.error(error);
+        setStatus(softDeleteMessage, error?.message || "Could not reactivate account.", "error");
+      }
+
+      reactivateBtn.disabled = false;
+    });
+
+    permanentDeleteRequestBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      const typed = deleteConfirmText.value.trim();
+
+      if (!deleteConfirmCheck.checked) {
+        setStatus(permanentDeleteMessage, "Please confirm that you understand permanent deletion cannot be undone.", "error");
+        return;
+      }
+
+      if (typed !== "DELETE MY ACCOUNT") {
+        setStatus(permanentDeleteMessage, "Type DELETE MY ACCOUNT exactly.", "error");
+        return;
+      }
+
+      permanentDeleteRequestBtn.disabled = true;
+      setStatus(permanentDeleteMessage, "Submitting delete request...", "");
+
+      try {
+        const createdAt = nowIso();
+
+        await insertWithFallback("account_delete_requests", [
+          {
+            user_id: currentUser.id,
+            uid: currentUser.id,
+            email: currentUser.email || "",
+            name: currentProfile.displayName || currentUser.email || "Member",
+            status: "pending",
+            request_type: "permanent_delete",
+            reason: "User requested permanent account deletion from settings.",
+            created_at: createdAt,
+            updated_at: createdAt
+          },
+          {
+            userId: currentUser.id,
+            uid: currentUser.id,
+            email: currentUser.email || "",
+            name: currentProfile.displayName || currentUser.email || "Member",
+            status: "pending",
+            requestType: "permanent_delete",
+            reason: "User requested permanent account deletion from settings.",
+            createdAt,
+            updatedAt: createdAt
+          },
+          {
+            user_id: currentUser.id,
+            status: "pending",
+            created_at: createdAt
+          }
+        ]);
+
+        await Promise.all([
+          upsertOrUpdateByUid("users", currentUser.id, [
+            {
+              delete_requested: true,
+              delete_requested_at: createdAt,
+              updated_at: createdAt
+            },
+            {
+              deleteRequested: true,
+              deleteRequestedAt: createdAt,
+              updatedAt: createdAt
+            }
+          ]),
+
+          upsertOrUpdateByUid("public_profiles", currentUser.id, [
+            {
+              delete_requested: true,
+              delete_requested_at: createdAt,
+              updated_at: createdAt
+            },
+            {
+              deleteRequested: true,
+              deleteRequestedAt: createdAt,
+              updatedAt: createdAt
+            }
+          ])
+        ]);
+
+        await refreshCurrentRows();
+
+        deleteConfirmText.value = "";
+        deleteConfirmCheck.checked = false;
+        setStatus(permanentDeleteMessage, "Permanent delete request submitted for admin review.", "success");
+      } catch (error) {
+        console.error(error);
+        setStatus(permanentDeleteMessage, error?.message || "Could not submit delete request.", "error");
+      }
+
+      permanentDeleteRequestBtn.disabled = false;
+    });
+
+    function updateInputsFromProfile() {
+      privateAccountToggle.checked = !!currentProfile.isPrivate;
+      cityVisibleToggle.checked = !!currentProfile.cityVisible;
+      genderVisibleToggle.checked = !!currentProfile.genderVisible;
+      showInNearbyToggle.checked = !!currentProfile.showInNearby && !currentProfile.softDeleted;
+      setCheckedRadioValue("locationVisibility", currentProfile.locationVisibility || "hidden");
+
+      const themeValue = currentProfile.themePreference || getStoredTheme() || "dark";
+      setCheckedRadioValue("themePreference", themeValue);
+      localStorage.setItem("osTheme", themeValue);
+      localStorage.setItem("bwTheme", themeValue);
+      applyTheme(themeValue);
+    }
+
+    function setVerificationText(status, isVerified) {
+      if (isVerified) {
+        verificationStatusText.textContent = "Verified account active.";
+        return;
+      }
+
+      if (status === "pending") verificationStatusText.textContent = "Verification request is pending review.";
+      else if (status === "approved") verificationStatusText.textContent = "Verification approved.";
+      else if (status === "rejected") verificationStatusText.textContent = "Verification rejected. You can review it.";
+      else verificationStatusText.textContent = "Open verification request form and track status.";
+    }
 
     async function loadSettings() {
       const { data, error } = await supabase.auth.getUser();
@@ -1934,6 +2989,7 @@
       }
 
       currentUser = data.user;
+      await loadInboxBadge();
 
       const uid = currentUser.id;
 
@@ -1970,32 +3026,26 @@
         verifiedEl.textContent = currentProfile.isVerified ? "Yes" : "No";
         createdAtEl.textContent = formatDate(currentProfile.createdAt || currentUserData.created_at || currentUserData.createdAt, currentUser);
 
-        const themeValue = currentProfile.themePreference || getStoredTheme() || "dark";
-        setCheckedRadioValue("themePreference", themeValue);
-        localStorage.setItem("bwTheme", themeValue);
-        applyTheme(themeValue);
-
-        privateAccountToggle.checked = !!currentProfile.isPrivate;
-        cityVisibleToggle.checked = !!currentProfile.cityVisible;
-        genderVisibleToggle.checked = !!currentProfile.genderVisible;
-
-        showInNearbyToggle.checked = !!currentProfile.showInNearby;
-        setCheckedRadioValue("locationVisibility", currentProfile.locationVisibility || "hidden");
+        updateInputsFromProfile();
 
         const requestStatus = verificationRow
           ? getString(verificationRow, ["status"], "pending")
           : "not_requested";
 
-        setVerificationBadge(requestStatus, !!currentProfile.isVerified);
+        setVerificationText(requestStatus, !!currentProfile.isVerified);
 
-        if (isCurrentUserAdmin) reportsAdminLink.classList.remove("hidden");
-        else reportsAdminLink.classList.add("hidden");
+        if (isCurrentUserAdmin) {
+          reportsAdminLink.classList.remove("hidden");
+          feedbackAdminLink.classList.remove("hidden");
+        } else {
+          reportsAdminLink.classList.add("hidden");
+          feedbackAdminLink.classList.add("hidden");
+        }
 
         await renderBlockedList();
 
         loading.classList.add("hidden");
-        overviewContent.classList.remove("hidden");
-        openAccordion("overview");
+        accountContent.classList.remove("hidden");
       } catch (error) {
         console.error(error);
         loading.textContent = "Could not load settings.";
@@ -2012,75 +3062,79 @@
     loadSettings();
 
     /*
-      SUPABASE NEEDS FOR THIS PAGE:
+      OWNSPACE SETTINGS UPDATE:
 
-      TABLES:
-      - users: select, upsert, update
-      - public_profiles: select, upsert, update
-      - verification_requests: select
-      - admins: select
+      FIXED / ADDED:
+      - BareWorld renamed to OwnSpace.
+      - Clean SVG icons.
+      - Settings sorted into clear control-center sections.
+      - Feedback form added.
+      - Feature request form added.
+      - Soft delete / temporary hide added.
+      - Reactivate account added.
+      - Permanent delete request added through account_delete_requests.
+      - Permanent delete does NOT directly delete Supabase Auth user from browser.
+      - Inbox badge counts only:
+        1) pending message_requests
+        2) unread chat_messages
+      - Bottom nav matches newer pages.
 
-      AUTH:
-      - logged-in user required
+      TABLES USED:
+      - users
+      - public_profiles
+      - verification_requests
+      - admins
+      - feedback
+      - feature_requests
+      - account_delete_requests
+      - message_requests
+      - chat_threads
+      - chat_messages
 
-      IMPORTANT COLUMNS:
-      users:
-      - uid
-      - display_name
-      - username
-      - bio
-      - photo_url
-      - is_private
-      - city_visible
-      - gender_visible
-      - show_in_nearby
-      - location_visibility
-      - theme_preference
-      - blocked_users
-      - soft_deleted
-      - deleted_by_self
-      - deleted_at
-      - moderation_status
-      - is_admin
-      - role
-      - updated_at
+      RECOMMENDED NEW TABLES:
 
-      public_profiles:
-      - uid
-      - display_name
-      - username
-      - bio
-      - photo_url
-      - is_private
-      - city_visible
-      - gender_visible
-      - show_in_nearby
-      - location_visibility
-      - soft_deleted
-      - deleted_by_self
-      - deleted_at
-      - moderation_status
-      - is_verified
-      - updated_at
+      feedback:
+      - id uuid primary key default gen_random_uuid()
+      - user_id uuid/text
+      - uid uuid/text
+      - name text
+      - email text
+      - type text
+      - message text
+      - rating int
+      - status text default 'pending'
+      - created_at timestamptz default now()
+      - updated_at timestamptz default now()
 
-      verification_requests:
-      - id
-      - uid / user_id
-      - status
+      feature_requests:
+      - id uuid primary key default gen_random_uuid()
+      - user_id uuid/text
+      - uid uuid/text
+      - name text
+      - email text
+      - title text
+      - description text
+      - category text
+      - priority text
+      - status text default 'pending'
+      - created_at timestamptz default now()
+      - updated_at timestamptz default now()
 
-      admins:
-      - id / uid / user_id
+      account_delete_requests:
+      - id uuid primary key default gen_random_uuid()
+      - user_id uuid/text
+      - uid uuid/text
+      - email text
+      - name text
+      - status text default 'pending'
+      - request_type text
+      - reason text
+      - created_at timestamptz default now()
+      - updated_at timestamptz default now()
 
-      RLS IDEA:
-      - Users can select/update their own users row where uid = auth.uid()
-      - Users can select/update their own public_profiles row where uid = auth.uid()
-      - Public/authenticated users can select visible public_profiles
-      - Users can select their own verification_requests row
-      - Users can select admins only enough for admin check, or use an RPC later
-      - Only admins should manage moderation fields
-
-      SHARE BUTTON:
-      - Not needed on settings page because it does not display post cards.
+      IMPORTANT:
+      - Permanent account deletion should be done by admin/server/Edge Function using service role.
+      - Frontend only submits the request.
     */
   </script>
 </body>
