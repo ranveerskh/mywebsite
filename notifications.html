@@ -3,32 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Notifications</title>
+  <title>OwnSpace - Notifications</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
     html[data-theme="dark"]{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
-      --soft2:#0f1630;
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
       --line:rgba(255,255,255,.08);
-      --text:#fff;
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
       --purple:#a78bfa;
       --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 18px 36px rgba(0,0,0,.18);
     }
 
     html[data-theme="light"]{
       --bg:#f3f6fb;
-      --card:#ffffff;
-      --soft:#eef3fb;
-      --soft2:#f7f9fd;
-      --line:rgba(15,23,42,.08);
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
       --text:#14213d;
       --muted:#6b7893;
       --blue:#1f8fff;
@@ -36,213 +42,257 @@
       --yellow:#d59617;
       --purple:#7f63ff;
       --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 28px rgba(20,33,61,.08);
     }
 
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(167,139,250,.08), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
-    }
-    html[data-theme="light"] body{
-      background:linear-gradient(180deg,#eef4ff 0%,#f8fbff 100%);
+      padding:10px 10px 108px;
     }
 
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
 
     .topbar{
-      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:10px 12px;
-      margin-bottom:14px;
+      padding:7px 9px;
+      margin-bottom:10px;
       display:grid;
-      grid-template-columns:48px 1fr auto;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
-    }
-    html[data-theme="light"] .topbar{
-      background:rgba(255,255,255,.88);
-      border:1px solid rgba(15,23,42,.06);
+      gap:8px;
+      box-shadow:var(--shadow);
     }
 
-    .top-icon-btn,.chip-btn{
+    .top-icon-btn{
+      width:42px;
+      height:42px;
       border:none;
-      background:var(--soft);
+      background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
-      text-decoration:none;
-      display:inline-flex;
+      display:flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
-      min-height:44px;
+      text-decoration:none;
     }
-    .top-icon-btn{
-      width:48px;
-      height:48px;
-      padding:0;
+
+    .top-icon-btn.refresh-top{
+      background:rgba(61,220,132,.13);
+      border-color:rgba(61,220,132,.22);
     }
-    .top-icon-btn svg{width:20px;height:20px;display:block}
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
 
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:22px;font-weight:800;line-height:1.1}
-    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .brand{
+      font-size:18px;
+      font-weight:900;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
 
-    .panel{
-      background:rgba(18,25,49,.88);
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .compact-controls{
+      background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-    html[data-theme="light"] .panel{
-      background:rgba(255,255,255,.92);
-      box-shadow:0 16px 30px rgba(20,33,61,.08);
-    }
-
-    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
-    .section-note{color:var(--muted);font-size:13px;line-height:1.6}
-
-    .stats-row{
-      display:flex;
+      border-radius:20px;
+      padding:10px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+      display:grid;
       gap:8px;
-      flex-wrap:wrap;
-      margin-top:14px;
     }
+
+    .summary-row{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:6px;
+    }
+
     .stat-chip{
-      display:inline-flex;
+      min-height:32px;
+      display:flex;
       align-items:center;
       justify-content:center;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
+      padding:6px 8px;
+      border-radius:12px;
+      font-size:11px;
+      font-weight:900;
       border:1px solid var(--line);
-      background:var(--soft2);
+      background:var(--surface-2);
       color:var(--text);
+      white-space:nowrap;
     }
-    .stat-chip.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .stat-chip.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .stat-chip.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
 
-    .toolbar{
-      display:grid;
-      gap:12px;
-    }
+    .stat-chip.blue{background:rgba(76,201,255,.13);border-color:rgba(76,201,255,.20)}
+    .stat-chip.yellow{background:rgba(245,185,66,.13);border-color:rgba(245,185,66,.20)}
+    .stat-chip.purple{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.20)}
 
     .tabs{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:8px;
+      gap:6px;
     }
+
     .tab-btn{
       border:none;
-      background:var(--soft2);
+      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:11px 10px;
-      font-size:13px;
-      font-weight:800;
+      border-radius:12px;
+      padding:8px 7px;
+      font-size:12px;
+      font-weight:900;
       cursor:pointer;
+      min-height:34px;
+      white-space:nowrap;
     }
+
     .tab-btn.active{
       background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
-      color:var(--text);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .search-actions-row{
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:6px;
+      align-items:center;
     }
 
     .search-wrap{
       position:relative;
+      min-width:0;
     }
+
     .search-input{
       width:100%;
       border:none;
       outline:none;
-      background:var(--soft2);
+      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px 46px 14px 14px;
-      font-size:14px;
+      border-radius:13px;
+      padding:10px 38px 10px 12px;
+      font-size:13px;
+      min-height:38px;
     }
+
     .search-input::placeholder{color:var(--muted)}
+
     .clear-search-btn{
       position:absolute;
-      right:8px;
+      right:5px;
       top:50%;
       transform:translateY(-50%);
-      width:32px;height:32px;
+      width:28px;
+      height:28px;
       border:none;
-      border-radius:10px;
-      background:var(--soft);
+      border-radius:9px;
+      background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:14px;
-      font-weight:800;
+      font-size:13px;
+      font-weight:900;
     }
 
-    .actions-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
     .action-btn{
       border:none;
-      background:var(--soft2);
+      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
+      padding:9px 10px;
+      font-size:12px;
+      font-weight:900;
       cursor:pointer;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap:6px;
-      min-height:42px;
-    }
-    .action-btn.primary{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
-    }
-    .action-btn.green{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.20);
+      min-height:38px;
+      white-space:nowrap;
     }
 
-    .loading{text-align:center;color:var(--muted);padding:28px 10px}
-    .list{display:grid;gap:12px}
+    .action-btn.primary{
+      background:rgba(76,201,255,.13);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .message{
+      min-height:16px;
+      font-size:12px;
+      line-height:1.35;
+      color:var(--muted);
+      padding:0 2px;
+    }
+
+    .message.ok{color:#9cf0bf}
+    .message.err{color:#ffb3bd}
+
+    .list-panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:24px 10px;
+      font-size:14px;
+    }
+
+    .list{
+      display:grid;
+      gap:9px;
+    }
+
     .item{
       display:block;
       text-decoration:none;
-      background:var(--soft2);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
-      padding:14px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:11px;
       color:var(--text);
     }
-    html[data-theme="light"] .item{
-      border:1px solid rgba(15,23,42,.06);
-    }
+
     .item.unread{
-      border-color:rgba(76,201,255,.26);
+      border-color:rgba(76,201,255,.28);
       box-shadow:0 0 0 1px rgba(76,201,255,.08) inset;
     }
 
@@ -251,138 +301,206 @@
       justify-content:space-between;
       align-items:flex-start;
       gap:10px;
-      margin-bottom:8px;
+      margin-bottom:6px;
     }
+
     .item-title{
-      font-size:15px;
-      font-weight:800;
-      line-height:1.4;
+      font-size:14px;
+      font-weight:900;
+      line-height:1.35;
     }
+
     .item-time{
       color:var(--muted);
-      font-size:11px;
+      font-size:10.5px;
       white-space:nowrap;
       flex-shrink:0;
     }
+
     .item-text{
-      color:#d7def5;
-      font-size:14px;
-      line-height:1.6;
-      margin-bottom:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      margin-bottom:8px;
       white-space:pre-wrap;
       word-break:break-word;
-    }
-    html[data-theme="light"] .item-text{
-      color:#33415c;
     }
 
     .item-bottom{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      gap:10px;
+      gap:8px;
       flex-wrap:wrap;
     }
 
     .type-wrap{
       display:flex;
-      gap:8px;
+      gap:6px;
       flex-wrap:wrap;
     }
+
     .item-type{
-      display:inline-block;
-      padding:6px 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
       border-radius:999px;
-      font-size:11px;
-      font-weight:800;
+      font-size:10.5px;
+      font-weight:900;
       border:1px solid transparent;
     }
-    .type-default{background:rgba(76,201,255,.14);color:#d8f7ff;border-color:rgba(76,201,255,.20)}
-    .type-follow{background:rgba(167,139,250,.14);color:#efe7ff;border-color:rgba(167,139,250,.20)}
-    .type-like{background:rgba(255,93,115,.14);color:#ffd6dd;border-color:rgba(255,93,115,.20)}
-    .type-comment{background:rgba(245,185,66,.14);color:#ffeab8;border-color:rgba(245,185,66,.20)}
-    .type-request{background:rgba(61,220,132,.14);color:#d9ffe8;border-color:rgba(61,220,132,.20)}
-    .type-event{background:rgba(76,201,255,.14);color:#d8f7ff;border-color:rgba(76,201,255,.20)}
-    .type-place{background:rgba(167,139,250,.14);color:#efe7ff;border-color:rgba(167,139,250,.20)}
-    .type-unread{background:rgba(245,185,66,.14);color:#ffeab8;border-color:rgba(245,185,66,.20)}
 
-    .item-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
+    .type-default{background:rgba(76,201,255,.13);color:var(--text);border-color:rgba(76,201,255,.20)}
+    .type-follow{background:rgba(167,139,250,.13);color:var(--text);border-color:rgba(167,139,250,.20)}
+    .type-like{background:rgba(255,93,115,.13);color:var(--text);border-color:rgba(255,93,115,.20)}
+    .type-comment{background:rgba(245,185,66,.13);color:var(--text);border-color:rgba(245,185,66,.20)}
+    .type-request{background:rgba(61,220,132,.13);color:var(--text);border-color:rgba(61,220,132,.20)}
+    .type-event{background:rgba(76,201,255,.13);color:var(--text);border-color:rgba(76,201,255,.20)}
+    .type-place{background:rgba(167,139,250,.13);color:var(--text);border-color:rgba(167,139,250,.20)}
+    .type-verification{background:rgba(61,220,132,.13);color:var(--text);border-color:rgba(61,220,132,.20)}
+    .type-unread{background:rgba(245,185,66,.13);color:var(--text);border-color:rgba(245,185,66,.20)}
+
     .mini-btn{
       border:none;
-      background:var(--soft);
+      background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
       border-radius:10px;
-      padding:8px 10px;
-      font-size:12px;
-      font-weight:800;
+      padding:7px 9px;
+      font-size:11.5px;
+      font-weight:900;
       cursor:pointer;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:34px;
+      min-height:32px;
     }
 
     .empty-box{
       text-align:center;
-      padding:28px 10px;
+      padding:26px 10px;
       color:var(--muted);
-      background:var(--soft2);
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.55;
     }
-    .hidden{display:none!important}
-
-    .message{
-      min-height:18px;
-      font-size:13px;
-      margin-top:8px;
-    }
-    .message.ok{color:#9cf0bf}
-    .message.err{color:#ffb3bd}
 
     .bottom-nav{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
-      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
-    }
-    html[data-theme="light"] .bottom-nav{
-      background:rgba(255,255,255,.96);
-      border:1px solid rgba(15,23,42,.08);
-      box-shadow:0 16px 30px rgba(20,33,61,.10);
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
     }
 
     .nav-link{
-      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:9px 5px;
+      border-radius:14px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
     }
-    html[data-theme="light"] .nav-link{color:#6b7893}
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
-      color:#d8f7ff;
+      color:var(--text);
     }
-    html[data-theme="light"] .nav-link.active{
-      color:#1f8fff;
+
+    .nav-link svg{
+      width:19px;
+      height:19px;
+      display:block;
     }
-    .nav-link .icon{font-size:18px;line-height:1}
 
     @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{grid-template-columns:48px 1fr}
-      .top-actions{grid-column:1 / -1;justify-content:stretch}
-      .top-actions .chip-btn{flex:1}
-      .brand{font-size:20px}
-      .tabs{grid-template-columns:1fr}
-      .item-bottom{align-items:flex-start}
+      body{padding:8px 8px 104px}
+
+      .topbar{
+        grid-template-columns:42px 1fr 42px;
+        border-radius:16px;
+        margin-bottom:8px;
+      }
+
+      .brand{font-size:17px}
+
+      .compact-controls{
+        padding:8px;
+        gap:6px;
+        margin-bottom:8px;
+        border-radius:18px;
+      }
+
+      .summary-row,
+      .tabs{
+        gap:5px;
+      }
+
+      .stat-chip{
+        font-size:10.5px;
+        padding:5px 5px;
+        min-height:30px;
+      }
+
+      .tab-btn{
+        font-size:11.5px;
+        padding:7px 5px;
+        min-height:32px;
+      }
+
+      .search-actions-row{
+        grid-template-columns:1fr;
+      }
+
+      .action-btn{
+        min-height:36px;
+      }
+
+      .list-panel{
+        padding:8px;
+        border-radius:18px;
+      }
+
+      .item{
+        border-radius:15px;
+        padding:10px;
+      }
+
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -393,50 +511,47 @@
       </button>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Notifications</div>
       </div>
 
-      <div class="top-actions">
-        <a href="feed.html" class="chip-btn">Feed</a>
-      </div>
+      <button id="refreshBtn" class="top-icon-btn refresh-top" type="button" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8 8 0 0 0-14.9-3"></path>
+          <path d="M4 4v5h5"></path>
+          <path d="M4 13a8 8 0 0 0 14.9 3"></path>
+          <path d="M20 20v-5h-5"></path>
+        </svg>
+      </button>
     </div>
 
-    <div class="panel">
-      <div class="section-title">Notifications</div>
-      <div class="section-note">Latest activity on your account.</div>
-
-      <div class="stats-row">
-        <span id="allCountChip" class="stat-chip blue">All: 0</span>
-        <span id="unreadCountChip" class="stat-chip yellow">Unread: 0</span>
-        <span id="requestCountChip" class="stat-chip purple">Requests: 0</span>
+    <div class="compact-controls">
+      <div class="summary-row">
+        <span id="allCountChip" class="stat-chip blue">All 0</span>
+        <span id="unreadCountChip" class="stat-chip yellow">Unread 0</span>
+        <span id="requestCountChip" class="stat-chip purple">Requests 0</span>
       </div>
-    </div>
 
-    <div class="panel">
-      <div class="toolbar">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="all" type="button">All</button>
-          <button class="tab-btn" data-tab="unread" type="button">Unread</button>
-          <button class="tab-btn" data-tab="requests" type="button">Requests</button>
-        </div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="all" type="button">All</button>
+        <button class="tab-btn" data-tab="unread" type="button">Unread</button>
+        <button class="tab-btn" data-tab="requests" type="button">Requests</button>
+      </div>
 
+      <div class="search-actions-row">
         <div class="search-wrap">
-          <input id="searchInput" class="search-input" type="text" placeholder="Search notifications..." />
-          <button id="clearSearchBtn" class="clear-search-btn hidden" type="button">✕</button>
+          <input id="searchInput" class="search-input" type="text" placeholder="Search..." />
+          <button id="clearSearchBtn" class="clear-search-btn hidden" type="button" aria-label="Clear search">×</button>
         </div>
 
-        <div class="actions-row">
-          <button id="markAllBtn" class="action-btn primary" type="button">Mark All Read</button>
-          <a href="follow-requests.html" class="action-btn" id="followRequestsLink">Follow Requests</a>
-          <button id="refreshBtn" class="action-btn green" type="button">Refresh</button>
-        </div>
-
-        <div id="pageMessage" class="message"></div>
+        <button id="markAllBtn" class="action-btn primary" type="button">Mark Read</button>
+        <a href="follow-requests.html" class="action-btn" id="followRequestsLink">Follow Req.</a>
       </div>
+
+      <div id="pageMessage" class="message"></div>
     </div>
 
-    <div class="panel">
+    <div class="list-panel">
       <div id="loading" class="loading">Loading notifications...</div>
       <div id="list" class="list hidden"></div>
       <div id="emptyBox" class="empty-box hidden">No notifications yet.</div>
@@ -445,23 +560,42 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5"></path>
+        <path d="M5 10v10h14V10"></path>
+        <path d="M9 20v-6h6v6"></path>
+      </svg>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+        <circle cx="12" cy="9" r="2.5"></circle>
+      </svg>
       <span>Nearby</span>
     </a>
+
     <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14"></path>
+        <path d="M5 12h14"></path>
+      </svg>
       <span>Create</span>
     </a>
-    <a href="nearby-events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+
+    <a href="inbox.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+      </svg>
+      <span>Inbox</span>
     </a>
+
     <a href="profile.html" class="nav-link active">
-      <span class="icon">◉</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
       <span>Profile</span>
     </a>
   </nav>
@@ -490,7 +624,7 @@
     let refreshTimer = null;
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
@@ -507,7 +641,7 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -519,7 +653,7 @@
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
-      else window.location.href = "feed.html";
+      else window.location.href = "profile.html";
     });
 
     function nowIso() {
@@ -572,20 +706,21 @@
       if (!value) return "Just now";
 
       try {
-        if (typeof value === "object" && typeof value.toDate === "function") {
-          return value.toDate().toLocaleString();
-        }
-      } catch {}
-
-      try {
-        if (typeof value === "object" && typeof value.seconds === "number") {
-          return new Date(value.seconds * 1000).toLocaleString();
-        }
-      } catch {}
-
-      try {
         const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
+        if (Number.isNaN(d.getTime())) return "Just now";
+
+        const now = Date.now();
+        const diff = now - d.getTime();
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
+
+        if (diff < minute) return "Now";
+        if (diff < hour) return `${Math.floor(diff / minute)}m`;
+        if (diff < day) return `${Math.floor(diff / hour)}h`;
+        if (diff < day * 7) return `${Math.floor(diff / day)}d`;
+
+        return d.toLocaleDateString([], { month: "short", day: "numeric" });
       } catch {
         return "Just now";
       }
@@ -608,6 +743,8 @@
         toUserId: getField(d, ["to_user_id", "toUserId", "user_id", "userId", "uid"], ""),
 
         postId: getField(d, ["post_id", "postId"], ""),
+        threadId: getField(d, ["thread_id", "threadId"], ""),
+        requestId: getField(d, ["request_id", "requestId"], ""),
         eventId: getField(d, ["event_id", "eventId"], ""),
         placeId: getField(d, ["place_id", "placeId"], ""),
         source: getField(d, ["source", "place_source", "placeSource"], ""),
@@ -627,6 +764,10 @@
       if (t === "follow_accept") return { label: "Accepted", cls: "type-follow" };
       if (t === "like") return { label: "Like", cls: "type-like" };
       if (t === "comment") return { label: "Comment", cls: "type-comment" };
+      if (t === "message_request") return { label: "Msg Request", cls: "type-request" };
+      if (t === "message_request_accepted") return { label: "Msg Accepted", cls: "type-request" };
+      if (t === "message") return { label: "Message", cls: "type-default" };
+      if (t === "verification" || t === "verification_update" || t === "verification_note") return { label: "Verification", cls: "type-verification" };
       if (t === "event_join" || t === "event_comment" || t === "event") return { label: "Event", cls: "type-event" };
       if (t === "place_update" || t === "place_approved" || t === "place_rejected" || t === "place") return { label: "Place", cls: "type-place" };
 
@@ -634,19 +775,37 @@
     }
 
     function getTargetUrl(item) {
-      if (item.type === "follow" && item.fromUserId) {
+      const t = String(item.type || "").toLowerCase();
+
+      if (t === "follow" && item.fromUserId) {
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
 
-      if (item.type === "follow_request") {
+      if (t === "follow_request") {
         return "follow-requests.html";
       }
 
-      if (item.type === "follow_accept" && item.fromUserId) {
+      if (t === "follow_accept" && item.fromUserId) {
         return `member.html?uid=${encodeURIComponent(item.fromUserId)}`;
       }
 
-      if ((item.type === "like" || item.type === "comment") && item.postId) {
+      if (t === "message" && item.threadId) {
+        return `chat.html?threadId=${encodeURIComponent(item.threadId)}`;
+      }
+
+      if (t === "message_request") {
+        return "inbox.html";
+      }
+
+      if (t === "message_request_accepted" && item.threadId) {
+        return `chat.html?threadId=${encodeURIComponent(item.threadId)}`;
+      }
+
+      if (t.includes("verification")) {
+        return "verification.html";
+      }
+
+      if ((t === "like" || t === "comment") && item.postId) {
         return `post.html?postId=${encodeURIComponent(item.postId)}`;
       }
 
@@ -667,27 +826,37 @@
     }
 
     function getActionLabel(item) {
-      if (item.type === "follow_request") return "Open Requests";
-      if (item.postId) return "Open Post";
-      if (item.eventId) return "Open Event";
-      if (item.placeId) return "Open Place";
-      if (item.fromUserId) return "Open Profile";
+      const t = String(item.type || "").toLowerCase();
+
+      if (t === "follow_request") return "Requests";
+      if (t === "message" || t === "message_request_accepted") return "Chat";
+      if (t === "message_request") return "Inbox";
+      if (t.includes("verification")) return "Verify";
+      if (item.postId) return "Post";
+      if (item.eventId) return "Event";
+      if (item.placeId) return "Place";
+      if (item.fromUserId) return "Profile";
       return "Open";
+    }
+
+    function isRequestType(item) {
+      const t = String(item.type || "").toLowerCase();
+      return t === "follow_request" || t === "message_request" || t === "message_request_accepted";
     }
 
     function updateCounts(items) {
       const allCount = items.length;
       const unreadCount = items.filter(isUnread).length;
-      const requestCount = items.filter(item => item.type === "follow_request").length;
+      const requestCount = items.filter(isRequestType).length;
       const unreadRequestCount = items.filter(item => item.type === "follow_request" && isUnread(item)).length;
 
-      allCountChip.textContent = `All: ${allCount}`;
-      unreadCountChip.textContent = `Unread: ${unreadCount}`;
-      requestCountChip.textContent = `Requests: ${requestCount}`;
+      allCountChip.textContent = `All ${allCount}`;
+      unreadCountChip.textContent = `Unread ${unreadCount}`;
+      requestCountChip.textContent = `Requests ${requestCount}`;
 
       followRequestsLink.textContent = unreadRequestCount > 0
-        ? `Follow Requests (${unreadRequestCount > 99 ? "99+" : unreadRequestCount})`
-        : "Follow Requests";
+        ? `Follow Req. (${unreadRequestCount > 99 ? "99+" : unreadRequestCount})`
+        : "Follow Req.";
     }
 
     function matchesSearch(item, queryText) {
@@ -711,7 +880,7 @@
       return allDocs.filter(item => {
         if (!matchesSearch(item, queryText)) return false;
         if (currentTab === "unread") return isUnread(item);
-        if (currentTab === "requests") return item.type === "follow_request";
+        if (currentTab === "requests") return isRequestType(item);
         return true;
       });
     }
@@ -725,7 +894,7 @@
 
         emptyBox.textContent =
           currentTab === "unread" ? "No unread notifications." :
-          currentTab === "requests" ? "No follow requests yet." :
+          currentTab === "requests" ? "No requests yet." :
           "No notifications yet.";
 
         return;
@@ -756,9 +925,7 @@
               ${isUnread(item) ? `<span class="item-type type-unread">Unread</span>` : ""}
             </div>
 
-            <div class="item-actions">
-              <span class="mini-btn">${escapeHtml(getActionLabel(item))}</span>
-            </div>
+            <span class="mini-btn">${escapeHtml(getActionLabel(item))}</span>
           </div>
         `;
 
@@ -1018,7 +1185,7 @@
       }
 
       notificationsChannel = supabase
-        .channel(`notifications-live-${currentUser.id}`)
+        .channel(`ownspace-notifications-live-${currentUser.id}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "notifications" },
@@ -1032,10 +1199,10 @@
 
       try {
         await loadNotifications();
-        setMessage("Notifications refreshed.", "ok");
+        setMessage("Refreshed.", "ok");
       } catch (err) {
         console.error(err);
-        setMessage("Could not refresh notifications.", "err");
+        setMessage("Could not refresh.", "err");
       }
     });
 
@@ -1073,34 +1240,20 @@
     });
 
     /*
-      SUPABASE NEEDS FOR THIS PAGE:
+      OWNSPACE / SUPABASE NOTES FOR THIS PAGE:
 
-      TABLES:
-      - notifications: select, update, realtime
+      UI FIXES:
+      - Removed top Feed button.
+      - Refresh button moved to top-right bar.
+      - Filters/stats/search/actions made compact.
+      - Options area now stays small instead of covering the page.
+      - BareWorld renamed to OwnSpace.
+      - Bottom nav icons replaced with clean SVG icons.
 
-      AUTH:
-      - logged-in user required
-
-      IMPORTANT COLUMNS:
-      notifications:
-      - id
-      - type
-      - title
-      - text
-      - from_user_id
-      - to_user_id
-      - post_id
-      - event_id
-      - place_id
-      - source
-      - is_read
-      - read
-      - read_at
-      - created_at
-      - updated_at
-
-      SHARE BUTTON:
-      - Not needed on notifications page because it does not display post cards.
+      NOTIFICATION LOGIC:
+      - This page reads general notifications only.
+      - Inbox badge logic stays separate in inbox.html/chat.html.
+      - Requests tab includes follow/message request style notifications.
     */
   </script>
 </body>
