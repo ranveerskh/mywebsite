@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OwnSpace - Community</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 88% 10%, rgba(167,139,250,.10), transparent 26%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
+    }
+
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
+      align-items:center;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:18px;font-weight:950;line-height:1.05;letter-spacing:-.02em}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:12px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading-box,
+    .empty-box,
+    .locked-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .cover{
+      width:100%;
+      max-height:310px;
+      object-fit:cover;
+      display:block;
+      border-radius:18px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      margin-bottom:12px;
+    }
+
+    .community-head{
+      display:grid;
+      gap:8px;
+    }
+
+    .community-title{
+      font-size:24px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      word-break:break-word;
+    }
+
+    .community-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:6px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .badge svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .meta-item{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:11px;
+      font-size:13px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .meta-item strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .desc,
+    .rules-text{
+      color:var(--text);
+      line-height:1.62;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .section-title{
+      font-size:17px;
+      font-weight:950;
+      margin-bottom:9px;
+      letter-spacing:-.01em;
+    }
+
+    .owner-card,
+    .member-card,
+    .post-author{
+      display:flex;
+      gap:11px;
+      align-items:center;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:17px;
+      padding:11px;
+    }
+
+    .owner-avatar,
+    .member-avatar,
+    .author-avatar,
+    .owner-avatar-placeholder,
+    .member-avatar-placeholder,
+    .author-avatar-placeholder{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      flex-shrink:0;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+
+    .owner-avatar,
+    .member-avatar,
+    .author-avatar{
+      object-fit:cover;
+    }
+
+    .owner-avatar-placeholder,
+    .member-avatar-placeholder,
+    .author-avatar-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      text-align:center;
+      font-size:10px;
+      padding:6px;
+      line-height:1.25;
+    }
+
+    .owner-body,
+    .member-body,
+    .author-body{
+      min-width:0;
+      flex:1;
+    }
+
+    .owner-name,
+    .member-name,
+    .author-name{
+      font-size:14px;
+      font-weight:950;
+      line-height:1.3;
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .owner-name a,
+    .member-name a,
+    .author-name a{
+      color:var(--text);
+      text-decoration:none;
+    }
+
+    .owner-name a:hover,
+    .member-name a:hover,
+    .author-name a:hover{text-decoration:underline}
+
+    .username{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:850;
+      margin-top:3px;
+      word-break:break-word;
+    }
+
+    .bio-small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      margin-top:4px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .verified-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:19px;
+      height:19px;
+      border-radius:999px;
+      background:#20c76f;
+      color:#fff;
+      border:2px solid rgba(255,255,255,.85);
+      box-shadow:0 0 0 3px rgba(32,199,111,.16);
+      flex-shrink:0;
+    }
+
+    .verified-badge svg{
+      width:12px;
+      height:12px;
+      stroke-width:3;
+    }
+
+    .action-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      font-size:12px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      gap:7px;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      color:var(--text);
+      border:1px solid var(--line);
+      background:var(--surface-2);
+    }
+
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .action-btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.5;
+    }
+
+    .message.ok{color:#86efac}
+    .message.err{color:#fda4af}
+
+    .composer{
+      display:grid;
+      gap:10px;
+    }
+
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .textarea{
+      min-height:105px;
+      resize:vertical;
+      line-height:1.55;
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{color:var(--muted)}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .file-box{
+      border:1px dashed var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:var(--surface-2);
+    }
+
+    .file-input{
+      width:100%;
+      color:var(--text);
+      font-size:13px;
+    }
+
+    .file-input::file-selector-button{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+      border-radius:10px;
+      padding:8px 10px;
+      margin-right:10px;
+      cursor:pointer;
+      font-weight:950;
+    }
+
+    .preview-wrap{
+      display:none;
+      margin-top:10px;
+    }
+
+    .preview-wrap.show{display:block}
+
+    .preview-img{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
+      margin-top:5px;
+    }
+
+    .posts-list,
+    .members-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .post-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .post-author{
+      margin-bottom:10px;
+      border-radius:15px;
+      padding:9px;
+      background:var(--surface-3);
+    }
+
+    .post-title{
+      font-size:16px;
+      font-weight:950;
+      line-height:1.35;
+      margin-bottom:8px;
+      word-break:break-word;
+    }
+
+    .post-text{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .post-image{
+      width:100%;
+      max-height:340px;
+      object-fit:cover;
+      border-radius:15px;
+      display:block;
+      margin-top:10px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+
+    .post-time{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:850;
+      margin-top:3px;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .count-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:9px 5px;
+      border-radius:14px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
+
+    @media(max-width:700px){
+      .brand{font-size:17px}
+      .community-title{font-size:21px}
+      .meta-grid,.grid-2{grid-template-columns:1fr}
+      .action-row .action-btn{flex:1}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Community</div>
+      </div>
+
+      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <div id="loadingPanel" class="panel">
+      <div class="loading-box">Loading community...</div>
+    </div>
+
+    <div id="notFoundPanel" class="panel hidden">
+      <div id="notFoundText" class="empty-box">Community not found.</div>
+    </div>
+
+    <div id="lockedPanel" class="panel hidden">
+      <div id="lockedText" class="locked-box">This community is private.</div>
+      <div id="lockedActionRow" class="action-row"></div>
+      <div id="lockedMessage" class="message"></div>
+    </div>
+
+    <div id="communityPanel" class="hidden">
+      <div class="panel">
+        <img id="coverImage" class="cover hidden" alt="Community cover" />
+
+        <div class="community-head">
+          <div id="communityTitle" class="community-title">Community</div>
+          <div id="communitySub" class="community-sub">Community details</div>
+          <div id="badgeRow" class="badge-row"></div>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <strong>Category</strong>
+            <span id="categoryText">-</span>
+          </div>
+
+          <div class="meta-item">
+            <strong>Privacy</strong>
+            <span id="privacyText">-</span>
+          </div>
+
+          <div class="meta-item">
+            <strong>Posting</strong>
+            <span id="postingText">-</span>
+          </div>
+
+          <div class="meta-item">
+            <strong>Members</strong>
+            <span id="membersCountText">0</span>
+          </div>
+        </div>
+
+        <div class="action-row" id="topActionRow"></div>
+        <div id="topMessage" class="message"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">About</div>
+        <div id="descriptionText" class="desc">No description added.</div>
+      </div>
+
+      <div id="rulesPanel" class="panel hidden">
+        <div class="section-title">Community Rules</div>
+        <div id="rulesText" class="rules-text"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Owner</div>
+        <div id="ownerCard" class="owner-card"></div>
+      </div>
+
+      <div id="composerPanel" class="panel hidden">
+        <div class="section-title">Post in Community</div>
+
+        <form id="postForm" class="composer">
+          <input id="postTitleInput" class="input" type="text" placeholder="Optional title" />
+          <textarea id="postTextInput" class="textarea" placeholder="Write an update, article, note, or community post..."></textarea>
+
+          <div class="grid-2">
+            <select id="postTypeInput" class="select">
+              <option value="post">Post</option>
+              <option value="article">Article</option>
+              <option value="update">Update</option>
+              <option value="question">Question</option>
+            </select>
+
+            <select id="postAudienceInput" class="select">
+              <option value="community">Community</option>
+              <option value="public">Public preview</option>
+            </select>
+          </div>
+
+          <div class="file-box">
+            <input id="postImageFile" class="file-input" type="file" accept="image/*" />
+            <div class="small-note">Optional photo. Uses Supabase Storage bucket: <strong>media</strong>.</div>
+            <div id="previewWrap" class="preview-wrap">
+              <img id="previewImg" class="preview-img" alt="Post preview" />
+            </div>
+          </div>
+
+          <button id="submitPostBtn" class="action-btn btn-green" type="submit">Post</button>
+          <div id="postMessage" class="message"></div>
+        </form>
+      </div>
+
+      <div id="composerLockedPanel" class="panel hidden">
+        <div class="empty-box" id="composerLockedText">Only approved community authors can post here.</div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <div class="section-title">Pinned & Recent Posts</div>
+          <div id="postsCountChip" class="count-pill">0 posts</div>
+        </div>
+
+        <div id="postsList" class="posts-list hidden"></div>
+        <div id="postsEmpty" class="empty-box hidden">No community posts yet.</div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <div class="section-title">Members</div>
+          <div id="membersCountChip" class="count-pill">0 members</div>
+        </div>
+
+        <div id="membersList" class="members-list hidden"></div>
+        <div id="membersEmpty" class="empty-box hidden">No members yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
+      <span>Feed</span>
+    </a>
+
+    <a href="nearby.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
+      <span>Nearby</span>
+    </a>
+
+    <a href="search.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
+      <span>Search</span>
+    </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
+    <a href="profile.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const STORAGE_BUCKET = "media";
+
+    const backBtn = document.getElementById("backBtn");
+    const loadingPanel = document.getElementById("loadingPanel");
+    const notFoundPanel = document.getElementById("notFoundPanel");
+    const notFoundText = document.getElementById("notFoundText");
+    const lockedPanel = document.getElementById("lockedPanel");
+    const lockedText = document.getElementById("lockedText");
+    const lockedActionRow = document.getElementById("lockedActionRow");
+    const lockedMessage = document.getElementById("lockedMessage");
+    const communityPanel = document.getElementById("communityPanel");
+
+    const coverImage = document.getElementById("coverImage");
+    const communityTitle = document.getElementById("communityTitle");
+    const communitySub = document.getElementById("communitySub");
+    const badgeRow = document.getElementById("badgeRow");
+    const categoryText = document.getElementById("categoryText");
+    const privacyText = document.getElementById("privacyText");
+    const postingText = document.getElementById("postingText");
+    const membersCountText = document.getElementById("membersCountText");
+    const descriptionText = document.getElementById("descriptionText");
+    const rulesPanel = document.getElementById("rulesPanel");
+    const rulesText = document.getElementById("rulesText");
+    const topActionRow = document.getElementById("topActionRow");
+    const topMessage = document.getElementById("topMessage");
+
+    const ownerCard = document.getElementById("ownerCard");
+
+    const composerPanel = document.getElementById("composerPanel");
+    const composerLockedPanel = document.getElementById("composerLockedPanel");
+    const composerLockedText = document.getElementById("composerLockedText");
+    const postForm = document.getElementById("postForm");
+    const postTitleInput = document.getElementById("postTitleInput");
+    const postTextInput = document.getElementById("postTextInput");
+    const postTypeInput = document.getElementById("postTypeInput");
+    const postAudienceInput = document.getElementById("postAudienceInput");
+    const postImageFile = document.getElementById("postImageFile");
+    const previewWrap = document.getElementById("previewWrap");
+    const previewImg = document.getElementById("previewImg");
+    const submitPostBtn = document.getElementById("submitPostBtn");
+    const postMessage = document.getElementById("postMessage");
+
+    const postsList = document.getElementById("postsList");
+    const postsEmpty = document.getElementById("postsEmpty");
+    const postsCountChip = document.getElementById("postsCountChip");
+
+    const membersList = document.getElementById("membersList");
+    const membersEmpty = document.getElementById("membersEmpty");
+    const membersCountChip = document.getElementById("membersCountChip");
+    const inboxBadge = document.getElementById("inboxBadge");
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentCommunityId = "";
+    let currentCommunity = null;
+    let ownerProfile = null;
+
+    let membersRows = [];
+    let postsRows = [];
+    let userMember = null;
+    let joinRequestPending = false;
+    let approvedAuthor = false;
+    let isOwner = false;
+    let isAdmin = false;
+    let canViewCommunity = false;
+    let canPostCommunity = false;
+
+    let previewObjectUrl = "";
+    let realtimeChannels = [];
+    let refreshTimer = null;
+
+    const ICONS = {
+      check: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      `,
+      lock: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+        </svg>
+      `,
+      users: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      `,
+      pin: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 17v5"></path>
+          <path d="M9 7 7 3h10l-2 4"></path>
+          <path d="M7 14h10l-2-7H9Z"></path>
+        </svg>
+      `,
+      edit: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+        </svg>
+      `,
+      trash: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+          <path d="M10 11v5"></path>
+          <path d="M14 11v5"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `,
+      report: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 9v4"></path>
+          <path d="M12 17h.01"></path>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+        </svg>
+      `
+    };
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    if (mq.addEventListener) {
+      mq.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "profile.html";
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text == null ? "" : String(text);
+      return div.innerHTML;
+    }
+
+    function setTopMessage(text = "", type = "") {
+      topMessage.textContent = text;
+      topMessage.className = `message ${type}`;
+    }
+
+    function setLockedMessage(text = "", type = "") {
+      lockedMessage.textContent = text;
+      lockedMessage.className = `message ${type}`;
+    }
+
+    function setPostMessage(text = "", type = "") {
+      postMessage.textContent = text;
+      postMessage.className = `message ${type}`;
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+      }
+      return fallback;
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") return value.toDate().getTime();
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") return value.seconds * 1000;
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      const ms = toMillis(value);
+      if (!ms) return "Just now";
+
+      const diff = Date.now() - ms;
+      const minute = 60 * 1000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+
+      if (diff < minute) return "Now";
+      if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+      if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+      if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
+
+      return new Date(ms).toLocaleDateString([], { month: "short", day: "numeric" });
+    }
+
+    function pretty(value) {
+      return String(value || "")
+        .replaceAll("_", " ")
+        .replaceAll("-", " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+
+      return {
+        uid: getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid,
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        verified: getBool(d, ["verified", "is_verified", "isVerified"]),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"]),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"]),
+        isAdmin: getBool(d, ["is_admin", "isAdmin"]) || getField(d, ["role"]) === "admin"
+      };
+    }
+
+    function normalizeCommunity(raw, fallbackId = "") {
+      const d = raw || {};
+      const privacy = String(getField(d, ["privacy", "visibility", "community_privacy", "communityPrivacy"], "public") || "public").toLowerCase();
+      const postingMode = String(getField(d, ["posting_mode", "postingMode", "post_permission", "postPermission"], "members") || "members").toLowerCase();
+
+      return {
+        id: getField(d, ["id"], fallbackId) || fallbackId,
+        name: getField(d, ["name", "title", "community_name", "communityName"], "Community") || "Community",
+        category: getField(d, ["category", "topic"], "General") || "General",
+        description: getField(d, ["description", "desc", "about"]),
+        rules: getField(d, ["rules", "community_rules", "communityRules"]),
+        privacy,
+        postingMode,
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "cover_url", "coverURL", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        ownerId: getField(d, ["owner_id", "ownerId", "creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"]),
+        ownerName: getField(d, ["owner_name", "ownerName", "creator_name", "creatorName", "display_name", "displayName"], "Member"),
+        featured: getBool(d, ["featured", "is_featured", "isFeatured"]),
+        pinned: getBool(d, ["pinned", "is_pinned", "isPinned"]),
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
+        memberCount: Number(d.member_count ?? d.memberCount ?? d.members_count ?? d.membersCount ?? 0) || 0,
+        createdAt: d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function normalizeMember(raw) {
+      const d = raw || {};
+
+      return {
+        id: getField(d, ["id"]),
+        communityId: getField(d, ["community_id", "communityId", "group_id", "groupId"]),
+        userId: getField(d, ["user_id", "userId", "uid", "member_id", "memberId"]),
+        role: String(getField(d, ["role"], "member") || "member").toLowerCase(),
+        status: String(getField(d, ["status"], "approved") || "approved").toLowerCase(),
+        approvedAuthor: getBool(d, ["approved_author", "approvedAuthor", "can_post", "canPost", "is_author", "isAuthor"]),
+        joinedAt: d.joined_at ?? d.joinedAt ?? d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function normalizePost(raw, fallbackId = "", sourceTable = "") {
+      const d = raw || {};
+      const createdAt = d.created_at ?? d.createdAt ?? d.timestamp ?? null;
+
+      return {
+        id: getField(d, ["id"], fallbackId) || fallbackId,
+        sourceTable,
+        communityId: getField(d, ["community_id", "communityId", "group_id", "groupId"]),
+        authorId: getField(d, ["user_id", "userId", "author_id", "authorId", "uid", "created_by", "createdBy"]),
+        authorName: getField(d, ["author_name", "authorName", "display_name", "displayName", "name"], "Member"),
+        authorUsername: getField(d, ["username", "author_username", "authorUsername"]),
+        title: getField(d, ["title", "heading"]),
+        text: getField(d, ["text", "body", "content", "caption", "description"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        type: getField(d, ["type", "post_type", "postType"], "post") || "post",
+        audience: getField(d, ["audience"], "community") || "community",
+        pinned: getBool(d, ["pinned", "is_pinned", "isPinned"]),
+        featured: getBool(d, ["featured", "is_featured", "isFeatured"]),
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
+        createdAt,
+        createdAtMs: toMillis(createdAt)
+      };
+    }
+
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function loadMergedProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
+      try {
+        const [publicRow, userRow] = await Promise.all([
+          selectProfileRow("public_profiles", uid),
+          selectProfileRow("users", uid)
+        ]);
+
+        return normalizeProfile({
+          ...(publicRow || {}),
+          ...(userRow || {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function isAdminUser(uid) {
+      if (!uid) return false;
+
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return true;
+        } catch {}
+      }
+
+      return !!currentUserProfile?.isAdmin;
+    }
+
+    async function findCommunity(id) {
+      const tables = ["communities", "community"];
+
+      for (const table of tables) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+          if (!error && data) return normalizeCommunity({ id: data.id, ...data }, data.id);
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function selectRowsByCommunity(table, communityId) {
+      const columns = ["community_id", "communityId", "group_id", "groupId"];
+      let rows = [];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, communityId);
+
+          if (!error && data) {
+            rows = rows.concat(data);
+            break;
+          }
+        } catch {}
+      }
+
+      return rows;
+    }
+
+    async function loadMembers() {
+      const tables = ["community_members", "communities_members", "communityMembers"];
+      const merged = [];
+
+      for (const table of tables) {
+        const rows = await selectRowsByCommunity(table, currentCommunityId);
+        rows.forEach(row => merged.push({ ...row, __table: table }));
+      }
+
+      const seen = new Set();
+
+      const normalized = merged
+        .map(normalizeMember)
+        .filter(row => row.userId)
+        .filter(row => {
+          const key = row.userId;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+      membersRows = await Promise.all(
+        normalized.map(async member => {
+          const profile = await loadMergedProfile(member.userId);
+
+          return {
+            ...member,
+            profile,
+            approved:
+              member.status === "approved" ||
+              member.status === "active" ||
+              member.status === "member" ||
+              member.status === "",
+            isOwner: member.userId === currentCommunity.ownerId
+          };
+        })
+      );
+
+      if (!membersRows.find(m => m.userId === currentCommunity.ownerId) && currentCommunity.ownerId) {
+        membersRows.unshift({
+          id: "owner",
+          communityId: currentCommunityId,
+          userId: currentCommunity.ownerId,
+          role: "owner",
+          status: "approved",
+          approved: true,
+          approvedAuthor: true,
+          isOwner: true,
+          profile: ownerProfile || await loadMergedProfile(currentCommunity.ownerId)
+        });
+      }
+
+      userMember = membersRows.find(m => m.userId === currentUser.id) || null;
+    }
+
+    async function loadJoinRequestState() {
+      joinRequestPending = false;
+
+      const tables = ["community_join_requests", "community_requests", "join_requests"];
+      const communityCols = ["community_id", "communityId", "group_id", "groupId"];
+      const userCols = ["user_id", "userId", "requester_id", "requesterId", "uid"];
+
+      for (const table of tables) {
+        for (const cCol of communityCols) {
+          for (const uCol of userCols) {
+            try {
+              const { data, error } = await supabase
+                .from(table)
+                .select("*")
+                .eq(cCol, currentCommunityId)
+                .eq(uCol, currentUser.id)
+                .limit(1);
+
+              if (!error && data && data.length) {
+                const status = String(data[0].status || "pending").toLowerCase();
+                joinRequestPending = status === "pending" || status === "requested";
+                return;
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+
+    async function loadApprovedAuthorState() {
+      approvedAuthor = false;
+
+      if (userMember?.approvedAuthor) {
+        approvedAuthor = true;
+        return;
+      }
+
+      const tables = ["community_authors", "community_approved_authors", "approved_authors"];
+      const communityCols = ["community_id", "communityId", "group_id", "groupId"];
+      const userCols = ["user_id", "userId", "uid", "author_id", "authorId"];
+
+      for (const table of tables) {
+        for (const cCol of communityCols) {
+          for (const uCol of userCols) {
+            try {
+              const { data, error } = await supabase
+                .from(table)
+                .select("*")
+                .eq(cCol, currentCommunityId)
+                .eq(uCol, currentUser.id)
+                .limit(1);
+
+              if (!error && data && data.length) {
+                const status = String(data[0].status || "approved").toLowerCase();
+                approvedAuthor = status === "approved" || status === "active";
+                return;
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+
+    async function loadPosts() {
+      const merged = [];
+
+      const sourceTables = ["community_posts", "posts"];
+
+      for (const table of sourceTables) {
+        const rows = await selectRowsByCommunity(table, currentCommunityId);
+        rows.forEach(row => merged.push(normalizePost({ id: row.id, ...row }, row.id, table)));
+      }
+
+      const seen = new Set();
+
+      postsRows = merged
+        .filter(post => post.id && !post.hidden)
+        .filter(post => {
+          const key = `${post.sourceTable}:${post.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (b.pinned && !a.pinned) return 1;
+          if (a.featured && !b.featured) return -1;
+          if (b.featured && !a.featured) return 1;
+          return b.createdAtMs - a.createdAtMs;
+        });
+
+      postsRows = await Promise.all(
+        postsRows.map(async post => {
+          const profile = await loadMergedProfile(post.authorId);
+
+          return {
+            ...post,
+            profile
+          };
+        })
+      );
+    }
+
+    function evaluateAccess() {
+      isOwner = currentCommunity.ownerId === currentUser.id;
+      const memberApproved = !!userMember?.approved;
+      const role = String(userMember?.role || "").toLowerCase();
+      const privilegedRole = ["owner", "admin", "moderator", "mod"].includes(role);
+
+      canViewCommunity =
+        !currentCommunity.hidden &&
+        (
+          currentCommunity.privacy === "public" ||
+          currentCommunity.privacy === "open" ||
+          isOwner ||
+          isAdmin ||
+          memberApproved
+        );
+
+      if (currentCommunity.privacy === "private" && !isOwner && !isAdmin && !memberApproved) {
+        canViewCommunity = false;
+      }
+
+      if (!canViewCommunity) {
+        canPostCommunity = false;
+        return;
+      }
+
+      if (isOwner || isAdmin || privilegedRole) {
+        canPostCommunity = true;
+        return;
+      }
+
+      const mode = currentCommunity.postingMode || "members";
+
+      if (mode === "public" || mode === "everyone") {
+        canPostCommunity = true;
+      } else if (mode === "members" || mode === "member") {
+        canPostCommunity = memberApproved;
+      } else if (mode === "approved" || mode === "approved_authors" || mode === "authors") {
+        canPostCommunity = memberApproved && approvedAuthor;
+      } else if (mode === "owner" || mode === "admin") {
+        canPostCommunity = false;
+      } else {
+        canPostCommunity = memberApproved;
+      }
+    }
+
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function updateRowWithFallback(table, id, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", id);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    async function createNotificationSafe(targetUid, payload = {}) {
+      if (!targetUid || targetUid === currentUser?.id) return;
+
+      try {
+        await insertWithFallback("notifications", [
+          {
+            type: payload.type || "notification",
+            title: payload.title || "",
+            text: payload.text || "",
+            from_user_id: currentUser?.id || "",
+            to_user_id: targetUid,
+            community_id: currentCommunityId,
+            created_at: nowIso(),
+            is_read: false
+          },
+          {
+            type: payload.type || "notification",
+            title: payload.title || "",
+            text: payload.text || "",
+            fromUserId: currentUser?.id || "",
+            toUserId: targetUid,
+            communityId: currentCommunityId,
+            createdAt: nowIso(),
+            isRead: false
+          },
+          {
+            type: payload.type || "notification",
+            text: payload.text || "",
+            to_user_id: targetUid,
+            created_at: nowIso()
+          }
+        ]);
+      } catch (err) {
+        console.warn("Notification failed:", err?.message || err);
+      }
+    }
+
+    async function joinCommunity(button, requestOnly = false) {
+      button.disabled = true;
+      setTopMessage("");
+      setLockedMessage("");
+
+      try {
+        const privacy = currentCommunity.privacy;
+
+        if (requestOnly || privacy === "private" || privacy === "request" || privacy === "approval" || privacy === "request_only") {
+          await insertWithFallback("community_join_requests", [
+            {
+              community_id: currentCommunityId,
+              requester_id: currentUser.id,
+              target_user_id: currentCommunity.ownerId || "",
+              status: "pending",
+              created_at: nowIso(),
+              updated_at: nowIso()
+            },
+            {
+              communityId: currentCommunityId,
+              requesterId: currentUser.id,
+              targetUserId: currentCommunity.ownerId || "",
+              status: "pending",
+              createdAt: nowIso(),
+              updatedAt: nowIso()
+            },
+            {
+              community_id: currentCommunityId,
+              user_id: currentUser.id,
+              status: "pending",
+              created_at: nowIso()
+            }
+          ]);
+
+          joinRequestPending = true;
+
+          await createNotificationSafe(currentCommunity.ownerId, {
+            type: "community_join_request",
+            title: "Community join request",
+            text: `${currentUserProfile?.displayName || "Someone"} requested to join ${currentCommunity.name}.`
+          });
+
+          renderLockedActions();
+          renderTopActions();
+          setTopMessage("Join request sent.", "ok");
+          setLockedMessage("Join request sent.", "ok");
+          return;
+        }
+
+        await insertWithFallback("community_members", [
+          {
+            community_id: currentCommunityId,
+            user_id: currentUser.id,
+            display_name: currentUserProfile?.displayName || "Member",
+            username: currentUserProfile?.username || "",
+            role: "member",
+            status: "approved",
+            joined_at: nowIso(),
+            created_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            communityId: currentCommunityId,
+            userId: currentUser.id,
+            displayName: currentUserProfile?.displayName || "Member",
+            username: currentUserProfile?.username || "",
+            role: "member",
+            status: "approved",
+            joinedAt: nowIso(),
+            createdAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            community_id: currentCommunityId,
+            user_id: currentUser.id,
+            role: "member",
+            status: "approved",
+            joined_at: nowIso()
+          }
+        ]);
+
+        await createNotificationSafe(currentCommunity.ownerId, {
+          type: "community_join",
+          title: "Community joined",
+          text: `${currentUserProfile?.displayName || "Someone"} joined ${currentCommunity.name}.`
+        });
+
+        await refreshAll();
+        setTopMessage("Joined community.", "ok");
+      } catch (err) {
+        console.error(err);
+        setTopMessage(err?.message || "Could not join community.", "err");
+        setLockedMessage(err?.message || "Could not send request.", "err");
+        button.disabled = false;
+      }
+    }
+
+    async function leaveCommunity(button) {
+      if (isOwner) return;
+
+      const ok = confirm("Leave this community?");
+      if (!ok) return;
+
+      button.disabled = true;
+      setTopMessage("");
+
+      try {
+        const variants = [
+          { table: "community_members", communityCol: "community_id", userCol: "user_id" },
+          { table: "community_members", communityCol: "communityId", userCol: "userId" },
+          { table: "communities_members", communityCol: "community_id", userCol: "user_id" },
+          { table: "communityMembers", communityCol: "communityId", userCol: "userId" }
+        ];
+
+        let success = false;
+        let lastError = null;
+
+        for (const v of variants) {
+          try {
+            const { error } = await supabase
+              .from(v.table)
+              .delete()
+              .eq(v.communityCol, currentCommunityId)
+              .eq(v.userCol, currentUser.id);
+
+            if (!error) success = true;
+            else lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+
+        if (!success && lastError) throw lastError;
+
+        await refreshAll();
+        setTopMessage("Left community.", "ok");
+      } catch (err) {
+        console.error(err);
+        setTopMessage("Could not leave community.", "err");
+        button.disabled = false;
+      }
+    }
+
+    async function softDeleteCommunity(button) {
+      if (!isOwner && !isAdmin) return;
+
+      const ok = confirm("Hide this community? This is a soft delete.");
+      if (!ok) return;
+
+      button.disabled = true;
+      setTopMessage("");
+
+      try {
+        await updateRowWithFallback("communities", currentCommunityId, [
+          {
+            hidden: true,
+            soft_deleted: true,
+            deleted_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            softDeleted: true,
+            deletedAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
+
+        window.location.href = "profile.html";
+      } catch (err) {
+        console.error(err);
+        setTopMessage("Could not hide community.", "err");
+        button.disabled = false;
+      }
+    }
+
+    function buildShareUrl() {
+      const url = new URL(window.location.href);
+      url.pathname = url.pathname.replace(/[^/]*$/, "community.html");
+      url.searchParams.set("communityId", currentCommunityId);
+      return url.toString();
+    }
+
+    async function shareCommunity(button) {
+      button.disabled = true;
+      setTopMessage("");
+
+      const shareUrl = buildShareUrl();
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: `${currentCommunity.name} on OwnSpace`,
+            text: `Check out ${currentCommunity.name} on OwnSpace.`,
+            url: shareUrl
+          });
+          setTopMessage("Community shared.", "ok");
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+          setTopMessage("Community link copied.", "ok");
+        } else {
+          prompt("Copy this community link:", shareUrl);
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          console.error(err);
+          setTopMessage("Could not share community.", "err");
+        }
+      }
+
+      button.disabled = false;
+    }
+
+    async function sharePost(post) {
+      const url = new URL("post.html", window.location.href);
+      url.searchParams.set("postId", post.id);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: post.title || "OwnSpace post",
+            text: post.text || "Check this post on OwnSpace.",
+            url: url.toString()
+          });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url.toString());
+          alert("Post link copied.");
+        } else {
+          prompt("Copy this post link:", url.toString());
+        }
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
+    }
+
+    async function togglePinPost(post, button) {
+      if (!isOwner && !isAdmin) return;
+
+      button.disabled = true;
+      const nextPinned = !post.pinned;
+
+      try {
+        await updateRowWithFallback(post.sourceTable || "community_posts", post.id, [
+          {
+            pinned: nextPinned,
+            is_pinned: nextPinned,
+            updated_at: nowIso()
+          },
+          {
+            pinned: nextPinned,
+            isPinned: nextPinned,
+            updatedAt: nowIso()
+          },
+          {
+            pinned: nextPinned
+          }
+        ]);
+
+        await refreshAll();
+      } catch (err) {
+        console.error(err);
+        alert("Could not update pin.");
+        button.disabled = false;
+      }
+    }
+
+    async function softDeletePost(post, button) {
+      if (!isOwner && !isAdmin && post.authorId !== currentUser.id) return;
+
+      const ok = confirm("Hide this post?");
+      if (!ok) return;
+
+      button.disabled = true;
+
+      try {
+        await updateRowWithFallback(post.sourceTable || "community_posts", post.id, [
+          {
+            hidden: true,
+            soft_deleted: true,
+            deleted_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            softDeleted: true,
+            deletedAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
+
+        await refreshAll();
+      } catch (err) {
+        console.error(err);
+        alert("Could not hide post.");
+        button.disabled = false;
+      }
+    }
+
+    function renderBadges() {
+      const badges = [];
+
+      badges.push(`
+        <span class="badge badge-blue">
+          ${escapeHtml(currentCommunity.category || "General")}
+        </span>
+      `);
+
+      if (currentCommunity.privacy === "private") {
+        badges.push(`<span class="badge badge-yellow">${ICONS.lock} Private</span>`);
+      } else if (currentCommunity.privacy === "request" || currentCommunity.privacy === "approval" || currentCommunity.privacy === "request_only") {
+        badges.push(`<span class="badge badge-yellow">${ICONS.lock} Request to Join</span>`);
+      } else {
+        badges.push(`<span class="badge badge-green">${ICONS.check} Public</span>`);
+      }
+
+      if (isOwner) badges.push(`<span class="badge badge-purple">Owner</span>`);
+      else if (userMember?.approved) badges.push(`<span class="badge badge-green">Joined</span>`);
+      else if (joinRequestPending) badges.push(`<span class="badge badge-yellow">Request Sent</span>`);
+
+      if (currentCommunity.featured) badges.push(`<span class="badge badge-purple">Featured</span>`);
+      if (currentCommunity.pinned) badges.push(`<span class="badge badge-blue">${ICONS.pin} Pinned</span>`);
+
+      badgeRow.innerHTML = badges.join("");
+    }
+
+    function renderTopActions() {
+      const buttons = [];
+
+      if (isOwner || isAdmin) {
+        buttons.push(`
+          <a href="edit-community.html?communityId=${encodeURIComponent(currentCommunityId)}" class="action-btn btn-primary">
+            ${ICONS.edit}
+            Edit Community
+          </a>
+        `);
+
+        buttons.push(`
+          <button id="deleteCommunityBtn" class="action-btn btn-red" type="button">
+            ${ICONS.trash}
+            Hide Community
+          </button>
+        `);
+      } else if (userMember?.approved) {
+        buttons.push(`
+          <button id="leaveCommunityBtn" class="action-btn btn-red" type="button">
+            Leave
+          </button>
+        `);
+      } else if (joinRequestPending) {
+        buttons.push(`
+          <button class="action-btn btn-yellow" type="button" disabled>
+            Request Sent
+          </button>
+        `);
+      } else {
+        const requestOnly =
+          currentCommunity.privacy === "private" ||
+          currentCommunity.privacy === "request" ||
+          currentCommunity.privacy === "approval" ||
+          currentCommunity.privacy === "request_only";
+
+        buttons.push(`
+          <button id="joinCommunityBtn" class="action-btn ${requestOnly ? "btn-yellow" : "btn-green"}" type="button">
+            ${requestOnly ? "Request to Join" : "Join Community"}
+          </button>
+        `);
+      }
+
+      buttons.push(`
+        <button id="shareCommunityBtn" class="action-btn btn-purple" type="button">
+          ${ICONS.share}
+          Share
+        </button>
+      `);
+
+      if (!isOwner) {
+        buttons.push(`
+          <a href="report.html?type=community&targetId=${encodeURIComponent(currentCommunityId)}&targetUserId=${encodeURIComponent(currentCommunity.ownerId || "")}" class="action-btn btn-yellow">
+            ${ICONS.report}
+            Report
+          </a>
+        `);
+      }
+
+      topActionRow.innerHTML = buttons.join("");
+
+      const joinBtn = document.getElementById("joinCommunityBtn");
+      const leaveBtn = document.getElementById("leaveCommunityBtn");
+      const shareBtn = document.getElementById("shareCommunityBtn");
+      const deleteBtn = document.getElementById("deleteCommunityBtn");
+
+      if (joinBtn) {
+        joinBtn.addEventListener("click", () => {
+          const requestOnly =
+            currentCommunity.privacy === "private" ||
+            currentCommunity.privacy === "request" ||
+            currentCommunity.privacy === "approval" ||
+            currentCommunity.privacy === "request_only";
+
+          joinCommunity(joinBtn, requestOnly);
+        });
+      }
+
+      if (leaveBtn) leaveBtn.addEventListener("click", () => leaveCommunity(leaveBtn));
+      if (shareBtn) shareBtn.addEventListener("click", () => shareCommunity(shareBtn));
+      if (deleteBtn) deleteBtn.addEventListener("click", () => softDeleteCommunity(deleteBtn));
+    }
+
+    function renderLockedActions() {
+      lockedActionRow.innerHTML = "";
+
+      if (joinRequestPending) {
+        lockedActionRow.innerHTML = `<button class="action-btn btn-yellow" disabled>Request Sent</button>`;
+        return;
+      }
+
+      const btn = document.createElement("button");
+      btn.className = "action-btn btn-yellow";
+      btn.type = "button";
+      btn.textContent = "Request to Join";
+      btn.addEventListener("click", () => joinCommunity(btn, true));
+      lockedActionRow.appendChild(btn);
+    }
+
+    function renderOwner() {
+      const profile = ownerProfile || normalizeProfile({}, currentCommunity.ownerId);
+
+      const avatarHtml = profile.photoURL
+        ? `<img class="owner-avatar" src="${escapeHtml(profile.photoURL)}" alt="Owner photo">`
+        : `<div class="owner-avatar-placeholder">No photo</div>`;
+
+      ownerCard.innerHTML = `
+        ${avatarHtml}
+        <div class="owner-body">
+          <div class="owner-name">
+            <a href="member.html?uid=${encodeURIComponent(profile.uid || currentCommunity.ownerId || "")}">
+              ${escapeHtml(profile.displayName || currentCommunity.ownerName || "Member")}
+            </a>
+            ${profile.verified ? `<span class="verified-badge">${ICONS.check}</span>` : ""}
+          </div>
+          ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+          <div class="bio-small">${escapeHtml(profile.bio || "Community owner")}</div>
+        </div>
+      `;
+
+      const img = ownerCard.querySelector(".owner-avatar");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.outerHTML = `<div class="owner-avatar-placeholder">No photo</div>`;
+        });
+      }
+    }
+
+    function renderMembers() {
+      membersList.innerHTML = "";
+
+      const rows = membersRows
+        .filter(m => m.approved || m.isOwner)
+        .sort((a, b) => {
+          if (a.isOwner && !b.isOwner) return -1;
+          if (b.isOwner && !a.isOwner) return 1;
+          return toMillis(b.joinedAt) - toMillis(a.joinedAt);
+        });
+
+      membersCountText.textContent = String(rows.length);
+      membersCountChip.textContent = `${rows.length} member${rows.length === 1 ? "" : "s"}`;
+
+      if (!rows.length) {
+        membersList.classList.add("hidden");
+        membersEmpty.classList.remove("hidden");
+        return;
+      }
+
+      membersEmpty.classList.add("hidden");
+      membersList.classList.remove("hidden");
+
+      rows.forEach(member => {
+        const profile = member.profile || {};
+        const card = document.createElement("div");
+        card.className = "member-card";
+
+        const avatarHtml = profile.photoURL
+          ? `<img class="member-avatar" src="${escapeHtml(profile.photoURL)}" alt="Member photo">`
+          : `<div class="member-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="member-body">
+            <div class="member-name">
+              <a href="member.html?uid=${encodeURIComponent(member.userId)}">${escapeHtml(profile.displayName || "Member")}</a>
+              ${profile.verified ? `<span class="verified-badge">${ICONS.check}</span>` : ""}
+              ${member.isOwner ? `<span class="badge badge-purple">Owner</span>` : ""}
+              ${member.role && member.role !== "member" && !member.isOwner ? `<span class="badge badge-blue">${escapeHtml(pretty(member.role))}</span>` : ""}
+            </div>
+            ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+          </div>
+        `;
+
+        const img = card.querySelector(".member-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="member-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        membersList.appendChild(card);
+      });
+    }
+
+    function renderComposer() {
+      composerPanel.classList.add("hidden");
+      composerLockedPanel.classList.add("hidden");
+
+      if (canPostCommunity) {
+        composerPanel.classList.remove("hidden");
+        return;
+      }
+
+      if (canViewCommunity) {
+        const mode = currentCommunity.postingMode || "members";
+
+        if (mode === "approved" || mode === "approved_authors" || mode === "authors") {
+          composerLockedText.textContent = "Only approved authors can post in this community.";
+        } else if (mode === "owner" || mode === "admin") {
+          composerLockedText.textContent = "Only the owner or admin can post in this community.";
+        } else {
+          composerLockedText.textContent = "Join this community to post.";
+        }
+
+        composerLockedPanel.classList.remove("hidden");
+      }
+    }
+
+    function renderPosts() {
+      postsList.innerHTML = "";
+      postsCountChip.textContent = `${postsRows.length} post${postsRows.length === 1 ? "" : "s"}`;
+
+      if (!postsRows.length) {
+        postsList.classList.add("hidden");
+        postsEmpty.classList.remove("hidden");
+        return;
+      }
+
+      postsEmpty.classList.add("hidden");
+      postsList.classList.remove("hidden");
+
+      postsRows.forEach(post => {
+        const card = document.createElement("div");
+        card.className = "post-card";
+
+        const profile = post.profile || {};
+        const avatarHtml = profile.photoURL
+          ? `<img class="author-avatar" src="${escapeHtml(profile.photoURL)}" alt="Author photo">`
+          : `<div class="author-avatar-placeholder">No photo</div>`;
+
+        const canManagePost = isOwner || isAdmin || post.authorId === currentUser.id;
+
+        card.innerHTML = `
+          <div class="post-author">
+            ${avatarHtml}
+            <div class="author-body">
+              <div class="author-name">
+                <a href="member.html?uid=${encodeURIComponent(post.authorId || "")}">
+                  ${escapeHtml(profile.displayName || post.authorName || "Member")}
+                </a>
+                ${profile.verified ? `<span class="verified-badge">${ICONS.check}</span>` : ""}
+              </div>
+              ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+              <div class="post-time">${escapeHtml(formatDate(post.createdAt))}</div>
+            </div>
+          </div>
+
+          <div class="badge-row">
+            ${post.pinned ? `<span class="badge badge-yellow">${ICONS.pin} Pinned</span>` : ""}
+            ${post.featured ? `<span class="badge badge-purple">Featured</span>` : ""}
+            <span class="badge badge-blue">${escapeHtml(pretty(post.type || "Post"))}</span>
+          </div>
+
+          ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ""}
+          ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
+          ${post.imageURL ? `<img class="post-image" src="${escapeHtml(post.imageURL)}" alt="Community post image">` : ""}
+
+          <div class="action-row">
+            <a href="post.html?postId=${encodeURIComponent(post.id)}" class="action-btn btn-primary">Open</a>
+            <button class="action-btn btn-purple share-post-btn" type="button">${ICONS.share} Share</button>
+            ${
+              canManagePost
+                ? `<button class="action-btn btn-yellow pin-post-btn" type="button">${ICONS.pin} ${post.pinned ? "Unpin" : "Pin"}</button>
+                   <button class="action-btn btn-red delete-post-btn" type="button">${ICONS.trash} Hide</button>`
+                : ``
+            }
+          </div>
+        `;
+
+        const avatarImg = card.querySelector(".author-avatar");
+        if (avatarImg) {
+          avatarImg.addEventListener("error", () => {
+            avatarImg.outerHTML = `<div class="author-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        const postImg = card.querySelector(".post-image");
+        if (postImg) {
+          postImg.addEventListener("error", () => {
+            postImg.style.display = "none";
+          });
+        }
+
+        const shareBtn = card.querySelector(".share-post-btn");
+        if (shareBtn) shareBtn.addEventListener("click", () => sharePost(post));
+
+        const pinBtn = card.querySelector(".pin-post-btn");
+        if (pinBtn) pinBtn.addEventListener("click", () => togglePinPost(post, pinBtn));
+
+        const deleteBtn = card.querySelector(".delete-post-btn");
+        if (deleteBtn) deleteBtn.addEventListener("click", () => softDeletePost(post, deleteBtn));
+
+        postsList.appendChild(card);
+      });
+    }
+
+    function renderCommunityView() {
+      communityTitle.textContent = currentCommunity.name || "Community";
+      communitySub.textContent = currentCommunity.featured ? "Featured OwnSpace community" : "OwnSpace community";
+      categoryText.textContent = currentCommunity.category || "General";
+      privacyText.textContent = pretty(currentCommunity.privacy || "Public");
+      postingText.textContent = pretty(currentCommunity.postingMode || "Members");
+      descriptionText.textContent = currentCommunity.description || "No description added.";
+
+      if (currentCommunity.rules) {
+        rulesText.textContent = currentCommunity.rules;
+        rulesPanel.classList.remove("hidden");
+      } else {
+        rulesPanel.classList.add("hidden");
+      }
+
+      if (currentCommunity.imageURL) {
+        coverImage.src = currentCommunity.imageURL;
+        coverImage.classList.remove("hidden");
+      } else {
+        coverImage.classList.add("hidden");
+        coverImage.removeAttribute("src");
+      }
+
+      renderBadges();
+      renderTopActions();
+      renderOwner();
+      renderComposer();
+      renderPosts();
+      renderMembers();
+    }
+
+    coverImage.addEventListener("error", () => {
+      coverImage.classList.add("hidden");
+    });
+
+    postImageFile.addEventListener("change", () => {
+      const file = postImageFile.files?.[0] || null;
+
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = "";
+      }
+
+      if (!file) {
+        previewWrap.classList.remove("show");
+        previewImg.removeAttribute("src");
+        return;
+      }
+
+      previewObjectUrl = URL.createObjectURL(file);
+      previewImg.src = previewObjectUrl;
+      previewWrap.classList.add("show");
+    });
+
+    async function uploadPostImage(file) {
+      const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `community-posts/${currentCommunityId}/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+
+      return {
+        path,
+        publicUrl: data?.publicUrl || ""
+      };
+    }
+
+    async function insertPostWithFallback(payloads) {
+      let lastError = null;
+
+      for (const table of ["community_posts", "posts"]) {
+        for (const payload of payloads) {
+          try {
+            const { data, error } = await supabase
+              .from(table)
+              .insert(payload)
+              .select()
+              .maybeSingle();
+
+            if (!error) return data || null;
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+      }
+
+      throw lastError || new Error("Could not create post.");
+    }
+
+    postForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!canPostCommunity) return;
+
+      const title = postTitleInput.value.trim();
+      const text = postTextInput.value.trim();
+      const type = postTypeInput.value || "post";
+      const audience = postAudienceInput.value || "community";
+      const imageFile = postImageFile.files?.[0] || null;
+
+      if (!title && !text && !imageFile) {
+        setPostMessage("Write something or add a photo first.", "err");
+        return;
+      }
+
+      submitPostBtn.disabled = true;
+      submitPostBtn.textContent = "Posting...";
+      setPostMessage("");
+
+      try {
+        let imageURL = "";
+        let imagePath = "";
+
+        if (imageFile) {
+          setPostMessage("Uploading photo...", "ok");
+          const uploadResult = await uploadPostImage(imageFile);
+          imageURL = uploadResult.publicUrl;
+          imagePath = uploadResult.path;
+        }
+
+        const displayName = currentUserProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
+        const username = currentUserProfile?.username || "";
+
+        const snakePayload = {
+          community_id: currentCommunityId,
+          user_id: currentUser.id,
+          author_id: currentUser.id,
+          author_name: displayName,
+          username,
+          title,
+          text,
+          body: text,
+          content: text,
+          caption: text,
+          type,
+          post_type: type,
+          audience,
+          image_url: imageURL,
+          image_path: imagePath,
+          pinned: false,
+          featured: false,
+          hidden: false,
+          soft_deleted: false,
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
+          communityId: currentCommunityId,
+          userId: currentUser.id,
+          authorId: currentUser.id,
+          authorName: displayName,
+          username,
+          title,
+          text,
+          body: text,
+          content: text,
+          caption: text,
+          type,
+          postType: type,
+          audience,
+          imageURL,
+          imagePath,
+          pinned: false,
+          featured: false,
+          hidden: false,
+          softDeleted: false,
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const minimalPayload = {
+          community_id: currentCommunityId,
+          user_id: currentUser.id,
+          title,
+          text,
+          image_url: imageURL,
+          created_at: nowIso()
+        };
+
+        await insertPostWithFallback([
+          snakePayload,
+          camelPayload,
+          minimalPayload
+        ]);
+
+        await createNotificationSafe(currentCommunity.ownerId, {
+          type: "community_post",
+          title: "New community post",
+          text: `${displayName} posted in ${currentCommunity.name}.`
+        });
+
+        postTitleInput.value = "";
+        postTextInput.value = "";
+        postImageFile.value = "";
+        previewWrap.classList.remove("show");
+        previewImg.removeAttribute("src");
+
+        await refreshAll();
+        setPostMessage("Posted.", "ok");
+      } catch (err) {
+        console.error(err);
+        setPostMessage(err?.message || "Could not post.", "err");
+      }
+
+      submitPostBtn.disabled = false;
+      submitPostBtn.textContent = "Post";
+    });
+
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase.from(table).select("id", { count: "exact", head: true });
+        const { count, error } = await buildQuery(query);
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
+
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+        if (countWithoutStatus !== null) return countWithoutStatus;
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
+      const seenColumns = ["seen_at", "read_at", "seenAt", "readAt"];
+
+      for (const receiverColumn of receiverColumns) {
+        for (const seenColumn of seenColumns) {
+          const count = await countRows("chat_messages", q =>
+            q.eq(receiverColumn, uid).neq("sender_id", uid).is(seenColumn, null)
+          );
+          if (count !== null) return count;
+        }
+
+        const unreadBoolCount = await countRows("chat_messages", q =>
+          q.eq(receiverColumn, uid).neq("sender_id", uid).eq("is_read", false)
+        );
+        if (unreadBoolCount !== null) return unreadBoolCount;
+
+        const readBoolCount = await countRows("chat_messages", q =>
+          q.eq(receiverColumn, uid).neq("sender_id", uid).eq("read", false)
+        );
+        if (readBoolCount !== null) return readBoolCount;
+      }
+
+      return 0;
+    }
+
+    async function updateInboxBadge() {
+      if (!currentUser || !inboxBadge) return;
+
+      try {
+        const [requests, messages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(messages || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
+    async function refreshAll() {
+      if (!currentCommunityId || !currentUser) return;
+
+      currentCommunity = await findCommunity(currentCommunityId);
+
+      if (!currentCommunity || currentCommunity.hidden) {
+        loadingPanel.classList.add("hidden");
+        communityPanel.classList.add("hidden");
+        lockedPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "Community not found or hidden.";
+        return;
+      }
+
+      ownerProfile = await loadMergedProfile(currentCommunity.ownerId);
+      await loadMembers();
+      await loadJoinRequestState();
+      await loadApprovedAuthorState();
+
+      isAdmin = await isAdminUser(currentUser.id);
+      evaluateAccess();
+
+      if (!canViewCommunity) {
+        loadingPanel.classList.add("hidden");
+        communityPanel.classList.add("hidden");
+        notFoundPanel.classList.add("hidden");
+        lockedPanel.classList.remove("hidden");
+        lockedText.textContent = joinRequestPending
+          ? "Your request is pending. You can view this community after approval."
+          : "This community is private. Request to join to view posts.";
+        renderLockedActions();
+        return;
+      }
+
+      await loadPosts();
+      renderCommunityView();
+
+      loadingPanel.classList.add("hidden");
+      notFoundPanel.classList.add("hidden");
+      lockedPanel.classList.add("hidden");
+      communityPanel.classList.remove("hidden");
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshAll().catch(err => console.error("Refresh failed:", err));
+      }, 350);
+    }
+
+    function clearRealtimeChannels() {
+      realtimeChannels.forEach(channel => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      });
+
+      realtimeChannels = [];
+    }
+
+    function setupRealtime() {
+      clearRealtimeChannels();
+
+      ["communities", "community_members", "community_posts", "posts", "community_join_requests"].forEach(table => {
+        try {
+          const channel = supabase
+            .channel(`community-live-${table}-${currentCommunityId}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table },
+              () => scheduleRefresh()
+            )
+            .subscribe();
+
+          realtimeChannels.push(channel);
+        } catch {}
+      });
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+
+      const params = new URLSearchParams(window.location.search);
+      currentCommunityId = params.get("communityId") || params.get("id") || "";
+
+      if (!currentCommunityId) {
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "No community selected.";
+        return;
+      }
+
+      try {
+        currentUserProfile = await loadMergedProfile(currentUser.id);
+        await updateInboxBadge();
+        await refreshAll();
+        setupRealtime();
+      } catch (err) {
+        console.error(err);
+        loadingPanel.classList.add("hidden");
+        notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "Could not load community.";
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      clearRealtimeChannels();
+
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+      }
+    });
+
+    initPage();
+
+    /*
+      OWNSPACE COMMUNITY.HTML NOTES:
+
+      TABLES SUPPORTED:
+      - communities
+      - community_members
+      - community_posts
+      - posts
+      - community_join_requests
+      - community_authors
+      - users
+      - public_profiles
+      - admins
+      - notifications
+      - message_requests
+      - chat_messages
+
+      MAIN FEATURES:
+      - Community photo/name/category/privacy/posting mode
+      - Owner card
+      - Description and rules
+      - Join / Leave / Request to Join
+      - Private/request-only community support
+      - Approved author posting support
+      - Community post composer with Supabase Storage upload
+      - Pinned posts
+      - Soft delete for community and posts
+      - Clean SVG icons
+      - Inbox badge counts ONLY:
+        1) pending message_requests
+        2) unread chat_messages
+      - General notifications are NOT counted in inbox badge
+
+      NEXT PAGE:
+      - edit-community.html
+    */
+  </script>
+</body>
+</html>
