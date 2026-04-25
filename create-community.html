@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OwnSpace - Create Community</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#22c55e;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 18px 36px rgba(0,0,0,.18);
+    }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#16a34a;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 28px rgba(20,33,61,.08);
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.08), transparent 24%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
+    }
+
+    .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
+      align-items:center;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      position:relative;
+    }
+
+    .top-icon-btn svg{width:18px;height:18px;display:block}
+    .top-center{text-align:center;min-width:0}
+    .brand{font-size:18px;font-weight:950;line-height:1.05;letter-spacing:-.02em}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:13px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+      font-size:14px;
+    }
+
+    .head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .head-title{
+      font-size:19px;
+      font-weight:950;
+      line-height:1.25;
+      margin-bottom:4px;
+      letter-spacing:-.02em;
+    }
+
+    .head-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .quick-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .quick-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:900;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
+    .quick-btn.primary{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .quick-btn.green{
+      background:rgba(34,197,94,.14);
+      border-color:rgba(34,197,94,.20);
+    }
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .meta-item{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .meta-item small{
+      display:block;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-size:11px;
+    }
+
+    .meta-item span{
+      font-weight:900;
+      font-size:14px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .section{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      margin-top:12px;
+    }
+
+    .section-title{
+      font-size:15px;
+      font-weight:950;
+      margin-bottom:4px;
+    }
+
+    .section-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      margin-bottom:10px;
+    }
+
+    .form{
+      display:grid;
+      gap:11px;
+    }
+
+    .field{
+      display:grid;
+      gap:6px;
+    }
+
+    .label{
+      font-size:12px;
+      font-weight:900;
+      color:var(--text);
+    }
+
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .textarea{
+      min-height:105px;
+      resize:vertical;
+      line-height:1.55;
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{
+      color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:11px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:11px;
+    }
+
+    .toggle-list{
+      display:grid;
+      gap:8px;
+    }
+
+    .check-row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:11px 12px;
+      border-radius:14px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+
+    .check-row input{
+      width:auto;
+      transform:scale(1.05);
+      accent-color:var(--blue);
+      margin-top:2px;
+    }
+
+    .check-row label{
+      margin:0;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text);
+    }
+
+    .small-note,
+    .note{
+      color:var(--muted);
+      line-height:1.45;
+      font-size:11px;
+    }
+
+    .small-note{margin-top:2px}
+    .note{margin-top:10px}
+
+    .file-box{
+      border:1px dashed var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:var(--surface-3);
+    }
+
+    .file-input{
+      width:100%;
+      color:var(--text);
+      font-size:13px;
+    }
+
+    .file-input::file-selector-button{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+      border-radius:10px;
+      padding:8px 10px;
+      margin-right:10px;
+      cursor:pointer;
+      font-weight:900;
+    }
+
+    .preview-wrap{
+      margin-top:10px;
+      display:none;
+    }
+
+    .preview-wrap.show{display:block}
+
+    .preview-img{
+      width:100%;
+      max-height:280px;
+      object-fit:cover;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      display:block;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 13px;
+      cursor:pointer;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+      font-size:12px;
+    }
+
+    .btn-save{
+      background:rgba(34,197,94,.14);
+      color:var(--text);
+      border:1px solid rgba(34,197,94,.20);
+      width:100%;
+      font-size:14px;
+      min-height:46px;
+    }
+
+    .btn-save:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
+
+    .message{
+      margin-top:2px;
+      min-height:18px;
+      font-size:13px;
+      text-align:left;
+      line-height:1.5;
+    }
+
+    .success{color:#86efac}
+    .error{color:#fda4af}
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:800;
+      min-height:58px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
+
+    @media (max-width:700px){
+      body{padding:10px 10px 108px}
+      .brand{font-size:18px}
+      .meta-grid,.grid,.grid-3{grid-template-columns:1fr}
+      .quick-actions .quick-btn{flex:1}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="profile.html" class="top-icon-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Create community</div>
+      </div>
+
+      <a href="profile.html" class="top-icon-btn" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <div class="panel">
+      <div id="loading" class="loading">Loading profile...</div>
+
+      <div id="content" class="hidden">
+        <div class="head">
+          <div>
+            <div class="head-title">Create New Community</div>
+            <div class="head-sub">
+              Build a focused space for members. You can use it for local groups, topics, education, updates, or featured OwnSpace communities.
+            </div>
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <span class="chip chip-blue">Owner auto-added</span>
+          <span class="chip chip-green">Storage upload</span>
+          <span class="chip chip-purple">Posting permissions</span>
+          <span class="chip chip-yellow">Soft-delete ready</span>
+        </div>
+
+        <div class="quick-actions">
+          <a href="profile.html" class="quick-btn">My Profile</a>
+          <a href="feed.html" class="quick-btn">Feed</a>
+          <a href="settings.html" class="quick-btn primary">Settings</a>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <small>Your Name</small>
+            <span id="profileNameText">-</span>
+          </div>
+          <div class="meta-item">
+            <small>Your Username</small>
+            <span id="profileUsernameText">-</span>
+          </div>
+          <div class="meta-item">
+            <small>Created Communities</small>
+            <span id="createdCountText">0</span>
+          </div>
+        </div>
+
+        <form id="communityForm" class="form">
+          <div class="section">
+            <div class="section-title">Basic Info</div>
+            <div class="section-sub">This is what people see first on the community card and detail page.</div>
+
+            <div class="grid">
+              <div class="field">
+                <label class="label" for="name">Community Name</label>
+                <input type="text" id="name" class="input" placeholder="Example: London Naturist Friends" required />
+              </div>
+
+              <div class="field">
+                <label class="label" for="category">Category</label>
+                <select id="category" class="select">
+                  <option value="General">General</option>
+                  <option value="Local Group">Local Group</option>
+                  <option value="Learning">Learning</option>
+                  <option value="Updates">Updates</option>
+                  <option value="Events">Events</option>
+                  <option value="Places">Places</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Support">Support</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="description">Description</label>
+              <textarea id="description" class="textarea" placeholder="Explain what this community is about..." required></textarea>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Privacy & Posting</div>
+            <div class="section-sub">Control who can join and who can post inside the community.</div>
+
+            <div class="grid">
+              <div class="field">
+                <label class="label" for="privacy">Community Privacy</label>
+                <select id="privacy" class="select">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+                <div class="small-note">Private communities can later use request/approval flow.</div>
+              </div>
+
+              <div class="field">
+                <label class="label" for="postingMode">Who Can Post?</label>
+                <select id="postingMode" class="select">
+                  <option value="owner_only">Only owner/admin</option>
+                  <option value="approved_authors">Approved authors only</option>
+                  <option value="members">All joined members</option>
+                </select>
+                <div class="small-note">For your OwnSpace Hub idea, use “Approved authors only”.</div>
+              </div>
+            </div>
+
+            <div class="toggle-list">
+              <div class="check-row">
+                <input type="checkbox" id="allowMemberRequests" checked />
+                <label for="allowMemberRequests">Allow people to request joining this community</label>
+              </div>
+
+              <div class="check-row">
+                <input type="checkbox" id="requestFeatured" />
+                <label for="requestFeatured">Request to feature this community later</label>
+              </div>
+
+              <div class="check-row">
+                <input type="checkbox" id="allowPinnedPosts" checked />
+                <label for="allowPinnedPosts">Allow pinned posts inside this community</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Location</div>
+            <div class="section-sub">Optional. Add location only if this is a city/local community.</div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label class="label" for="city">City</label>
+                <input type="text" id="city" class="input" placeholder="London" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="province">Province / State</label>
+                <input type="text" id="province" class="input" placeholder="Ontario" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="country">Country</label>
+                <input type="text" id="country" class="input" placeholder="Canada" />
+              </div>
+            </div>
+
+            <div class="small-note">If you add any location field, fill all three: city, province/state and country.</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Community Rules</div>
+            <div class="section-sub">These rules appear later on the community detail page.</div>
+
+            <div class="field">
+              <label class="label" for="rules">Rules / Guidelines</label>
+              <textarea id="rules" class="textarea" placeholder="Example: Be respectful. No spam. Follow OwnSpace rules. Keep the community safe." required></textarea>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Community Photo</div>
+            <div class="section-sub">Optional. Uploads to Supabase Storage. No link field needed.</div>
+
+            <div class="file-box">
+              <input id="imageFile" class="file-input" type="file" accept="image/*" />
+              <div class="small-note">Storage bucket used: <strong>media</strong>. Folder path: <strong>communities/user-id/...</strong></div>
+
+              <div id="previewWrap" class="preview-wrap">
+                <img id="previewImg" class="preview-img" alt="Community photo preview" />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-save" id="saveBtn">Create Community</button>
+          <div id="message" class="message"></div>
+        </form>
+
+        <div class="note">
+          This saves into <strong>communities</strong> and auto-adds you into <strong>community_members</strong> as owner/admin.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
+      <span>Feed</span>
+    </a>
+
+    <a href="nearby.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
+      <span>Nearby</span>
+    </a>
+
+    <a href="search.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
+      <span>Search</span>
+    </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
+    <a href="profile.html" class="nav-link active">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const STORAGE_BUCKET = "media";
+
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const communityForm = document.getElementById("communityForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const message = document.getElementById("message");
+
+    const profileNameText = document.getElementById("profileNameText");
+    const profileUsernameText = document.getElementById("profileUsernameText");
+    const createdCountText = document.getElementById("createdCountText");
+
+    const nameInput = document.getElementById("name");
+    const categoryInput = document.getElementById("category");
+    const descriptionInput = document.getElementById("description");
+    const privacyInput = document.getElementById("privacy");
+    const postingModeInput = document.getElementById("postingMode");
+    const allowMemberRequestsInput = document.getElementById("allowMemberRequests");
+    const requestFeaturedInput = document.getElementById("requestFeatured");
+    const allowPinnedPostsInput = document.getElementById("allowPinnedPosts");
+    const cityInput = document.getElementById("city");
+    const provinceInput = document.getElementById("province");
+    const countryInput = document.getElementById("country");
+    const rulesInput = document.getElementById("rules");
+    const imageFileInput = document.getElementById("imageFile");
+    const previewWrap = document.getElementById("previewWrap");
+    const previewImg = document.getElementById("previewImg");
+    const inboxBadge = document.getElementById("inboxBadge");
+
+    let currentUser = null;
+    let currentProfile = null;
+    let previewObjectUrl = "";
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    function showMessage(text = "", type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleText(value) {
+      return String(value || "").trim();
+    }
+
+    function countryAliases(country) {
+      const c = normalizeText(country);
+      if (!c) return "";
+      const aliases = [c];
+
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "canada") aliases.push("ca");
+
+      return aliases.join(" ");
+    }
+
+    function buildLocationSearch(city, province, country) {
+      return [
+        titleText(city),
+        titleText(province),
+        titleText(country),
+        countryAliases(country)
+      ]
+      .filter(Boolean)
+      .join(" ")
+      .trim()
+      .toLowerCase();
+    }
+
+    function makeSlug(value) {
+      const base = String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60);
+
+      const suffix = Math.random().toString(36).slice(2, 7);
+      return `${base || "community"}-${suffix}`;
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+
+      return {
+        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        trustScore: Number(d.trust_score ?? d.trustScore ?? 50),
+        pointsBalance: Number(d.points_balance ?? d.pointsBalance ?? 0),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"])
+      };
+    }
+
+    async function fetchProfileRowByUidOrId(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function loadProfile() {
+      const [publicRow, userRow] = await Promise.all([
+        fetchProfileRowByUidOrId("public_profiles", currentUser.id),
+        fetchProfileRowByUidOrId("users", currentUser.id)
+      ]);
+
+      currentProfile = normalizeProfile({
+        ...(publicRow || {}),
+        ...(userRow || {}),
+        uid: currentUser.id
+      }, currentUser.id);
+
+      profileNameText.textContent = currentProfile.displayName || "Member";
+      profileUsernameText.textContent = currentProfile.username ? `@${currentProfile.username}` : "-";
+    }
+
+    async function loadCreatedCommunityCount() {
+      let count = 0;
+
+      const columns = ["creator_id", "created_by", "owner_id", "user_id", "uid"];
+
+      for (const column of columns) {
+        try {
+          const { count: foundCount, error } = await supabase
+            .from("communities")
+            .select("id", { count: "exact", head: true })
+            .eq(column, currentUser.id)
+            .neq("hidden", true);
+
+          if (!error) {
+            count = foundCount || 0;
+            break;
+          }
+        } catch {}
+      }
+
+      createdCountText.textContent = String(count);
+    }
+
+    function setPreviewFromFile(file) {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = "";
+      }
+
+      if (!file) {
+        previewWrap.classList.remove("show");
+        previewImg.removeAttribute("src");
+        return;
+      }
+
+      previewObjectUrl = URL.createObjectURL(file);
+      previewImg.src = previewObjectUrl;
+      previewWrap.classList.add("show");
+    }
+
+    imageFileInput.addEventListener("change", () => {
+      const file = imageFileInput.files?.[0] || null;
+      setPreviewFromFile(file);
+    });
+
+    async function uploadCommunityImage(file, userId) {
+      const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `communities/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+
+      return {
+        path,
+        publicUrl: data?.publicUrl || ""
+      };
+    }
+
+    async function insertCommunityWithFallback(payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from("communities")
+            .insert(payload)
+            .select()
+            .single();
+
+          if (!error && data) return data;
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not create community.");
+    }
+
+    async function insertCommunityMemberWithFallback(payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from("community_members")
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Community created, but owner member row could not be added.");
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadgeCount(uid) {
+      if (!inboxBadge) return;
+
+      try {
+        const [requests, messages] = await Promise.all([
+          countPendingMessageRequests(uid),
+          countUnreadChatMessages(uid)
+        ]);
+
+        const unreadTotal = Number(requests || 0) + Number(messages || 0);
+
+        if (!unreadTotal) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
+    communityForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser || !currentProfile) return;
+
+      const name = nameInput.value.trim();
+      const category = categoryInput.value || "General";
+      const description = descriptionInput.value.trim();
+      const privacy = privacyInput.value || "public";
+      const postingMode = postingModeInput.value || "owner_only";
+      const allowMemberRequests = !!allowMemberRequestsInput.checked;
+      const requestFeatured = !!requestFeaturedInput.checked;
+      const allowPinnedPosts = !!allowPinnedPostsInput.checked;
+      const city = cityInput.value.trim();
+      const province = provinceInput.value.trim();
+      const country = countryInput.value.trim();
+      const rules = rulesInput.value.trim();
+      const imageFile = imageFileInput.files?.[0] || null;
+
+      if (!name) {
+        showMessage("Community name is required.", "error");
+        return;
+      }
+
+      if (name.length < 3) {
+        showMessage("Community name should be at least 3 characters.", "error");
+        return;
+      }
+
+      if (!description) {
+        showMessage("Description is required.", "error");
+        return;
+      }
+
+      if (!rules) {
+        showMessage("Community rules are required.", "error");
+        return;
+      }
+
+      const hasAnyLocation = !!(city || province || country);
+
+      if (hasAnyLocation && !(city && province && country)) {
+        showMessage("Fill full location: city, province/state and country.", "error");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Creating...";
+      showMessage("");
+
+      try {
+        let uploadedImageUrl = "";
+        let uploadedImagePath = "";
+
+        if (imageFile) {
+          showMessage("Uploading community photo...", "success");
+          const uploadResult = await uploadCommunityImage(imageFile, currentUser.id);
+          uploadedImageUrl = uploadResult.publicUrl;
+          uploadedImagePath = uploadResult.path;
+        }
+
+        const slug = makeSlug(name);
+        const locationSearch = hasAnyLocation ? buildLocationSearch(city, province, country) : "";
+        const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || "Member";
+        const creatorUsername = currentProfile.username || "";
+
+        const snakePayload = {
+          name,
+          community_name: name,
+          slug,
+          category,
+          description,
+          rules,
+          privacy,
+          visibility: privacy,
+
+          posting_mode: postingMode,
+          allow_member_requests: allowMemberRequests,
+          allow_pinned_posts: allowPinnedPosts,
+          request_featured: requestFeatured,
+
+          is_featured: false,
+          featured: false,
+          pinned: false,
+
+          city,
+          province,
+          state: province,
+          country,
+          location_search: locationSearch,
+
+          image_url: uploadedImageUrl,
+          image_path: uploadedImagePath,
+          photo_url: uploadedImageUrl,
+
+          creator_id: currentUser.id,
+          created_by: currentUser.id,
+          owner_id: currentUser.id,
+          user_id: currentUser.id,
+          creator_name: creatorName,
+          creator_username: creatorUsername,
+
+          member_count: 1,
+          posts_count: 0,
+
+          status: "active",
+          hidden: false,
+          hidden_by_admin: false,
+          soft_deleted: false,
+
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
+          name,
+          communityName: name,
+          slug,
+          category,
+          description,
+          rules,
+          privacy,
+          visibility: privacy,
+
+          postingMode,
+          allowMemberRequests,
+          allowPinnedPosts,
+          requestFeatured,
+
+          isFeatured: false,
+          featured: false,
+          pinned: false,
+
+          city,
+          province,
+          state: province,
+          country,
+          locationSearch,
+
+          imageURL: uploadedImageUrl,
+          imagePath: uploadedImagePath,
+          photoURL: uploadedImageUrl,
+
+          creatorId: currentUser.id,
+          createdBy: currentUser.id,
+          ownerId: currentUser.id,
+          userId: currentUser.id,
+          creatorName,
+          creatorUsername,
+
+          memberCount: 1,
+          postsCount: 0,
+
+          status: "active",
+          hidden: false,
+          hiddenByAdmin: false,
+          softDeleted: false,
+
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const minimalPayload = {
+          name,
+          category,
+          description,
+          rules,
+          privacy,
+          city,
+          province,
+          country,
+          image_url: uploadedImageUrl,
+          creator_id: currentUser.id,
+          created_by: currentUser.id,
+          status: "active",
+          hidden: false,
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const createdCommunity = await insertCommunityWithFallback([
+          snakePayload,
+          camelPayload,
+          minimalPayload
+        ]);
+
+        const communityId = createdCommunity.id;
+
+        const memberSnakePayload = {
+          community_id: communityId,
+          user_id: currentUser.id,
+          display_name: creatorName,
+          username: creatorUsername,
+          role: "owner",
+          is_owner: true,
+          is_admin: true,
+          joined_at: nowIso(),
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const memberCamelPayload = {
+          communityId,
+          userId: currentUser.id,
+          displayName: creatorName,
+          username: creatorUsername,
+          role: "owner",
+          isOwner: true,
+          isAdmin: true,
+          joinedAt: nowIso(),
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const memberMinimalPayload = {
+          community_id: communityId,
+          user_id: currentUser.id,
+          role: "owner",
+          joined_at: nowIso()
+        };
+
+        await insertCommunityMemberWithFallback([
+          memberSnakePayload,
+          memberCamelPayload,
+          memberMinimalPayload
+        ]);
+
+        showMessage("Community created successfully.", "success");
+        window.location.href = `community.html?communityId=${encodeURIComponent(communityId)}`;
+      } catch (err) {
+        console.error(err);
+        showMessage(err?.message || "Could not create community.", "error");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Create Community";
+      }
+    });
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+
+      try {
+        await Promise.all([
+          loadProfile(),
+          loadCreatedCommunityCount(),
+          loadInboxBadgeCount(currentUser.id)
+        ]);
+
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        loading.textContent = "Could not load profile.";
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    initPage();
+
+    /*
+      OWNSPACE COMMUNITY CREATE PAGE NOTES:
+
+      TABLES USED:
+      - users: select
+      - public_profiles: select
+      - communities: insert, select after insert
+      - community_members: insert
+      - message_requests: inbox badge count only
+      - chat_threads: inbox badge support
+      - chat_messages: inbox badge count only
+
+      STORAGE:
+      - Bucket: media
+      - Path: communities/{userId}/filename
+
+      COMMUNITIES IMPORTANT COLUMNS:
+      - id
+      - name
+      - slug
+      - category
+      - description
+      - rules
+      - privacy / visibility
+      - posting_mode
+      - allow_member_requests
+      - allow_pinned_posts
+      - request_featured
+      - is_featured
+      - city
+      - province
+      - country
+      - location_search
+      - image_url
+      - image_path
+      - creator_id / created_by / owner_id
+      - creator_name
+      - creator_username
+      - member_count
+      - status
+      - hidden
+      - soft_deleted
+      - created_at
+      - updated_at
+
+      COMMUNITY_MEMBERS IMPORTANT COLUMNS:
+      - id
+      - community_id
+      - user_id
+      - display_name
+      - username
+      - role
+      - is_owner
+      - is_admin
+      - joined_at
+      - created_at
+      - updated_at
+
+      NEXT PAGE:
+      - community.html
+    */
+  </script>
+</body>
+</html>
