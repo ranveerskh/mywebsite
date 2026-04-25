@@ -252,6 +252,10 @@
       color:#d8f7ff;
       border:1px solid rgba(76,201,255,.20);
     }
+    button:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
     .message{
       min-height:20px;
       font-size:14px;
@@ -368,7 +372,7 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
+    <a href="nearby-events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
@@ -379,17 +383,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      getDocs,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -399,12 +393,19 @@
     const searchInput = document.getElementById("searchInput");
     const statusFilter = document.getElementById("statusFilter");
 
+    let currentUser = null;
     let allRequests = [];
+    let verificationChannel = null;
+    let refreshTimer = null;
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "settings.html";
     });
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
 
     function setMessage(text, type = "") {
       pageMessage.textContent = text;
@@ -413,14 +414,70 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function formatDate(ts) {
-      if (!ts) return "Just now";
-      try { return ts.toDate().toLocaleString(); }
-      catch { return "Just now"; }
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("column")
+      );
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+
+      const ms = toMillis(value);
+      if (!ms) return "Just now";
+
+      try {
+        return new Date(ms).toLocaleString();
+      } catch {
+        return "Just now";
+      }
     }
 
     function statusBadgeClass(status) {
@@ -429,65 +486,295 @@
       return "status-pending";
     }
 
+    function normalizeRequest(row) {
+      const d = row || {};
+      const uid = String(getField(d, ["uid", "user_id", "userId", "target_user_id", "targetUserId"], "") || "");
+      const rowId = String(getField(d, ["id"], "") || "");
+
+      return {
+        id: rowId,
+        uid: uid || rowId,
+        fullName: String(getField(d, ["full_name", "fullName", "name", "real_name", "realName"], "No name") || "No name"),
+        email: String(getField(d, ["email"], "") || ""),
+        accountType: String(getField(d, ["account_type", "accountType"], "personal") || "personal"),
+        socialLink: String(getField(d, ["social_link", "socialLink", "website", "link"], "") || ""),
+        idPhotoURL: String(getField(d, ["id_photo_url", "idPhotoURL", "idPhotoUrl"], "") || ""),
+        selfieWithIdURL: String(getField(d, ["selfie_with_id_url", "selfieWithIdURL", "selfieWithIdUrl"], "") || ""),
+        reason: String(getField(d, ["reason"], "No reason provided") || "No reason provided"),
+        adminNote: String(getField(d, ["admin_note", "adminNote"], "") || ""),
+        status: String(getField(d, ["status"], "pending") || "pending").toLowerCase(),
+        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null,
+        createdAtMs: toMillis(d.created_at ?? d.createdAt ?? d.created ?? null),
+        raw: d
+      };
+    }
+
     function getFilteredRequests() {
       const q = searchInput.value.trim().toLowerCase();
       const status = statusFilter.value;
 
       return allRequests.filter(item => {
-        const req = item.request;
-        const matchesStatus = status === "all" ? true : (req.status || "pending") === status;
+        const matchesStatus = status === "all" ? true : (item.status || "pending") === status;
         if (!matchesStatus) return false;
 
         if (!q) return true;
 
         const haystack = [
-          req.fullName || "",
-          req.email || "",
-          req.accountType || "",
-          req.reason || ""
+          item.fullName || "",
+          item.email || "",
+          item.accountType || "",
+          item.reason || "",
+          item.uid || "",
+          item.id || "",
+          item.socialLink || ""
         ].join(" ").toLowerCase();
 
         return haystack.includes(q);
       });
     }
 
-    async function approveRequest(uid, note) {
-      await updateDoc(doc(db, "verification_requests", uid), {
-        status: "approved",
-        adminNote: note || "",
-        updatedAt: serverTimestamp()
-      });
+    async function selectByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
 
-      await setDoc(doc(db, "users", uid), {
-        isVerified: true
-      }, { merge: true });
-
-      await setDoc(doc(db, "publicProfiles", uid), {
-        isVerified: true
-      }, { merge: true });
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`Select failed ${table}.${column}:`, err?.message || err);
+        }
+        return null;
+      }
     }
 
-    async function rejectRequest(uid, note) {
-      await updateDoc(doc(db, "verification_requests", uid), {
-        status: "rejected",
-        adminNote: note || "",
-        updatedAt: serverTimestamp()
-      });
+    async function checkAdminAccess(uid) {
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
 
-      await setDoc(doc(db, "users", uid), {
-        isVerified: false
-      }, { merge: true });
+      for (const [table, column] of checks) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return true;
+      }
 
-      await setDoc(doc(db, "publicProfiles", uid), {
-        isVerified: false
-      }, { merge: true });
+      return false;
     }
 
-    async function saveAdminNote(uid, note) {
-      await updateDoc(doc(db, "verification_requests", uid), {
+    async function updateByColumnWithPayloads(table, column, value, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq(column, value);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    async function updateVerificationRequest(item, status, note) {
+      const snakePayload = {
+        status,
+        admin_note: note || "",
+        reviewed_at: nowIso(),
+        reviewed_by: currentUser?.id || "",
+        updated_at: nowIso()
+      };
+
+      const camelPayload = {
+        status,
         adminNote: note || "",
-        updatedAt: serverTimestamp()
-      });
+        reviewedAt: nowIso(),
+        reviewedBy: currentUser?.id || "",
+        updatedAt: nowIso()
+      };
+
+      const minimalPayload = {
+        status,
+        updated_at: nowIso()
+      };
+
+      const payloads = [snakePayload, camelPayload, minimalPayload];
+
+      const updateTargets = [];
+
+      if (item.id) updateTargets.push(["id", item.id]);
+      if (item.uid) {
+        updateTargets.push(["uid", item.uid]);
+        updateTargets.push(["user_id", item.uid]);
+        updateTargets.push(["userId", item.uid]);
+      }
+
+      let lastError = null;
+
+      for (const [column, value] of updateTargets) {
+        try {
+          await updateByColumnWithPayloads("verification_requests", column, value, payloads);
+          return true;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not update verification request.");
+    }
+
+    async function upsertOrUpdateProfile(table, uid, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .upsert({ uid, ...payload }, { onConflict: "uid" });
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("uid", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", uid);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    async function updateUserVerified(uid, isVerified) {
+      if (!uid) throw new Error("Missing request user id.");
+
+      const userPayloads = [
+        {
+          is_verified: isVerified,
+          verified: isVerified,
+          verification_status: isVerified ? "approved" : "rejected",
+          updated_at: nowIso()
+        },
+        {
+          isVerified,
+          verified: isVerified,
+          verificationStatus: isVerified ? "approved" : "rejected",
+          updatedAt: nowIso()
+        },
+        {
+          is_verified: isVerified
+        }
+      ];
+
+      const publicPayloads = [
+        {
+          is_verified: isVerified,
+          verified: isVerified,
+          verification_status: isVerified ? "approved" : "rejected",
+          updated_at: nowIso()
+        },
+        {
+          isVerified,
+          verified: isVerified,
+          verificationStatus: isVerified ? "approved" : "rejected",
+          updatedAt: nowIso()
+        },
+        {
+          is_verified: isVerified
+        }
+      ];
+
+      await Promise.all([
+        upsertOrUpdateProfile("users", uid, userPayloads),
+        upsertOrUpdateProfile("public_profiles", uid, publicPayloads)
+      ]);
+    }
+
+    async function approveRequest(item, note) {
+      await updateVerificationRequest(item, "approved", note);
+      await updateUserVerified(item.uid, true);
+    }
+
+    async function rejectRequest(item, note) {
+      await updateVerificationRequest(item, "rejected", note);
+      await updateUserVerified(item.uid, false);
+    }
+
+    async function saveAdminNote(item, note) {
+      const snakePayload = {
+        admin_note: note || "",
+        updated_at: nowIso()
+      };
+
+      const camelPayload = {
+        adminNote: note || "",
+        updatedAt: nowIso()
+      };
+
+      const minimalPayload = {
+        admin_note: note || ""
+      };
+
+      const payloads = [snakePayload, camelPayload, minimalPayload];
+
+      const updateTargets = [];
+
+      if (item.id) updateTargets.push(["id", item.id]);
+      if (item.uid) {
+        updateTargets.push(["uid", item.uid]);
+        updateTargets.push(["user_id", item.uid]);
+        updateTargets.push(["userId", item.uid]);
+      }
+
+      let lastError = null;
+
+      for (const [column, value] of updateTargets) {
+        try {
+          await updateByColumnWithPayloads("verification_requests", column, value, payloads);
+          return true;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not save admin note.");
     }
 
     function renderList() {
@@ -503,9 +790,13 @@
       emptyBox.classList.add("hidden");
       list.classList.remove("hidden");
 
-      items.forEach((item) => {
-        const req = item.request;
-        const uid = item.uid;
+      items.forEach((req) => {
+        const uid = req.uid;
+        const key = req.id || req.uid;
+
+        const socialLink = normalizeHref(req.socialLink);
+        const idPhotoLink = normalizeHref(req.idPhotoURL);
+        const selfieLink = normalizeHref(req.selfieWithIdURL);
 
         const card = document.createElement("div");
         card.className = "card";
@@ -516,7 +807,8 @@
               <div class="card-title">${escapeHtml(req.fullName || "No name")}</div>
               <div class="card-sub">
                 ${escapeHtml(req.email || "-")} • ${escapeHtml(req.accountType || "personal")}<br>
-                UID: ${escapeHtml(uid)}<br>
+                UID: ${escapeHtml(uid || "-")}<br>
+                Request ID: ${escapeHtml(req.id || "-")}<br>
                 Submitted: ${escapeHtml(formatDate(req.createdAt))}
               </div>
             </div>
@@ -529,28 +821,28 @@
             <div class="info-box">
               <small>Social / Website</small>
               <div>
-                ${req.socialLink ? `<a href="${escapeHtml(req.socialLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.socialLink)}</a>` : "Not provided"}
+                ${req.socialLink ? `<a href="${escapeHtml(socialLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.socialLink)}</a>` : "Not provided"}
               </div>
             </div>
 
             <div class="info-box">
               <small>Public Profile</small>
               <div>
-                <a href="member.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open member profile</a>
+                ${uid ? `<a href="member.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open member profile</a>` : "Missing UID"}
               </div>
             </div>
 
             <div class="info-box">
               <small>ID Photo Link</small>
               <div>
-                ${req.idPhotoURL ? `<a href="${escapeHtml(req.idPhotoURL)}" target="_blank" rel="noopener noreferrer">Open ID photo</a>` : "Not provided"}
+                ${req.idPhotoURL ? `<a href="${escapeHtml(idPhotoLink)}" target="_blank" rel="noopener noreferrer">Open ID photo</a>` : "Not provided"}
               </div>
             </div>
 
             <div class="info-box">
               <small>Selfie with ID Link</small>
               <div>
-                ${req.selfieWithIdURL ? `<a href="${escapeHtml(req.selfieWithIdURL)}" target="_blank" rel="noopener noreferrer">Open selfie with ID</a>` : "Not provided"}
+                ${req.selfieWithIdURL ? `<a href="${escapeHtml(selfieLink)}" target="_blank" rel="noopener noreferrer">Open selfie with ID</a>` : "Not provided"}
               </div>
             </div>
           </div>
@@ -562,14 +854,14 @@
 
           <div class="field">
             <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
-            <textarea class="admin-note-input" data-uid="${uid}" placeholder="Write admin note...">${escapeHtml(req.adminNote || "")}</textarea>
+            <textarea class="admin-note-input" data-key="${escapeHtml(key)}" placeholder="Write admin note...">${escapeHtml(req.adminNote || "")}</textarea>
           </div>
 
           <div class="actions">
-            <a class="open-btn" href="verification.html" target="_blank" rel="noopener noreferrer">Open user page</a>
-            <button class="save-note-btn" data-action="save-note" data-uid="${uid}">Save Note</button>
-            <button class="approve-btn" data-action="approve" data-uid="${uid}">Approve</button>
-            <button class="reject-btn" data-action="reject" data-uid="${uid}">Reject</button>
+            ${uid ? `<a class="open-btn" href="verification.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open user page</a>` : ""}
+            <button class="save-note-btn" data-action="save-note" data-key="${escapeHtml(key)}">Save Note</button>
+            <button class="approve-btn" data-action="approve" data-key="${escapeHtml(key)}">Approve</button>
+            <button class="reject-btn" data-action="reject" data-key="${escapeHtml(key)}">Reject</button>
           </div>
         `;
 
@@ -578,39 +870,38 @@
 
       list.querySelectorAll("button[data-action]").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const uid = btn.getAttribute("data-uid");
+          const key = btn.getAttribute("data-key");
           const action = btn.getAttribute("data-action");
-          const noteInput = list.querySelector(`.admin-note-input[data-uid="${uid}"]`);
+          const noteInput = list.querySelector(`.admin-note-input[data-key="${CSS.escape(key)}"]`);
           const note = noteInput ? noteInput.value.trim() : "";
+          const item = allRequests.find(x => (x.id || x.uid) === key);
+
+          if (!item) return;
 
           btn.disabled = true;
+          setMessage("");
 
           try {
             if (action === "save-note") {
-              await saveAdminNote(uid, note);
+              await saveAdminNote(item, note);
+              item.adminNote = note;
               setMessage("Admin note saved.", "success");
             } else if (action === "approve") {
-              await approveRequest(uid, note);
-              const item = allRequests.find(x => x.uid === uid);
-              if (item) {
-                item.request.status = "approved";
-                item.request.adminNote = note;
-              }
+              await approveRequest(item, note);
+              item.status = "approved";
+              item.adminNote = note;
               renderList();
               setMessage("Verification approved.", "success");
             } else if (action === "reject") {
-              await rejectRequest(uid, note);
-              const item = allRequests.find(x => x.uid === uid);
-              if (item) {
-                item.request.status = "rejected";
-                item.request.adminNote = note;
-              }
+              await rejectRequest(item, note);
+              item.status = "rejected";
+              item.adminNote = note;
               renderList();
               setMessage("Verification rejected.", "success");
             }
           } catch (error) {
             console.error(error);
-            setMessage("Action failed.", "error");
+            setMessage(error?.message || "Action failed.", "error");
           }
 
           btn.disabled = false;
@@ -621,37 +912,189 @@
     searchInput.addEventListener("input", renderList);
     statusFilter.addEventListener("change", renderList);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function loadVerificationRequests(showLoading = true) {
+      if (showLoading) {
+        loading.classList.remove("hidden");
+        list.classList.add("hidden");
+        emptyBox.classList.add("hidden");
+      }
+
+      let rows = [];
+      let lastError = null;
+
+      try {
+        const { data, error } = await supabase
+          .from("verification_requests")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!error) {
+          rows = data || [];
+          lastError = null;
+        } else {
+          lastError = error;
+        }
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("verification_requests")
+            .select("*")
+            .order("createdAt", { ascending: false });
+
+          if (!error) {
+            rows = data || [];
+            lastError = null;
+          } else {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("verification_requests")
+            .select("*");
+
+          if (error) throw error;
+          rows = data || [];
+        } catch (err) {
+          console.error(err);
+          loading.textContent = "Could not load verification requests.";
+          return;
+        }
+      }
+
+      allRequests = rows
+        .map(row => normalizeRequest({ id: row.id, ...row }))
+        .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+      loading.classList.add("hidden");
+      renderList();
+    }
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadVerificationRequests(false).catch(err => console.error("Verification refresh failed:", err));
+      }, 350);
+    }
+
+    function setupRealtime() {
+      if (verificationChannel) {
+        try {
+          supabase.removeChannel(verificationChannel);
+        } catch {}
+      }
+
+      verificationChannel = supabase
+        .channel(`verification-admin-live-${currentUser.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "verification_requests" },
+          () => scheduleRefresh()
+        )
+        .subscribe();
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      try {
-        const adminSnap = await getDoc(doc(db, "admins", user.uid));
-        if (!adminSnap.exists()) {
-          loading.textContent = "Access denied. Admin only.";
-          return;
+      currentUser = data.user;
+
+      const isAdmin = await checkAdminAccess(currentUser.id);
+
+      if (!isAdmin) {
+        loading.textContent = "Access denied. Admin only.";
+        return;
+      }
+
+      await loadVerificationRequests(true);
+      setupRealtime();
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
         }
+      });
+    }
 
-        const requestsSnap = await getDocs(collection(db, "verification_requests"));
-
-        allRequests = requestsSnap.docs.map(d => ({
-          uid: d.id,
-          request: d.data()
-        })).sort((a, b) => {
-          const aSec = a.request.createdAt?.seconds || 0;
-          const bSec = b.request.createdAt?.seconds || 0;
-          return bSec - aSec;
-        });
-
-        loading.classList.add("hidden");
-        renderList();
-      } catch (error) {
-        console.error(error);
-        loading.textContent = "Could not load verification requests.";
+    window.addEventListener("beforeunload", () => {
+      if (verificationChannel) {
+        try {
+          supabase.removeChannel(verificationChannel);
+        } catch {}
       }
     });
+
+    initPage().catch((error) => {
+      console.error(error);
+      loading.textContent = "Could not load verification requests.";
+    });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - admins: select
+      - verification_requests: select, update, realtime optional
+      - users: update, upsert
+      - public_profiles: update, upsert
+
+      AUTH:
+      - logged-in user required
+      - admin user required
+
+      IMPORTANT COLUMNS:
+      verification_requests:
+      - id
+      - uid / user_id
+      - full_name
+      - email
+      - account_type
+      - social_link
+      - id_photo_url
+      - selfie_with_id_url
+      - reason
+      - admin_note
+      - status
+      - reviewed_at
+      - reviewed_by
+      - created_at
+      - updated_at
+
+      users:
+      - uid
+      - is_verified
+      - verification_status
+      - updated_at
+
+      public_profiles:
+      - uid
+      - is_verified
+      - verification_status
+      - updated_at
+
+      RLS IDEA:
+      - Only admins can select/update all verification_requests
+      - Only admins can update is_verified on users/public_profiles
+      - Users can select their own verification request on verification.html
+      - Users can insert/update their own pending request only before review
+
+      SHARE BUTTON:
+      - Not needed on verification admin page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
