@@ -598,17 +598,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      deleteDoc,
-      addDoc,
-      updateDoc,
-      collection,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
 
@@ -657,6 +647,10 @@
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
     }
@@ -668,14 +662,14 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "bwTheme") applyTheme();
     });
 
     const mq = window.matchMedia("(prefers-color-scheme: light)");
@@ -702,7 +696,7 @@
 
     function escapeHtml(text) {
       const div = document.createElement("div");
-      div.textContent = text || "";
+      div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
@@ -749,18 +743,53 @@
       return "https://" + value;
     }
 
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+      }
+      return fallback;
+    }
+
+    function readLat(obj) {
+      return num(
+        obj?.lat ??
+        obj?.latitude ??
+        obj?.location?.lat ??
+        obj?.location?.latitude ??
+        obj?.coords?.lat ??
+        obj?.coords?.latitude
+      );
+    }
+
+    function readLng(obj) {
+      return num(
+        obj?.lng ??
+        obj?.lon ??
+        obj?.long ??
+        obj?.longitude ??
+        obj?.location?.lng ??
+        obj?.location?.lon ??
+        obj?.location?.long ??
+        obj?.location?.longitude ??
+        obj?.coords?.lng ??
+        obj?.coords?.longitude
+      );
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
-        uid: d.uid || d.id || fallbackUid || "",
-        displayName: d.displayName || d.name || d.fullName || d.username || "Member",
-        username: d.username || d.handle || d.userName || "",
-        photoURL: d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || "",
-        bio: d.bio || d.about || d.description || "",
-        verified: !!(d.verified || d.isVerified),
-        moderationStatus: d.moderationStatus || d.status || "",
-        isHiddenByAdmin: !!d.isHiddenByAdmin,
-        softDeleted: !!d.softDeleted
+        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted)
       };
     }
 
@@ -768,41 +797,76 @@
       const d = raw || {};
       const status = String(d.status || "").toLowerCase();
 
+      const approved =
+        d.approved === true ||
+        d.verified === true ||
+        d.is_verified === true ||
+        d.isVerified === true ||
+        ["approved", "active", "verified"].includes(status);
+
+      const rejected =
+        status === "rejected" ||
+        d.rejected === true;
+
+      const pending =
+        d.pending === true ||
+        status === "pending" ||
+        (!approved && !rejected);
+
       return {
-        id: d.id || fallbackId || "",
+        id: getField(d, ["id"]) || fallbackId || "",
         source: sourceName,
-        name: d.name || d.title || d.placeName || "Unnamed Place",
-        category: d.category || d.topic || "General",
-        description: d.description || d.desc || d.notes || "",
-        city: d.city || d.locationCity || "",
-        province: d.province || d.state || d.region || d.locationProvince || "",
-        country: d.country || d.locationCountry || "",
-        address: d.address || d.fullAddress || "",
-        website: d.website || d.url || d.link || "",
-        imageURL: d.imageURL || d.imageUrl || d.photoURL || d.mediaUrl || "",
-        createdBy: d.createdBy || d.userId || d.uid || "",
-        creatorName: d.creatorName || d.displayName || "Member",
-        creatorUsername: d.creatorUsername || "",
-        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved", "active", "verified"].includes(status),
-        pending: status === "pending" || d.pending === true || (!d.approved && !d.verified && !d.isVerified && status !== "rejected"),
-        rejected: status === "rejected" || d.rejected === true,
-        hidden: !!d.hidden || !!d.hiddenByAdmin || !!d.softDeleted,
-        lat: num(d.lat ?? d.latitude),
-        lng: num(d.lng ?? d.longitude)
+        name: getField(d, ["name", "title", "place_name", "placeName"]) || "Unnamed Place",
+        category: getField(d, ["category", "topic"]) || "General",
+        description: getField(d, ["description", "desc", "notes"]),
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        address: getField(d, ["address", "full_address", "fullAddress"]),
+        website: getField(d, ["website", "url", "link"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
+        creatorUsername: getField(d, ["creator_username", "creatorUsername"]),
+        approved,
+        pending,
+        rejected,
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        lat: readLat(d),
+        lng: readLng(d)
       };
+    }
+
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
     }
 
     async function loadProfile(uid) {
       if (!uid) return normalizeProfile({}, "");
+
       try {
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(doc(db, "users", uid)),
-          getDoc(doc(db, "publicProfiles", uid))
+        const [publicRow, userRow] = await Promise.all([
+          selectProfileRow("public_profiles", uid),
+          selectProfileRow("users", uid)
         ]);
 
         return normalizeProfile({
-          ...(publicSnap.exists() ? publicSnap.data() : {}),
-          ...(userSnap.exists() ? userSnap.data() : {}),
+          ...(publicRow || {}),
+          ...(userRow || {}),
           uid
         }, uid);
       } catch {
@@ -813,18 +877,28 @@
     async function findPlace(placeId, source) {
       if (source && PLACE_SOURCES.includes(source)) {
         try {
-          const snap = await getDoc(doc(db, source, placeId));
-          if (snap.exists()) {
-            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, source);
+          const { data, error } = await supabase
+            .from(source)
+            .select("*")
+            .eq("id", placeId)
+            .maybeSingle();
+
+          if (!error && data) {
+            return normalizePlace({ id: data.id, ...data }, data.id, source);
           }
         } catch {}
       }
 
-      for (const col of PLACE_SOURCES) {
+      for (const tableName of PLACE_SOURCES) {
         try {
-          const snap = await getDoc(doc(db, col, placeId));
-          if (snap.exists()) {
-            return normalizePlace({ id: snap.id, ...snap.data() }, snap.id, col);
+          const { data, error } = await supabase
+            .from(tableName)
+            .select("*")
+            .eq("id", placeId)
+            .maybeSingle();
+
+          if (!error && data) {
+            return normalizePlace({ id: data.id, ...data }, data.id, tableName);
           }
         } catch {}
       }
@@ -832,12 +906,69 @@
       return null;
     }
 
+    async function updatePlaceById(tableName, placeId, payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from(tableName)
+            .update(payload)
+            .eq("id", placeId);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not update place.");
+    }
+
+    async function deletePlaceById(tableName, placeId) {
+      try {
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .eq("id", placeId);
+
+        if (!error) return;
+      } catch {}
+
+      await updatePlaceById(tableName, placeId, [
+        {
+          hidden: true,
+          soft_deleted: true,
+          deleted_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          hidden: true,
+          softDeleted: true,
+          deletedAt: nowIso(),
+          updatedAt: nowIso()
+        },
+        {
+          hidden: true
+        }
+      ]);
+    }
+
     function renderBadges() {
       const badges = [];
+
       badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.category || "General")}</span>`);
-      badges.push(`<span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">${currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending approval"}</span>`);
+
+      badges.push(`
+        <span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">
+          ${currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending approval"}
+        </span>
+      `);
+
       if (isCreator) badges.push(`<span class="badge badge-purple">Your Place</span>`);
       if (currentPlace.city) badges.push(`<span class="badge badge-blue">${escapeHtml(currentPlace.city)}</span>`);
+
       badgeRow.innerHTML = badges.join("");
     }
 
@@ -908,6 +1039,7 @@
       if (toggleEditBtn) {
         toggleEditBtn.addEventListener("click", () => {
           const opening = editPanel.classList.contains("hidden");
+
           if (opening) {
             fillEditForm();
             editPanel.classList.remove("hidden");
@@ -929,7 +1061,7 @@
           setTopMessage("");
 
           try {
-            await deleteDoc(doc(db, currentSource, currentPlaceId));
+            await deletePlaceById(currentSource, currentPlaceId);
             window.location.href = "nearby-places.html";
           } catch (err) {
             console.error(err);
@@ -965,6 +1097,7 @@
 
     cancelEditBtn.addEventListener("click", () => {
       editPanel.classList.add("hidden");
+
       const toggleEditBtn = document.getElementById("toggleEditBtn");
       if (toggleEditBtn) toggleEditBtn.textContent = "Edit Place";
     });
@@ -975,6 +1108,7 @@
 
     editForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       if (!currentPlace || !isCreator) return;
 
       const name = editName.value.trim();
@@ -993,18 +1127,22 @@
         setEditMessage("Place name is required.", "err");
         return;
       }
+
       if (!city) {
         setEditMessage("City is required.", "err");
         return;
       }
+
       if (!province) {
         setEditMessage("Province / State is required.", "err");
         return;
       }
+
       if (!country) {
         setEditMessage("Country is required.", "err");
         return;
       }
+
       if (!description) {
         setEditMessage("Description is required.", "err");
         return;
@@ -1017,6 +1155,7 @@
         setEditMessage("Latitude must be a valid number.", "err");
         return;
       }
+
       if (lngText && !Number.isFinite(lng)) {
         setEditMessage("Longitude must be a valid number.", "err");
         return;
@@ -1027,7 +1166,33 @@
       setEditMessage("");
 
       try {
-        await updateDoc(doc(db, currentSource, currentPlaceId), {
+        const locationSearch = buildLocationSearch(city, province, country);
+
+        const snakePayload = {
+          name,
+          category,
+          city,
+          location_city: city,
+          current_city: city,
+          province,
+          state: province,
+          region: province,
+          location_province: province,
+          current_province: province,
+          country,
+          location_country: country,
+          current_country: country,
+          location_search: locationSearch,
+          address,
+          website,
+          image_url: imageURL,
+          description,
+          lat,
+          lng,
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
           name,
           category,
           city,
@@ -1041,15 +1206,66 @@
           country,
           locationCountry: country,
           currentCountry: country,
-          locationSearch: buildLocationSearch(city, province, country),
+          locationSearch,
           address,
           website,
           imageURL,
           description,
           lat,
           lng,
-          updatedAt: serverTimestamp()
-        });
+          updatedAt: nowIso()
+        };
+
+        const minimalSnakePayload = {
+          name,
+          category,
+          city,
+          province,
+          country,
+          address,
+          website,
+          image_url: imageURL,
+          description,
+          lat,
+          lng,
+          updated_at: nowIso()
+        };
+
+        const minimalCamelPayload = {
+          name,
+          category,
+          city,
+          province,
+          country,
+          address,
+          website,
+          imageURL,
+          description,
+          lat,
+          lng,
+          updatedAt: nowIso()
+        };
+
+        const ultraMinimalPayload = {
+          name,
+          category,
+          city,
+          province,
+          country,
+          address,
+          website,
+          description,
+          lat,
+          lng
+        };
+
+        await updatePlaceById(currentSource, currentPlaceId, [
+          snakePayload,
+          camelPayload,
+          minimalSnakePayload,
+          minimalCamelPayload,
+          ultraMinimalPayload
+        ]);
 
         currentPlace = {
           ...currentPlace,
@@ -1077,13 +1293,15 @@
       saveBtn.disabled = false;
     });
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
 
       const params = new URLSearchParams(window.location.search);
       currentPlaceId = params.get("placeId") || "";
@@ -1106,7 +1324,7 @@
 
         currentSource = currentPlace.source;
         currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
-        isCreator = currentPlace.createdBy === user.uid;
+        isCreator = currentPlace.createdBy === currentUser.id;
 
         if (!isCreator && (currentPlace.pending || currentPlace.rejected)) {
           loadingPanel.classList.add("hidden");
@@ -1124,7 +1342,58 @@
         loadingPanel.classList.add("hidden");
         notFoundPanel.classList.remove("hidden");
       }
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    initPage();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - users: select
+      - public_profiles: select
+      - nearby_places: select, update, delete
+      - places: select, update, delete
+      - nudist_places: select, update, delete
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS:
+      nearby_places / places / nudist_places:
+      - id
+      - name
+      - category
+      - description
+      - city
+      - province
+      - country
+      - address
+      - website
+      - image_url
+      - created_by
+      - creator_name
+      - approved
+      - pending
+      - rejected
+      - hidden
+      - hidden_by_admin
+      - soft_deleted
+      - lat
+      - lng
+      - status
+      - created_at
+      - updated_at
+
+      SHARE BUTTON:
+      - Not needed on this page because it displays a place, not a post card.
+    */
   </script>
 </body>
 </html>
