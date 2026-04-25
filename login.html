@@ -3,268 +3,159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Login</title>
+  <title>OwnSpace - Login</title>
+
   <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-      font-family:Arial,sans-serif;
-    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
     html[data-theme="dark"]{
       --bg:#07101f;
-      --surface:#0c1630;
+      --surface:rgba(12,22,48,.92);
       --surface-2:#111d3d;
       --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.10);
       --line-soft:rgba(255,255,255,.05);
       --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
-      --green:#3ddc84;
-      --red:#ff5d73;
+      --green:#22c55e;
+      --yellow:#f5b942;
       --purple:#a78bfa;
-      --shadow:0 18px 36px rgba(0,0,0,.18);
-      --hero-grad:linear-gradient(135deg,#07101f 0%, #0d1834 45%, #142753 100%);
+      --red:#ff5d73;
+      --shadow:0 24px 48px rgba(0,0,0,.26);
     }
 
     html[data-theme="light"]{
       --bg:#f3f6fb;
-      --surface:#ffffff;
+      --surface:rgba(255,255,255,.96);
       --surface-2:#f7f9fd;
       --surface-3:#edf3ff;
-      --line:rgba(15,23,42,.09);
+      --line:rgba(15,23,42,.10);
       --line-soft:rgba(15,23,42,.05);
       --text:#14213d;
       --muted:#6b7893;
       --blue:#1f8fff;
       --green:#22b36c;
-      --red:#e74c66;
+      --yellow:#d59617;
       --purple:#7f63ff;
-      --shadow:0 16px 28px rgba(20,33,61,.08);
-      --hero-grad:linear-gradient(135deg,#eef4ff 0%, #f8fbff 45%, #e9f2ff 100%);
+      --red:#e74c66;
+      --shadow:0 18px 36px rgba(20,33,61,.10);
     }
 
     body{
       min-height:100vh;
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(76,201,255,.14), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(167,139,250,.14), transparent 30%),
+        var(--bg);
       color:var(--text);
+      padding:18px;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:14px;
     }
 
     .wrap{
       width:100%;
-      max-width:980px;
+      max-width:520px;
+      margin:0 auto;
     }
 
-    .shell{
-      display:grid;
-      grid-template-columns:1fr 420px;
-      gap:12px;
-      align-items:stretch;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
     }
 
-    .hero,
+    .top-link{
+      min-height:42px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      color:var(--text);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:900;
+      box-shadow:var(--shadow);
+      gap:7px;
+    }
+
+    .top-link svg{
+      width:17px;
+      height:17px;
+      display:block;
+    }
+
     .card{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:26px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .hero{
-      padding:28px;
-      background:var(--hero-grad);
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      min-height:620px;
-    }
-
-    .top-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:14px;
-      flex-wrap:wrap;
-    }
-
-    .brand-wrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .brand-mark{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      background:linear-gradient(135deg, rgba(76,201,255,.22), rgba(167,139,250,.22));
-      border:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-      font-weight:900;
-      color:var(--text);
-      flex-shrink:0;
-    }
-    .brand{
-      font-size:20px;
-      font-weight:800;
-      line-height:1.05;
-    }
-    .brand-sub{
-      font-size:11px;
-      color:var(--muted);
-      margin-top:2px;
-    }
-
-    .icon-btn,
-    .ghost-btn,
-    .btn{
-      border:none;
-      text-decoration:none;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:13px;
-      min-height:42px;
-      font-weight:800;
-      transition:.18s ease;
-    }
-    .icon-btn:hover,
-    .ghost-btn:hover,
-    .btn:hover{
-      transform:translateY(-1px);
-      opacity:.96;
-    }
-
-    .icon-btn{
-      width:42px;
-      height:42px;
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-size:16px;
-    }
-
-    .ghost-btn{
-      padding:0 14px;
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-size:12px;
-    }
-
-    .hero-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(76,201,255,.14);
-      border:1px solid rgba(76,201,255,.25);
-      color:var(--text);
-      font-size:12px;
-      font-weight:800;
-      margin-bottom:16px;
-    }
-
-    .hero h1{
-      font-size:42px;
-      line-height:1.08;
-      margin-bottom:14px;
-      letter-spacing:-.5px;
-    }
-
-    .hero-sub{
-      color:var(--muted);
-      font-size:16px;
-      line-height:1.7;
-      max-width:560px;
-      margin-bottom:22px;
-    }
-
-    .hero-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:22px;
-    }
-
-    .hero-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-    }
-
-    .hero-box{
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-    }
-    .hero-box strong{
-      display:block;
-      font-size:14px;
-      margin-bottom:5px;
-    }
-    .hero-box span{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    .card{
+      border-radius:24px;
       padding:20px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
-
-    .card-top{
-      margin-bottom:18px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
     }
 
     .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:7px 11px;
+      padding:8px 12px;
       border-radius:999px;
       background:rgba(76,201,255,.14);
-      border:1px solid rgba(76,201,255,.22);
+      border:1px solid rgba(76,201,255,.24);
       color:var(--text);
       font-size:12px;
-      font-weight:800;
+      font-weight:900;
       margin-bottom:12px;
     }
 
-    h2{
+    h1{
       font-size:30px;
-      line-height:1.1;
+      line-height:1.15;
       margin-bottom:8px;
     }
 
     .sub{
       color:var(--muted);
-      line-height:1.65;
+      line-height:1.6;
       font-size:13px;
+      margin-bottom:14px;
     }
 
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+    }
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+
     .form{
-      margin-top:18px;
       display:grid;
-      gap:12px;
+      gap:14px;
     }
 
     .field{
@@ -274,15 +165,15 @@
 
     label{
       display:block;
-      font-size:12px;
-      font-weight:800;
+      font-size:13px;
       color:var(--text);
+      font-weight:900;
     }
 
     input{
       width:100%;
       padding:13px 14px;
-      border-radius:15px;
+      border-radius:14px;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
@@ -294,200 +185,250 @@
       color:var(--muted);
     }
 
-    .actions{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:4px;
-    }
-
     .message{
       min-height:18px;
       font-size:13px;
+      line-height:1.45;
+      word-break:break-word;
       flex:1;
+      min-width:190px;
     }
 
-    .success{ color:#86efac; }
-    .error{ color:#fda4af; }
+    .success{color:#86efac}
+    .error{color:#fda4af}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:2px;
+    }
 
     .btn{
-      padding:0 18px;
+      border:none;
+      border-radius:14px;
+      padding:13px 16px;
+      cursor:pointer;
+      font-weight:900;
       font-size:14px;
+      min-height:44px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
     .btn-primary{
-      background:rgba(76,201,255,.16);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.22);
-      min-width:132px;
+      background:var(--green);
+      color:#052e16;
+      min-width:160px;
     }
 
-    .btn-secondary{
-      background:rgba(61,220,132,.16);
+    .btn-soft{
+      background:var(--surface-2);
       color:var(--text);
-      border:1px solid rgba(61,220,132,.22);
+      border:1px solid var(--line);
     }
 
-    .divider{
-      height:1px;
-      background:var(--line);
-      margin:18px 0 14px;
+    .btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
     }
 
     .bottom{
       text-align:center;
+      margin-top:16px;
       color:var(--muted);
       font-size:13px;
-      line-height:1.55;
     }
 
     .bottom a{
-      color:var(--green);
+      color:var(--blue);
       text-decoration:none;
-      font-weight:800;
+      font-weight:900;
     }
 
-    .loader{
+    .note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .modal-overlay{
       position:fixed;
       inset:0;
-      background:var(--bg);
+      z-index:100;
+      background:rgba(0,0,0,.66);
+      backdrop-filter:blur(10px);
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:40;
+      padding:16px;
+    }
+
+    .modal{
+      width:100%;
+      max-width:560px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .modal h2{
+      font-size:22px;
+      margin-bottom:8px;
+    }
+
+    .modal p{
       color:var(--muted);
-      font-size:15px;
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:12px;
+    }
+
+    .check-row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      margin-bottom:10px;
+    }
+
+    .check-row input{
+      width:auto;
+      margin-top:3px;
+      transform:scale(1.08);
+      accent-color:var(--blue);
+      flex-shrink:0;
+    }
+
+    .check-row label{
+      margin:0;
+      font-size:13px;
+      line-height:1.5;
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .check-row a{
+      color:var(--blue);
+      text-decoration:none;
+      font-weight:900;
     }
 
     .hidden{display:none!important}
 
-    @media (max-width:900px){
-      .shell{
-        grid-template-columns:1fr;
-      }
-      .hero{
-        min-height:auto;
-      }
-      .hero h1{
-        font-size:34px;
-      }
-    }
-
-    @media (max-width:640px){
-      body{padding:10px}
-      .hero,
-      .card{
-        padding:16px;
-      }
-      .hero-grid{
-        grid-template-columns:1fr;
-      }
-      .actions{
-        align-items:stretch;
-      }
-      .btn-primary,
-      .hero-actions .ghost-btn,
-      .hero-actions .btn-secondary{
-        width:100%;
-      }
-      h2{
-        font-size:26px;
-      }
-      .hero h1{
-        font-size:30px;
-      }
+    @media (max-width:700px){
+      body{padding:12px;align-items:flex-start}
+      .actions{align-items:stretch}
+      .btn-primary,.btn-soft{width:100%}
+      .card{padding:16px}
+      h1{font-size:26px}
+      .message{min-width:100%}
     }
   </style>
 </head>
+
 <body>
-  <div id="loader" class="loader hidden">Checking session...</div>
+  <div class="wrap">
+    <div class="topbar">
+      <a href="index.html" class="top-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+        Back
+      </a>
 
-  <div class="wrap" id="pageContent">
-    <div class="shell">
-      <div class="hero">
-        <div>
-          <div class="top-row">
-            <div class="brand-wrap">
-              <div class="brand-mark">B</div>
-              <div>
-                <div class="brand">BareWorld</div>
-                <div class="brand-sub">Private member community</div>
-              </div>
-            </div>
+      <a href="signup.html" class="top-link">Sign Up</a>
+    </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="themeBtn" class="icon-btn" type="button" aria-label="Theme">◐</button>
-              <a href="index.html" class="ghost-btn">Home</a>
-            </div>
-          </div>
+    <div class="card">
+      <div class="badge">Welcome back</div>
 
-          <div class="hero-badge">Welcome back</div>
+      <h1>Login to OwnSpace</h1>
 
-          <h1>Login and go straight into your community</h1>
-
-          <p class="hero-sub">
-            Access your BareWorld account, open your feed, manage your profile, approve requests, and continue where you left off.
-          </p>
-
-          <div class="hero-actions">
-            <a href="signup.html" class="btn btn-secondary">Create Account</a>
-            <a href="school.html" class="ghost-btn">School</a>
-          </div>
-        </div>
-
-        <div class="hero-grid">
-          <div class="hero-box">
-            <strong>Private profiles</strong>
-            <span>Choose who can see your content and profile details.</span>
-          </div>
-          <div class="hero-box">
-            <strong>Feed access</strong>
-            <span>Jump into updates, comments, follows and notifications.</span>
-          </div>
-          <div class="hero-box">
-            <strong>Nearby flow</strong>
-            <span>Explore people, events and places from one system.</span>
-          </div>
-          <div class="hero-box">
-            <strong>Safer community</strong>
-            <span>Moderated structure with cleaner member controls.</span>
-          </div>
-        </div>
+      <div class="sub">
+        Continue to your own space. Login stays simple; if our rules are updated, you may be asked to accept the latest version once.
       </div>
 
-      <div class="card">
-        <div class="card-top">
-          <div class="badge">Member Login</div>
-          <h2>Login</h2>
-          <div class="sub">
-            Enter your account details to access the member feed.
-          </div>
+      <div class="chip-row">
+        <span class="chip chip-blue">OwnSpace</span>
+        <span class="chip chip-purple">Private + public profiles</span>
+        <span class="chip chip-yellow">18+ community</span>
+      </div>
+
+      <form id="loginForm" class="form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" required />
         </div>
 
-        <form id="loginForm" class="form">
-          <div class="field">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="Enter your email" required />
-          </div>
-
-          <div class="field">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required />
-          </div>
-
-          <div class="actions">
-            <div id="message" class="message"></div>
-            <button type="submit" id="loginBtn" class="btn btn-primary">Login</button>
-          </div>
-        </form>
-
-        <div class="divider"></div>
-
-        <div class="bottom">
-          Don’t have an account? <a href="signup.html">Create one</a>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
         </div>
+
+        <div class="actions">
+          <div id="message" class="message"></div>
+          <button type="submit" id="loginBtn" class="btn btn-primary">Login</button>
+        </div>
+      </form>
+
+      <div class="bottom">
+        New here? <a href="signup.html">Create account</a>
+      </div>
+
+      <div class="note">
+        Forgot password flow can be added later with Supabase password reset email.
+      </div>
+    </div>
+  </div>
+
+  <div id="termsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>Accept updated OwnSpace rules</h2>
+      <p>
+        Before continuing, please accept the latest Terms, Privacy Policy, Community Guidelines, and Content Policy.
+      </p>
+
+      <div class="check-row">
+        <input type="checkbox" id="modalTerms" />
+        <label for="modalTerms">
+          I agree to the <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>.
+        </label>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="modalPrivacy" />
+        <label for="modalPrivacy">
+          I agree to the <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+        </label>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="modalGuidelines" />
+        <label for="modalGuidelines">
+          I agree to the <a href="community-guidelines.html" target="_blank" rel="noopener noreferrer">Community Guidelines</a>
+          and <a href="content-policy.html" target="_blank" rel="noopener noreferrer">Content Policy</a>.
+        </label>
+      </div>
+
+      <div class="actions">
+        <div id="modalMessage" class="message"></div>
+        <button id="acceptTermsBtn" class="btn btn-primary" type="button">Accept & Continue</button>
+        <button id="logoutBtn" class="btn btn-soft" type="button">Logout</button>
       </div>
     </div>
   </div>
@@ -495,17 +436,23 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
+    const CURRENT_TERMS_VERSION = "2026-04-25";
+
     const loginForm = document.getElementById("loginForm");
     const loginBtn = document.getElementById("loginBtn");
     const message = document.getElementById("message");
-    const themeBtn = document.getElementById("themeBtn");
-    const loader = document.getElementById("loader");
-    const pageContent = document.getElementById("pageContent");
 
-    function setMessage(text, type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
-    }
+    const termsModal = document.getElementById("termsModal");
+    const modalTerms = document.getElementById("modalTerms");
+    const modalPrivacy = document.getElementById("modalPrivacy");
+    const modalGuidelines = document.getElementById("modalGuidelines");
+    const modalMessage = document.getElementById("modalMessage");
+    const acceptTermsBtn = document.getElementById("acceptTermsBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    let currentUser = null;
+    let isCheckingSession = false;
+    let hasRedirected = false;
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -518,39 +465,41 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue = getStoredTheme()) {
+    function applyTheme(themeValue) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    function toggleTheme() {
-      const current = getStoredTheme();
-      const next = current === "dark" ? "light" : "dark";
-      localStorage.setItem("bwTheme", next);
-      applyTheme(next);
+    applyTheme(getStoredTheme());
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
     }
 
-    function showLoader() {
-      loader.classList.remove("hidden");
+    function nowIso() {
+      return new Date().toISOString();
     }
 
-    function hideLoader() {
-      loader.classList.add("hidden");
-      pageContent.classList.remove("hidden");
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = `message ${type}`;
     }
 
-    function redirectToFeed() {
-      window.location.href = "feed.html";
+    function setModalMessage(text, type = "") {
+      modalMessage.textContent = text;
+      modalMessage.className = `message ${type}`;
     }
 
-    function getLoginErrorMessage(error) {
+    function makeFriendlyError(error) {
       const msg = String(error?.message || "").toLowerCase();
 
-      if (
-        msg.includes("invalid login credentials") ||
-        msg.includes("invalid credentials") ||
-        msg.includes("email not found") ||
-        msg.includes("invalid email or password")
-      ) {
+      if (msg.includes("invalid login credentials")) {
         return "Invalid email or password.";
       }
 
@@ -562,62 +511,98 @@
         return "Invalid email address.";
       }
 
-      if (msg.includes("too many requests")) {
-        return "Too many attempts. Try again later.";
+      if (msg.includes("row-level security") || msg.includes("permission denied")) {
+        return "Database permission issue. RLS or policy still needs fixing.";
       }
 
-      if (msg.includes("network")) {
-        return "Network issue. Try again.";
-      }
-
-      return "Login failed.";
+      return error?.message || "Could not login.";
     }
 
-    async function checkExistingSession() {
-      showLoader();
+    async function getUserProfile(uid) {
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("uid,accepted_terms_version,terms_accepted_at,privacy_accepted_at,community_guidelines_accepted_at,content_policy_accepted_at,age_confirmed_at")
+          .eq("uid", uid)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch {}
+
+      return null;
+    }
+
+    function userAcceptedLatestTerms(user, profile) {
+      const metadata = user?.user_metadata || {};
+
+      const profileVersion = profile?.accepted_terms_version || "";
+      const metaVersion = metadata?.accepted_terms_version || "";
+
+      if (profileVersion === CURRENT_TERMS_VERSION) return true;
+      if (metaVersion === CURRENT_TERMS_VERSION) return true;
+
+      return false;
+    }
+
+    async function updateTermsAcceptance(user) {
+      const acceptedAt = nowIso();
+
+      await supabase.auth.updateUser({
+        data: {
+          age_confirmed: true,
+          age_confirmed_at: acceptedAt,
+
+          terms_accepted_at: acceptedAt,
+          privacy_accepted_at: acceptedAt,
+          community_guidelines_accepted_at: acceptedAt,
+          content_policy_accepted_at: acceptedAt,
+          accepted_terms_version: CURRENT_TERMS_VERSION
+        }
+      });
 
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        const { error } = await supabase
+          .from("users")
+          .update({
+            age_confirmed: true,
+            age_confirmed_at: acceptedAt,
 
-        if (data?.session?.user) {
-          redirectToFeed();
-          return;
+            terms_accepted_at: acceptedAt,
+            privacy_accepted_at: acceptedAt,
+            community_guidelines_accepted_at: acceptedAt,
+            content_policy_accepted_at: acceptedAt,
+            accepted_terms_version: CURRENT_TERMS_VERSION,
+
+            updated_at: acceptedAt
+          })
+          .eq("uid", user.id);
+
+        if (error) {
+          console.warn("Terms update in users failed:", error.message);
         }
-      } catch (error) {
-        console.error("Session check failed:", error);
+      } catch (err) {
+        console.warn("Terms update skipped:", err?.message || err);
       }
-
-      hideLoader();
     }
 
-    applyTheme();
+    async function continueAfterLogin(user) {
+      currentUser = user;
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", () => {
-        if (getStoredTheme() === "system") applyTheme("system");
-      });
-    }
+      const profile = await getUserProfile(user.id);
 
-    window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme();
-    });
-
-    themeBtn.addEventListener("click", toggleTheme);
-
-    supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
-        redirectToFeed();
+      if (!userAcceptedLatestTerms(user, profile)) {
+        termsModal.classList.remove("hidden");
         return;
       }
 
-      if (!session?.user) {
-        hideLoader();
-      }
-    });
+      redirectToApp();
+    }
 
-    checkExistingSession();
+    function redirectToApp() {
+      if (hasRedirected) return;
+      hasRedirected = true;
+      window.location.replace("profile.html");
+    }
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -626,7 +611,7 @@
       const password = document.getElementById("password").value;
 
       if (!email || !password) {
-        setMessage("Please fill all fields.", "error");
+        setMessage("Please enter email and password.", "error");
         return;
       }
 
@@ -642,22 +627,85 @@
 
         if (error) throw error;
 
-        if (data?.user) {
-          setMessage("Login successful. Redirecting...", "success");
-          setTimeout(() => {
-            redirectToFeed();
-          }, 500);
-          return;
+        if (!data?.user) {
+          throw new Error("Login completed but no user was returned.");
         }
 
-        throw new Error("Login failed");
+        setMessage("Login successful. Checking account...", "success");
+
+        await continueAfterLogin(data.user);
       } catch (error) {
-        console.error(error);
-        setMessage(getLoginErrorMessage(error), "error");
+        console.error("LOGIN ERROR:", error);
+        setMessage(makeFriendlyError(error), "error");
+
         loginBtn.disabled = false;
         loginBtn.textContent = "Login";
       }
     });
+
+    acceptTermsBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      if (!modalTerms.checked || !modalPrivacy.checked || !modalGuidelines.checked) {
+        setModalMessage("Please accept all required updated rules.", "error");
+        return;
+      }
+
+      acceptTermsBtn.disabled = true;
+      acceptTermsBtn.textContent = "Saving...";
+      setModalMessage("");
+
+      try {
+        await updateTermsAcceptance(currentUser);
+
+        setModalMessage("Accepted. Redirecting...", "success");
+
+        setTimeout(() => {
+          redirectToApp();
+        }, 500);
+      } catch (err) {
+        console.error("Terms acceptance failed:", err);
+        setModalMessage(err.message || "Could not save acceptance.", "error");
+        acceptTermsBtn.disabled = false;
+        acceptTermsBtn.textContent = "Accept & Continue";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.reload();
+    });
+
+    async function redirectIfLoggedIn() {
+      if (isCheckingSession) return;
+
+      isCheckingSession = true;
+
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Session check failed:", error);
+          return;
+        }
+
+        if (data?.session?.user) {
+          await continueAfterLogin(data.session.user);
+        }
+      } catch (err) {
+        console.error("Session check error:", err);
+      }
+
+      isCheckingSession = false;
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user && !hasRedirected) {
+        continueAfterLogin(session.user).catch(console.error);
+      }
+    });
+
+    redirectIfLoggedIn();
   </script>
 </body>
 </html>
