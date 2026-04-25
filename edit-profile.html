@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OwnSpace - Edit Profile</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -465,12 +466,6 @@
       flex-shrink:0;
     }
 
-    .btn-preview{
-      background:var(--surface-3);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-
     .btn-save{
       background:rgba(34,197,94,.14);
       color:var(--text);
@@ -478,12 +473,6 @@
       width:100%;
       font-size:14px;
       min-height:44px;
-    }
-
-    .btn-blue{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
     }
 
     .btn-red{
@@ -945,20 +934,19 @@
     let currentBlockedUsers = [];
 
     let currentPhotoURL = "";
-    let currentPhotoPath = "";
     let selectedPhotoFile = null;
     let selectedPreviewObjectUrl = "";
     let removePhotoRequested = false;
 
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
-      return themeValue === "light" ? "light" : "dark";
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue) {
@@ -1061,6 +1049,7 @@
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
+
       const aliases = [c];
 
       if (c === "united states") aliases.push("usa", "us", "america");
@@ -1095,6 +1084,30 @@
       if (!value) return "";
       if (/^https?:\/\//i.test(value)) return value;
       return "https://" + value;
+    }
+
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function renderVerifiedStatus() {
+      verifiedLink.href = "verification.html";
+
+      if (verifiedStatus) {
+        verifiedLink.textContent = "Verified";
+        verifiedLink.className = "verify-link verified";
+      } else {
+        verifiedLink.textContent = "Not Verified - Get Verified";
+        verifiedLink.className = "verify-link not-verified";
+      }
     }
 
     function extractLinksToLoad(raw) {
@@ -1138,30 +1151,6 @@
         raw.link2Title
       ]);
 
-      if ((!link1 || !link2) && Array.isArray(raw.links)) {
-        const arr = raw.links.slice(0, 2);
-
-        if (!link1 && arr[0]) {
-          if (typeof arr[0] === "string") {
-            link1 = arr[0];
-            link1Label = arr[0];
-          } else {
-            link1 = arr[0].url || arr[0].href || arr[0].link || "";
-            link1Label = arr[0].label || arr[0].title || arr[0].name || link1;
-          }
-        }
-
-        if (!link2 && arr[1]) {
-          if (typeof arr[1] === "string") {
-            link2 = arr[1];
-            link2Label = arr[1];
-          } else {
-            link2 = arr[1].url || arr[1].href || arr[1].link || "";
-            link2Label = arr[1].label || arr[1].title || arr[1].name || link2;
-          }
-        }
-      }
-
       return {
         link1,
         link1Label,
@@ -1170,28 +1159,40 @@
       };
     }
 
-    function getField(raw, names) {
-      for (const name of names) {
-        const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
-      }
-      return "";
+    function isSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("column") ||
+        msg.includes("does not exist")
+      );
     }
 
-    function nowIso() {
-      return new Date().toISOString();
-    }
+    async function upsertWithFallback(table, payloadVariants, conflictColumn = "uid") {
+      let lastError = null;
 
-    function renderVerifiedStatus() {
-      verifiedLink.href = "verification.html";
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .upsert(payload, { onConflict: conflictColumn });
 
-      if (verifiedStatus) {
-        verifiedLink.textContent = "Verified";
-        verifiedLink.className = "verify-link verified";
-      } else {
-        verifiedLink.textContent = "Not Verified - Get Verified";
-        verifiedLink.className = "verify-link not-verified";
+          if (!error) return true;
+
+          lastError = error;
+          console.warn(`${table} upsert variant failed:`, error?.message || error);
+
+          if (!isSchemaError(error)) {
+            continue;
+          }
+        } catch (err) {
+          lastError = err;
+          console.warn(`${table} upsert variant failed:`, err?.message || err);
+        }
       }
+
+      throw lastError || new Error(`Could not save ${table}.`);
     }
 
     async function checkUsernameAvailability(rawValue) {
@@ -1370,9 +1371,9 @@
 
         const links = extractLinksToLoad(merged);
 
-        const city = getField(merged, ["city", "location_city", "current_city"]);
-        const province = getField(merged, ["province", "state", "region", "location_province", "current_province"]);
-        const country = getField(merged, ["country", "location_country", "current_country"]);
+        const city = getField(merged, ["city"]);
+        const province = getField(merged, ["province"]);
+        const country = getField(merged, ["country"]);
 
         const locationVisibility =
           getField(merged, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) ||
@@ -1383,7 +1384,13 @@
         cityInput.value = city;
         provinceInput.value = province;
         countryInput.value = country;
-        locationVisibilityInput.value = locationVisibility;
+
+        if (["city", "gps", "hidden"].includes(locationVisibility)) {
+          locationVisibilityInput.value = locationVisibility;
+        } else {
+          locationVisibilityInput.value = locationVisibility === "approximate" ? "gps" : "city";
+        }
+
         bioInput.value = getField(merged, ["bio", "about", "description"]);
         cityVisibleInput.checked = !!(merged.city_visible ?? merged.cityVisible);
         isPrivateInput.checked = !!(merged.is_private ?? merged.isPrivate ?? merged.privateProfile ?? merged.private ?? merged.accountPrivate);
@@ -1402,7 +1409,6 @@
         nearbyStatusText.textContent = locationVisibility === "hidden" ? "Hidden" : "Visible";
 
         currentPhotoURL = getField(merged, ["photo_url", "photoURL", "user_photo_url", "userPhotoURL", "avatar", "avatar_url", "avatarUrl"]);
-        currentPhotoPath = getField(merged, ["photo_path", "photoPath", "profile_photo_path", "profilePhotoPath"]);
 
         currentRealName = getField(merged, ["real_name", "realName"]);
         currentModerationStatus = getField(merged, ["moderation_status", "moderationStatus"]);
@@ -1516,18 +1522,15 @@
         }
 
         let finalPhotoURL = currentPhotoURL;
-        let finalPhotoPath = currentPhotoPath;
 
         if (removePhotoRequested) {
           finalPhotoURL = "";
-          finalPhotoPath = "";
         }
 
         if (selectedPhotoFile) {
           showMessage("Uploading profile photo...", "success");
           const uploadResult = await uploadProfilePhoto(selectedPhotoFile, currentUser.id);
           finalPhotoURL = uploadResult.publicUrl;
-          finalPhotoPath = uploadResult.path;
         }
 
         if (originalUsernameLower && originalUsernameLower !== username) {
@@ -1554,123 +1557,96 @@
         const latValue = locationChanged ? null : originalLat;
         const lngValue = locationChanged ? null : originalLng;
 
-        const linksArray = [
-          link1 ? { label: link1Label, url: link1 } : null,
-          link2 ? { label: link2Label, url: link2 } : null
-        ].filter(Boolean);
+        const basePayload = {
+          uid: currentUser.id,
+          display_name: displayName,
+          username,
+          bio,
+          photo_url: finalPhotoURL,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          city_visible: cityVisible,
+          is_private: isPrivate,
+          is_verified: verifiedStatus,
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility,
+          gender,
+          gender_custom: genderCustom,
+          gender_visible: genderVisible,
+          lat: latValue,
+          lng: lngValue,
+          link1,
+          link1_label: link1Label,
+          link2,
+          link2_label: link2Label,
+          updated_at: nowIso()
+        };
 
-        const userPayload = {
+        const userFullPayload = {
+          ...basePayload,
+          email: currentUser.email || "",
+          display_name_lower: displayName.toLowerCase(),
+          username_lower: username,
+          real_name: currentRealName || "",
+          city_lower: city.toLowerCase(),
+          moderation_status: currentModerationStatus || "",
+          warning_until: currentWarningUntil,
+          blocked_users: currentBlockedUsers
+        };
+
+        const publicFullPayload = {
+          ...basePayload,
+          display_name_lower: displayName.toLowerCase(),
+          username_lower: username,
+          city_lower: city.toLowerCase(),
+          moderation_status: currentModerationStatus || "",
+          warning_until: currentWarningUntil
+        };
+
+        const userMinimalPayload = {
           uid: currentUser.id,
           email: currentUser.email || "",
           display_name: displayName,
-          display_name_lower: displayName.toLowerCase(),
           username,
-          username_lower: username,
-          real_name: currentRealName || "",
           bio,
           photo_url: finalPhotoURL,
-          photo_path: finalPhotoPath,
-          profile_photo_path: finalPhotoPath,
-
           city,
-          city_lower: city.toLowerCase(),
           province,
-          state: province,
-          region: province,
           country,
-          location_city: city,
-          location_province: province,
-          location_country: country,
-          current_city: city,
-          current_province: province,
-          current_country: country,
           location_search: locationSearch,
-
-          city_visible: cityVisible,
           is_private: isPrivate,
-          is_verified: verifiedStatus,
           show_in_nearby: showInNearby,
           location_visibility: locationVisibility,
-
-          gender,
-          gender_custom: genderCustom,
-          gender_visible: genderVisible,
-
-          moderation_status: currentModerationStatus || "",
-          warning_until: currentWarningUntil,
-          lat: latValue,
-          lng: lngValue,
-          blocked_users: currentBlockedUsers,
-
-          link1,
-          link1_label: link1Label,
-          link2,
-          link2_label: link2Label,
-          links: linksArray,
-
           updated_at: nowIso()
         };
 
-        const publicPayload = {
+        const publicMinimalPayload = {
           uid: currentUser.id,
           display_name: displayName,
-          display_name_lower: displayName.toLowerCase(),
           username,
-          username_lower: username,
           bio,
           photo_url: finalPhotoURL,
-          photo_path: finalPhotoPath,
-          profile_photo_path: finalPhotoPath,
-
           city,
-          city_lower: city.toLowerCase(),
           province,
-          state: province,
-          region: province,
           country,
-          location_city: city,
-          location_province: province,
-          location_country: country,
-          current_city: city,
-          current_province: province,
-          current_country: country,
           location_search: locationSearch,
-
-          city_visible: cityVisible,
           is_private: isPrivate,
-          is_verified: verifiedStatus,
           show_in_nearby: showInNearby,
           location_visibility: locationVisibility,
-
-          gender,
-          gender_custom: genderCustom,
-          gender_visible: genderVisible,
-
-          moderation_status: currentModerationStatus || "",
-          warning_until: currentWarningUntil,
-          lat: latValue,
-          lng: lngValue,
-
-          link1,
-          link1_label: link1Label,
-          link2,
-          link2_label: link2Label,
-          links: linksArray,
-
           updated_at: nowIso()
         };
 
-        const { error: userSaveError } = await supabase
-          .from("users")
-          .upsert(userPayload, { onConflict: "uid" });
+        await upsertWithFallback("users", [
+          userFullPayload,
+          userMinimalPayload
+        ]);
 
-        if (userSaveError) throw userSaveError;
-
-        const { error: publicSaveError } = await supabase
-          .from("public_profiles")
-          .upsert(publicPayload, { onConflict: "uid" });
-
-        if (publicSaveError) throw publicSaveError;
+        await upsertWithFallback("public_profiles", [
+          publicFullPayload,
+          publicMinimalPayload
+        ]);
 
         const { error: authUpdateError } = await supabase.auth.updateUser({
           data: {
@@ -1689,7 +1665,6 @@
         originalLng = lngValue;
 
         currentPhotoURL = finalPhotoURL;
-        currentPhotoPath = finalPhotoPath;
         selectedPhotoFile = null;
         removePhotoRequested = false;
         photoFileInput.value = "";
@@ -1725,36 +1700,29 @@
     /*
       OWNSPACE / SUPABASE NOTES:
 
-      MAIN FIX:
+      FIXED:
+      - Removed current_city / current_province / current_country from save payload.
+      - Removed location_city / location_province / location_country from save payload.
       - Removed old Profile Photo Link field.
       - Added Supabase Storage upload for profile photo.
-      - Not Verified button now links to verification.html.
-      - Verified button is visible and styled.
-      - Profile links are kept because they are social/profile links, not image links.
+      - Not Verified button now opens verification.html.
+      - Light theme is default if no saved theme exists.
+      - Added fallback save payloads so if extra optional columns are missing, core profile still saves.
 
       STORAGE:
       - Bucket used: media
       - Upload path: profiles/{uid}/{timestamp-random}.{ext}
 
-      TABLES USED:
+      CORE TABLES USED:
       - users: select, upsert
       - public_profiles: select, upsert
       - usernames: select, upsert, delete old username
       - Supabase Auth metadata update
 
-      COLUMNS UPDATED:
-      - photo_url
-      - photo_path
-      - profile_photo_path
-      - display_name
-      - username
-      - bio
-      - city/province/country
-      - location_search
-      - location_visibility
-      - show_in_nearby
-      - gender/gender_custom/gender_visible
-      - link1/link1_label/link2/link2_label/links
+      IMPORTANT:
+      - Your Supabase users/public_profiles tables should have:
+        uid, display_name, username, bio, photo_url, city, province, country,
+        location_search, is_private, show_in_nearby, location_visibility, updated_at.
     */
   </script>
 </body>
