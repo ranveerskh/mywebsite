@@ -1,97 +1,369 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BareWorld - Report</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;
+
+    :root,
+    html[data-theme="dark"]{
+      --bg:#0b1020;
+      --card:#121931;
+      --soft:#161f3d;
+      --soft2:#0f1630;
+      --line:rgba(255,255,255,.08);
+      --text:#fff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --red:#ff5d73;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --nav-bg:rgba(12,18,35,.92);
+      --topbar-bg:rgba(11,16,32,.82);
     }
+
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --soft:#eef3fb;
+      --soft2:#f7f9fd;
+      --line:rgba(15,23,42,.08);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --red:#e74c66;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --nav-bg:rgba(255,255,255,.96);
+      --topbar-bg:rgba(255,255,255,.88);
+    }
+
     body{
       background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
-      color:var(--text);min-height:100vh;padding:14px 14px 92px;
+      color:var(--text);
+      min-height:100vh;
+      padding:14px 14px 92px;
     }
+    html[data-theme="light"] body{
+      background:linear-gradient(180deg,#eef4ff 0%,#f8fbff 100%);
+    }
+
     .app{max-width:760px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar{
-      position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);border:1px solid rgba(255,255,255,.04);
-      border-radius:18px;padding:12px 14px;margin-bottom:14px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
-    .left-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+
+    .left-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
     .back-btn,.chip-btn{
-      border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;
-      font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line);text-decoration:none;display:inline-block;
+      border:none;
+      background:var(--soft);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
     }
+
     .brand{font-size:22px;font-weight:800}
     .brand-sub{font-size:12px;color:var(--muted)}
     .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
     .panel{
-      background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;
-      margin-bottom:14px;box-shadow:0 20px 40px rgba(0,0,0,.18);
+      background:rgba(18,25,49,.88);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 20px 40px rgba(0,0,0,.18);
     }
-    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
-    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:6px}
-    .loading{text-align:center;color:var(--muted);padding:28px 10px}
-    .hidden{display:none!important}
+    html[data-theme="light"] .panel{
+      background:rgba(255,255,255,.92);
+      box-shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    .section-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:6px;
+    }
+
+    .loading{
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+    }
+
     .preview-card{
-      display:flex;gap:12px;align-items:flex-start;background:#0f1630;border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;padding:14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:var(--soft2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
     }
+
     .preview-thumb,.preview-thumb-empty{
-      width:82px;height:82px;border-radius:16px;flex-shrink:0;border:1px solid rgba(255,255,255,.08);background:#1b2445;
+      width:82px;
+      height:82px;
+      border-radius:16px;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:#1b2445;
+    }
+    html[data-theme="light"] .preview-thumb,
+    html[data-theme="light"] .preview-thumb-empty{
+      background:#edf3ff;
     }
     .preview-thumb{object-fit:cover}
     .preview-thumb-empty{
-      display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;color:var(--muted);font-size:11px;line-height:1.3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.3;
     }
+
     .preview-body{min-width:0;flex:1}
-    .preview-title{font-size:17px;font-weight:800;line-height:1.35;margin-bottom:4px}
-    .preview-sub{font-size:13px;color:#8fdfff;font-weight:700;margin-bottom:8px}
-    .preview-text{font-size:14px;color:#d7def5;line-height:1.6;word-break:break-word;white-space:pre-wrap}
-    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .preview-title{
+      font-size:17px;
+      font-weight:800;
+      line-height:1.35;
+      margin-bottom:4px;
+    }
+    .preview-sub{
+      font-size:13px;
+      color:var(--blue);
+      font-weight:700;
+      margin-bottom:8px;
+      word-break:break-word;
+    }
+    .preview-text{
+      font-size:14px;
+      color:#d7def5;
+      line-height:1.6;
+      word-break:break-word;
+      white-space:pre-wrap;
+    }
+    html[data-theme="light"] .preview-text{
+      color:#33415c;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
     .badge{
-      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
     }
-    .badge-post{background:rgba(76,201,255,.14);color:#d8f7ff;border:1px solid rgba(76,201,255,.20)}
-    .badge-profile{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
-    .badge-warning{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
+    .badge-post{
+      background:rgba(76,201,255,.14);
+      color:#d8f7ff;
+      border:1px solid rgba(76,201,255,.20);
+    }
+    .badge-profile{
+      background:rgba(167,139,250,.14);
+      color:#e8defd;
+      border:1px solid rgba(167,139,250,.20);
+    }
+    .badge-place{
+      background:rgba(61,220,132,.14);
+      color:#d9ffe8;
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .badge-event{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+    .badge-warning{
+      background:rgba(245,185,66,.14);
+      color:#ffe7b0;
+      border:1px solid rgba(245,185,66,.20);
+    }
+
     .field{margin-bottom:14px}
-    label{display:block;font-size:13px;font-weight:700;margin-bottom:8px;color:#dfe7ff}
+    label{
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:8px;
+      color:#dfe7ff;
+    }
+    html[data-theme="light"] label{
+      color:#33415c;
+    }
+
     select,textarea{
-      width:100%;border:none;outline:none;border-radius:16px;background:#0f1630;color:#fff;
-      border:1px solid rgba(255,255,255,.07);padding:14px;font-size:14px;
+      width:100%;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      background:var(--soft2);
+      color:var(--text);
+      border:1px solid var(--line);
+      padding:14px;
+      font-size:14px;
     }
-    textarea{min-height:130px;resize:vertical}
+    textarea{
+      min-height:130px;
+      resize:vertical;
+      line-height:1.55;
+    }
     select option{color:#000}
-    .helper{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .submit-btn,.cancel-btn{
-      border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800;cursor:pointer;
+    .helper{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.6;
+      margin-top:6px;
     }
-    .submit-btn{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.22)}
-    .cancel-btn{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
-    .message{min-height:20px;font-size:14px;margin-top:10px}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .submit-btn,.cancel-btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      min-height:44px;
+    }
+    .submit-btn{
+      background:rgba(255,93,115,.14);
+      color:#ffd3d9;
+      border:1px solid rgba(255,93,115,.22);
+    }
+    .cancel-btn{
+      background:var(--soft);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .submit-btn:disabled,.cancel-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .message{
+      min-height:20px;
+      font-size:14px;
+      margin-top:10px;
+    }
     .success{color:#9cf0bf}
     .error{color:#ffb3bd}
+
     .empty-box{
-      text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
+      text-align:center;
+      padding:28px 10px;
+      color:var(--muted);
+      background:var(--soft2);
+      border-radius:18px;
+      border:1px dashed var(--line);
+      line-height:1.6;
     }
+
     .bottom-nav{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(760px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);
-      border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;z-index:50;
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      width:min(760px, calc(100% - 20px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      z-index:50;
       box-shadow:0 20px 40px rgba(0,0,0,.25);
     }
+
     .nav-link{
-      text-decoration:none;color:#b9c4e3;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:4px;padding:10px 6px;border-radius:14px;font-size:11px;font-weight:700;min-height:58px;
+      text-decoration:none;
+      color:#b9c4e3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:10px 6px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:700;
+      min-height:58px;
+    }
+    html[data-theme="light"] .nav-link{
+      color:#6b7893;
     }
     .nav-link .icon{font-size:18px;line-height:1}
+
+    @media(max-width:700px){
+      body{padding:12px 12px 92px}
+      .topbar{align-items:flex-start}
+      .top-actions{width:100%}
+      .top-actions .chip-btn{flex:1}
+      .brand{font-size:20px}
+      .preview-card{align-items:flex-start}
+      .preview-thumb,.preview-thumb-empty{
+        width:70px;
+        height:70px;
+        border-radius:14px;
+      }
+      .submit-btn,.cancel-btn{flex:1}
+    }
   </style>
 </head>
 <body>
@@ -188,7 +460,7 @@
       <span class="icon">＋</span>
       <span>Create</span>
     </a>
-    <a href="events.html" class="nav-link">
+    <a href="nearby-events.html" class="nav-link">
       <span class="icon">◈</span>
       <span>Events</span>
     </a>
@@ -199,18 +471,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      collection,
-      addDoc,
-      query,
-      where,
-      getDocs,
-      doc,
-      getDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const cancelBtn = document.getElementById("cancelBtn");
@@ -232,12 +493,50 @@
     const submitBtn = document.getElementById("submitBtn");
     const message = document.getElementById("message");
 
+    const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+
     let currentUser = null;
+    let currentUserProfile = null;
+
     let targetType = "";
     let targetId = "";
     let targetOwnerId = "";
+    let targetSource = "";
     let targetTitleText = "";
     let targetPreviewText = "";
+    let targetImageUrl = "";
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function getStoredTheme() {
+      return localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -262,6 +561,7 @@
         previewImgEmpty.classList.remove("hidden");
         return;
       }
+
       previewImg.src = clean;
       previewImg.classList.remove("hidden");
       previewImgEmpty.classList.add("hidden");
@@ -277,115 +577,371 @@
       return {
         type: (p.get("type") || "").trim().toLowerCase(),
         targetId: (p.get("targetId") || "").trim(),
-        targetUserId: (p.get("targetUserId") || "").trim()
+        targetUserId: (p.get("targetUserId") || "").trim(),
+        source: (p.get("source") || "").trim()
+      };
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return String(value).trim();
+        }
+      }
+      return fallback;
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find")
+      );
+    }
+
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        bio: getField(d, ["bio", "about", "description"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"])
       };
     }
 
     function getPostOwnerId(postData) {
-      return (
-        postData?.userId ||
-        postData?.authorId ||
-        postData?.ownerId ||
-        postData?.uid ||
-        ""
-      );
+      return getField(postData, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]);
+    }
+
+    function normalizePost(row) {
+      const d = row || {};
+      return {
+        id: getField(d, ["id"]),
+        ownerId: getPostOwnerId(d),
+        displayName: getField(d, ["display_name", "displayName", "name"]) || "Member",
+        caption: getField(d, ["caption", "text", "content"]) || "No caption",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"])
+      };
+    }
+
+    function normalizePlace(row, source = "") {
+      const d = row || {};
+      return {
+        id: getField(d, ["id"]),
+        source,
+        ownerId: getField(d, ["created_by", "createdBy", "creator_id", "creatorId", "user_id", "userId", "owner_id", "ownerId"]),
+        name: getField(d, ["name", "title", "place_name", "placeName"]) || "Reported place",
+        category: getField(d, ["category", "topic"]) || "Place",
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        description: getField(d, ["description", "desc", "notes"]) || "No description",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"])
+      };
+    }
+
+    function normalizeEvent(row) {
+      const d = row || {};
+      return {
+        id: getField(d, ["id"]),
+        ownerId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "owner_id", "ownerId", "uid"]),
+        title: getField(d, ["title", "name"]) || "Reported event",
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        date: getField(d, ["date"]),
+        description: getField(d, ["description", "desc"]) || "No description",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member"
+      };
+    }
+
+    async function selectByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Select failed ${table}.${column}:`, err?.message || err);
+        return null;
+      }
+    }
+
+    async function selectManyByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value);
+
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Select many failed ${table}.${column}:`, err?.message || err);
+        return [];
+      }
+    }
+
+    async function loadProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
+      const attempts = [
+        () => selectByColumn("public_profiles", "uid", uid),
+        () => selectByColumn("public_profiles", "id", uid),
+        () => selectByColumn("users", "uid", uid),
+        () => selectByColumn("users", "id", uid)
+      ];
+
+      for (const fn of attempts) {
+        const row = await fn();
+        if (row) return normalizeProfile(row, uid);
+      }
+
+      return normalizeProfile({ uid }, uid);
+    }
+
+    async function loadPostTarget(id) {
+      const row = await selectByColumn("posts", "id", id);
+      if (!row) return null;
+
+      const post = normalizePost({ id: row.id, ...row });
+
+      targetOwnerId = targetOwnerId || post.ownerId;
+      targetTitleText = "Reported post";
+      targetPreviewText = post.caption;
+      targetImageUrl = post.imageURL;
+
+      previewTitle.textContent = targetTitleText;
+      previewSub.textContent = post.displayName ? `By ${post.displayName}` : "Post";
+      previewText.textContent = post.caption;
+      showImage(post.imageURL);
+
+      return post;
+    }
+
+    async function loadProfileTarget(id) {
+      const profile = await loadProfile(id);
+
+      if (!profile || !profile.uid) return null;
+
+      targetOwnerId = targetOwnerId || profile.uid;
+      targetTitleText = profile.displayName || "Reported profile";
+      targetPreviewText = profile.bio || "No bio added yet.";
+      targetImageUrl = profile.photoURL || "";
+
+      previewTitle.textContent = targetTitleText;
+      previewSub.textContent = profile.username ? `@${profile.username}` : "Profile";
+      previewText.textContent = targetPreviewText;
+      showImage(targetImageUrl);
+
+      return profile;
+    }
+
+    async function loadPlaceTarget(id, source = "") {
+      const sources = source && PLACE_SOURCES.includes(source)
+        ? [source, ...PLACE_SOURCES.filter(s => s !== source)]
+        : PLACE_SOURCES;
+
+      for (const table of sources) {
+        const row = await selectByColumn(table, "id", id);
+        if (!row) continue;
+
+        const place = normalizePlace({ id: row.id, ...row }, table);
+
+        targetOwnerId = targetOwnerId || place.ownerId;
+        targetSource = table;
+        targetTitleText = place.name || "Reported place";
+        targetPreviewText = place.description || "No description";
+        targetImageUrl = place.imageURL || "";
+
+        previewTitle.textContent = targetTitleText;
+        previewSub.textContent = [place.category, place.city].filter(Boolean).join(" • ") || "Place";
+        previewText.textContent = targetPreviewText;
+        showImage(targetImageUrl);
+
+        return place;
+      }
+
+      return null;
+    }
+
+    async function loadEventTarget(id) {
+      const row = await selectByColumn("events", "id", id);
+      if (!row) return null;
+
+      const event = normalizeEvent({ id: row.id, ...row });
+
+      targetOwnerId = targetOwnerId || event.ownerId;
+      targetTitleText = event.title || "Reported event";
+      targetPreviewText = event.description || "No description";
+      targetImageUrl = event.imageURL || "";
+
+      previewTitle.textContent = targetTitleText;
+      previewSub.textContent = [event.creatorName, event.city, event.date].filter(Boolean).join(" • ") || "Event";
+      previewText.textContent = targetPreviewText;
+      showImage(targetImageUrl);
+
+      return event;
+    }
+
+    function updateTargetBadge(type) {
+      const labelMap = {
+        post: "Post report",
+        profile: "Profile report",
+        place: "Place report",
+        event: "Event report"
+      };
+
+      const classMap = {
+        post: "badge-post",
+        profile: "badge-profile",
+        place: "badge-place",
+        event: "badge-event"
+      };
+
+      targetTypeBadge.textContent = labelMap[type] || "Target report";
+      targetTypeBadge.className = `badge ${classMap[type] || "badge-post"}`;
     }
 
     async function loadTarget() {
       const params = getParams();
+
       targetType = params.type;
       targetId = params.targetId;
       targetOwnerId = params.targetUserId || "";
+      targetSource = params.source || "";
 
-      if (!targetType || !targetId || !["post", "profile"].includes(targetType)) {
+      const allowedTypes = ["post", "profile", "place", "event"];
+
+      if (!targetType || !targetId || !allowedTypes.includes(targetType)) {
         loading.classList.add("hidden");
         invalidBox.classList.remove("hidden");
         return false;
       }
 
-      targetTypeBadge.textContent = targetType === "post" ? "Post report" : "Profile report";
-      targetTypeBadge.className = `badge ${targetType === "post" ? "badge-post" : "badge-profile"}`;
+      updateTargetBadge(targetType);
+
+      let target = null;
 
       if (targetType === "post") {
-        const postSnap = await getDoc(doc(db, "posts", targetId));
-        if (!postSnap.exists()) {
-          loading.classList.add("hidden");
-          invalidBox.classList.remove("hidden");
-          return false;
-        }
+        target = await loadPostTarget(targetId);
+      } else if (targetType === "profile") {
+        target = await loadProfileTarget(targetId);
+      } else if (targetType === "place") {
+        target = await loadPlaceTarget(targetId, targetSource);
+      } else if (targetType === "event") {
+        target = await loadEventTarget(targetId);
+      }
 
-        const post = postSnap.data();
-        targetOwnerId = targetOwnerId || getPostOwnerId(post);
-
-        const caption = post.caption || post.text || post.content || "No caption";
-        const displayName = post.displayName || "Member";
-        const imageUrl = post.imageURL || post.imageUrl || post.photoURL || post.mediaUrl || "";
-
-        targetTitleText = "Reported post";
-        targetPreviewText = caption;
-
-        previewTitle.textContent = targetTitleText;
-        previewSub.textContent = `By ${displayName}`;
-        previewText.textContent = caption;
-        showImage(imageUrl);
-      } else {
-        const profileSnap = await getDoc(doc(db, "publicProfiles", targetId));
-        if (!profileSnap.exists()) {
-          loading.classList.add("hidden");
-          invalidBox.classList.remove("hidden");
-          return false;
-        }
-
-        const profile = profileSnap.data();
-        targetOwnerId = targetId;
-
-        const displayName = profile.displayName || "Member";
-        const username = profile.username ? `@${profile.username}` : "";
-        const bio = profile.bio || "No bio added yet.";
-        const photoUrl = profile.photoURL || "";
-
-        targetTitleText = displayName;
-        targetPreviewText = bio;
-
-        previewTitle.textContent = displayName;
-        previewSub.textContent = username;
-        previewText.textContent = bio;
-        showImage(photoUrl);
+      if (!target) {
+        loading.classList.add("hidden");
+        invalidBox.classList.remove("hidden");
+        return false;
       }
 
       loading.classList.add("hidden");
       content.classList.remove("hidden");
       formPanel.classList.remove("hidden");
+
       return true;
     }
 
-    async function hasExistingPendingReport() {
-      const q = query(
-        collection(db, "reports"),
-        where("reporterId", "==", currentUser.uid),
-        where("targetType", "==", targetType),
-        where("targetId", "==", targetId)
-      );
+    async function hasExistingPendingReportSnake() {
+      const rows = await selectManyByColumn("reports", "reporter_id", currentUser.id);
 
-      const snap = await getDocs(q);
-      return snap.docs.some(d => (d.data().status || "pending") === "pending");
+      return rows.some(row => {
+        const rowTargetType = getField(row, ["target_type", "targetType"]);
+        const rowTargetId = getField(row, ["target_id", "targetId"]);
+        const status = getField(row, ["status"], "pending").toLowerCase();
+
+        return rowTargetType === targetType &&
+          rowTargetId === targetId &&
+          status === "pending";
+      });
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    async function hasExistingPendingReportCamel() {
+      const rows = await selectManyByColumn("reports", "reporterId", currentUser.id);
+
+      return rows.some(row => {
+        const rowTargetType = getField(row, ["targetType", "target_type"]);
+        const rowTargetId = getField(row, ["targetId", "target_id"]);
+        const status = getField(row, ["status"], "pending").toLowerCase();
+
+        return rowTargetType === targetType &&
+          rowTargetId === targetId &&
+          status === "pending";
+      });
+    }
+
+    async function hasExistingPendingReport() {
+      try {
+        if (await hasExistingPendingReportSnake()) return true;
+      } catch {}
+
+      try {
+        if (await hasExistingPendingReportCamel()) return true;
+      } catch {}
+
+      return false;
+    }
+
+    async function insertReportWithFallback(payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from("reports")
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not submit report.");
+    }
+
+    function getReporterName() {
+      return (
+        currentUserProfile?.displayName ||
+        currentUser?.user_metadata?.display_name ||
+        currentUser?.user_metadata?.name ||
+        currentUser?.email ||
+        "Member"
+      );
+    }
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
+      currentUserProfile = await loadProfile(currentUser.id);
 
       try {
         const ok = await loadTarget();
         if (!ok) return;
 
-        if (targetOwnerId && targetOwnerId === currentUser.uid) {
-          formPanel.classList.add("hidden");
+        if (targetOwnerId && targetOwnerId === currentUser.id) {
           setMessage("You cannot report your own content.", "error");
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Cannot Report";
           return;
         }
 
@@ -399,7 +955,13 @@
         console.error("Report page load failed:", err);
         loading.textContent = "Could not load report target.";
       }
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
 
     reportForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -414,22 +976,80 @@
         return;
       }
 
+      if (targetOwnerId && targetOwnerId === currentUser.id) {
+        setMessage("You cannot report your own content.", "error");
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = "Submitting...";
       setMessage("");
 
       try {
-        await addDoc(collection(db, "reports"), {
-          reporterId: currentUser.uid,
-          reporterName: currentUser.displayName || currentUser.email || "Member",
-          targetType,
-          targetId,
-          targetOwnerId,
+        const reporterName = getReporterName();
+
+        const snakePayload = {
+          reporter_id: currentUser.id,
+          reporter_name: reporterName,
+          target_type: targetType,
+          target_id: targetId,
+          target_owner_id: targetOwnerId || "",
+          target_source: targetSource || "",
+          target_title: targetTitleText || "",
+          target_preview: targetPreviewText || "",
+          target_image_url: targetImageUrl || "",
           reason,
           note,
           status: "pending",
-          createdAt: serverTimestamp()
-        });
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
+          reporterId: currentUser.id,
+          reporterName,
+          targetType,
+          targetId,
+          targetOwnerId: targetOwnerId || "",
+          targetSource: targetSource || "",
+          targetTitle: targetTitleText || "",
+          targetPreview: targetPreviewText || "",
+          targetImageURL: targetImageUrl || "",
+          reason,
+          note,
+          status: "pending",
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const minimalSnakePayload = {
+          reporter_id: currentUser.id,
+          target_type: targetType,
+          target_id: targetId,
+          target_owner_id: targetOwnerId || "",
+          reason,
+          note,
+          status: "pending",
+          created_at: nowIso()
+        };
+
+        const minimalCamelPayload = {
+          reporterId: currentUser.id,
+          targetType,
+          targetId,
+          targetOwnerId: targetOwnerId || "",
+          reason,
+          note,
+          status: "pending",
+          createdAt: nowIso()
+        };
+
+        await insertReportWithFallback([
+          snakePayload,
+          camelPayload,
+          minimalSnakePayload,
+          minimalCamelPayload
+        ]);
 
         setMessage("Report submitted successfully.", "success");
         reasonInput.value = "";
@@ -442,6 +1062,53 @@
         submitBtn.textContent = "Submit Report";
       }
     });
+
+    initPage();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - reports: select, insert
+      - posts: select
+      - public_profiles: select
+      - users: select
+      - nearby_places: select
+      - places: select
+      - nudist_places: select
+      - events: select
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS:
+      reports:
+      - id
+      - reporter_id
+      - reporter_name
+      - target_type
+      - target_id
+      - target_owner_id
+      - target_source
+      - target_title
+      - target_preview
+      - target_image_url
+      - reason
+      - note
+      - status
+      - created_at
+      - updated_at
+
+      RLS IDEA:
+      - Authenticated users can insert reports where reporter_id = auth.uid()
+      - Users can select their own reports where reporter_id = auth.uid()
+      - Admin can select/update all reports
+      - Users cannot report their own content in UI
+      - Admin panel should review reports and write moderation_history
+
+      SHARE BUTTON:
+      - Not needed on report page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
