@@ -242,6 +242,10 @@
       border-color:rgba(76,201,255,.20);
       min-width:170px;
     }
+    .save-btn:disabled,.action-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
     .action-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .action-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .action-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
@@ -443,14 +447,7 @@
   </nav>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
     const loading = document.getElementById("loading");
@@ -476,8 +473,16 @@
     const selfieWithIdURL = document.getElementById("selfieWithIdURL");
 
     let currentUser = null;
+    let currentRequest = null;
     let currentRequestStatus = "not_requested";
     let isAlreadyVerified = false;
+    let isAdminViewOnly = false;
+    let targetUid = "";
+    let verificationChannel = null;
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
 
     function getStoredTheme() {
       return localStorage.getItem("bwTheme") || "dark";
@@ -490,14 +495,14 @@
       return themeValue === "light" ? "light" : "dark";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -515,6 +520,71 @@
     function setFormMessage(text, type = "") {
       formMessage.textContent = text;
       formMessage.className = `message ${type}`;
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function getString(raw, names, fallback = "") {
+      const value = getField(raw, names, fallback);
+      return value === undefined || value === null ? fallback : String(value).trim();
+    }
+
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("column")
+      );
+    }
+
+    function normalizeProfile(row = {}, fallbackUid = "") {
+      const d = row || {};
+
+      return {
+        uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid,
+        isVerified: !!(d.is_verified ?? d.isVerified ?? d.verified),
+        displayName: getString(d, ["display_name", "displayName", "name", "full_name", "fullName"], ""),
+        email: getString(d, ["email"], ""),
+        fullName: getString(d, ["real_name", "realName", "full_name", "fullName", "display_name", "displayName"], "")
+      };
+    }
+
+    function normalizeRequest(row = {}) {
+      const d = row || {};
+      const uid = getString(d, ["uid", "user_id", "userId", "target_user_id", "targetUserId"], "");
+
+      return {
+        id: getString(d, ["id"], ""),
+        uid: uid || getString(d, ["id"], "") || "",
+        fullName: getString(d, ["full_name", "fullName", "name", "real_name", "realName"], ""),
+        email: getString(d, ["email"], ""),
+        accountType: getString(d, ["account_type", "accountType"], "personal") || "personal",
+        socialLink: getString(d, ["social_link", "socialLink", "website", "link"], ""),
+        reason: getString(d, ["reason"], ""),
+        idPhotoURL: getString(d, ["id_photo_url", "idPhotoURL", "idPhotoUrl"], ""),
+        selfieWithIdURL: getString(d, ["selfie_with_id_url", "selfieWithIdURL", "selfieWithIdUrl"], ""),
+        status: getString(d, ["status"], "pending").toLowerCase() || "pending",
+        adminNote: getString(d, ["admin_note", "adminNote"], ""),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null,
+        raw: d
+      };
     }
 
     function setStatus(status, alreadyVerified = false) {
@@ -538,9 +608,9 @@
       }
     }
 
-    function fillForm(data, userEmail = "") {
-      fullName.value = data.fullName || "";
-      email.value = data.email || userEmail || "";
+    function fillForm(data = {}, userEmail = "", profile = {}) {
+      fullName.value = data.fullName || profile.fullName || profile.displayName || "";
+      email.value = data.email || profile.email || userEmail || "";
       accountType.value = data.accountType || "personal";
       socialLink.value = data.socialLink || "";
       reason.value = data.reason || "";
@@ -548,9 +618,9 @@
       selfieWithIdURL.value = data.selfieWithIdURL || "";
     }
 
-    function updateHeaderBits(data, userEmail = "") {
+    function updateHeaderBits(data = {}, userEmail = "") {
       const accountValue = data?.accountType || accountType.value || "personal";
-      const emailValue = data?.email || userEmail || "";
+      const emailValue = data?.email || email.value || userEmail || "";
 
       accountTypeChip.textContent = `Type: ${accountValue}`;
       accountTypeChip.classList.remove("hidden");
@@ -562,111 +632,419 @@
         emailChip.classList.add("hidden");
       }
 
-      const hasId = !!(data?.idPhotoURL || idPhotoURL.value.trim());
-      const hasSelfie = !!(data?.selfieWithIdURL || selfieWithIdURL.value.trim());
+      const idLink = data?.idPhotoURL || idPhotoURL.value.trim();
+      const selfieLink = data?.selfieWithIdURL || selfieWithIdURL.value.trim();
 
-      if (hasId) {
-        idLinkBtn.href = data?.idPhotoURL || idPhotoURL.value.trim();
-      }
-      if (hasSelfie) {
-        selfieLinkBtn.href = data?.selfieWithIdURL || selfieWithIdURL.value.trim();
-      }
+      const hasId = !!idLink;
+      const hasSelfie = !!selfieLink;
+
+      if (hasId) idLinkBtn.href = normalizeHref(idLink);
+      if (hasSelfie) selfieLinkBtn.href = normalizeHref(selfieLink);
 
       proofLinks.classList.toggle("hidden", !(hasId || hasSelfie));
       idLinkBtn.classList.toggle("hidden", !hasId);
       selfieLinkBtn.classList.toggle("hidden", !hasSelfie);
     }
 
-    async function syncVerifiedState(uid) {
-      try {
-        const [userSnap, publicSnap] = await Promise.all([
-          getDoc(doc(db, "users", uid)),
-          getDoc(doc(db, "publicProfiles", uid))
-        ]);
-
-        const userVerified = userSnap.exists() && !!(userSnap.data().isVerified || userSnap.data().verified);
-        const publicVerified = publicSnap.exists() && !!(publicSnap.data().isVerified || publicSnap.data().verified);
-        isAlreadyVerified = userVerified || publicVerified;
-      } catch {
-        isAlreadyVerified = false;
+    function updateAdminNoteBox(note = "") {
+      if (note && note.trim()) {
+        adminNoteBox.classList.remove("hidden");
+        adminNoteText.textContent = note;
+      } else {
+        adminNoteBox.classList.add("hidden");
+        adminNoteText.textContent = "-";
       }
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    function setFormAvailability() {
+      if (isAdminViewOnly) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Admin View Only";
+        setFormMessage("Admin view only. Use Verification Admin page to approve or reject.", "success");
+        verificationForm.querySelectorAll("input, textarea, select").forEach(el => {
+          el.disabled = true;
+        });
+        return;
+      }
+
+      verificationForm.querySelectorAll("input, textarea, select").forEach(el => {
+        el.disabled = false;
+      });
+
+      if (isAlreadyVerified) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Already Verified";
+      } else if (currentRequestStatus === "pending") {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Update Request";
+      } else if (currentRequestStatus === "rejected") {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Resubmit Request";
+      } else {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Send Request";
+      }
+    }
+
+    async function selectByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`Select failed ${table}.${column}:`, err?.message || err);
+        }
+        return null;
+      }
+    }
+
+    async function selectManyByColumn(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value);
+
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`Select many failed ${table}.${column}:`, err?.message || err);
+        }
+        return [];
+      }
+    }
+
+    async function checkAdminAccess(uid) {
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return true;
+      }
+
+      return false;
+    }
+
+    async function loadProfileFromTable(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return row;
+      }
+
+      return null;
+    }
+
+    async function loadCombinedProfile(uid) {
+      const [userRow, publicRow] = await Promise.all([
+        loadProfileFromTable("users", uid),
+        loadProfileFromTable("public_profiles", uid)
+      ]);
+
+      const userProfile = normalizeProfile(userRow || {}, uid);
+      const publicProfile = normalizeProfile(publicRow || {}, uid);
+
+      return normalizeProfile({
+        ...(publicRow || {}),
+        ...(userRow || {}),
+        uid,
+        is_verified: userProfile.isVerified || publicProfile.isVerified,
+        display_name: publicProfile.displayName || userProfile.displayName,
+        email: userProfile.email,
+        real_name: userProfile.fullName || publicProfile.fullName
+      }, uid);
+    }
+
+    async function syncVerifiedState(uid) {
+      try {
+        const profile = await loadCombinedProfile(uid);
+        isAlreadyVerified = !!profile.isVerified;
+        return profile;
+      } catch {
+        isAlreadyVerified = false;
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function loadVerificationRequest(uid) {
+      const attempts = [
+        ["verification_requests", "uid"],
+        ["verification_requests", "user_id"],
+        ["verification_requests", "userId"],
+        ["verification_requests", "id"]
+      ];
+
+      for (const [table, column] of attempts) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return normalizeRequest({ id: row.id, ...row });
+      }
+
+      return null;
+    }
+
+    async function updateByColumnWithPayloads(table, column, value, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq(column, value);
+
+          if (!error) return true;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not update ${table}.`);
+    }
+
+    async function insertWithPayloads(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function upsertWithPayloads(table, payloads, conflictColumn = "uid") {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .upsert(payload, { onConflict: conflictColumn })
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not upsert ${table}.`);
+    }
+
+    async function saveVerificationRequest(payload) {
+      const existing = currentRequest;
+
+      const snakePayload = {
+        uid: targetUid,
+        user_id: targetUid,
+        full_name: payload.fullName,
+        email: payload.email,
+        account_type: payload.accountType,
+        social_link: payload.socialLink,
+        reason: payload.reason,
+        id_photo_url: payload.idPhotoURL,
+        selfie_with_id_url: payload.selfieWithIdURL,
+        status: "pending",
+        admin_note: "",
+        updated_at: nowIso()
+      };
+
+      const camelPayload = {
+        uid: targetUid,
+        userId: targetUid,
+        fullName: payload.fullName,
+        email: payload.email,
+        accountType: payload.accountType,
+        socialLink: payload.socialLink,
+        reason: payload.reason,
+        idPhotoURL: payload.idPhotoURL,
+        selfieWithIdURL: payload.selfieWithIdURL,
+        status: "pending",
+        adminNote: "",
+        updatedAt: nowIso()
+      };
+
+      const minimalPayload = {
+        uid: targetUid,
+        full_name: payload.fullName,
+        email: payload.email,
+        account_type: payload.accountType,
+        reason: payload.reason,
+        id_photo_url: payload.idPhotoURL,
+        selfie_with_id_url: payload.selfieWithIdURL,
+        status: "pending",
+        updated_at: nowIso()
+      };
+
+      if (!existing || !existing.createdAt) {
+        snakePayload.created_at = nowIso();
+        camelPayload.createdAt = nowIso();
+        minimalPayload.created_at = nowIso();
+      }
+
+      const payloads = [snakePayload, camelPayload, minimalPayload];
+
+      if (existing?.id) {
+        try {
+          await updateByColumnWithPayloads("verification_requests", "id", existing.id, payloads);
+          return;
+        } catch {}
+      }
+
+      if (existing?.uid) {
+        const columns = ["uid", "user_id", "userId"];
+
+        for (const column of columns) {
+          try {
+            await updateByColumnWithPayloads("verification_requests", column, existing.uid, payloads);
+            return;
+          } catch {}
+        }
+      }
+
+      try {
+        await upsertWithPayloads("verification_requests", payloads, "uid");
+        return;
+      } catch {}
+
+      await insertWithPayloads("verification_requests", payloads);
+    }
+
+    async function loadPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = user;
+      currentUser = data.user;
+
+      const params = new URLSearchParams(window.location.search);
+      const requestedUid = params.get("uid") || "";
+      const isAdmin = await checkAdminAccess(currentUser.id);
+
+      targetUid = currentUser.id;
+      isAdminViewOnly = false;
+
+      if (requestedUid && requestedUid !== currentUser.id && isAdmin) {
+        targetUid = requestedUid;
+        isAdminViewOnly = true;
+      }
 
       try {
-        await syncVerifiedState(user.uid);
+        const profile = await syncVerifiedState(targetUid);
+        currentRequest = await loadVerificationRequest(targetUid);
 
-        const requestRef = doc(db, "verification_requests", user.uid);
-        const requestSnap = await getDoc(requestRef);
-
-        if (requestSnap.exists()) {
-          const data = requestSnap.data();
-          currentRequestStatus = data.status || "pending";
-          fillForm(data, user.email || "");
-          updateHeaderBits(data, user.email || "");
-
-          if (data.adminNote && data.adminNote.trim()) {
-            adminNoteBox.classList.remove("hidden");
-            adminNoteText.textContent = data.adminNote;
-          } else {
-            adminNoteBox.classList.add("hidden");
-          }
+        if (currentRequest) {
+          currentRequestStatus = currentRequest.status || "pending";
+          fillForm(currentRequest, currentUser.email || "", profile);
+          updateHeaderBits(currentRequest, currentUser.email || "");
+          updateAdminNoteBox(currentRequest.adminNote || "");
         } else {
           currentRequestStatus = "not_requested";
-          fillForm({}, user.email || "");
-          updateHeaderBits({}, user.email || "");
-          adminNoteBox.classList.add("hidden");
+          fillForm({}, currentUser.email || "", profile);
+          updateHeaderBits({}, currentUser.email || "");
+          updateAdminNoteBox("");
         }
 
         setStatus(currentRequestStatus, isAlreadyVerified);
-
-        if (isAlreadyVerified) {
-          saveBtn.disabled = true;
-          saveBtn.textContent = "Already Verified";
-        } else if (currentRequestStatus === "pending") {
-          saveBtn.textContent = "Update Request";
-        } else if (currentRequestStatus === "rejected") {
-          saveBtn.textContent = "Resubmit Request";
-        } else {
-          saveBtn.textContent = "Send Request";
-        }
+        setFormAvailability();
 
         loading.classList.add("hidden");
         verificationForm.classList.remove("hidden");
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         loading.textContent = "Could not load verification page.";
       }
-    });
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session?.user) {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    function subscribeToRequest() {
+      if (!targetUid) return;
+
+      if (verificationChannel) {
+        try {
+          supabase.removeChannel(verificationChannel);
+        } catch {}
+      }
+
+      verificationChannel = supabase
+        .channel(`verification-user-live-${targetUid}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "verification_requests" },
+          async () => {
+            try {
+              const profile = await syncVerifiedState(targetUid);
+              currentRequest = await loadVerificationRequest(targetUid);
+
+              if (currentRequest) {
+                currentRequestStatus = currentRequest.status || "pending";
+                fillForm(currentRequest, currentUser.email || "", profile);
+                updateHeaderBits(currentRequest, currentUser.email || "");
+                updateAdminNoteBox(currentRequest.adminNote || "");
+              }
+
+              setStatus(currentRequestStatus, isAlreadyVerified);
+              setFormAvailability();
+            } catch (err) {
+              console.warn("Verification refresh failed:", err?.message || err);
+            }
+          }
+        )
+        .subscribe();
+    }
 
     [email, accountType, idPhotoURL, selfieWithIdURL].forEach(el => {
-      el.addEventListener("input", () => updateHeaderBits({}, auth.currentUser?.email || ""));
-      el.addEventListener("change", () => updateHeaderBits({}, auth.currentUser?.email || ""));
+      el.addEventListener("input", () => updateHeaderBits({}, currentUser?.email || ""));
+      el.addEventListener("change", () => updateHeaderBits({}, currentUser?.email || ""));
     });
 
     verificationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!currentUser || isAlreadyVerified) return;
+
+      if (!currentUser || isAlreadyVerified || isAdminViewOnly) return;
 
       const payload = {
-        uid: currentUser.uid,
         fullName: fullName.value.trim(),
         email: email.value.trim(),
         accountType: accountType.value,
         socialLink: socialLink.value.trim(),
         reason: reason.value.trim(),
         idPhotoURL: idPhotoURL.value.trim(),
-        selfieWithIdURL: selfieWithIdURL.value.trim(),
-        status: "pending",
-        adminNote: "",
-        updatedAt: serverTimestamp()
+        selfieWithIdURL: selfieWithIdURL.value.trim()
       };
 
       if (!payload.fullName || !payload.email || !payload.reason || !payload.idPhotoURL || !payload.selfieWithIdURL) {
@@ -676,41 +1054,92 @@
 
       saveBtn.disabled = true;
       saveBtn.textContent = "Sending...";
+      setFormMessage("");
 
       try {
-        const requestRef = doc(db, "verification_requests", currentUser.uid);
-        const existingSnap = await getDoc(requestRef);
-        const existingData = existingSnap.exists() ? existingSnap.data() : {};
-
-        await setDoc(requestRef, {
-          uid: currentUser.uid,
-          fullName: payload.fullName,
-          email: payload.email,
-          accountType: payload.accountType,
-          socialLink: payload.socialLink,
-          reason: payload.reason,
-          idPhotoURL: payload.idPhotoURL,
-          selfieWithIdURL: payload.selfieWithIdURL,
-          status: "pending",
-          adminNote: "",
-          createdAt: existingData.createdAt || serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        await saveVerificationRequest(payload);
 
         currentRequestStatus = "pending";
+        currentRequest = await loadVerificationRequest(targetUid);
+
         setStatus("pending", false);
-        adminNoteBox.classList.add("hidden");
+        updateAdminNoteBox("");
         updateHeaderBits(payload, payload.email);
+
         setFormMessage("Verification request saved.", "success");
         saveBtn.textContent = "Update Request";
       } catch (error) {
         console.error(error);
-        setFormMessage("Could not save verification request.", "error");
+        setFormMessage(error?.message || "Could not save verification request.", "error");
         saveBtn.textContent = currentRequestStatus === "pending" ? "Update Request" : "Send Request";
       }
 
       saveBtn.disabled = false;
     });
+
+    window.addEventListener("beforeunload", () => {
+      if (verificationChannel) {
+        try {
+          supabase.removeChannel(verificationChannel);
+        } catch {}
+      }
+    });
+
+    loadPage().then(() => subscribeToRequest());
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - verification_requests: select, insert, update, realtime optional
+      - users: select
+      - public_profiles: select
+      - admins: select only if admin opens verification.html?uid=USER_ID
+
+      AUTH:
+      - logged-in user required
+
+      IMPORTANT COLUMNS:
+      verification_requests:
+      - id
+      - uid
+      - user_id
+      - full_name
+      - email
+      - account_type
+      - social_link
+      - reason
+      - id_photo_url
+      - selfie_with_id_url
+      - status
+      - admin_note
+      - created_at
+      - updated_at
+      - reviewed_at
+      - reviewed_by
+
+      users:
+      - uid
+      - email
+      - display_name
+      - real_name
+      - is_verified
+
+      public_profiles:
+      - uid
+      - display_name
+      - is_verified
+
+      RLS IDEA:
+      - Users can select their own verification_requests where uid = auth.uid() OR user_id = auth.uid()
+      - Users can insert their own verification request where uid = auth.uid()
+      - Users can update their own request only while status is pending/rejected
+      - Admins can select/update all verification_requests
+      - Admins can update is_verified on users/public_profiles
+
+      SHARE BUTTON:
+      - Not needed on verification page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
