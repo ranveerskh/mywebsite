@@ -368,6 +368,7 @@
       gap:8px;
       flex-wrap:wrap;
       margin-top:12px;
+      align-items:center;
     }
     .action-btn{
       border:none;
@@ -391,6 +392,14 @@
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
+    }
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
+    }
+    .share-post-btn{
+      margin-left:auto;
     }
 
     .bottom-nav{
@@ -467,6 +476,7 @@
       body{padding:10px 10px 110px}
       .brand{font-size:18px}
       .tabs{grid-template-columns:repeat(2,1fr)}
+      .share-post-btn{margin-left:0}
     }
   </style>
 </head>
@@ -773,6 +783,26 @@
       return Number.isNaN(ms) ? 0 : ms;
     }
 
+    async function sharePost(postId) {
+      const url = new URL("post.html", window.location.href);
+      url.searchParams.set("postId", postId);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: "Check this post on BareWorld",
+            text: "Check this post on BareWorld",
+            url: url.toString()
+          });
+        } else {
+          await navigator.clipboard.writeText(url.toString());
+          alert("Post link copied.");
+        }
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
+    }
+
     function openLoading() {
       listLoading.classList.remove("hidden");
       listWrap.classList.add("hidden");
@@ -1034,6 +1064,7 @@
           <div class="card-actions">
             <a href="post.html?postId=${encodeURIComponent(post.id)}" class="action-btn btn-primary">Open Post</a>
             <a href="member.html?uid=${encodeURIComponent(post.userId)}" class="action-btn btn-soft">Owner</a>
+            <button class="action-btn btn-green share-post-btn" type="button" data-post-id="${escapeHtml(post.id)}">Share</button>
           </div>
         `;
 
@@ -1041,6 +1072,13 @@
         if (img) {
           img.addEventListener("error", () => {
             img.style.display = "none";
+          });
+        }
+
+        const shareBtn = card.querySelector(".share-post-btn");
+        if (shareBtn) {
+          shareBtn.addEventListener("click", async () => {
+            await sharePost(post.id);
           });
         }
 
@@ -1106,7 +1144,7 @@
         if (place.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(place.city)}</span>`);
 
         const websiteHref = normalizeHref(place.website);
-        const openDetail = `places.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source || "")}`;
+        const openDetail = `place.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source || "")}`;
 
         const websiteHtml = place.website
           ? `<a href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>`
@@ -1283,6 +1321,29 @@
     }
 
     initPage();
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      TABLES:
+      - users: select
+      - public_profiles: select
+      - follows: select
+      - posts: select
+      - events: select
+      - nearby_places: select
+      - places: select
+      - nudist_places: select
+      - notifications: select
+
+      AUTH:
+      - logged-in user required
+
+      SHARE BUTTON:
+      - Added on post result cards inside Posts tab.
+      - Uses native mobile share sheet when available.
+      - Desktop fallback copies post.html?postId=POST_ID.
+    */
   </script>
 </body>
 </html>
