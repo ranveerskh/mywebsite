@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Profile</title>
+  <title>OwnSpace - Profile</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -24,7 +25,7 @@
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 18px 36px rgba(0,0,0,.18);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
 
     html[data-theme="light"]{
@@ -43,14 +44,17 @@
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 28px rgba(20,33,61,.08);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:8px 8px 108px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -64,21 +68,22 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
+      padding:7px 9px;
       margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -87,316 +92,446 @@
       text-decoration:none;
       position:relative;
     }
-    .top-icon-btn svg{width:19px;height:19px;display:block}
-    .top-center{text-align:center;min-width:0}
-    .brand{font-size:18px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
 
-    .shell{
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .panel{
       background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      overflow:hidden;
+      padding:12px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
-      margin-bottom:12px;
     }
-    .section{
-      padding:14px;
-      border-bottom:1px solid var(--line-soft);
-    }
-    .section:last-child{border-bottom:none}
 
-    .loading{
+    .loading,
+    .empty-box{
       text-align:center;
       color:var(--muted);
-      padding:24px 10px;
+      padding:22px 10px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
       font-size:14px;
     }
 
     .profile-head{
       display:grid;
-      grid-template-columns:76px 1fr;
+      grid-template-columns:82px 1fr;
       gap:12px;
       align-items:start;
     }
-    .avatar{
-      width:76px;
-      height:76px;
-      border-radius:50%;
-      object-fit:cover;
-      background:var(--surface-3);
-      border:1px solid var(--line);
+
+    .avatar-wrap{
+      display:grid;
+      gap:8px;
+      justify-items:center;
     }
+
+    .avatar,
     .avatar-placeholder{
-      width:76px;
-      height:76px;
+      width:82px;
+      height:82px;
       border-radius:50%;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      flex-shrink:0;
+    }
+
+    .avatar{
+      object-fit:cover;
+    }
+
+    .avatar-placeholder{
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-      padding:8px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
       color:var(--muted);
       font-size:11px;
+      padding:8px;
       line-height:1.3;
     }
 
-    .name-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:3px;
+    .profile-main{
+      min-width:0;
+      display:grid;
+      gap:6px;
     }
+
+    .name-actions-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:start;
+      min-width:0;
+    }
+
     .name-inline{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       min-width:0;
     }
+
     .display-name{
-      font-size:22px;
-      font-weight:800;
-      line-height:1.1;
+      font-size:23px;
+      font-weight:950;
+      line-height:1.12;
       word-break:break-word;
+      letter-spacing:-.03em;
     }
 
-    .verified-dot{
+    .verified-badge{
+      width:24px;
+      height:24px;
+      border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:20px;
-      height:20px;
-      border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-      font-size:11px;
-      font-weight:900;
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 3px rgba(32,199,111,.18),
+        0 8px 18px rgba(32,199,111,.22);
       flex-shrink:0;
+    }
+
+    .verified-badge svg{
+      width:15px;
+      height:15px;
+      display:block;
+      stroke-width:3;
     }
 
     .moderation-badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:22px;
-      height:22px;
+      width:23px;
+      height:23px;
       border-radius:999px;
       font-size:13px;
-      font-weight:900;
+      font-weight:950;
       flex-shrink:0;
     }
+
     .moderation-warn{
-      background:rgba(245,185,66,.14);
+      background:rgba(245,185,66,.16);
       color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
+      border:1px solid rgba(245,185,66,.25);
     }
+
     .moderation-ban{
-      background:rgba(255,93,115,.14);
+      background:rgba(255,93,115,.16);
       color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
+      border:1px solid rgba(255,93,115,.25);
+    }
+
+    .owner-actions{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .owner-btn{
+      border:none;
+      border-radius:12px;
+      font-size:11.5px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      cursor:pointer;
+      min-height:34px;
+      color:var(--text);
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      padding:7px 9px;
+      white-space:nowrap;
+    }
+
+    .owner-btn svg{
+      width:13px;
+      height:13px;
+      display:block;
+    }
+
+    .owner-btn.private{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.22);
+    }
+
+    .owner-btn.public{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .owner-btn.edit{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.22);
     }
 
     .username{
       color:var(--blue);
       font-size:13px;
-      font-weight:700;
-      margin-bottom:8px;
+      font-weight:850;
       word-break:break-word;
     }
 
     .bio{
       color:var(--text);
-      line-height:1.58;
-      font-size:14px;
+      line-height:1.5;
+      font-size:13.5px;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
     .profile-meta{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-top:10px;
     }
+
     .meta-chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:6px 10px;
+      padding:6px 9px;
       border-radius:999px;
       font-size:11px;
-      font-weight:800;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
-      line-height:1.3;
+      line-height:1;
     }
+
     .meta-chip.location{
       background:rgba(76,201,255,.14);
       border-color:rgba(76,201,255,.20);
     }
+
     .meta-chip.gender{
       background:rgba(167,139,250,.14);
       border-color:rgba(167,139,250,.20);
     }
 
-    .links-wrap{
+    .links-block{
       display:grid;
-      gap:8px;
-      margin-top:10px;
-    }
-    .profile-link{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-      text-decoration:none;
-      color:var(--text);
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:9px 10px;
-      font-size:13px;
-      font-weight:700;
-    }
-    .profile-link svg{
-      width:15px;
-      height:15px;
-      display:block;
-      flex-shrink:0;
-      color:var(--blue);
-    }
-    .profile-link span{
-      min-width:0;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      gap:6px;
+      margin-top:2px;
     }
 
-    .actions-row{
+    .links-title{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .links-wrap{
       display:flex;
-      align-items:center;
       gap:7px;
-      flex-shrink:0;
       flex-wrap:wrap;
     }
-    .compact-btn,
-    .tiny-state-btn{
-      border:none;
-      border-radius:11px;
-      font-size:12px;
-      font-weight:800;
+
+    .profile-link{
+      color:var(--text);
       text-decoration:none;
+      font-size:12px;
+      font-weight:950;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(76,201,255,.22);
+      background:rgba(76,201,255,.12);
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
       display:inline-flex;
       align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      min-height:36px;
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-      background:rgba(76,201,255,.14);
+      gap:6px;
     }
-    .compact-btn{
-      padding:8px 11px;
+
+    .profile-link svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
     }
-    .tiny-state-btn{
-      padding:6px 9px;
-      min-height:32px;
-      font-size:11px;
+
+    .trust-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
       background:var(--surface-2);
       border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      margin-top:10px;
     }
-    .tiny-state-btn.private{
-      background:rgba(245,185,66,.14);
-      border-color:rgba(245,185,66,.20);
+
+    .trust-label{
+      font-size:12px;
+      font-weight:950;
+      color:var(--text);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
     }
-    .tiny-state-btn.public{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.20);
+
+    .trust-label span:last-child{
+      color:var(--green);
+    }
+
+    .trust-track{
+      width:100%;
+      height:8px;
+      border-radius:999px;
+      overflow:hidden;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line-soft);
+    }
+
+    .trust-fill{
+      height:100%;
+      width:50%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--yellow), var(--green));
+    }
+
+    .points-pill{
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(167,139,250,.14);
+      border:1px solid rgba(167,139,250,.22);
+      color:var(--text);
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
     }
 
     .stats{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:8px;
-      margin-top:14px;
+      gap:7px;
+      margin-top:10px;
     }
+
     .stat{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 8px;
+      border-radius:15px;
+      padding:9px 7px;
       text-align:center;
       cursor:pointer;
+      text-decoration:none;
+      color:var(--text);
+      min-width:0;
     }
+
     .stat-value{
-      font-size:16px;
-      font-weight:800;
-      margin-bottom:3px;
+      display:block;
+      font-size:17px;
       line-height:1.1;
+      font-weight:950;
     }
+
     .stat-label{
-      font-size:11px;
+      display:block;
       color:var(--muted);
-      line-height:1.25;
+      font-size:10.5px;
+      font-weight:900;
+      margin-top:4px;
+      white-space:nowrap;
     }
 
     .tabs{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:8px;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
     }
+
     .tab-btn{
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:11px 8px;
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
+      padding:9px 5px;
+      font-size:11.5px;
+      font-weight:950;
       white-space:nowrap;
+      cursor:pointer;
+      min-height:38px;
     }
+
     .tab-btn.active{
       background:rgba(76,201,255,.14);
-      color:var(--text);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
 
-    .empty-box{
-      text-align:center;
-      padding:22px 10px;
-      color:var(--muted);
-      background:var(--surface-2);
-      border-radius:16px;
-      border:1px dashed var(--line);
-      line-height:1.55;
-      font-size:14px;
+    .tab-panel{
+      display:block;
     }
 
-    .dashboard-list{
+    .dashboard-list,
+    .events-grid,
+    .places-grid,
+    .communities-grid{
       display:grid;
-      gap:12px;
+      gap:10px;
     }
-    .dashboard-card{
+
+    .dashboard-card,
+    .event-card,
+    .place-card,
+    .community-card{
       display:block;
       color:inherit;
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
+      overflow:hidden;
     }
+
     .dashboard-post-link{
       display:block;
       text-decoration:none;
       color:inherit;
     }
+
     .dashboard-top{
       display:flex;
       align-items:center;
@@ -404,24 +539,28 @@
       gap:10px;
       margin-bottom:8px;
     }
+
     .dashboard-label{
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       color:var(--blue);
     }
+
     .dashboard-time{
-      font-size:11px;
+      font-size:10.5px;
       color:var(--muted);
       flex-shrink:0;
     }
+
     .dashboard-text{
       color:var(--text);
       font-size:14px;
-      line-height:1.58;
+      line-height:1.55;
       white-space:pre-wrap;
       word-break:break-word;
-      margin-bottom:10px;
+      margin-bottom:9px;
     }
+
     .dashboard-image{
       width:100%;
       max-height:340px;
@@ -431,67 +570,95 @@
       background:var(--surface-3);
       border:1px solid var(--line-soft);
     }
-    .dashboard-actions{
+
+    .card-actions{
       display:flex;
       align-items:center;
-      justify-content:flex-end;
-      gap:8px;
+      gap:7px;
+      flex-wrap:wrap;
       margin-top:10px;
     }
-    .dashboard-share-btn{
+
+    .mini-btn{
       border:none;
       cursor:pointer;
-      font-weight:800;
-      border-radius:10px;
+      font-weight:950;
+      border-radius:12px;
       padding:8px 10px;
-      font-size:11px;
+      font-size:12px;
       display:inline-flex;
       align-items:center;
-      gap:6px;
+      justify-content:center;
+      gap:5px;
       text-decoration:none;
-      background:rgba(61,220,132,.12);
+      background:var(--surface-3);
       color:var(--text);
-      border:1px solid rgba(61,220,132,.18);
-      margin-left:auto;
+      border:1px solid var(--line);
+      min-height:36px;
     }
-    .dashboard-share-btn svg{
-      width:15px;
-      height:15px;
+
+    .mini-btn svg{
+      width:14px;
+      height:14px;
       display:block;
       flex-shrink:0;
     }
+
+    .btn-blue{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .btn-green{
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .btn-red{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.22);
+    }
+
+    .share-btn{
+      margin-left:auto;
+    }
+
     .show-more-wrap{
-      margin-top:14px;
+      margin-top:10px;
       display:flex;
       justify-content:center;
     }
+
     .show-more-btn{
       border:none;
       background:rgba(76,201,255,.14);
       color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-      border-radius:12px;
-      padding:10px 14px;
-      font-size:12px;
-      font-weight:800;
+      border:1px solid rgba(76,201,255,.22);
+      border-radius:14px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:950;
       cursor:pointer;
       min-height:40px;
+      width:100%;
     }
 
     .photos-grid{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:8px;
+      grid-template-columns:repeat(3,1fr);
+      gap:6px;
     }
+
     .photo-tile{
       aspect-ratio:1/1;
-      border-radius:16px;
+      border-radius:13px;
       overflow:hidden;
       background:var(--surface-2);
       border:1px solid var(--line);
       display:block;
       text-decoration:none;
     }
+
     .photo-tile img{
       width:100%;
       height:100%;
@@ -499,76 +666,73 @@
       display:block;
     }
 
-    .events-grid,.places-grid{
-      display:grid;
-      gap:12px;
-    }
-    .event-card,.place-card{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-    }
-    .event-title,.place-title{
+    .card-title{
       font-size:16px;
-      font-weight:800;
-      margin-bottom:10px;
-      line-height:1.4;
+      font-weight:950;
+      margin-bottom:7px;
+      line-height:1.35;
     }
+
     .badge-row{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-bottom:10px;
+      margin-bottom:9px;
     }
+
     .badge{
-      display:inline-block;
-      padding:6px 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 9px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+      line-height:1;
     }
+
     .badge-private{
       background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
+      border-color:rgba(245,185,66,.20);
     }
-    .badge-created{
-      background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .badge-joined{
-      background:rgba(167,139,250,.14);
-      color:var(--text);
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .badge-visited{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .badge-explored{
-      background:rgba(245,185,66,.14);
-      color:var(--text);
-      border:1px solid rgba(245,185,66,.20);
-    }
+
+    .badge-created,
     .badge-added{
       background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.20);
+      border-color:rgba(61,220,132,.20);
     }
-    .event-meta,.place-meta{
+
+    .badge-joined,
+    .badge-community{
+      background:rgba(167,139,250,.14);
+      border-color:rgba(167,139,250,.20);
+    }
+
+    .badge-visited{
+      background:rgba(76,201,255,.14);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .badge-explored{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.20);
+    }
+
+    .card-meta{
       display:grid;
-      gap:6px;
+      gap:5px;
       color:var(--text);
       font-size:13px;
-      line-height:1.55;
-      margin-bottom:10px;
+      line-height:1.45;
+      margin-bottom:8px;
     }
-    .event-desc,.place-desc{
+
+    .card-desc{
       color:var(--text);
-      line-height:1.58;
+      line-height:1.55;
       font-size:14px;
       white-space:pre-wrap;
       word-break:break-word;
@@ -580,20 +744,23 @@
       border-radius:22px;
       overflow:hidden;
       box-shadow:var(--shadow);
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
+
     .network-head{
-      padding:14px;
+      padding:12px;
       border-bottom:1px solid var(--line-soft);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
     }
+
     .network-head-title{
-      font-size:17px;
-      font-weight:800;
+      font-size:16px;
+      font-weight:950;
     }
+
     .network-close{
       width:36px;
       height:36px;
@@ -607,45 +774,54 @@
       justify-content:center;
       cursor:pointer;
     }
+
     .network-close svg{
       width:16px;
       height:16px;
       display:block;
     }
+
     .network-body{
-      padding:14px;
+      padding:12px;
       display:grid;
-      gap:18px;
+      gap:16px;
     }
-    .network-section:last-child{margin-bottom:0}
+
     .network-title{
       font-size:15px;
-      font-weight:800;
-      margin-bottom:10px;
+      font-weight:950;
+      margin-bottom:9px;
     }
+
     .network-list{
       display:grid;
-      gap:10px;
+      gap:9px;
     }
 
     .person-card{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:16px;
-      padding:12px;
+      padding:10px;
       display:flex;
-      gap:12px;
+      gap:10px;
       align-items:center;
     }
-    .person-avatar,.person-avatar-placeholder{
-      width:48px;
-      height:48px;
+
+    .person-avatar,
+    .person-avatar-placeholder{
+      width:46px;
+      height:46px;
       border-radius:50%;
       flex-shrink:0;
       border:1px solid var(--line);
       background:var(--surface-3);
     }
-    .person-avatar{object-fit:cover}
+
+    .person-avatar{
+      object-fit:cover;
+    }
+
     .person-avatar-placeholder{
       display:flex;
       align-items:center;
@@ -655,26 +831,30 @@
       text-align:center;
       padding:6px;
     }
+
     .person-body{
       min-width:0;
       flex:1;
     }
+
     .person-name{
-      font-size:15px;
-      font-weight:800;
+      font-size:14px;
+      font-weight:950;
       line-height:1.3;
     }
+
     .person-name a{
       color:var(--text);
       text-decoration:none;
     }
-    .person-name a:hover{text-decoration:underline}
+
     .person-username{
       font-size:12px;
       color:var(--blue);
-      font-weight:700;
+      font-weight:850;
       margin-top:3px;
     }
+
     .person-sub{
       font-size:12px;
       color:var(--muted);
@@ -696,11 +876,12 @@
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
       overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -709,20 +890,22 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
       position:relative;
     }
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
+
     .icon-svg{
       width:20px;
       height:20px;
@@ -731,11 +914,13 @@
       justify-content:center;
       line-height:1;
     }
+
     .icon-svg svg{
       width:20px;
       height:20px;
       display:block;
     }
+
     .nav-badge{
       position:absolute;
       top:5px;
@@ -747,164 +932,277 @@
       background:var(--red);
       color:#fff;
       font-size:10px;
-      font-weight:800;
+      font-weight:950;
       display:flex;
       align-items:center;
       justify-content:center;
       line-height:1;
+      border:2px solid var(--nav-bg);
     }
 
-    @media (max-width:700px){
-      body{padding:10px 10px 108px}
-      .brand{font-size:18px}
-      .profile-head{grid-template-columns:72px 1fr}
-      .avatar,.avatar-placeholder{width:72px;height:72px}
-      .display-name{font-size:20px}
-      .photos-grid{grid-template-columns:repeat(3,1fr)}
-      .compact-btn{padding:7px 10px}
-      .tab-btn{font-size:12px;padding:10px 5px}
+    @media(max-width:700px){
+      .panel{
+        padding:10px;
+        border-radius:20px;
+      }
+
+      .brand{font-size:17px}
+
+      .profile-head{
+        grid-template-columns:70px 1fr;
+        gap:10px;
+      }
+
+      .avatar,
+      .avatar-placeholder{
+        width:70px;
+        height:70px;
+      }
+
+      .display-name{
+        font-size:20px;
+      }
+
+      .verified-badge{
+        width:23px;
+        height:23px;
+      }
+
+      .name-actions-row{
+        grid-template-columns:1fr;
+      }
+
+      .owner-actions{
+        justify-content:flex-start;
+      }
+
+      .bio{
+        font-size:13px;
+      }
+
+      .tabs{
+        gap:5px;
+      }
+
+      .tab-btn{
+        font-size:10.5px;
+        padding:8px 2px;
+      }
+
+      .share-btn{
+        margin-left:0;
+      }
+
+      .bottom-nav{
+        padding:7px;
+        gap:5px;
+      }
+
+      .nav-link{
+        font-size:10px;
+        padding:8px 3px;
+      }
     }
 
-    @media (max-width:420px){
-      .display-name{font-size:19px}
-      .photos-grid{grid-template-columns:repeat(3,1fr)}
-      .name-row{align-items:flex-start}
-      .stats{gap:6px}
-      .stat{padding:9px 6px}
-      .stat-value{font-size:15px}
-      .stat-label{font-size:10px}
-      .tab-btn{font-size:11px;padding:10px 4px}
+    @media(max-width:390px){
+      .tab-btn{
+        font-size:9.8px;
+      }
+
+      .owner-btn{
+        font-size:10.8px;
+        padding:7px 8px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
       <a href="search.html" class="top-icon-btn" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="M20 20l-3.5-3.5"></path>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
         </svg>
       </a>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">My profile</div>
       </div>
 
       <a href="settings.html" class="top-icon-btn" aria-label="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-.33-1 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.33H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 .33 1 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.27.3.46.65.6 1 .14.33.21.68.21 1.03s-.07.7-.21 1.03c-.14.35-.33.7-.6.97z"></path>
+          <path d="M12 2v3"></path>
+          <path d="M12 19v3"></path>
+          <path d="M4.93 4.93l2.12 2.12"></path>
+          <path d="M16.95 16.95l2.12 2.12"></path>
+          <path d="M2 12h3"></path>
+          <path d="M19 12h3"></path>
+          <path d="M4.93 19.07l2.12-2.12"></path>
+          <path d="M16.95 7.05l2.12-2.12"></path>
         </svg>
       </a>
     </div>
 
-    <div class="shell">
-      <div class="section">
-        <div id="loading" class="loading">Loading profile...</div>
+    <div class="panel">
+      <div id="loading" class="loading">Loading profile...</div>
 
-        <div id="content" class="hidden">
-          <div class="profile-head">
+      <div id="content" class="hidden">
+        <div class="profile-head">
+          <div class="avatar-wrap">
             <img id="avatar" class="avatar hidden" alt="Profile Photo" />
             <div id="avatarPlaceholder" class="avatar-placeholder">No photo</div>
+          </div>
 
-            <div>
-              <div class="name-row">
-                <div>
-                  <div class="name-inline">
-                    <div class="display-name" id="displayName">Member</div>
-                    <span id="verifiedDot" class="verified-dot hidden">✓</span>
-                    <span id="moderationBadge" class="moderation-badge hidden">!</span>
-                  </div>
-                </div>
+          <div class="profile-main">
+            <div class="name-actions-row">
+              <div>
+                <div class="name-inline">
+                  <div class="display-name" id="displayName">Member</div>
 
-                <div class="actions-row">
-                  <button id="privacyToggleBtn" class="tiny-state-btn public" type="button">Public</button>
-                  <a href="edit-profile.html" class="compact-btn">Edit Profile</a>
-                </div>
-              </div>
+                  <span id="verifiedDot" class="verified-badge hidden" title="Verified">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </span>
 
-              <div id="usernameText" class="username hidden">@username</div>
-              <div class="bio" id="bio">No bio added yet.</div>
-
-              <div id="profileMeta" class="profile-meta hidden">
-                <span id="locationChip" class="meta-chip location hidden"></span>
-                <span id="genderChip" class="meta-chip gender hidden"></span>
-              </div>
-
-              <div id="linksWrap" class="links-wrap hidden"></div>
-
-              <div class="stats">
-                <div class="stat" id="postsStat">
-                  <div class="stat-value" id="postsCount">0</div>
-                  <div class="stat-label">Posts</div>
-                </div>
-                <div class="stat" id="followersStat">
-                  <div class="stat-value" id="followersCount">0</div>
-                  <div class="stat-label">Followers</div>
-                </div>
-                <div class="stat" id="followingStat">
-                  <div class="stat-value" id="followingCount">0</div>
-                  <div class="stat-label">Following</div>
+                  <span id="moderationBadge" class="moderation-badge hidden">!</span>
                 </div>
               </div>
+
+              <div class="owner-actions">
+                <button id="privacyToggleBtn" class="owner-btn public" type="button">
+                  <span>Public</span>
+                </button>
+
+                <a href="edit-profile.html" class="owner-btn edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                  </svg>
+                  <span>Edit</span>
+                </a>
+              </div>
+            </div>
+
+            <div id="usernameText" class="username hidden">@username</div>
+            <div class="bio" id="bio">No bio added yet.</div>
+
+            <div id="profileMeta" class="profile-meta hidden">
+              <span id="locationChip" class="meta-chip location hidden"></span>
+              <span id="genderChip" class="meta-chip gender hidden"></span>
+            </div>
+
+            <div id="linksBlock" class="links-block hidden">
+              <div class="links-title">Links</div>
+              <div id="linksWrap" class="links-wrap"></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="section">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="dashboardTab">Dashboard</button>
-          <button class="tab-btn" data-tab="photosTab">Photos</button>
-          <button class="tab-btn" data-tab="eventsTab">Events</button>
-          <button class="tab-btn" data-tab="placesTab">Places</button>
-        </div>
-      </div>
-
-      <div id="dashboardTab" class="section">
-        <div id="dashboardList" class="dashboard-list hidden"></div>
-        <div id="dashboardEmpty" class="empty-box hidden">No posts yet.</div>
-        <div id="showMoreWrap" class="show-more-wrap hidden">
-          <button id="showMoreBtn" class="show-more-btn" type="button">Show More</button>
-        </div>
-      </div>
-
-      <div id="photosTab" class="section hidden">
-        <div id="photosGrid" class="photos-grid hidden"></div>
-        <div id="photosEmpty" class="empty-box hidden">No photo posts yet.</div>
-      </div>
-
-      <div id="eventsTab" class="section hidden">
-        <div style="display:grid;gap:18px;">
+        <div class="trust-row">
           <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Created Events</div>
-            <div id="createdEventsGrid" class="events-grid hidden"></div>
-            <div id="createdEmpty" class="empty-box hidden">No created events yet.</div>
+            <div class="trust-label">
+              <span>Trust Bar</span>
+              <span id="trustLabel">50%</span>
+            </div>
+            <div class="trust-track">
+              <div id="trustFill" class="trust-fill"></div>
+            </div>
           </div>
 
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Joined Events</div>
-            <div id="joinedEventsGrid" class="events-grid hidden"></div>
-            <div id="joinedEmpty" class="empty-box hidden">No joined events yet.</div>
+          <div id="pointsPill" class="points-pill">0 pts</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat" id="postsStat">
+            <div class="stat-value" id="postsCount">0</div>
+            <div class="stat-label">Posts</div>
+          </div>
+
+          <div class="stat" id="followersStat">
+            <div class="stat-value" id="followersCount">0</div>
+            <div class="stat-label">Followers</div>
+          </div>
+
+          <div class="stat" id="followingStat">
+            <div class="stat-value" id="followingCount">0</div>
+            <div class="stat-label">Following</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div id="placesTab" class="section hidden">
-        <div style="display:grid;gap:18px;">
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Added Places</div>
-            <div id="addedPlacesGrid" class="places-grid hidden"></div>
-            <div id="addedPlacesEmpty" class="empty-box hidden">No added places yet.</div>
-          </div>
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="dashboardTab">Dashboard</button>
+        <button class="tab-btn" data-tab="photosTab">Photos</button>
+        <button class="tab-btn" data-tab="eventsTab">Events</button>
+        <button class="tab-btn" data-tab="placesTab">Places</button>
+        <button class="tab-btn" data-tab="communitiesTab">Community</button>
+      </div>
+    </div>
 
-          <div>
-            <div style="font-size:17px;font-weight:800;margin-bottom:12px;">Visited Places</div>
-            <div id="visitedPlacesGrid" class="places-grid hidden"></div>
-            <div id="visitedPlacesEmpty" class="empty-box hidden">No visited places yet.</div>
-          </div>
+    <div id="dashboardTab" class="panel tab-panel">
+      <div id="dashboardList" class="dashboard-list hidden"></div>
+      <div id="dashboardEmpty" class="empty-box hidden">No posts yet.</div>
+      <div id="showMoreWrap" class="show-more-wrap hidden">
+        <button id="showMoreBtn" class="show-more-btn" type="button">Show More</button>
+      </div>
+    </div>
+
+    <div id="photosTab" class="panel tab-panel hidden">
+      <div id="photosGrid" class="photos-grid hidden"></div>
+      <div id="photosEmpty" class="empty-box hidden">No photo posts yet.</div>
+    </div>
+
+    <div id="eventsTab" class="panel tab-panel hidden">
+      <div style="display:grid;gap:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">Created Events</div>
+          <div id="createdEventsGrid" class="events-grid hidden"></div>
+          <div id="createdEmpty" class="empty-box hidden">No created events yet.</div>
+        </div>
+
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">Joined Events</div>
+          <div id="joinedEventsGrid" class="events-grid hidden"></div>
+          <div id="joinedEmpty" class="empty-box hidden">No joined events yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="placesTab" class="panel tab-panel hidden">
+      <div style="display:grid;gap:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">Added Places</div>
+          <div id="addedPlacesGrid" class="places-grid hidden"></div>
+          <div id="addedPlacesEmpty" class="empty-box hidden">No added places yet.</div>
+        </div>
+
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">Visited Places</div>
+          <div id="visitedPlacesGrid" class="places-grid hidden"></div>
+          <div id="visitedPlacesEmpty" class="empty-box hidden">No visited places yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="communitiesTab" class="panel tab-panel hidden">
+      <div style="display:grid;gap:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">My Communities</div>
+          <div id="createdCommunitiesGrid" class="communities-grid hidden"></div>
+          <div id="createdCommunitiesEmpty" class="empty-box hidden">No communities created yet.</div>
+        </div>
+
+        <div>
+          <div style="font-size:16px;font-weight:950;margin-bottom:10px;">Joined Communities</div>
+          <div id="joinedCommunitiesGrid" class="communities-grid hidden"></div>
+          <div id="joinedCommunitiesEmpty" class="empty-box hidden">No joined communities yet.</div>
         </div>
       </div>
     </div>
@@ -912,6 +1210,7 @@
     <div id="networkShell" class="network-shell hidden">
       <div class="network-head">
         <div class="network-head-title">Network</div>
+
         <button id="closeNetworkBtn" class="network-close" type="button" aria-label="Close network">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 6L6 18"></path>
@@ -941,7 +1240,8 @@
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 10.5 12 3l9 7.5"></path>
-          <path d="M5 9.5V21h14V9.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
         </svg>
       </span>
       <span>Feed</span>
@@ -950,8 +1250,8 @@
     <a href="nearby.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </span>
       <span>Nearby</span>
@@ -970,8 +1270,7 @@
     <a href="inbox.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 6h16v12H4z"></path>
-          <path d="M4 7l8 6 8-6"></path>
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       </span>
       <span>Inbox</span>
@@ -981,8 +1280,8 @@
     <a href="profile.html" class="nav-link active">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M4 20c1.8-3.2 5-5 8-5s6.2 1.8 8 5"></path>
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </span>
       <span>Profile</span>
@@ -990,1088 +1289,1328 @@
   </nav>
 
   <script type="module">
-  import { supabase } from "./supabase.js";
+    import { supabase } from "./supabase.js";
 
-  const loading = document.getElementById("loading");
-  const content = document.getElementById("content");
-  const avatar = document.getElementById("avatar");
-  const avatarPlaceholder = document.getElementById("avatarPlaceholder");
-  const displayNameEl = document.getElementById("displayName");
-  const verifiedDot = document.getElementById("verifiedDot");
-  const usernameText = document.getElementById("usernameText");
-  const bioEl = document.getElementById("bio");
-  const moderationBadge = document.getElementById("moderationBadge");
-  const linksWrap = document.getElementById("linksWrap");
-  const privacyToggleBtn = document.getElementById("privacyToggleBtn");
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const avatar = document.getElementById("avatar");
+    const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+    const displayNameEl = document.getElementById("displayName");
+    const verifiedDot = document.getElementById("verifiedDot");
+    const usernameText = document.getElementById("usernameText");
+    const bioEl = document.getElementById("bio");
+    const moderationBadge = document.getElementById("moderationBadge");
+    const linksBlock = document.getElementById("linksBlock");
+    const linksWrap = document.getElementById("linksWrap");
+    const privacyToggleBtn = document.getElementById("privacyToggleBtn");
 
-  const profileMeta = document.getElementById("profileMeta");
-  const locationChip = document.getElementById("locationChip");
-  const genderChip = document.getElementById("genderChip");
+    const profileMeta = document.getElementById("profileMeta");
+    const locationChip = document.getElementById("locationChip");
+    const genderChip = document.getElementById("genderChip");
 
-  const postsCountEl = document.getElementById("postsCount");
-  const followersCountEl = document.getElementById("followersCount");
-  const followingCountEl = document.getElementById("followingCount");
+    const trustLabel = document.getElementById("trustLabel");
+    const trustFill = document.getElementById("trustFill");
+    const pointsPill = document.getElementById("pointsPill");
 
-  const dashboardList = document.getElementById("dashboardList");
-  const dashboardEmpty = document.getElementById("dashboardEmpty");
-  const showMoreWrap = document.getElementById("showMoreWrap");
-  const showMoreBtn = document.getElementById("showMoreBtn");
+    const postsCountEl = document.getElementById("postsCount");
+    const followersCountEl = document.getElementById("followersCount");
+    const followingCountEl = document.getElementById("followingCount");
 
-  const photosGrid = document.getElementById("photosGrid");
-  const photosEmpty = document.getElementById("photosEmpty");
+    const dashboardList = document.getElementById("dashboardList");
+    const dashboardEmpty = document.getElementById("dashboardEmpty");
+    const showMoreWrap = document.getElementById("showMoreWrap");
+    const showMoreBtn = document.getElementById("showMoreBtn");
 
-  const createdEventsGrid = document.getElementById("createdEventsGrid");
-  const createdEmpty = document.getElementById("createdEmpty");
-  const joinedEventsGrid = document.getElementById("joinedEventsGrid");
-  const joinedEmpty = document.getElementById("joinedEmpty");
+    const photosGrid = document.getElementById("photosGrid");
+    const photosEmpty = document.getElementById("photosEmpty");
 
-  const followersList = document.getElementById("followersList");
-  const followersEmpty = document.getElementById("followersEmpty");
-  const followingList = document.getElementById("followingList");
-  const followingEmpty = document.getElementById("followingEmpty");
+    const createdEventsGrid = document.getElementById("createdEventsGrid");
+    const createdEmpty = document.getElementById("createdEmpty");
+    const joinedEventsGrid = document.getElementById("joinedEventsGrid");
+    const joinedEmpty = document.getElementById("joinedEmpty");
 
-  const addedPlacesGrid = document.getElementById("addedPlacesGrid");
-  const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
-  const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
-  const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
+    const addedPlacesGrid = document.getElementById("addedPlacesGrid");
+    const addedPlacesEmpty = document.getElementById("addedPlacesEmpty");
+    const visitedPlacesGrid = document.getElementById("visitedPlacesGrid");
+    const visitedPlacesEmpty = document.getElementById("visitedPlacesEmpty");
 
-  const postsStat = document.getElementById("postsStat");
-  const followersStat = document.getElementById("followersStat");
-  const followingStat = document.getElementById("followingStat");
-  const networkShell = document.getElementById("networkShell");
-  const closeNetworkBtn = document.getElementById("closeNetworkBtn");
+    const createdCommunitiesGrid = document.getElementById("createdCommunitiesGrid");
+    const createdCommunitiesEmpty = document.getElementById("createdCommunitiesEmpty");
+    const joinedCommunitiesGrid = document.getElementById("joinedCommunitiesGrid");
+    const joinedCommunitiesEmpty = document.getElementById("joinedCommunitiesEmpty");
 
-  let currentUserId = "";
-  let currentProfile = null;
-  let dashboardPosts = [];
-  let dashboardVisibleCount = 10;
+    const followersList = document.getElementById("followersList");
+    const followersEmpty = document.getElementById("followersEmpty");
+    const followingList = document.getElementById("followingList");
+    const followingEmpty = document.getElementById("followingEmpty");
 
-  const PROFILE_TABLES = {
-    users: ["users"],
-    publicProfiles: ["public_profiles", "publicProfiles"]
-  };
+    const postsStat = document.getElementById("postsStat");
+    const followersStat = document.getElementById("followersStat");
+    const followingStat = document.getElementById("followingStat");
+    const networkShell = document.getElementById("networkShell");
+    const closeNetworkBtn = document.getElementById("closeNetworkBtn");
+    const inboxBadge = document.getElementById("inboxBadge");
 
-  const POSTS_TABLES = ["posts"];
-  const EVENTS_TABLES = ["events"];
-  const EVENT_MEMBERS_TABLES = ["event_members", "events_members", "eventMembers"];
-  const FOLLOWS_TABLES = ["follows"];
-  const PLACES_TABLES = ["places", "nearby_places", "nudist_places"];
-  const PLACE_VISITS_TABLES = ["place_visits", "placeVisits"];
+    let currentUserId = "";
+    let currentProfile = null;
+    let dashboardPosts = [];
+    let dashboardVisibleCount = 10;
 
-  function getStoredTheme() {
-    return localStorage.getItem("bwTheme") || "dark";
-  }
-
-  function resolveTheme(themeValue) {
-    if (themeValue === "system") {
-      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-    }
-    return themeValue === "light" ? "light" : "dark";
-  }
-
-  function applyTheme(themeValue) {
-    document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-  }
-
-  applyTheme(getStoredTheme());
-
-  window.addEventListener("storage", (e) => {
-    if (e.key === "bwTheme") applyTheme(getStoredTheme());
-  });
-
-  const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-  if (mediaQuery.addEventListener) {
-    mediaQuery.addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
-  }
-
-  function nowIso() {
-    return new Date().toISOString();
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text || "";
-    return div.innerHTML;
-  }
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLowerCase();
-  }
-
-  function normalizeHref(url) {
-    const value = String(url || "").trim();
-    if (!value) return "";
-    if (/^https?:\/\//i.test(value)) return value;
-    return "https://" + value;
-  }
-
-  function getField(raw, names) {
-    for (const name of names) {
-      const value = raw?.[name];
-      if (value != null && String(value).trim()) return String(value).trim();
-    }
-    return "";
-  }
-
-  function getBool(raw, names) {
-    for (const name of names) {
-      if (raw?.[name] != null) return !!raw[name];
-    }
-    return false;
-  }
-
-  function isMissingTableError(error) {
-    const msg = String(error?.message || "").toLowerCase();
-    return (
-      msg.includes("does not exist") ||
-      msg.includes("relation") && msg.includes("does not exist") ||
-      msg.includes("could not find the table") ||
-      msg.includes("not found in the schema cache")
-    );
-  }
-
-  async function selectFirstAvailable(tableNames, buildQuery = null) {
-    for (const table of tableNames) {
-      try {
-        let q = supabase.from(table).select("*");
-        if (buildQuery) q = buildQuery(q, table);
-        const { data, error } = await q;
-
-        if (error) {
-          if (isMissingTableError(error)) continue;
-          console.error(`Query error on ${table}:`, error);
-          return { table, data: [], error };
-        }
-
-        return { table, data: Array.isArray(data) ? data : [], error: null };
-      } catch (err) {
-        console.error(`Query failed on ${table}:`, err);
-      }
-    }
-    return { table: null, data: [], error: null };
-  }
-
-  async function selectAllAvailable(tableNames, buildQuery = null) {
-    const merged = [];
-    const usedTables = [];
-
-    for (const table of tableNames) {
-      try {
-        let q = supabase.from(table).select("*");
-        if (buildQuery) q = buildQuery(q, table);
-        const { data, error } = await q;
-
-        if (error) {
-          if (isMissingTableError(error)) continue;
-          console.error(`Query error on ${table}:`, error);
-          continue;
-        }
-
-        usedTables.push(table);
-        (data || []).forEach(row => merged.push({ ...row, __table: table }));
-      } catch (err) {
-        console.error(`Query failed on ${table}:`, err);
-      }
-    }
-
-    return { tables: usedTables, data: merged };
-  }
-
-  async function fetchSingleByUid(tableNames, uid) {
-    const result = await selectFirstAvailable(tableNames, (q) => q.eq("uid", uid).limit(1));
-    return result.data?.[0] || null;
-  }
-
-  function extractProfileLinks(raw) {
-    const found = [];
-
-    const addLink = (url, label) => {
-      const clean = String(url || "").trim();
-      if (!clean) return;
-      found.push({
-        url: clean,
-        href: normalizeHref(clean),
-        label: String(label || clean).trim()
-      });
+    const PROFILE_TABLES = {
+      users: ["users"],
+      publicProfiles: ["public_profiles", "publicProfiles"]
     };
 
-    addLink(
-      getField(raw, ["link1", "link_1", "url1", "website1", "site1", "social1"]),
-      getField(raw, ["link1Label", "link_1_label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
-    );
+    const POSTS_TABLES = ["posts"];
+    const EVENTS_TABLES = ["events"];
+    const EVENT_MEMBERS_TABLES = ["event_members", "events_members", "eventMembers"];
+    const FOLLOWS_TABLES = ["follows"];
+    const PLACES_TABLES = ["places", "nearby_places", "nudist_places"];
+    const PLACE_VISITS_TABLES = ["place_visits", "placeVisits"];
+    const COMMUNITIES_TABLES = ["communities", "community"];
+    const COMMUNITY_MEMBERS_TABLES = ["community_members", "communities_members", "communityMembers"];
 
-    addLink(
-      getField(raw, ["link2", "link_2", "url2", "website2", "site2", "social2"]),
-      getField(raw, ["link2Label", "link_2_label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
-    );
-
-    const maybeArray = raw?.links;
-    if (Array.isArray(maybeArray)) {
-      maybeArray.slice(0, 2).forEach(entry => {
-        if (typeof entry === "string") {
-          addLink(entry, entry);
-        } else if (entry && typeof entry === "object") {
-          addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || entry.url || entry.href);
-        }
-      });
-    }
-
-    const unique = [];
-    const seen = new Set();
-    for (const item of found) {
-      const key = item.href.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(item);
-      }
-    }
-
-    return unique.slice(0, 2);
-  }
-
-  function normalizeProfile(raw, fallbackUid = "") {
-    const d = raw || {};
-    const city = d.city || d.location_city || d.locationCity || d.current_city || d.currentCity || "";
-    const province = d.province || d.state || d.region || d.location_province || d.locationProvince || d.current_province || d.currentProvince || "";
-    const country = d.country || d.location_country || d.locationCountry || d.current_country || d.currentCountry || "";
-
-    const rawGender = d.gender === "self_describe"
-      ? (d.gender_custom || d.genderCustom || "")
-      : (d.gender || "");
-
-    return {
-      uid: d.uid || d.id || fallbackUid || "",
-      displayName: d.display_name || d.displayName || d.name || d.fullName || d.full_name || d.username || "Member",
-      username: d.username || d.handle || d.userName || d.user_name || "",
-      bio: d.bio || d.about || d.description || "",
-      photoURL: d.photo_url || d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || d.user_photo_url || "",
-      isPrivate: getBool(d, ["is_private", "isPrivate", "privateProfile", "private_profile", "private", "accountPrivate", "account_private"]),
-      moderationStatus: d.moderation_status || d.moderationStatus || d.status || "",
-      warningUntil: d.warning_until || d.warningUntil || null,
-      verified: getBool(d, ["verified", "is_verified", "isVerified"]),
-      isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"]),
-      softDeleted: getBool(d, ["soft_deleted", "softDeleted"]),
-      blockedUsers: Array.isArray(d.blocked_users) ? d.blocked_users : (Array.isArray(d.blockedUsers) ? d.blockedUsers : []),
-      links: extractProfileLinks(d),
-      city,
-      province,
-      country,
-      cityVisible: getBool(d, ["city_visible", "cityVisible"]),
-      gender: rawGender,
-      genderVisible: getBool(d, ["gender_visible", "genderVisible"])
-    };
-  }
-
-  function normalizeEvent(raw, fallbackId = "") {
-    const d = raw || {};
-    return {
-      id: d.id || fallbackId || "",
-      title: d.title || d.name || "Untitled Event",
-      description: d.description || d.desc || "",
-      city: d.city || d.location_city || d.locationCity || "",
-      date: d.date || "",
-      time: d.time || "",
-      visibility: d.visibility || d.event_visibility || d.eventVisibility || "public",
-      creatorId: d.creator_id || d.creatorId || d.user_id || d.userId || d.uid || "",
-      creatorName: d.creator_name || d.creatorName || d.display_name || d.displayName || d.host_name || d.hostName || "Member",
-      hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted"
-    };
-  }
-
-  function normalizePlace(raw, fallbackId = "") {
-    const d = raw || {};
-    return {
-      id: d.id || fallbackId || "",
-      source: d.source || d.place_source || d.placeSource || d.__table || "",
-      name: d.name || d.title || d.place_name || d.placeName || "Untitled Place",
-      category: d.category || d.topic || "General",
-      city: d.city || d.location_city || d.locationCity || "",
-      description: d.description || d.desc || "",
-      imageURL: d.image_url || d.imageURL || d.imageUrl || d.photo_url || d.photoURL || d.media_url || d.mediaUrl || "",
-      hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
-      creatorId: d.creator_id || d.creatorId || d.created_by || d.createdBy || d.user_id || d.userId || d.owner_id || d.ownerId || ""
-    };
-  }
-
-  function mergeProfiles(a, b, uid = "") {
-    return normalizeProfile(
-      { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
-      uid || b?.uid || a?.uid || ""
-    );
-  }
-
-  function formatDate(value) {
-    if (!value) return "Just now";
-    try {
-      const d = new Date(value);
-      return Number.isNaN(d.getTime()) ? "Just now" : d.toLocaleString();
-    } catch {
-      return "Just now";
-    }
-  }
-
-  async function sharePost(postId) {
-    const url = new URL("post.html", window.location.href);
-    url.searchParams.set("postId", postId);
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Check this post on BareWorld",
-          text: "Check this post on BareWorld",
-          url: url.toString()
-        });
-      } else {
-        await navigator.clipboard.writeText(url.toString());
-        alert("Post link copied.");
-      }
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
-  }
-
-  function showAvatar(url) {
-    const cleanUrl = (url || "").trim();
-    if (!cleanUrl) {
-      avatar.classList.add("hidden");
-      avatar.removeAttribute("src");
-      avatarPlaceholder.classList.remove("hidden");
-      return;
-    }
-    avatar.src = cleanUrl;
-    avatar.classList.remove("hidden");
-    avatarPlaceholder.classList.add("hidden");
-  }
-
-  avatar.addEventListener("error", () => {
-    avatar.classList.add("hidden");
-    avatarPlaceholder.classList.remove("hidden");
-  });
-
-  function applyModerationBadge(status, warningUntil) {
-    moderationBadge.className = "moderation-badge hidden";
-    moderationBadge.textContent = "!";
-
-    if (status === "banned") {
-      moderationBadge.className = "moderation-badge moderation-ban";
-      return;
-    }
-
-    if (status === "warned" && warningUntil) {
-      const untilMs = new Date(warningUntil).getTime();
-      if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
-        moderationBadge.className = "moderation-badge moderation-warn";
-      }
-    }
-  }
-
-  function renderLinks(links) {
-    linksWrap.innerHTML = "";
-
-    if (!Array.isArray(links) || !links.length) {
-      linksWrap.classList.add("hidden");
-      return;
-    }
-
-    links.forEach(item => {
-      const a = document.createElement("a");
-      a.className = "profile-link";
-      a.href = item.href;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.22"></path>
-          <path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13.3 18.78"></path>
+    const ICONS = {
+      external: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17 17 7"></path>
+          <path d="M9 7h8v8"></path>
+          <path d="M19 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path>
         </svg>
-        <span>${escapeHtml(item.label)}</span>
-      `;
-      linksWrap.appendChild(a);
+      `,
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `
+    };
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      return themeValue === "light" ? "light" : "dark";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    linksWrap.classList.remove("hidden");
-  }
-
-  function renderProfileMeta(profile) {
-    let hasMeta = false;
-
-    const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
-    if (profile.cityVisible && locationParts.length) {
-      locationChip.textContent = locationParts.join(", ");
-      locationChip.classList.remove("hidden");
-      hasMeta = true;
-    } else {
-      locationChip.classList.add("hidden");
-      locationChip.textContent = "";
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
     }
 
-    if (profile.genderVisible && String(profile.gender || "").trim()) {
-      genderChip.textContent = profile.gender;
-      genderChip.classList.remove("hidden");
-      hasMeta = true;
-    } else {
-      genderChip.classList.add("hidden");
-      genderChip.textContent = "";
+    function nowIso() {
+      return new Date().toISOString();
     }
 
-    profileMeta.classList.toggle("hidden", !hasMeta);
-  }
-
-  function setPrivacyButton(isPrivate) {
-    privacyToggleBtn.textContent = isPrivate ? "Private" : "Public";
-    privacyToggleBtn.className = `tiny-state-btn ${isPrivate ? "private" : "public"}`;
-  }
-
-  async function togglePrivacy() {
-    if (!currentUserId || !currentProfile) return;
-
-    const nextValue = !currentProfile.isPrivate;
-    privacyToggleBtn.disabled = true;
-
-    try {
-      const usersRes = await selectFirstAvailable(PROFILE_TABLES.users);
-      const usersTable = usersRes.table || "users";
-
-      const publicRes = await selectFirstAvailable(PROFILE_TABLES.publicProfiles);
-      const publicTable = publicRes.table || "public_profiles";
-
-      const payload = {
-        uid: currentUserId,
-        is_private: nextValue,
-        updated_at: nowIso()
-      };
-
-      await Promise.all([
-        supabase.from(usersTable).upsert(payload, { onConflict: "uid" }),
-        supabase.from(publicTable).upsert(payload, { onConflict: "uid" })
-      ]);
-
-      currentProfile.isPrivate = nextValue;
-      setPrivacyButton(nextValue);
-    } catch (err) {
-      console.error("Privacy update error:", err);
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text == null ? "" : String(text);
+      return div.innerHTML;
     }
 
-    privacyToggleBtn.disabled = false;
-  }
-
-  privacyToggleBtn.addEventListener("click", togglePrivacy);
-
-  function openTab(tabId) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab").forEach(el => el.classList.add("hidden"));
-
-    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-    if (btn) btn.classList.add("active");
-
-    const panel = document.getElementById(tabId);
-    if (panel) panel.classList.remove("hidden");
-  }
-
-  function openNetwork(sectionId) {
-    networkShell.classList.remove("hidden");
-    setTimeout(() => {
-      const target = document.getElementById(sectionId);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 60);
-  }
-
-  function closeNetwork() {
-    networkShell.classList.add("hidden");
-  }
-
-  closeNetworkBtn.addEventListener("click", closeNetwork);
-
-  postsStat.addEventListener("click", () => openTab("dashboardTab"));
-  followersStat.addEventListener("click", () => openNetwork("followersSection"));
-  followingStat.addEventListener("click", () => openNetwork("followingSection"));
-
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => openTab(btn.dataset.tab));
-  });
-
-  function getCreatedMs(obj) {
-    const value = obj?.created_at || obj?.createdAt || obj?.timestamp || null;
-    if (!value) return 0;
-    const ms = new Date(value).getTime();
-    return Number.isNaN(ms) ? 0 : ms;
-  }
-
-  function getPostOwnerId(post) {
-    return post?.user_id || post?.userId || post?.author_id || post?.authorId || post?.owner_id || post?.ownerId || post?.uid || "";
-  }
-
-  function getPostImage(post) {
-    return post?.image_url || post?.imageURL || post?.imageUrl || post?.photo_url || post?.photoURL || post?.media_url || post?.mediaUrl || "";
-  }
-
-  function getPostCaption(post) {
-    return post?.caption || post?.text || post?.content || "";
-  }
-
-  function isHiddenRow(row) {
-    return !!(
-      row?.hidden ||
-      row?.hidden_by_admin ||
-      row?.hiddenByAdmin ||
-      row?.soft_deleted ||
-      row?.softDeleted
-    ) || String(row?.status || "").toLowerCase() === "deleted";
-  }
-
-  function renderDashboardPosts() {
-    dashboardList.innerHTML = "";
-
-    if (!dashboardPosts.length) {
-      dashboardList.classList.add("hidden");
-      dashboardEmpty.classList.remove("hidden");
-      showMoreWrap.classList.add("hidden");
-      return;
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
-    dashboardEmpty.classList.add("hidden");
-    dashboardList.classList.remove("hidden");
-
-    const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
-
-    visiblePosts.forEach(post => {
-      const postId = post.id || "";
-      const caption = getPostCaption(post);
-      const imageUrl = getPostImage(post);
-
-      const card = document.createElement("div");
-      card.className = "dashboard-card";
-
-      card.innerHTML = `
-        <a class="dashboard-post-link" href="post.html?postId=${encodeURIComponent(postId)}">
-          <div class="dashboard-top">
-            <div class="dashboard-label">Recent Post</div>
-            <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
-          </div>
-          ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
-          ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
-        </a>
-
-        <div class="dashboard-actions">
-          <button class="dashboard-share-btn" data-post-id="${escapeHtml(postId)}" type="button" aria-label="Share post">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
-              <path d="M12 16V4"></path>
-              <path d="M7 9l5-5 5 5"></path>
-            </svg>
-            <span>Share</span>
-          </button>
-        </div>
-      `;
-
-      const img = card.querySelector(".dashboard-image");
-      if (img) {
-        img.addEventListener("error", () => {
-          img.style.display = "none";
-        });
+    function getLinkLabel(url, fallback = "Website") {
+      try {
+        const clean = normalizeHref(url);
+        const host = new URL(clean).hostname.replace(/^www\./i, "");
+        return host || fallback;
+      } catch {
+        return fallback;
       }
+    }
 
-      const shareBtn = card.querySelector(".dashboard-share-btn");
-      if (shareBtn) {
-        shareBtn.addEventListener("click", async () => {
-          await sharePost(postId);
-        });
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
-
-      dashboardList.appendChild(card);
-    });
-
-    if (dashboardPosts.length > dashboardVisibleCount) {
-      showMoreWrap.classList.remove("hidden");
-    } else {
-      showMoreWrap.classList.add("hidden");
-    }
-  }
-
-  showMoreBtn.addEventListener("click", () => {
-    dashboardVisibleCount += 10;
-    renderDashboardPosts();
-  });
-
-  function renderPhotos(posts) {
-    photosGrid.innerHTML = "";
-
-    if (!posts.length) {
-      photosGrid.classList.add("hidden");
-      photosEmpty.classList.remove("hidden");
-      return;
+      return fallback;
     }
 
-    photosEmpty.classList.add("hidden");
-    photosGrid.classList.remove("hidden");
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
 
-    posts.forEach(post => {
-      const imageUrl = getPostImage(post);
-      if (!imageUrl) return;
+    function clampNumber(value, min, max, fallback) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
+    }
 
-      const tile = document.createElement("a");
-      tile.className = "photo-tile";
-      tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
-      tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
+    function isMissingTableError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        (msg.includes("relation") && msg.includes("does not exist")) ||
+        msg.includes("could not find the table") ||
+        msg.includes("not found in the schema cache")
+      );
+    }
 
-      const img = tile.querySelector("img");
-      img.addEventListener("error", () => {
-        tile.remove();
-        if (!photosGrid.children.length) {
-          photosGrid.classList.add("hidden");
-          photosEmpty.classList.remove("hidden");
+    async function selectFirstAvailable(tableNames, buildQuery = null) {
+      for (const table of tableNames) {
+        try {
+          let q = supabase.from(table).select("*");
+          if (buildQuery) q = buildQuery(q, table);
+          const { data, error } = await q;
+
+          if (error) {
+            if (isMissingTableError(error)) continue;
+            console.error(`Query error on ${table}:`, error);
+            return { table, data: [], error };
+          }
+
+          return { table, data: Array.isArray(data) ? data : [], error: null };
+        } catch (err) {
+          console.error(`Query failed on ${table}:`, err);
         }
-      });
+      }
 
-      photosGrid.appendChild(tile);
-    });
-
-    if (!photosGrid.children.length) {
-      photosGrid.classList.add("hidden");
-      photosEmpty.classList.remove("hidden");
-    }
-  }
-
-  function renderEvents(list, container, emptyEl, typeLabel) {
-    container.innerHTML = "";
-
-    if (!list.length) {
-      container.classList.add("hidden");
-      emptyEl.classList.remove("hidden");
-      return;
+      return { table: null, data: [], error: null };
     }
 
-    emptyEl.classList.add("hidden");
-    container.classList.remove("hidden");
+    async function selectAllAvailable(tableNames, buildQuery = null) {
+      const merged = [];
+      const usedTables = [];
 
-    list.forEach(event => {
-      const card = document.createElement("div");
-      card.className = "event-card";
+      for (const table of tableNames) {
+        try {
+          let q = supabase.from(table).select("*");
+          if (buildQuery) q = buildQuery(q, table);
+          const { data, error } = await q;
 
-      card.innerHTML = `
-        <div class="event-title">${escapeHtml(event.title || "Untitled Event")}</div>
+          if (error) {
+            if (isMissingTableError(error)) continue;
+            console.error(`Query error on ${table}:`, error);
+            continue;
+          }
 
-        <div class="badge-row">
-          ${event.visibility === "private"
-            ? `<span class="badge badge-private">Private</span>`
-            : ``}
-          <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
-        </div>
+          usedTables.push(table);
+          (data || []).forEach(row => merged.push({ ...row, __table: table }));
+        } catch (err) {
+          console.error(`Query failed on ${table}:`, err);
+        }
+      }
 
-        <div class="event-meta">
-          <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
-          <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
-          <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
-          <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
-        </div>
-
-        <div class="event-desc">${escapeHtml(event.description || "No description added.")}</div>
-      `;
-
-      container.appendChild(card);
-    });
-  }
-
-  function renderPeople(ids, profilesMap, blockedUsers, listEl, emptyEl, emptyText) {
-    listEl.innerHTML = "";
-
-    const uniqueIds = [...new Set(ids.filter(Boolean))]
-      .filter(uid => !blockedUsers.includes(uid));
-
-    if (!uniqueIds.length) {
-      emptyEl.textContent = emptyText;
-      listEl.classList.add("hidden");
-      emptyEl.classList.remove("hidden");
-      return;
+      return { tables: usedTables, data: merged };
     }
 
-    const usable = uniqueIds.filter(uid => {
-      const p = profilesMap.get(uid) || {};
-      return !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned";
-    });
+    async function fetchSingleProfile(tableNames, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
 
-    if (!usable.length) {
-      emptyEl.textContent = emptyText;
-      listEl.classList.add("hidden");
-      emptyEl.classList.remove("hidden");
-      return;
+      for (const col of columns) {
+        const result = await selectFirstAvailable(tableNames, q => q.eq(col, uid).limit(1));
+        if (result.data?.[0]) return result.data[0];
+      }
+
+      return null;
     }
 
-    emptyEl.classList.add("hidden");
-    listEl.classList.remove("hidden");
+    function extractProfileLinks(raw) {
+      const found = [];
 
-    usable.forEach(uid => {
-      const p = profilesMap.get(uid) || {};
-      const card = document.createElement("div");
-      card.className = "person-card";
+      const addLink = (url, label) => {
+        const clean = String(url || "").trim();
+        if (!clean) return;
 
-      const avatarHtml = p.photoURL
-        ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
-        : `<div class="person-avatar-placeholder">No photo</div>`;
+        found.push({
+          url: clean,
+          href: normalizeHref(clean),
+          label: label ? String(label).trim() : getLinkLabel(clean)
+        });
+      };
 
-      card.innerHTML = `
-        ${avatarHtml}
-        <div class="person-body">
-          <div class="person-name">
-            <a href="member.html?uid=${encodeURIComponent(uid)}">
-              ${escapeHtml(p.displayName || "Member")}
-            </a>
-          </div>
-          ${p.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
-          ${p.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
-        </div>
-      `;
+      addLink(
+        getField(raw, ["link1", "link_1", "url1", "website1", "site1", "social1", "bio_link_1", "bioLink1"]),
+        getField(raw, ["link1Label", "link_1_label", "url1Label", "website1Label", "site1Label", "social1Label", "link1Title"])
+      );
 
-      const img = card.querySelector(".person-avatar");
-      if (img) {
-        img.addEventListener("error", () => {
-          img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+      addLink(
+        getField(raw, ["link2", "link_2", "url2", "website2", "site2", "social2", "bio_link_2", "bioLink2"]),
+        getField(raw, ["link2Label", "link_2_label", "url2Label", "website2Label", "site2Label", "social2Label", "link2Title"])
+      );
+
+      const maybeArray = raw?.links;
+      if (Array.isArray(maybeArray)) {
+        maybeArray.slice(0, 2).forEach(entry => {
+          if (typeof entry === "string") {
+            addLink(entry, getLinkLabel(entry));
+          } else if (entry && typeof entry === "object") {
+            addLink(entry.url || entry.href || entry.link, entry.label || entry.title || entry.name || "");
+          }
         });
       }
 
-      listEl.appendChild(card);
-    });
-  }
+      const unique = [];
+      const seen = new Set();
 
-  function buildPlaceKey(source, placeId) {
-    return `${String(source || "").trim()}__${String(placeId || "").trim()}`;
-  }
+      for (const item of found) {
+        const key = item.href.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
+        }
+      }
 
-  function getPlaceStatusFromDoc(place, uid) {
-    const arrayVisitedFields = ["visitedBy", "visited_users", "visitedUsers", "visitors"];
-    const arrayExploredFields = ["exploredBy", "explored_users", "exploredUsers", "explorers"];
-
-    for (const key of arrayVisitedFields) {
-      if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
-    }
-    for (const key of arrayExploredFields) {
-      if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
+      return unique.slice(0, 2);
     }
 
-    if (place.user_statuses && typeof place.user_statuses === "object" && place.user_statuses[uid]) {
-      return String(place.user_statuses[uid]).toLowerCase();
-    }
-    if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
-      return String(place.userStatuses[uid]).toLowerCase();
-    }
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      const city = d.city || d.location_city || d.locationCity || d.current_city || d.currentCity || "";
+      const province = d.province || d.state || d.region || d.location_province || d.locationProvince || d.current_province || d.currentProvince || "";
+      const country = d.country || d.location_country || d.locationCountry || d.current_country || d.currentCountry || "";
 
-    return "";
-  }
+      const rawGender = d.gender === "self_describe"
+        ? (d.gender_custom || d.genderCustom || "")
+        : (d.gender || "");
 
-  function getVisitedPlaces(uid, allPlacesRows, placeVisitsRows) {
-    const placeMapExact = new Map();
-    const placeMapLoose = new Map();
-
-    allPlacesRows.forEach(row => {
-      const base = normalizePlace(row, row.id || "");
-      if (base.hidden) return;
-
-      const exactKey = buildPlaceKey(base.source, base.id);
-      placeMapExact.set(exactKey, base);
-      placeMapLoose.set(base.id, base);
-    });
-
-    const visitMapExact = new Map();
-    const visitMapLoose = new Map();
-
-    (placeVisitsRows || []).forEach(raw => {
-      const userId = raw.user_id || raw.userId || raw.uid || raw.member_id || raw.memberId || "";
-      if (userId !== uid) return;
-
-      const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || raw.id || "";
-      const source = raw.source || raw.place_source || raw.placeSource || "";
-      const statusRaw = String(raw.status || raw.type || "").toLowerCase();
-
-      if (!placeId) return;
-
-      let status = "";
-      if (statusRaw.includes("visited")) status = "visited";
-      else if (statusRaw.includes("explored")) status = "explored";
-      else if (raw.visited === true) status = "visited";
-      else if (raw.explored === true) status = "explored";
-      else status = "visited";
-
-      const record = { placeId, source, userStatus: status };
-
-      if (source) visitMapExact.set(buildPlaceKey(source, placeId), record);
-      visitMapLoose.set(placeId, record);
-    });
-
-    allPlacesRows.forEach(raw => {
-      const detectedStatus = getPlaceStatusFromDoc(raw, uid);
-      if (!detectedStatus) return;
-
-      const base = normalizePlace(raw, raw.id || "");
-      if (base.hidden) return;
-
-      const record = {
-        placeId: base.id,
-        source: base.source,
-        userStatus: detectedStatus
+      return {
+        uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
+        displayName: d.display_name || d.displayName || d.name || d.fullName || d.full_name || d.username || "Member",
+        username: d.username || d.handle || d.userName || d.user_name || "",
+        bio: d.bio || d.about || d.description || "",
+        photoURL: d.photo_url || d.photoURL || d.avatar || d.avatarUrl || d.userPhotoURL || d.user_photo_url || "",
+        isPrivate: getBool(d, ["is_private", "isPrivate", "privateProfile", "private_profile", "private", "accountPrivate", "account_private"]),
+        moderationStatus: d.moderation_status || d.moderationStatus || d.status || "",
+        warningUntil: d.warning_until || d.warningUntil || null,
+        verified: getBool(d, ["verified", "is_verified", "isVerified"]),
+        verificationType: d.verification_type || d.verificationType || d.badge_type || d.badgeType || "",
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"]),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"]),
+        blockedUsers: Array.isArray(d.blocked_users) ? d.blocked_users : (Array.isArray(d.blockedUsers) ? d.blockedUsers : []),
+        links: extractProfileLinks(d),
+        city,
+        province,
+        country,
+        cityVisible: getBool(d, ["city_visible", "cityVisible"]),
+        gender: rawGender,
+        genderVisible: getBool(d, ["gender_visible", "genderVisible"]),
+        trustScore: clampNumber(getField(d, ["trust_score", "trustScore"], 50), 0, 100, 50),
+        pointsBalance: clampNumber(getField(d, ["points_balance", "pointsBalance", "earned_points", "earnedPoints"], 0), 0, 999999999, 0)
       };
-
-      if (base.source) visitMapExact.set(buildPlaceKey(base.source, base.id), record);
-      visitMapLoose.set(base.id, record);
-    });
-
-    const finalMap = new Map();
-
-    visitMapExact.forEach((visit, exactKey) => {
-      const base = placeMapExact.get(exactKey);
-      if (base) finalMap.set(exactKey, { ...base, userStatus: visit.userStatus });
-    });
-
-    visitMapLoose.forEach((visit, placeId) => {
-      const existingExact = Array.from(finalMap.values()).find(v => v.id === placeId);
-      if (existingExact) return;
-
-      const base = placeMapLoose.get(placeId);
-      if (base) {
-        finalMap.set(`loose__${placeId}`, { ...base, userStatus: visit.userStatus });
-      }
-    });
-
-    return Array.from(finalMap.values());
-  }
-
-  function renderPlaces(list, container, emptyEl, type) {
-    container.innerHTML = "";
-
-    if (!list.length) {
-      container.classList.add("hidden");
-      emptyEl.classList.remove("hidden");
-      return;
     }
 
-    emptyEl.classList.add("hidden");
-    container.classList.remove("hidden");
+    function normalizeEvent(raw, fallbackId = "") {
+      const d = raw || {};
 
-    list.forEach(place => {
-      const card = document.createElement("div");
-      card.className = "place-card";
-
-      const statusBadge = type === "added"
-        ? `<span class="badge badge-added">Added</span>`
-        : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
-
-      card.innerHTML = `
-        <div class="place-title">${escapeHtml(place.name || "Untitled Place")}</div>
-
-        <div class="badge-row">
-          ${statusBadge}
-          ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
-        </div>
-
-        <div class="place-meta">
-          <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
-        </div>
-
-        <div class="place-desc">${escapeHtml(place.description || "No description added.")}</div>
-      `;
-
-      container.appendChild(card);
-    });
-  }
-
-  async function loadEverything(uid) {
-    const [
-      userRow,
-      publicRow,
-      postsRes,
-      eventsRes,
-      eventMembersRes,
-      followsRes,
-      publicProfilesRes,
-      usersRes,
-      placesRes,
-      placeVisitsRes
-    ] = await Promise.all([
-      fetchSingleByUid(PROFILE_TABLES.users, uid),
-      fetchSingleByUid(PROFILE_TABLES.publicProfiles, uid),
-      selectAllAvailable(POSTS_TABLES),
-      selectAllAvailable(EVENTS_TABLES),
-      selectAllAvailable(EVENT_MEMBERS_TABLES),
-      selectAllAvailable(FOLLOWS_TABLES),
-      selectAllAvailable(PROFILE_TABLES.publicProfiles),
-      selectAllAvailable(PROFILE_TABLES.users),
-      selectAllAvailable(PLACES_TABLES),
-      selectAllAvailable(PLACE_VISITS_TABLES)
-    ]);
-
-    const mergedProfile = mergeProfiles(
-      publicRow ? normalizeProfile(publicRow, uid) : null,
-      userRow ? normalizeProfile(userRow, uid) : null,
-      uid
-    );
-
-    currentProfile = mergedProfile;
-
-    displayNameEl.textContent = mergedProfile.displayName || "Member";
-    verifiedDot.classList.toggle("hidden", !mergedProfile.verified);
-
-    if (mergedProfile.username) {
-      usernameText.textContent = "@" + mergedProfile.username;
-      usernameText.classList.remove("hidden");
-    } else {
-      usernameText.classList.add("hidden");
+      return {
+        id: d.id || fallbackId || "",
+        title: d.title || d.name || "Untitled Event",
+        description: d.description || d.desc || "",
+        city: d.city || d.location_city || d.locationCity || "",
+        date: d.date || "",
+        time: d.time || "",
+        visibility: d.visibility || d.event_visibility || d.eventVisibility || "public",
+        creatorId: d.creator_id || d.creatorId || d.user_id || d.userId || d.created_by || d.createdBy || d.uid || "",
+        creatorName: d.creator_name || d.creatorName || d.display_name || d.displayName || d.host_name || d.hostName || "Member",
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted"
+      };
     }
 
-    bioEl.textContent = mergedProfile.bio?.trim() ? mergedProfile.bio : "No bio added yet.";
-    renderProfileMeta(mergedProfile);
-    renderLinks(mergedProfile.links || []);
-    showAvatar(mergedProfile.photoURL || "");
-    applyModerationBadge(mergedProfile.moderationStatus, mergedProfile.warningUntil);
-    setPrivacyButton(mergedProfile.isPrivate);
+    function normalizePlace(raw, fallbackId = "") {
+      const d = raw || {};
 
-    const blockedUsers = Array.isArray(mergedProfile.blockedUsers) ? mergedProfile.blockedUsers : [];
+      return {
+        id: d.id || fallbackId || "",
+        source: d.source || d.place_source || d.placeSource || d.__table || "",
+        name: d.name || d.title || d.place_name || d.placeName || "Untitled Place",
+        category: d.category || d.topic || "General",
+        city: d.city || d.location_city || d.locationCity || "",
+        description: d.description || d.desc || "",
+        imageURL: d.image_url || d.imageURL || d.imageUrl || d.photo_url || d.photoURL || d.media_url || d.mediaUrl || "",
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
+        creatorId: d.creator_id || d.creatorId || d.created_by || d.createdBy || d.user_id || d.userId || d.owner_id || d.ownerId || ""
+      };
+    }
 
-    dashboardPosts = (postsRes.data || [])
-      .filter(p => getPostOwnerId(p) === uid && !isHiddenRow(p))
-      .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+    function normalizeCommunity(raw, fallbackId = "") {
+      const d = raw || {};
 
-    dashboardVisibleCount = 10;
-    postsCountEl.textContent = String(dashboardPosts.length);
-    renderDashboardPosts();
+      return {
+        id: d.id || fallbackId || "",
+        name: d.name || d.title || d.community_name || d.communityName || "Untitled Community",
+        description: d.description || d.desc || d.about || "",
+        privacy: d.privacy || d.visibility || d.type || "Public",
+        creatorId: d.creator_id || d.creatorId || d.created_by || d.createdBy || d.owner_id || d.ownerId || d.user_id || d.userId || d.uid || "",
+        memberCount: clampNumber(d.member_count ?? d.memberCount ?? d.members_count ?? d.membersCount ?? 0, 0, 9999999, 0),
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted"
+      };
+    }
 
-    const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
-    renderPhotos(photoPosts);
+    function mergeProfiles(a, b, uid = "") {
+      return normalizeProfile(
+        { ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" },
+        uid || b?.uid || a?.uid || ""
+      );
+    }
 
-    const allEvents = (eventsRes.data || [])
-      .map(d => normalizeEvent(d, d.id || ""))
-      .filter(e => !e.hidden);
+    function formatDate(value) {
+      if (!value) return "Just now";
 
-    const createdEvents = allEvents.filter(e => e.creatorId === uid);
+      try {
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return "Just now";
 
-    const eventMembers = (eventMembersRes.data || []);
-    const joinedEventIds = new Set(
-      eventMembers
-        .filter(row => {
-          const memberUid = row.user_id || row.userId || row.uid || row.member_id || row.memberId || "";
-          return memberUid === uid;
-        })
-        .map(row => row.event_id || row.eventId || "")
-        .filter(Boolean)
-    );
+        const now = Date.now();
+        const diff = now - d.getTime();
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
 
-    const joinedEvents = allEvents.filter(e => joinedEventIds.has(e.id) && e.creatorId !== uid);
+        if (diff < minute) return "Now";
+        if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+        if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+        if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
 
-    renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
-    renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
-
-    const follows = (followsRes.data || []);
-    const followers = follows
-      .filter(f => (f.following_id || f.followingId) === uid)
-      .map(f => f.follower_id || f.followerId)
-      .filter(Boolean);
-
-    const following = follows
-      .filter(f => (f.follower_id || f.followerId) === uid)
-      .map(f => f.following_id || f.followingId)
-      .filter(Boolean);
-
-    followersCountEl.textContent = String(followers.filter(id => !blockedUsers.includes(id)).length);
-    followingCountEl.textContent = String(following.filter(id => !blockedUsers.includes(id)).length);
-
-    const profilesMap = new Map();
-
-    (usersRes.data || []).forEach(row => {
-      const p = normalizeProfile(row, row.uid || row.id || "");
-      const key = p.uid || row.uid || row.id || "";
-      if (key) profilesMap.set(key, p);
-    });
-
-    (publicProfilesRes.data || []).forEach(row => {
-      const p = normalizeProfile(row, row.uid || row.id || "");
-      const key = p.uid || row.uid || row.id || "";
-      if (!key) return;
-
-      if (profilesMap.has(key)) {
-        profilesMap.set(key, mergeProfiles(profilesMap.get(key), p, key));
-      } else {
-        profilesMap.set(key, p);
+        return d.toLocaleDateString([], { month: "short", day: "numeric" });
+      } catch {
+        return "Just now";
       }
-    });
+    }
 
-    renderPeople(followers, profilesMap, blockedUsers, followersList, followersEmpty, "No followers yet.");
-    renderPeople(following, profilesMap, blockedUsers, followingList, followingEmpty, "Not following anyone yet.");
+    async function sharePost(postId) {
+      const url = new URL("post.html", window.location.href);
+      url.searchParams.set("postId", postId);
 
-    const allPlaces = (placesRes.data || [])
-      .map(d => normalizePlace(d, d.id || ""))
-      .filter(place => !place.hidden);
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: "Check this post on OwnSpace",
+            text: "Check this post on OwnSpace",
+            url: url.toString()
+          });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url.toString());
+          alert("Post link copied.");
+        } else {
+          prompt("Copy this post link:", url.toString());
+        }
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
+    }
 
-    const addedPlaces = allPlaces
-      .filter(place => place.creatorId === uid)
-      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    function showAvatar(url) {
+      const cleanUrl = String(url || "").trim();
 
-    const visitedPlaces = getVisitedPlaces(uid, placesRes.data || [], placeVisitsRes.data || [])
-      .filter(place => place.creatorId !== uid || place.userStatus)
-      .sort((a, b) => {
-        if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
-        if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
-        return (a.name || "").localeCompare(b.name || "");
-      });
-
-    renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
-    renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
-
-    loading.classList.add("hidden");
-    content.classList.remove("hidden");
-    openTab("dashboardTab");
-    closeNetwork();
-  }
-
-  async function initProfilePage() {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-
-      const uid = data?.session?.user?.id || "";
-      if (!uid) {
-        window.location.href = "login.html";
+      if (!cleanUrl) {
+        avatar.classList.add("hidden");
+        avatar.removeAttribute("src");
+        avatarPlaceholder.classList.remove("hidden");
         return;
       }
 
-      currentUserId = uid;
-      await loadEverything(uid);
-    } catch (err) {
-      console.error("Profile load error:", err);
-      loading.textContent = "Error loading profile.";
+      avatar.src = cleanUrl;
+      avatar.classList.remove("hidden");
+      avatarPlaceholder.classList.add("hidden");
     }
-  }
 
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_OUT" || !session?.user) {
-      window.location.href = "login.html";
+    avatar.addEventListener("error", () => {
+      avatar.classList.add("hidden");
+      avatarPlaceholder.classList.remove("hidden");
+    });
+
+    function applyModerationBadge(status, warningUntil) {
+      moderationBadge.className = "moderation-badge hidden";
+      moderationBadge.textContent = "!";
+
+      if (status === "banned") {
+        moderationBadge.className = "moderation-badge moderation-ban";
+        return;
+      }
+
+      if (status === "warned" && warningUntil) {
+        const untilMs = new Date(warningUntil).getTime();
+        if (!Number.isNaN(untilMs) && Date.now() < untilMs) {
+          moderationBadge.className = "moderation-badge moderation-warn";
+        }
+      }
     }
-  });
 
-  initProfilePage();
+    function renderLinks(links) {
+      linksWrap.innerHTML = "";
 
-  /*
-    SUPABASE NEEDS FOR THIS PAGE:
+      if (!Array.isArray(links) || !links.length) {
+        linksBlock.classList.add("hidden");
+        return;
+      }
 
-    TABLES:
-    - users: select, upsert
-    - public_profiles: select, upsert
-    - posts: select
-    - events: select
-    - event_members: select
-    - follows: select
-    - places: select
-    - nearby_places: select
-    - nudist_places: select
-    - place_visits: select
+      links.forEach((item, index) => {
+        const a = document.createElement("a");
+        a.className = "profile-link";
+        a.href = item.href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.innerHTML = `${ICONS.external}<span>${escapeHtml(item.label || getLinkLabel(item.href, index === 0 ? "Website" : "Social"))}</span>`;
+        linksWrap.appendChild(a);
+      });
 
-    AUTH:
-    - logged-in user required
+      linksBlock.classList.remove("hidden");
+    }
 
-    SHARE BUTTON:
-    - Added on Dashboard post cards.
-    - Uses native mobile share sheet when available.
-    - Desktop fallback copies post.html?postId=POST_ID.
-  */
-</script>
+    function renderProfileMeta(profile) {
+      let hasMeta = false;
+
+      const locationParts = [profile.city, profile.province, profile.country].filter(Boolean);
+
+      if (profile.cityVisible && locationParts.length) {
+        locationChip.textContent = locationParts.join(", ");
+        locationChip.classList.remove("hidden");
+        hasMeta = true;
+      } else {
+        locationChip.classList.add("hidden");
+        locationChip.textContent = "";
+      }
+
+      if (profile.genderVisible && String(profile.gender || "").trim()) {
+        genderChip.textContent = profile.gender;
+        genderChip.classList.remove("hidden");
+        hasMeta = true;
+      } else {
+        genderChip.classList.add("hidden");
+        genderChip.textContent = "";
+      }
+
+      profileMeta.classList.toggle("hidden", !hasMeta);
+    }
+
+    function setPrivacyButton(isPrivate) {
+      const label = privacyToggleBtn.querySelector("span") || privacyToggleBtn;
+      label.textContent = isPrivate ? "Private" : "Public";
+      privacyToggleBtn.className = `owner-btn ${isPrivate ? "private" : "public"}`;
+    }
+
+    async function togglePrivacy() {
+      if (!currentUserId || !currentProfile) return;
+
+      const nextValue = !currentProfile.isPrivate;
+      privacyToggleBtn.disabled = true;
+
+      try {
+        const payload = {
+          uid: currentUserId,
+          is_private: nextValue,
+          isPrivate: nextValue,
+          updated_at: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const usersRes = await selectFirstAvailable(PROFILE_TABLES.users);
+        const usersTable = usersRes.table || "users";
+
+        const publicRes = await selectFirstAvailable(PROFILE_TABLES.publicProfiles);
+        const publicTable = publicRes.table || "public_profiles";
+
+        await Promise.all([
+          supabase.from(usersTable).upsert(payload, { onConflict: "uid" }),
+          supabase.from(publicTable).upsert(payload, { onConflict: "uid" })
+        ]);
+
+        currentProfile.isPrivate = nextValue;
+        setPrivacyButton(nextValue);
+      } catch (err) {
+        console.error("Privacy update error:", err);
+        alert("Could not update privacy.");
+      }
+
+      privacyToggleBtn.disabled = false;
+    }
+
+    privacyToggleBtn.addEventListener("click", togglePrivacy);
+
+    function openTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll("#dashboardTab, #photosTab, #eventsTab, #placesTab, #communitiesTab").forEach(el => el.classList.add("hidden"));
+
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      if (btn) btn.classList.add("active");
+
+      const panel = document.getElementById(tabId);
+      if (panel) panel.classList.remove("hidden");
+    }
+
+    function openNetwork(sectionId) {
+      networkShell.classList.remove("hidden");
+      setTimeout(() => {
+        const target = document.getElementById(sectionId);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
+    }
+
+    function closeNetwork() {
+      networkShell.classList.add("hidden");
+    }
+
+    closeNetworkBtn.addEventListener("click", closeNetwork);
+
+    postsStat.addEventListener("click", () => openTab("dashboardTab"));
+    followersStat.addEventListener("click", () => openNetwork("followersSection"));
+    followingStat.addEventListener("click", () => openNetwork("followingSection"));
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => openTab(btn.dataset.tab));
+    });
+
+    function getCreatedMs(obj) {
+      const value = obj?.created_at || obj?.createdAt || obj?.timestamp || null;
+      if (!value) return 0;
+      const ms = new Date(value).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    function getPostOwnerId(post) {
+      return post?.user_id || post?.userId || post?.author_id || post?.authorId || post?.owner_id || post?.ownerId || post?.uid || "";
+    }
+
+    function getPostImage(post) {
+      return post?.image_url || post?.imageURL || post?.imageUrl || post?.photo_url || post?.photoURL || post?.media_url || post?.mediaUrl || "";
+    }
+
+    function getPostCaption(post) {
+      return post?.caption || post?.text || post?.content || "";
+    }
+
+    function isHiddenRow(row) {
+      return !!(
+        row?.hidden ||
+        row?.hidden_by_admin ||
+        row?.hiddenByAdmin ||
+        row?.soft_deleted ||
+        row?.softDeleted
+      ) || String(row?.status || "").toLowerCase() === "deleted";
+    }
+
+    function renderDashboardPosts() {
+      dashboardList.innerHTML = "";
+
+      if (!dashboardPosts.length) {
+        dashboardList.classList.add("hidden");
+        dashboardEmpty.classList.remove("hidden");
+        showMoreWrap.classList.add("hidden");
+        return;
+      }
+
+      dashboardEmpty.classList.add("hidden");
+      dashboardList.classList.remove("hidden");
+
+      const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
+
+      visiblePosts.forEach(post => {
+        const postId = post.id || "";
+        const caption = getPostCaption(post);
+        const imageUrl = getPostImage(post);
+
+        const card = document.createElement("div");
+        card.className = "dashboard-card";
+
+        card.innerHTML = `
+          <a class="dashboard-post-link" href="post.html?postId=${encodeURIComponent(postId)}">
+            <div class="dashboard-top">
+              <div class="dashboard-label">Recent Post</div>
+              <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
+            </div>
+            ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
+            ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
+          </a>
+
+          <div class="card-actions">
+            <a href="post.html?postId=${encodeURIComponent(postId)}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
+            <button class="mini-btn btn-green share-btn" data-post-id="${escapeHtml(postId)}" type="button">${ICONS.share}<span>Share</span></button>
+          </div>
+        `;
+
+        const img = card.querySelector(".dashboard-image");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+        }
+
+        const shareBtn = card.querySelector(".share-btn");
+        if (shareBtn) {
+          shareBtn.addEventListener("click", async () => {
+            await sharePost(postId);
+          });
+        }
+
+        dashboardList.appendChild(card);
+      });
+
+      showMoreWrap.classList.toggle("hidden", dashboardPosts.length <= dashboardVisibleCount);
+    }
+
+    showMoreBtn.addEventListener("click", () => {
+      dashboardVisibleCount += 10;
+      renderDashboardPosts();
+    });
+
+    function renderPhotos(posts) {
+      photosGrid.innerHTML = "";
+
+      if (!posts.length) {
+        photosGrid.classList.add("hidden");
+        photosEmpty.classList.remove("hidden");
+        return;
+      }
+
+      photosEmpty.classList.add("hidden");
+      photosGrid.classList.remove("hidden");
+
+      posts.forEach(post => {
+        const imageUrl = getPostImage(post);
+        if (!imageUrl) return;
+
+        const tile = document.createElement("a");
+        tile.className = "photo-tile";
+        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+        tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
+
+        const img = tile.querySelector("img");
+        img.addEventListener("error", () => {
+          tile.remove();
+
+          if (!photosGrid.children.length) {
+            photosGrid.classList.add("hidden");
+            photosEmpty.classList.remove("hidden");
+          }
+        });
+
+        photosGrid.appendChild(tile);
+      });
+
+      if (!photosGrid.children.length) {
+        photosGrid.classList.add("hidden");
+        photosEmpty.classList.remove("hidden");
+      }
+    }
+
+    function renderEvents(list, container, emptyEl, typeLabel) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(event => {
+        const card = document.createElement("div");
+        card.className = "event-card";
+
+        card.innerHTML = `
+          <div class="card-title">${escapeHtml(event.title || "Untitled Event")}</div>
+
+          <div class="badge-row">
+            ${event.visibility === "private" ? `<span class="badge badge-private">Private</span>` : ``}
+            <span class="badge ${typeLabel === "Created" ? "badge-created" : "badge-joined"}">${typeLabel}</span>
+          </div>
+
+          <div class="card-meta">
+            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+            <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
+            <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+            <div><strong>Host:</strong> ${escapeHtml(event.creatorName || "Member")}</div>
+          </div>
+
+          <div class="card-desc">${escapeHtml(event.description || "No description added.")}</div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderPlaces(list, container, emptyEl, type) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(place => {
+        const card = document.createElement("div");
+        card.className = "place-card";
+
+        const statusBadge = type === "added"
+          ? `<span class="badge badge-added">Added</span>`
+          : `<span class="badge ${place.userStatus === "explored" ? "badge-explored" : "badge-visited"}">${place.userStatus === "explored" ? "Explored" : "Visited"}</span>`;
+
+        card.innerHTML = `
+          <div class="card-title">${escapeHtml(place.name || "Untitled Place")}</div>
+
+          <div class="badge-row">
+            ${statusBadge}
+            ${place.category ? `<span class="badge badge-joined">${escapeHtml(place.category)}</span>` : ""}
+          </div>
+
+          <div class="card-meta">
+            <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
+          </div>
+
+          <div class="card-desc">${escapeHtml(place.description || "No description added.")}</div>
+
+          <div class="card-actions">
+            <a href="place.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source || "")}" class="mini-btn btn-blue">${ICONS.open}<span>Open Place</span></a>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderCommunities(list, container, emptyEl, typeLabel) {
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      container.classList.remove("hidden");
+
+      list.forEach(community => {
+        const card = document.createElement("div");
+        card.className = "community-card";
+
+        card.innerHTML = `
+          <div class="card-title">${escapeHtml(community.name || "Untitled Community")}</div>
+
+          <div class="badge-row">
+            <span class="badge badge-community">${escapeHtml(typeLabel)}</span>
+            <span class="badge badge-visited">${escapeHtml(community.privacy || "Public")}</span>
+            <span class="badge badge-created">${escapeHtml(String(community.memberCount || 0))} members</span>
+          </div>
+
+          <div class="card-desc">${escapeHtml(community.description || "No description added.")}</div>
+
+          <div class="card-actions">
+            <a href="community.html?communityId=${encodeURIComponent(community.id)}" class="mini-btn btn-blue">${ICONS.open}<span>Open Community</span></a>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderPeople(ids, profilesMap, blockedUsers, listEl, emptyEl, emptyText) {
+      listEl.innerHTML = "";
+
+      const uniqueIds = [...new Set(ids.filter(Boolean))]
+        .filter(uid => !blockedUsers.includes(uid));
+
+      if (!uniqueIds.length) {
+        emptyEl.textContent = emptyText;
+        listEl.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      const usable = uniqueIds.filter(uid => {
+        const p = profilesMap.get(uid) || {};
+        return !p.softDeleted && !p.isHiddenByAdmin && p.moderationStatus !== "banned";
+      });
+
+      if (!usable.length) {
+        emptyEl.textContent = emptyText;
+        listEl.classList.add("hidden");
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      listEl.classList.remove("hidden");
+
+      usable.forEach(uid => {
+        const p = profilesMap.get(uid) || {};
+        const card = document.createElement("div");
+        card.className = "person-card";
+
+        const avatarHtml = p.photoURL
+          ? `<img class="person-avatar" src="${escapeHtml(p.photoURL)}" alt="Profile Photo">`
+          : `<div class="person-avatar-placeholder">No photo</div>`;
+
+        card.innerHTML = `
+          ${avatarHtml}
+          <div class="person-body">
+            <div class="person-name">
+              <a href="member.html?uid=${encodeURIComponent(uid)}">
+                ${escapeHtml(p.displayName || "Member")}
+              </a>
+            </div>
+            ${p.username ? `<div class="person-username">@${escapeHtml(p.username)}</div>` : ""}
+            ${p.bio ? `<div class="person-sub">${escapeHtml(p.bio)}</div>` : ``}
+          </div>
+        `;
+
+        const img = card.querySelector(".person-avatar");
+        if (img) {
+          img.addEventListener("error", () => {
+            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        listEl.appendChild(card);
+      });
+    }
+
+    function buildPlaceKey(source, placeId) {
+      return `${String(source || "").trim()}__${String(placeId || "").trim()}`;
+    }
+
+    function getPlaceStatusFromDoc(place, uid) {
+      const arrayVisitedFields = ["visitedBy", "visited_users", "visitedUsers", "visitors"];
+      const arrayExploredFields = ["exploredBy", "explored_users", "exploredUsers", "explorers"];
+
+      for (const key of arrayVisitedFields) {
+        if (Array.isArray(place[key]) && place[key].includes(uid)) return "visited";
+      }
+
+      for (const key of arrayExploredFields) {
+        if (Array.isArray(place[key]) && place[key].includes(uid)) return "explored";
+      }
+
+      if (place.user_statuses && typeof place.user_statuses === "object" && place.user_statuses[uid]) {
+        return String(place.user_statuses[uid]).toLowerCase();
+      }
+
+      if (place.userStatuses && typeof place.userStatuses === "object" && place.userStatuses[uid]) {
+        return String(place.userStatuses[uid]).toLowerCase();
+      }
+
+      return "";
+    }
+
+    function getVisitedPlaces(uid, allPlacesRows, placeVisitsRows) {
+      const placeMapExact = new Map();
+      const placeMapLoose = new Map();
+
+      allPlacesRows.forEach(row => {
+        const base = normalizePlace(row, row.id || "");
+        if (base.hidden) return;
+
+        const exactKey = buildPlaceKey(base.source, base.id);
+        placeMapExact.set(exactKey, base);
+        placeMapLoose.set(base.id, base);
+      });
+
+      const visitMapExact = new Map();
+      const visitMapLoose = new Map();
+
+      (placeVisitsRows || []).forEach(raw => {
+        const userId = raw.user_id || raw.userId || raw.uid || raw.member_id || raw.memberId || "";
+        if (userId !== uid) return;
+
+        const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
+        const source = raw.source || raw.place_source || raw.placeSource || "";
+        const statusRaw = String(raw.status || raw.type || "").toLowerCase();
+
+        if (!placeId) return;
+
+        let status = "";
+        if (statusRaw.includes("visited")) status = "visited";
+        else if (statusRaw.includes("explored")) status = "explored";
+        else if (raw.visited === true) status = "visited";
+        else if (raw.explored === true) status = "explored";
+        else status = "visited";
+
+        const record = { placeId, source, userStatus: status };
+
+        if (source) visitMapExact.set(buildPlaceKey(source, placeId), record);
+        visitMapLoose.set(placeId, record);
+      });
+
+      allPlacesRows.forEach(raw => {
+        const detectedStatus = getPlaceStatusFromDoc(raw, uid);
+        if (!detectedStatus) return;
+
+        const base = normalizePlace(raw, raw.id || "");
+        if (base.hidden) return;
+
+        const record = {
+          placeId: base.id,
+          source: base.source,
+          userStatus: detectedStatus
+        };
+
+        if (base.source) visitMapExact.set(buildPlaceKey(base.source, base.id), record);
+        visitMapLoose.set(base.id, record);
+      });
+
+      const finalMap = new Map();
+
+      visitMapExact.forEach((visit, exactKey) => {
+        const base = placeMapExact.get(exactKey);
+        if (base) finalMap.set(exactKey, { ...base, userStatus: visit.userStatus });
+      });
+
+      visitMapLoose.forEach((visit, placeId) => {
+        const existingExact = Array.from(finalMap.values()).find(v => v.id === placeId);
+        if (existingExact) return;
+
+        const base = placeMapLoose.get(placeId);
+        if (base) {
+          finalMap.set(`loose__${placeId}`, { ...base, userStatus: visit.userStatus });
+        }
+      });
+
+      return Array.from(finalMap.values());
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+
+      for (const col of targetColumns) {
+        try {
+          const { count, error } = await supabase
+            .from("message_requests")
+            .select("id", { count: "exact", head: true })
+            .eq(col, uid)
+            .eq("status", "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadgeCount(uid) {
+      try {
+        const [requests, messages] = await Promise.all([
+          countPendingMessageRequests(uid),
+          countUnreadChatMessages(uid)
+        ]);
+
+        const unreadTotal = Number(requests || 0) + Number(messages || 0);
+
+        if (!unreadTotal) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
+    async function loadEverything(uid) {
+      const [
+        userRow,
+        publicRow,
+        postsRes,
+        eventsRes,
+        eventMembersRes,
+        followsRes,
+        publicProfilesRes,
+        usersRes,
+        placesRes,
+        placeVisitsRes,
+        communitiesRes,
+        communityMembersRes
+      ] = await Promise.all([
+        fetchSingleProfile(PROFILE_TABLES.users, uid),
+        fetchSingleProfile(PROFILE_TABLES.publicProfiles, uid),
+        selectAllAvailable(POSTS_TABLES),
+        selectAllAvailable(EVENTS_TABLES),
+        selectAllAvailable(EVENT_MEMBERS_TABLES),
+        selectAllAvailable(FOLLOWS_TABLES),
+        selectAllAvailable(PROFILE_TABLES.publicProfiles),
+        selectAllAvailable(PROFILE_TABLES.users),
+        selectAllAvailable(PLACES_TABLES),
+        selectAllAvailable(PLACE_VISITS_TABLES),
+        selectAllAvailable(COMMUNITIES_TABLES),
+        selectAllAvailable(COMMUNITY_MEMBERS_TABLES)
+      ]);
+
+      const mergedProfile = mergeProfiles(
+        publicRow ? normalizeProfile(publicRow, uid) : null,
+        userRow ? normalizeProfile(userRow, uid) : null,
+        uid
+      );
+
+      currentProfile = mergedProfile;
+
+      displayNameEl.textContent = mergedProfile.displayName || "Member";
+      verifiedDot.classList.toggle("hidden", !mergedProfile.verified);
+
+      if (mergedProfile.username) {
+        usernameText.textContent = "@" + mergedProfile.username;
+        usernameText.classList.remove("hidden");
+      } else {
+        usernameText.classList.add("hidden");
+      }
+
+      bioEl.textContent = mergedProfile.bio?.trim() ? mergedProfile.bio : "No bio added yet.";
+      renderProfileMeta(mergedProfile);
+      renderLinks(mergedProfile.links || []);
+      showAvatar(mergedProfile.photoURL || "");
+      applyModerationBadge(mergedProfile.moderationStatus, mergedProfile.warningUntil);
+      setPrivacyButton(mergedProfile.isPrivate);
+
+      trustLabel.textContent = `${mergedProfile.trustScore}%`;
+      trustFill.style.width = `${mergedProfile.trustScore}%`;
+      pointsPill.textContent = `${mergedProfile.pointsBalance} pts`;
+
+      const blockedUsers = Array.isArray(mergedProfile.blockedUsers) ? mergedProfile.blockedUsers : [];
+
+      dashboardPosts = (postsRes.data || [])
+        .filter(p => getPostOwnerId(p) === uid && !isHiddenRow(p))
+        .sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+
+      dashboardVisibleCount = 10;
+      postsCountEl.textContent = String(dashboardPosts.length);
+      renderDashboardPosts();
+
+      const photoPosts = dashboardPosts.filter(p => String(getPostImage(p) || "").trim());
+      renderPhotos(photoPosts);
+
+      const allEvents = (eventsRes.data || [])
+        .map(d => normalizeEvent(d, d.id || ""))
+        .filter(e => !e.hidden);
+
+      const createdEvents = allEvents.filter(e => e.creatorId === uid);
+
+      const eventMembers = eventMembersRes.data || [];
+      const joinedEventIds = new Set(
+        eventMembers
+          .filter(row => {
+            const memberUid = row.user_id || row.userId || row.uid || row.member_id || row.memberId || "";
+            return memberUid === uid;
+          })
+          .map(row => row.event_id || row.eventId || "")
+          .filter(Boolean)
+      );
+
+      const joinedEvents = allEvents.filter(e => joinedEventIds.has(e.id) && e.creatorId !== uid);
+
+      renderEvents(createdEvents, createdEventsGrid, createdEmpty, "Created");
+      renderEvents(joinedEvents, joinedEventsGrid, joinedEmpty, "Joined");
+
+      const follows = followsRes.data || [];
+      const followers = follows
+        .filter(f => (f.following_id || f.followingId) === uid)
+        .map(f => f.follower_id || f.followerId)
+        .filter(Boolean);
+
+      const following = follows
+        .filter(f => (f.follower_id || f.followerId) === uid)
+        .map(f => f.following_id || f.followingId)
+        .filter(Boolean);
+
+      followersCountEl.textContent = String(followers.filter(id => !blockedUsers.includes(id)).length);
+      followingCountEl.textContent = String(following.filter(id => !blockedUsers.includes(id)).length);
+
+      const profilesMap = new Map();
+
+      (usersRes.data || []).forEach(row => {
+        const p = normalizeProfile(row, row.uid || row.id || row.user_id || "");
+        const key = p.uid || row.uid || row.id || row.user_id || "";
+        if (key) profilesMap.set(key, p);
+      });
+
+      (publicProfilesRes.data || []).forEach(row => {
+        const p = normalizeProfile(row, row.uid || row.id || row.user_id || "");
+        const key = p.uid || row.uid || row.id || row.user_id || "";
+        if (!key) return;
+
+        if (profilesMap.has(key)) {
+          profilesMap.set(key, mergeProfiles(profilesMap.get(key), p, key));
+        } else {
+          profilesMap.set(key, p);
+        }
+      });
+
+      renderPeople(followers, profilesMap, blockedUsers, followersList, followersEmpty, "No followers yet.");
+      renderPeople(following, profilesMap, blockedUsers, followingList, followingEmpty, "Not following anyone yet.");
+
+      const allPlaces = (placesRes.data || [])
+        .map(d => normalizePlace(d, d.id || ""))
+        .filter(place => !place.hidden);
+
+      const addedPlaces = allPlaces
+        .filter(place => place.creatorId === uid)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      const visitedPlaces = getVisitedPlaces(uid, placesRes.data || [], placeVisitsRes.data || [])
+        .filter(place => place.creatorId !== uid || place.userStatus)
+        .sort((a, b) => {
+          if (a.userStatus === "explored" && b.userStatus !== "explored") return -1;
+          if (b.userStatus === "explored" && a.userStatus !== "explored") return 1;
+          return (a.name || "").localeCompare(b.name || "");
+        });
+
+      renderPlaces(addedPlaces, addedPlacesGrid, addedPlacesEmpty, "added");
+      renderPlaces(visitedPlaces, visitedPlacesGrid, visitedPlacesEmpty, "visited");
+
+      const allCommunities = (communitiesRes.data || [])
+        .map(d => normalizeCommunity(d, d.id || ""))
+        .filter(c => !c.hidden);
+
+      const createdCommunities = allCommunities
+        .filter(c => c.creatorId === uid)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      const communityMemberIds = new Set(
+        (communityMembersRes.data || [])
+          .filter(row => {
+            const memberUid = row.user_id || row.userId || row.uid || row.member_id || row.memberId || "";
+            return memberUid === uid;
+          })
+          .map(row => row.community_id || row.communityId || row.group_id || row.groupId || "")
+          .filter(Boolean)
+      );
+
+      const joinedCommunities = allCommunities
+        .filter(c => communityMemberIds.has(c.id) && c.creatorId !== uid)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      renderCommunities(createdCommunities, createdCommunitiesGrid, createdCommunitiesEmpty, "Created");
+      renderCommunities(joinedCommunities, joinedCommunitiesGrid, joinedCommunitiesEmpty, "Joined");
+
+      await loadInboxBadgeCount(uid);
+
+      loading.classList.add("hidden");
+      content.classList.remove("hidden");
+      openTab("dashboardTab");
+      closeNetwork();
+    }
+
+    async function initProfilePage() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        const uid = data?.session?.user?.id || "";
+
+        if (!uid) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        currentUserId = uid;
+        await loadEverything(uid);
+      } catch (err) {
+        console.error("Profile load error:", err);
+        loading.textContent = "Error loading profile.";
+      }
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session?.user) {
+        window.location.href = "login.html";
+      }
+    });
+
+    initProfilePage();
+
+    /*
+      OWNSPACE PROFILE PAGE UPDATE:
+
+      FIXED:
+      - BareWorld renamed to OwnSpace.
+      - Green verified badge is now bright and clearly visible.
+      - Settings icon replaced with cleaner SVG.
+      - Profile area aligned like member.html.
+      - Public/Private + Edit controls are compact and do not cover profile.
+      - Links show website/domain labels, not generic Link 1 / Link 2.
+      - Added Trust Bar and Points display.
+      - Added Community tab after Places.
+      - Dashboard / Photos / Events / Places / Community are aligned in one row.
+      - Photos tab keeps grid layout.
+      - Network stays hidden until Followers/Following clicked.
+      - Inbox badge counts only pending message requests + unread chat messages.
+      - Share text updated to OwnSpace.
+    */
+  </script>
 </body>
 </html>
