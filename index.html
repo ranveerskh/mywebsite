@@ -460,8 +460,7 @@
   </div>
 
   <script type="module">
-    import { auth } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { supabase } from "./supabase.js";
 
     const loader = document.getElementById("loader");
     const pageContent = document.getElementById("pageContent");
@@ -504,15 +503,43 @@
 
     themeBtn.addEventListener("click", toggleTheme);
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!error && data?.user) {
         window.location.href = "feed.html";
         return;
       }
 
       loader.classList.add("hidden");
       pageContent.classList.remove("hidden");
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          window.location.href = "feed.html";
+        }
+      });
+    }
+
+    initPage().catch((error) => {
+      console.error(error);
+      loader.classList.add("hidden");
+      pageContent.classList.remove("hidden");
     });
+
+    /*
+      SUPABASE NEEDS FOR THIS PAGE:
+
+      AUTH:
+      - supabase.auth.getUser()
+      - supabase.auth.onAuthStateChange()
+
+      TABLES:
+      - None
+
+      SHARE BUTTON:
+      - Not needed on this landing page because it does not display post cards.
+    */
   </script>
 </body>
 </html>
