@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - School</title>
+  <title>OwnSpace - Hub</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
@@ -47,11 +48,15 @@
     }
 
     body{
-      background:var(--bg);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:12px 12px 110px;
+      padding:10px 10px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
 
@@ -63,21 +68,22 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
-      margin-bottom:12px;
+      padding:7px 9px;
+      margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
-      width:44px;
-      height:44px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -85,26 +91,65 @@
       justify-content:center;
       text-decoration:none;
     }
-    .top-icon-btn svg{width:19px;height:19px;display:block}
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:20px;font-weight:800;line-height:1.05}
-    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      padding:14px;
-      margin-bottom:12px;
+      padding:13px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
     }
 
+    .hero-card{
+      position:relative;
+      overflow:hidden;
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.13), rgba(167,139,250,.10)),
+        var(--surface);
+    }
+
+    .hero-card:before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -120px auto;
+      width:230px;
+      height:230px;
+      border-radius:50%;
+      background:rgba(61,220,132,.08);
+      pointer-events:none;
+    }
+
     .hero-title{
-      font-size:18px;
-      font-weight:800;
+      position:relative;
+      font-size:21px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.03em;
       margin-bottom:6px;
     }
+
     .hero-sub{
+      position:relative;
       color:var(--muted);
       font-size:13px;
       line-height:1.55;
@@ -112,23 +157,27 @@
     }
 
     .chip-row{
+      position:relative;
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
       margin-bottom:12px;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:7px 11px;
+      padding:6px 10px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
+      font-size:11px;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
+      line-height:1;
     }
+
     .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
@@ -136,62 +185,152 @@
     .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
     .action-row{
+      position:relative;
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      align-items:center;
     }
-    .action-btn{
+
+    .action-btn,
+    .mini-btn{
       border:none;
       border-radius:12px;
-      padding:10px 13px;
-      font-size:13px;
-      font-weight:800;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:6px;
       cursor:pointer;
       min-height:40px;
-    }
-    .btn-primary{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .btn-soft{
-      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
+      background:var(--surface-2);
     }
-    .btn-purple{
+
+    .action-btn svg,
+    .mini-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .action-btn:disabled,
+    .mini-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-soft{background:var(--surface-2);border-color:var(--line)}
+
+    .founder-card{
+      display:grid;
+      grid-template-columns:66px 1fr;
+      gap:12px;
+      align-items:center;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .founder-avatar,
+    .founder-placeholder{
+      width:66px;
+      height:66px;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      flex-shrink:0;
+    }
+
+    .founder-avatar{object-fit:cover}
+
+    .founder-placeholder{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      text-align:center;
+      font-size:10px;
+      line-height:1.25;
+      padding:7px;
+    }
+
+    .founder-body{min-width:0}
+    .founder-label{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 9px;
+      border-radius:999px;
       background:rgba(167,139,250,.14);
+      border:1px solid rgba(167,139,250,.22);
       color:var(--text);
-      border:1px solid rgba(167,139,250,.20);
+      font-size:11px;
+      font-weight:950;
+      margin-bottom:6px;
+    }
+
+    .founder-name{
+      font-size:17px;
+      font-weight:950;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
+    .founder-user{
+      color:var(--blue);
+      font-size:12px;
+      font-weight:850;
+      margin-top:3px;
+      word-break:break-word;
+    }
+
+    .founder-bio{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      margin-top:5px;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
 
     .search-wrap{
       position:relative;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
+
     .search-box{
       width:100%;
       border:none;
       outline:none;
-      padding:14px 48px 14px 14px;
+      padding:13px 44px 13px 14px;
       border-radius:16px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       font-size:14px;
     }
+
     .search-box::placeholder{color:var(--muted)}
+
     .clear-btn{
       position:absolute;
       right:8px;
       top:50%;
       transform:translateY(-50%);
-      width:34px;
-      height:34px;
+      width:30px;
+      height:30px;
       border:none;
       border-radius:10px;
       background:var(--surface-3);
@@ -201,121 +340,345 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:14px;
-      font-weight:800;
+      font-size:13px;
+      font-weight:950;
     }
 
-    .category-row{
+    .tabs{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
+      gap:7px;
+      overflow-x:auto;
+      padding-bottom:2px;
+      margin-bottom:10px;
+      scrollbar-width:none;
     }
-    .category-btn{
+
+    .tabs::-webkit-scrollbar{display:none}
+
+    .tab-btn{
+      flex:0 0 auto;
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
       border-radius:999px;
-      padding:8px 12px;
+      padding:9px 12px;
       font-size:12px;
-      font-weight:800;
+      font-weight:950;
       cursor:pointer;
+      white-space:nowrap;
     }
-    .category-btn.active{
+
+    .tab-btn.active{
       background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .composer{
+      display:grid;
+      gap:10px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .composer-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .composer-title{
+      font-size:16px;
+      font-weight:950;
+      margin-bottom:4px;
+    }
+
+    .composer-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .field{
+      display:grid;
+      gap:6px;
+    }
+
+    .field.full{grid-column:1/-1}
+
+    .label{
+      font-size:12px;
+      font-weight:950;
+      color:var(--text);
+    }
+
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .textarea{
+      min-height:96px;
+      resize:vertical;
+      line-height:1.55;
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{color:var(--muted)}
+
+    .check-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .check-pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 11px;
+      font-size:12px;
+      font-weight:850;
+      color:var(--text);
+    }
+
+    .check-pill input{
+      accent-color:var(--blue);
+      transform:scale(1.05);
+    }
+
+    .file-box{
+      border:1px dashed var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:var(--surface-3);
+    }
+
+    .file-input{
+      width:100%;
+      color:var(--text);
+      font-size:13px;
+    }
+
+    .file-input::file-selector-button{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.20);
+      border-radius:10px;
+      padding:8px 10px;
+      margin-right:10px;
+      cursor:pointer;
+      font-weight:950;
+    }
+
+    .preview-wrap{
+      margin-top:10px;
+      display:none;
+    }
+
+    .preview-wrap.show{display:block}
+
+    .preview-img{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      display:block;
+    }
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .success{color:#86efac}
+    .error{color:#fda4af}
+
+    .loading-box,
+    .empty-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.55;
+    }
+
+    .featured-strip{
+      display:grid;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .section-small-title{
+      font-size:15px;
+      font-weight:950;
+      margin-bottom:8px;
     }
 
     .list{
       display:grid;
-      gap:12px;
+      gap:10px;
     }
-    .card{
+
+    .post-card{
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
-      padding:14px;
+      padding:12px;
+      overflow:hidden;
     }
+
+    .post-card.pinned{
+      border-color:rgba(245,185,66,.26);
+      background:linear-gradient(135deg, rgba(245,185,66,.08), transparent 35%), var(--surface-2);
+    }
+
     .cover{
       width:100%;
-      max-height:260px;
+      max-height:320px;
       object-fit:cover;
+      border-radius:15px;
       display:block;
-      border-radius:16px;
       background:var(--surface-3);
       border:1px solid var(--line);
-      margin-bottom:12px;
-    }
-    .card-title{
-      font-size:17px;
-      font-weight:800;
-      line-height:1.4;
-      margin-bottom:8px;
-    }
-    .badge-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
       margin-bottom:10px;
     }
-    .mini-badge{
+
+    .post-title{
+      font-size:17px;
+      font-weight:950;
+      line-height:1.35;
+      letter-spacing:-.01em;
+      margin-bottom:7px;
+      word-break:break-word;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:9px;
+    }
+
+    .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       padding:5px 9px;
       border-radius:999px;
       font-size:11px;
-      font-weight:800;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-3);
       color:var(--text);
+      line-height:1;
     }
-    .mini-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .mini-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .mini-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .mini-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
 
-    .summary{
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .post-summary{
       color:var(--text);
       line-height:1.55;
       font-size:14px;
       white-space:pre-wrap;
       word-break:break-word;
-      margin-bottom:12px;
+      margin-bottom:10px;
     }
-    .body{
+
+    .post-body{
       color:var(--text);
       line-height:1.65;
       font-size:14px;
       white-space:pre-wrap;
       word-break:break-word;
-      padding-top:12px;
-      margin-top:12px;
       border-top:1px solid var(--line-soft);
-    }
-    .card-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:12px;
+      padding-top:11px;
+      margin-top:10px;
     }
 
-    .loading-box{
-      text-align:center;
+    .credit-line{
       color:var(--muted);
-      padding:20px 10px;
-      background:var(--surface-2);
-      border-radius:16px;
-      border:1px dashed var(--line);
+      font-size:12px;
+      line-height:1.45;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:9px 10px;
+      margin-top:10px;
     }
-    .empty-box{
-      text-align:center;
-      padding:22px 10px;
-      color:var(--muted);
+
+    .poll-box{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+      padding:10px;
+      border-radius:15px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+    }
+
+    .poll-option{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border-radius:12px;
       background:var(--surface-2);
-      border-radius:16px;
-      border:1px dashed var(--line);
+      border:1px solid var(--line);
+      font-size:13px;
+      font-weight:850;
+    }
+
+    .poll-option span:last-child{
+      color:var(--muted);
+      flex-shrink:0;
+    }
+
+    .post-actions{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      align-items:center;
+    }
+
+    .share-btn{
+      margin-left:auto;
     }
 
     .bottom-nav{
@@ -330,10 +693,12 @@
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -342,27 +707,72 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
+      position:relative;
     }
-    .nav-link .icon{
-      font-size:18px;
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
       display:block;
     }
 
-    @media (max-width:700px){
-      body{padding:10px 10px 110px}
-      .brand{font-size:18px}
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
+
+    @media(max-width:700px){
+      body{padding:10px 10px 108px}
+      .brand{font-size:17px}
+      .panel{padding:11px;border-radius:20px}
+      .form-grid{grid-template-columns:1fr}
+      .founder-card{grid-template-columns:58px 1fr}
+      .founder-avatar,.founder-placeholder{width:58px;height:58px}
+      .action-row .action-btn,
+      .post-actions .mini-btn{flex:1}
+      .share-btn{margin-left:0}
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -373,11 +783,11 @@
       </a>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
-        <div class="brand-sub">School</div>
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Hub</div>
       </div>
 
-      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh school">
+      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh hub">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
           <path d="M21 3v6h-6"></path>
@@ -385,58 +795,249 @@
       </button>
     </div>
 
-    <div class="panel">
-      <div class="hero-title">School</div>
+    <div class="panel hero-card">
+      <div class="hero-title">OwnSpace Hub</div>
       <div class="hero-sub">
-        Learning space for guides, lessons, tips and explanations. You can update content later from your admin side.
+        Official updates, featured posts, learning content, safety notes, polls, articles and community guidance — all in one trusted place.
       </div>
 
       <div class="chip-row">
-        <span class="chip chip-blue" id="lessonCountChip">Lessons: -</span>
-        <span class="chip chip-purple" id="categoryCountChip">Categories: -</span>
-        <span class="chip chip-green" id="statusChip">Ready</span>
+        <span id="postCountChip" class="chip chip-blue">Posts: -</span>
+        <span id="featuredCountChip" class="chip chip-purple">Featured: -</span>
+        <span id="authorChip" class="chip chip-yellow">Author: checking</span>
+        <span id="statusChip" class="chip chip-green">Ready</span>
       </div>
 
       <div class="action-row">
-        <button id="refreshHeroBtn" class="action-btn btn-primary" type="button">Refresh</button>
-        <a href="feed.html" class="action-btn btn-soft">Back to Feed</a>
-        <a href="settings.html" class="action-btn btn-purple">Settings</a>
+        <button id="refreshHeroBtn" class="action-btn btn-primary" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+            <path d="M21 3v6h-6"></path>
+          </svg>
+          Refresh
+        </button>
+
+        <a href="feed.html" class="action-btn btn-soft">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5"></path>
+            <path d="M5 10v10h14V10"></path>
+          </svg>
+          Feed
+        </a>
+
+        <a href="settings.html" class="action-btn btn-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 2v3"></path>
+            <path d="M12 19v3"></path>
+            <path d="M2 12h3"></path>
+            <path d="M19 12h3"></path>
+            <path d="M4.9 4.9l2.1 2.1"></path>
+            <path d="M17 17l2.1 2.1"></path>
+            <path d="M19.1 4.9 17 7"></path>
+            <path d="M7 17l-2.1 2.1"></path>
+          </svg>
+          Settings
+        </a>
       </div>
+    </div>
+
+    <div id="founderPanel" class="panel hidden">
+      <div class="section-small-title">Featured Profile</div>
+      <div class="founder-card">
+        <img id="founderAvatar" class="founder-avatar hidden" alt="Founder profile photo" />
+        <div id="founderPlaceholder" class="founder-placeholder">No photo</div>
+
+        <div class="founder-body">
+          <div class="founder-label">Founder / Official Profile</div>
+          <div id="founderName" class="founder-name">Member</div>
+          <div id="founderUsername" class="founder-user hidden">@username</div>
+          <div id="founderBio" class="founder-bio">Official OwnSpace profile.</div>
+
+          <div class="action-row" style="margin-top:10px;">
+            <a id="founderProfileLink" href="profile.html" class="action-btn btn-primary">View Profile</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="composerPanel" class="panel hidden">
+      <form id="hubForm" class="composer">
+        <div class="composer-head">
+          <div>
+            <div class="composer-title">Create Hub Post</div>
+            <div class="composer-sub">Only admins and approved Hub authors can publish here.</div>
+          </div>
+
+          <button id="closeComposerBtn" type="button" class="action-btn btn-soft">Hide</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="label" for="postTitle">Title</label>
+            <input id="postTitle" class="input" type="text" placeholder="Post title" required />
+          </div>
+
+          <div class="field">
+            <label class="label" for="postType">Type</label>
+            <select id="postType" class="select">
+              <option value="update">Update</option>
+              <option value="learn">Learn</option>
+              <option value="safety">Safety</option>
+              <option value="poll">Poll</option>
+              <option value="article">Article</option>
+              <option value="photo">Photo</option>
+              <option value="featured">Featured</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label" for="postCategory">Category</label>
+            <input id="postCategory" class="input" type="text" placeholder="General, Etiquette, Safety..." />
+          </div>
+
+          <div class="field">
+            <label class="label" for="externalUrl">External Link</label>
+            <input id="externalUrl" class="input" type="text" placeholder="Optional link / credit source" />
+          </div>
+
+          <div class="field full">
+            <label class="label" for="postSummary">Short Description</label>
+            <textarea id="postSummary" class="textarea" placeholder="Short preview shown on card..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label class="label" for="postBody">Full Post / Article</label>
+            <textarea id="postBody" class="textarea" placeholder="Write the full update, lesson, article, credit note, etc..."></textarea>
+          </div>
+
+          <div class="field full" id="pollOptionsWrap">
+            <label class="label" for="pollOptions">Poll Options</label>
+            <textarea id="pollOptions" class="textarea" placeholder="One option per line. Example:&#10;Yes&#10;No&#10;Maybe"></textarea>
+          </div>
+
+          <div class="field full">
+            <label class="label" for="credits">Credits / Source Note</label>
+            <input id="credits" class="input" type="text" placeholder="Optional: source, article credit, author credit..." />
+          </div>
+
+          <div class="field full">
+            <label class="label">Photo Upload</label>
+            <div class="file-box">
+              <input id="imageFile" class="file-input" type="file" accept="image/*" />
+              <div class="preview-wrap" id="previewWrap">
+                <img id="previewImg" class="preview-img" alt="Preview" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field full">
+            <div class="check-row">
+              <label class="check-pill">
+                <input id="isFeaturedInput" type="checkbox" />
+                Featured
+              </label>
+
+              <label class="check-pill">
+                <input id="isPinnedInput" type="checkbox" />
+                Pin to top
+              </label>
+
+              <label class="check-pill">
+                <input id="isPublishedInput" type="checkbox" checked />
+                Published
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <button id="savePostBtn" type="submit" class="action-btn btn-green">Publish Hub Post</button>
+        <div id="composerMessage" class="message"></div>
+      </form>
     </div>
 
     <div class="panel">
       <div class="search-wrap">
-        <input id="searchInput" class="search-box" type="text" placeholder="Search lessons..." />
+        <input id="searchInput" class="search-box" type="text" placeholder="Search Hub posts, updates, safety, learn..." />
         <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
       </div>
 
-      <div id="categoryRow" class="category-row"></div>
+      <div class="tabs" id="tabsRow">
+        <button class="tab-btn active" data-filter="all" type="button">All</button>
+        <button class="tab-btn" data-filter="featured" type="button">Featured</button>
+        <button class="tab-btn" data-filter="update" type="button">Updates</button>
+        <button class="tab-btn" data-filter="learn" type="button">Learn</button>
+        <button class="tab-btn" data-filter="safety" type="button">Safety</button>
+        <button class="tab-btn" data-filter="poll" type="button">Polls</button>
+        <button class="tab-btn" data-filter="article" type="button">Articles</button>
+      </div>
 
-      <div id="listLoading" class="loading-box">Loading school content...</div>
+      <div id="authorActionRow" class="action-row hidden" style="margin-bottom:10px;">
+        <button id="showComposerBtn" type="button" class="action-btn btn-green">
+          Create Hub Post
+        </button>
+      </div>
+
+      <div id="featuredStrip" class="featured-strip hidden">
+        <div class="section-small-title">Pinned / Featured</div>
+        <div id="featuredList" class="list"></div>
+      </div>
+
+      <div id="listLoading" class="loading-box">Loading OwnSpace Hub...</div>
       <div id="listWrap" class="list hidden"></div>
-      <div id="emptyBox" class="empty-box hidden">No school lessons yet.</div>
+      <div id="emptyBox" class="empty-box hidden">No Hub posts yet.</div>
     </div>
   </div>
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
-    </a>
+
     <a href="search.html" class="nav-link">
-      <span class="icon">⌕</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
       <span>Search</span>
     </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
+    </a>
+
     <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -444,36 +1045,124 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
-    const lessonCountChip = document.getElementById("lessonCountChip");
-    const categoryCountChip = document.getElementById("categoryCountChip");
+    const STORAGE_BUCKET = "media";
+
+    const postCountChip = document.getElementById("postCountChip");
+    const featuredCountChip = document.getElementById("featuredCountChip");
+    const authorChip = document.getElementById("authorChip");
     const statusChip = document.getElementById("statusChip");
 
     const refreshBtn = document.getElementById("refreshBtn");
     const refreshHeroBtn = document.getElementById("refreshHeroBtn");
 
+    const founderPanel = document.getElementById("founderPanel");
+    const founderAvatar = document.getElementById("founderAvatar");
+    const founderPlaceholder = document.getElementById("founderPlaceholder");
+    const founderName = document.getElementById("founderName");
+    const founderUsername = document.getElementById("founderUsername");
+    const founderBio = document.getElementById("founderBio");
+    const founderProfileLink = document.getElementById("founderProfileLink");
+
+    const composerPanel = document.getElementById("composerPanel");
+    const hubForm = document.getElementById("hubForm");
+    const closeComposerBtn = document.getElementById("closeComposerBtn");
+    const showComposerBtn = document.getElementById("showComposerBtn");
+    const authorActionRow = document.getElementById("authorActionRow");
+
+    const postTitle = document.getElementById("postTitle");
+    const postType = document.getElementById("postType");
+    const postCategory = document.getElementById("postCategory");
+    const externalUrl = document.getElementById("externalUrl");
+    const postSummary = document.getElementById("postSummary");
+    const postBody = document.getElementById("postBody");
+    const pollOptionsWrap = document.getElementById("pollOptionsWrap");
+    const pollOptions = document.getElementById("pollOptions");
+    const credits = document.getElementById("credits");
+    const imageFile = document.getElementById("imageFile");
+    const previewWrap = document.getElementById("previewWrap");
+    const previewImg = document.getElementById("previewImg");
+    const isFeaturedInput = document.getElementById("isFeaturedInput");
+    const isPinnedInput = document.getElementById("isPinnedInput");
+    const isPublishedInput = document.getElementById("isPublishedInput");
+    const savePostBtn = document.getElementById("savePostBtn");
+    const composerMessage = document.getElementById("composerMessage");
+
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearBtn");
-    const categoryRow = document.getElementById("categoryRow");
+    const tabsRow = document.getElementById("tabsRow");
 
+    const featuredStrip = document.getElementById("featuredStrip");
+    const featuredList = document.getElementById("featuredList");
     const listLoading = document.getElementById("listLoading");
     const listWrap = document.getElementById("listWrap");
     const emptyBox = document.getElementById("emptyBox");
 
-    let currentUser = null;
-    let currentCategory = "all";
-    let lessonsData = [];
-    let schoolChannels = [];
-    let refreshTimer = null;
+    const inboxBadge = document.getElementById("inboxBadge");
 
-    const SCHOOL_SOURCES = [
+    let currentUser = null;
+    let currentProfile = null;
+    let isAdmin = false;
+    let canPostHub = false;
+    let currentFilter = "all";
+    let hubPosts = [];
+    let hubChannels = [];
+    let refreshTimer = null;
+    let previewObjectUrl = "";
+
+    const HUB_SOURCES = [
+      "hub_posts",
       "school_posts",
       "school_lessons",
       "schoolLessons",
       "school"
     ];
 
+    const ICONS = {
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `,
+      link: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"></path>
+          <path d="M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1"></path>
+        </svg>
+      `,
+      hide: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3l18 18"></path>
+          <path d="M10.6 10.6A2 2 0 0 0 12 14a2 2 0 0 0 1.4-.6"></path>
+          <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5 0 9 5 10 8a15.2 15.2 0 0 1-2.2 3.6"></path>
+          <path d="M6.1 6.1A14.3 14.3 0 0 0 2 12c1 3 5 8 10 8a10.7 10.7 0 0 0 4.3-.9"></path>
+        </svg>
+      `,
+      trash: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+          <path d="M10 11v5"></path>
+          <path d="M14 11v5"></path>
+        </svg>
+      `
+    };
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
     }
 
     function resolveTheme(themeValue) {
@@ -490,7 +1179,7 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
@@ -506,6 +1195,21 @@
       return div.innerHTML;
     }
 
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
     function isMissingSchemaError(error) {
       const msg = String(error?.message || "").toLowerCase();
       return (
@@ -516,14 +1220,15 @@
       );
     }
 
-    function getField(raw, names, fallback = "") {
-      for (const name of names) {
-        const value = raw?.[name];
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-          return value;
-        }
-      }
-      return fallback;
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizeExternalUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
     function getCreatedMs(obj) {
@@ -556,24 +1261,82 @@
       }
     }
 
-    function normalizeExternalUrl(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
+    function formatDate(valueMs) {
+      if (!valueMs) return "";
+      try {
+        return new Date(valueMs).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+      } catch {
+        return "";
+      }
     }
 
-    function normalizeLesson(raw, fallbackId = "", sourceName = "") {
+    function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      return {
+        uid: getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"], ""),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], ""),
+        bio: getField(d, ["bio", "about", "description"], ""),
+        role: getField(d, ["role"], ""),
+        isAdmin: getBool(d, ["is_admin", "isAdmin"], false),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false)
+      };
+    }
+
+    function normalizePollOptions(raw) {
+      const value =
+        raw?.poll_options ??
+        raw?.pollOptions ??
+        raw?.options ??
+        raw?.poll ??
+        [];
+
+      if (Array.isArray(value)) {
+        return value
+          .map(item => {
+            if (typeof item === "string") return { text: item, votes: 0 };
+            if (item && typeof item === "object") {
+              return {
+                text: String(item.text || item.label || item.title || "").trim(),
+                votes: Number(item.votes || item.count || 0) || 0
+              };
+            }
+            return null;
+          })
+          .filter(item => item && item.text);
+      }
+
+      if (typeof value === "string") {
+        return value
+          .split("\n")
+          .map(x => x.trim())
+          .filter(Boolean)
+          .map(text => ({ text, votes: 0 }));
+      }
+
+      return [];
+    }
+
+    function normalizeHubPost(raw, fallbackId = "", sourceName = "") {
+      const d = raw || {};
+      const type = String(getField(d, [
+        "post_type",
+        "postType",
+        "type",
+        "category_type"
+      ], getField(d, ["category", "topic"], "update")) || "update").trim().toLowerCase();
 
       return {
         id: String(getField(d, ["id"], fallbackId) || fallbackId || ""),
         source: sourceName,
-
-        title: String(getField(d, ["title", "name"], "Untitled Lesson") || "Untitled Lesson"),
-        summary: String(getField(d, ["summary", "description", "subtitle"], "") || ""),
+        title: String(getField(d, ["title", "name"], "Untitled Hub Post") || "Untitled Hub Post"),
+        summary: String(getField(d, ["summary", "description", "subtitle", "caption"], "") || ""),
         body: String(getField(d, ["body", "content", "text"], "") || ""),
-
+        postType: type || "update",
+        category: String(getField(d, ["category", "topic"], "General") || "General").trim() || "General",
+        credits: String(getField(d, ["credits", "credit", "source_note", "sourceNote", "source"], "") || ""),
+        externalURL: normalizeExternalUrl(String(getField(d, ["external_url", "externalURL", "url", "link"], "") || "")),
         imageURL: String(getField(d, [
           "image_url",
           "imageURL",
@@ -583,42 +1346,168 @@
           "media_url",
           "mediaUrl"
         ], "") || ""),
-
-        category: String(getField(d, ["category", "topic"], "General") || "General").trim() || "General",
-
-        externalURL: normalizeExternalUrl(String(getField(d, [
-          "external_url",
-          "externalURL",
-          "url",
-          "link"
-        ], "") || "")),
-
+        imagePath: String(getField(d, ["image_path", "imagePath", "media_path", "mediaPath"], "") || ""),
+        createdBy: String(getField(d, ["created_by", "createdBy", "user_id", "userId", "author_id", "authorId", "uid"], "") || ""),
+        creatorName: String(getField(d, ["creator_name", "creatorName", "display_name", "displayName", "author_name", "authorName"], "OwnSpace") || "OwnSpace"),
+        creatorUsername: String(getField(d, ["creator_username", "creatorUsername", "username", "author_username", "authorUsername"], "") || ""),
         published: d.published !== false && d.is_published !== false && d.isPublished !== false,
-        hidden: !!(
-          d.hidden ||
-          d.hidden_by_admin ||
-          d.hiddenByAdmin ||
-          d.soft_deleted ||
-          d.softDeleted
-        ),
-
+        pinned: !!(d.pinned || d.is_pinned || d.isPinned),
+        featured: !!(d.featured || d.is_featured || d.isFeatured),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        softDeleted: !!(d.soft_deleted || d.softDeleted),
         createdAtMs: getCreatedMs(d),
-        order: Number.isFinite(Number(d.order)) ? Number(d.order) : null
+        order: Number.isFinite(Number(d.order)) ? Number(d.order) : null,
+        pollOptions: normalizePollOptions(d)
       };
     }
 
-    function updateCounts() {
-      const visibleLessons = lessonsData.filter(item => item.published && !item.hidden);
-      const categories = [...new Set(visibleLessons.map(item => item.category).filter(Boolean))];
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
 
-      lessonCountChip.textContent = `Lessons: ${visibleLessons.length}`;
-      categoryCountChip.textContent = `Categories: ${categories.length}`;
-      statusChip.textContent = visibleLessons.length ? "Live" : "Ready";
-      statusChip.className = `chip ${visibleLessons.length ? "chip-green" : "chip-yellow"}`;
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
     }
 
-    function updateClearButton() {
-      clearBtn.classList.toggle("hidden", !searchInput.value.trim());
+    async function loadMergedProfile(uid) {
+      if (!uid) return normalizeProfile({}, "");
+
+      try {
+        const [publicRow, userRow] = await Promise.all([
+          selectProfileRow("public_profiles", uid),
+          selectProfileRow("users", uid)
+        ]);
+
+        return normalizeProfile({
+          ...(publicRow || {}),
+          ...(userRow || {}),
+          uid
+        }, uid);
+      } catch {
+        return normalizeProfile({ uid }, uid);
+      }
+    }
+
+    async function checkAdmin(uid, profile) {
+      if (profile?.isAdmin || profile?.role === "admin") return true;
+
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return true;
+        } catch {}
+      }
+
+      return false;
+    }
+
+    async function checkHubAuthor(uid) {
+      if (!uid) return false;
+
+      const columns = ["user_id", "userId", "uid", "id"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from("hub_authors")
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) {
+            return data.can_post !== false && data.active !== false && data.disabled !== true;
+          }
+        } catch (err) {
+          if (!isMissingSchemaError(err)) console.warn("hub_authors check failed:", err?.message || err);
+        }
+      }
+
+      return false;
+    }
+
+    function renderFounderProfile() {
+      if (!currentProfile) return;
+
+      founderName.textContent = currentProfile.displayName || "Member";
+
+      if (currentProfile.username) {
+        founderUsername.textContent = "@" + currentProfile.username;
+        founderUsername.classList.remove("hidden");
+      } else {
+        founderUsername.classList.add("hidden");
+      }
+
+      founderBio.textContent = currentProfile.bio?.trim()
+        ? currentProfile.bio
+        : "Founder / official OwnSpace profile.";
+
+      founderProfileLink.href = "profile.html";
+
+      if (currentProfile.photoURL) {
+        founderAvatar.src = currentProfile.photoURL;
+        founderAvatar.classList.remove("hidden");
+        founderPlaceholder.classList.add("hidden");
+      } else {
+        founderAvatar.classList.add("hidden");
+        founderPlaceholder.classList.remove("hidden");
+      }
+
+      founderPanel.classList.remove("hidden");
+    }
+
+    founderAvatar.addEventListener("error", () => {
+      founderAvatar.classList.add("hidden");
+      founderPlaceholder.classList.remove("hidden");
+    });
+
+    function setComposerMessage(text = "", type = "") {
+      composerMessage.textContent = text;
+      composerMessage.className = `message ${type}`;
+    }
+
+    function updateAuthorUI() {
+      if (canPostHub) {
+        authorChip.textContent = isAdmin ? "Author: admin" : "Author: approved";
+        authorChip.className = "chip chip-green";
+        authorActionRow.classList.remove("hidden");
+      } else {
+        authorChip.textContent = "Author: view only";
+        authorChip.className = "chip chip-yellow";
+        authorActionRow.classList.add("hidden");
+        composerPanel.classList.add("hidden");
+      }
+    }
+
+    function updateCounts() {
+      const visible = hubPosts.filter(p => p.published && !p.hidden);
+      const featured = visible.filter(p => p.featured || p.pinned);
+
+      postCountChip.textContent = `Posts: ${visible.length}`;
+      featuredCountChip.textContent = `Featured: ${featured.length}`;
+      statusChip.textContent = visible.length ? "Live" : "Ready";
+      statusChip.className = `chip ${visible.length ? "chip-green" : "chip-yellow"}`;
     }
 
     function openLoading() {
@@ -641,134 +1530,332 @@
       emptyBox.classList.add("hidden");
     }
 
-    function renderCategories() {
-      const visibleLessons = lessonsData.filter(item => item.published && !item.hidden);
-      const categories = [...new Set(visibleLessons.map(item => item.category).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b));
-
-      const allButtons = [
-        { key: "all", label: "All" },
-        ...categories.map(cat => ({ key: cat, label: cat }))
-      ];
-
-      categoryRow.innerHTML = "";
-
-      allButtons.forEach(item => {
-        const btn = document.createElement("button");
-        btn.className = `category-btn ${currentCategory === item.key ? "active" : ""}`;
-        btn.type = "button";
-        btn.textContent = item.label;
-
-        btn.addEventListener("click", () => {
-          currentCategory = item.key;
-          renderCategories();
-          renderLessons();
-        });
-
-        categoryRow.appendChild(btn);
-      });
+    function updateClearButton() {
+      clearBtn.classList.toggle("hidden", !searchInput.value.trim());
     }
 
-    function getFilteredLessons() {
-      const q = searchInput.value.trim().toLowerCase();
+    function getFilteredPosts() {
+      const q = normalizeText(searchInput.value);
 
-      return lessonsData
+      return hubPosts
         .filter(item => item.published && !item.hidden)
-        .filter(item => currentCategory === "all" || item.category === currentCategory)
+        .filter(item => {
+          if (currentFilter === "all") return true;
+          if (currentFilter === "featured") return item.featured || item.pinned;
+          return item.postType === currentFilter || normalizeText(item.category) === currentFilter;
+        })
         .filter(item => {
           if (!q) return true;
 
-          const joined = [
+          const text = [
             item.title,
             item.summary,
             item.body,
-            item.category
-          ].filter(Boolean).join(" ").toLowerCase();
+            item.category,
+            item.postType,
+            item.creatorName,
+            item.creatorUsername,
+            item.credits
+          ].join(" ").toLowerCase();
 
-          return joined.includes(q);
+          return text.includes(q);
         })
         .sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (b.pinned && !a.pinned) return 1;
+
+          if (a.featured && !b.featured) return -1;
+          if (b.featured && !a.featured) return 1;
+
           if (a.order !== null && b.order !== null) return a.order - b.order;
           if (a.order !== null) return -1;
           if (b.order !== null) return 1;
+
           return b.createdAtMs - a.createdAtMs || a.title.localeCompare(b.title);
         });
     }
 
-    function renderLessons() {
+    function getTypeLabel(type) {
+      const map = {
+        update: "Update",
+        learn: "Learn",
+        safety: "Safety",
+        poll: "Poll",
+        article: "Article",
+        photo: "Photo",
+        featured: "Featured"
+      };
+
+      return map[type] || type.charAt(0).toUpperCase() + type.slice(1);
+    }
+
+    function getTypeBadgeClass(type) {
+      if (type === "learn") return "badge-blue";
+      if (type === "update") return "badge-green";
+      if (type === "safety") return "badge-yellow";
+      if (type === "poll") return "badge-purple";
+      if (type === "article") return "badge-blue";
+      if (type === "photo") return "badge-purple";
+      return "badge-blue";
+    }
+
+    function canManagePost(post) {
+      return isAdmin || (post.createdBy && post.createdBy === currentUser?.id);
+    }
+
+    function buildShareUrl(postId) {
+      const url = new URL(window.location.href);
+      url.pathname = url.pathname.replace(/[^/]*$/, "hub.html");
+      url.searchParams.set("postId", postId);
+      return url.toString();
+    }
+
+    async function shareHubPost(post) {
+      const shareUrl = buildShareUrl(post.id);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: post.title || "OwnSpace Hub",
+            text: post.summary || "Check this OwnSpace Hub post.",
+            url: shareUrl
+          });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+          alert("Hub post link copied.");
+        } else {
+          prompt("Copy this Hub post link:", shareUrl);
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") console.error("Share failed:", err);
+      }
+    }
+
+    function renderPoll(post) {
+      if (post.postType !== "poll" || !post.pollOptions.length) return "";
+
+      const total = post.pollOptions.reduce((sum, item) => sum + (Number(item.votes) || 0), 0);
+
+      return `
+        <div class="poll-box">
+          ${post.pollOptions.map(item => {
+            const votes = Number(item.votes) || 0;
+            const percent = total ? Math.round((votes / total) * 100) : 0;
+
+            return `
+              <div class="poll-option">
+                <span>${escapeHtml(item.text)}</span>
+                <span>${percent}%</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderPostCard(post, compact = false) {
+      const card = document.createElement("div");
+      card.className = `post-card ${post.pinned ? "pinned" : ""}`;
+
+      const imageHtml = post.imageURL
+        ? `<img class="cover" src="${escapeHtml(post.imageURL)}" alt="Hub post image">`
+        : "";
+
+      const badges = [];
+
+      if (post.pinned) badges.push(`<span class="badge badge-yellow">Pinned</span>`);
+      if (post.featured) badges.push(`<span class="badge badge-purple">Featured</span>`);
+      badges.push(`<span class="badge ${getTypeBadgeClass(post.postType)}">${escapeHtml(getTypeLabel(post.postType))}</span>`);
+      if (post.category) badges.push(`<span class="badge badge-blue">${escapeHtml(post.category)}</span>`);
+      if (post.createdAtMs) badges.push(`<span class="badge">${escapeHtml(formatDate(post.createdAtMs))}</span>`);
+      if (post.creatorName) badges.push(`<span class="badge badge-green">${escapeHtml(post.creatorName)}</span>`);
+
+      const bodyId = `hubBody_${post.source}_${post.id}`.replace(/[^a-zA-Z0-9_]/g, "_");
+      const hasBody = !!String(post.body || "").trim();
+      const bodyHtml = hasBody
+        ? `<div id="${bodyId}" class="post-body ${compact ? "hidden" : "hidden"}">${escapeHtml(post.body)}</div>`
+        : "";
+
+      const creditHtml = post.credits
+        ? `<div class="credit-line"><strong>Credits / Source:</strong> ${escapeHtml(post.credits)}</div>`
+        : "";
+
+      const manageButtons = canManagePost(post)
+        ? `
+          <button class="mini-btn btn-yellow hide-post-btn" type="button">
+            ${ICONS.hide}
+            <span>Soft Hide</span>
+          </button>
+          <button class="mini-btn btn-red delete-post-btn" type="button">
+            ${ICONS.trash}
+            <span>Delete</span>
+          </button>
+        `
+        : "";
+
+      card.innerHTML = `
+        ${imageHtml}
+        <div class="post-title">${escapeHtml(post.title)}</div>
+        <div class="badge-row">${badges.join("")}</div>
+
+        <div class="post-summary">${escapeHtml(post.summary || "Open this Hub post to read more.")}</div>
+
+        ${renderPoll(post)}
+        ${creditHtml}
+
+        <div class="post-actions">
+          ${
+            hasBody
+              ? `<button class="mini-btn btn-primary read-btn" type="button" data-target="${bodyId}">${ICONS.open}<span>Read More</span></button>`
+              : ""
+          }
+
+          ${
+            post.externalURL
+              ? `<a href="${escapeHtml(post.externalURL)}" target="_blank" rel="noopener noreferrer" class="mini-btn btn-soft">${ICONS.link}<span>Open Link</span></a>`
+              : ""
+          }
+
+          ${
+            post.createdBy
+              ? `<a href="member.html?uid=${encodeURIComponent(post.createdBy)}" class="mini-btn btn-soft">Author</a>`
+              : ""
+          }
+
+          ${manageButtons}
+
+          <button class="mini-btn btn-green share-btn" type="button">${ICONS.share}<span>Share</span></button>
+        </div>
+
+        ${bodyHtml}
+      `;
+
+      const img = card.querySelector(".cover");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+        });
+      }
+
+      const readBtn = card.querySelector(".read-btn");
+      if (readBtn) {
+        readBtn.addEventListener("click", () => {
+          const body = document.getElementById(readBtn.getAttribute("data-target"));
+          if (!body) return;
+
+          const willOpen = body.classList.contains("hidden");
+          body.classList.toggle("hidden");
+          readBtn.querySelector("span").textContent = willOpen ? "Hide" : "Read More";
+        });
+      }
+
+      const shareBtn = card.querySelector(".share-btn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+          await shareHubPost(post);
+        });
+      }
+
+      const hideBtn = card.querySelector(".hide-post-btn");
+      if (hideBtn) {
+        hideBtn.addEventListener("click", async () => {
+          const ok = confirm("Soft hide this Hub post?");
+          if (!ok) return;
+
+          hideBtn.disabled = true;
+
+          try {
+            await softHidePost(post);
+            await refreshAll();
+          } catch (err) {
+            console.error(err);
+            alert("Could not hide post.");
+            hideBtn.disabled = false;
+          }
+        });
+      }
+
+      const deleteBtn = card.querySelector(".delete-post-btn");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          const ok = confirm("Permanently delete this Hub post? This cannot be undone.");
+          if (!ok) return;
+
+          const typed = prompt("Type DELETE to permanently delete this Hub post.");
+
+          if (typed !== "DELETE") return;
+
+          deleteBtn.disabled = true;
+
+          try {
+            await permanentDeletePost(post);
+            await refreshAll();
+          } catch (err) {
+            console.error(err);
+            alert("Could not delete post.");
+            deleteBtn.disabled = false;
+          }
+        });
+      }
+
+      return card;
+    }
+
+    function renderFeaturedStrip() {
+      featuredList.innerHTML = "";
+
+      const rows = hubPosts
+        .filter(item => item.published && !item.hidden && (item.pinned || item.featured))
+        .sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (b.pinned && !a.pinned) return 1;
+          return b.createdAtMs - a.createdAtMs;
+        })
+        .slice(0, 3);
+
+      if (!rows.length || currentFilter === "featured") {
+        featuredStrip.classList.add("hidden");
+        return;
+      }
+
+      rows.forEach(post => {
+        featuredList.appendChild(renderPostCard(post, true));
+      });
+
+      featuredStrip.classList.remove("hidden");
+    }
+
+    function renderPosts() {
       openLoading();
 
       requestAnimationFrame(() => {
-        const rows = getFilteredLessons();
+        updateCounts();
+        renderFeaturedStrip();
+
+        const rows = getFilteredPosts();
 
         if (!rows.length) {
-          const emptyText = lessonsData.length
-            ? "No lessons match your search."
-            : "School page is ready. Add lessons later from your admin side.";
-          showEmpty(emptyText);
+          showEmpty(hubPosts.length ? "No Hub posts match your search." : "OwnSpace Hub is ready. Add posts from the Hub composer or admin side.");
           return;
         }
 
         listWrap.innerHTML = "";
 
-        rows.forEach((lesson, index) => {
-          const card = document.createElement("div");
-          card.className = "card";
-
-          const imageHtml = lesson.imageURL
-            ? `<img class="cover" src="${escapeHtml(lesson.imageURL)}" alt="Lesson image">`
-            : "";
-
-          const badges = [];
-          if (lesson.category) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(lesson.category)}</span>`);
-          if (lesson.createdAtMs) badges.push(`<span class="mini-badge mini-purple">${new Date(lesson.createdAtMs).toLocaleDateString()}</span>`);
-          if (lesson.externalURL) badges.push(`<span class="mini-badge mini-green">Link</span>`);
-
-          const bodyId = `lessonBody_${index}`;
-
-          card.innerHTML = `
-            ${imageHtml}
-            <div class="card-title">${escapeHtml(lesson.title)}</div>
-            <div class="badge-row">${badges.join("")}</div>
-            <div class="summary">${escapeHtml(lesson.summary || "Open this lesson to read more.")}</div>
-
-            <div class="card-actions">
-              <button class="action-btn btn-primary toggle-btn" type="button" data-target="${bodyId}">
-                Read Lesson
-              </button>
-              ${lesson.externalURL ? `<a href="${escapeHtml(lesson.externalURL)}" target="_blank" rel="noopener noreferrer" class="action-btn btn-soft">Open Link</a>` : ""}
-            </div>
-
-            <div id="${bodyId}" class="body hidden">${escapeHtml(lesson.body || lesson.summary || "")}</div>
-          `;
-
-          const img = card.querySelector(".cover");
-          if (img) {
-            img.addEventListener("error", () => {
-              img.style.display = "none";
-            });
-          }
-
-          listWrap.appendChild(card);
-        });
-
-        listWrap.querySelectorAll(".toggle-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const targetId = btn.getAttribute("data-target");
-            const body = document.getElementById(targetId);
-            if (!body) return;
-
-            const willOpen = body.classList.contains("hidden");
-            body.classList.toggle("hidden");
-            btn.textContent = willOpen ? "Hide Lesson" : "Read Lesson";
-          });
+        rows.forEach(post => {
+          listWrap.appendChild(renderPostCard(post));
         });
 
         showList();
+
+        const postId = new URLSearchParams(window.location.search).get("postId");
+        if (postId) {
+          const target = Array.from(listWrap.children).find(card => card.innerHTML.includes(escapeHtml(postId)));
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       });
     }
 
-    async function selectLessonsFromTable(tableName) {
+    async function selectPostsFromTable(tableName) {
       try {
         const { data, error } = await supabase
           .from(tableName)
@@ -776,70 +1863,66 @@
 
         if (error) throw error;
 
-        return (data || []).map(row => {
-          return normalizeLesson({ id: row.id, ...row }, row.id, tableName);
-        });
+        return (data || []).map(row => normalizeHubPost({ id: row.id, ...row }, row.id, tableName));
       } catch (err) {
         if (!isMissingSchemaError(err)) {
-          console.warn(`School source failed: ${tableName}`, err?.message || err);
+          console.warn(`Hub source failed: ${tableName}`, err?.message || err);
         }
+
         return [];
       }
     }
 
-    async function loadLessons() {
+    async function loadHubPosts() {
       const map = new Map();
 
-      for (const source of SCHOOL_SOURCES) {
-        const rows = await selectLessonsFromTable(source);
+      for (const source of HUB_SOURCES) {
+        const rows = await selectPostsFromTable(source);
 
-        rows.forEach(lesson => {
-          map.set(`${lesson.source}:${lesson.id}`, lesson);
+        rows.forEach(post => {
+          map.set(`${post.source}:${post.id}`, post);
         });
       }
 
-      lessonsData = Array.from(map.values());
-
-      updateCounts();
-      renderCategories();
-      renderLessons();
+      hubPosts = Array.from(map.values());
+      renderPosts();
     }
 
     async function refreshAll() {
       openLoading();
 
       try {
-        await loadLessons();
+        await loadHubPosts();
       } catch (err) {
         console.error(err);
-        showEmpty("Could not load school page.");
+        showEmpty("Could not load OwnSpace Hub.");
       }
     }
 
     function scheduleRefresh() {
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
-        refreshAll().catch(err => console.error("School refresh failed:", err));
+        refreshAll().catch(err => console.error("Hub refresh failed:", err));
       }, 350);
     }
 
     function clearRealtimeChannels() {
-      schoolChannels.forEach(channel => {
+      hubChannels.forEach(channel => {
         try {
           supabase.removeChannel(channel);
         } catch {}
       });
 
-      schoolChannels = [];
+      hubChannels = [];
     }
 
     function setupRealtime() {
       clearRealtimeChannels();
 
-      SCHOOL_SOURCES.forEach(source => {
+      HUB_SOURCES.forEach(source => {
         try {
           const channel = supabase
-            .channel(`school-live-${source}`)
+            .channel(`hub-live-${source}`)
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: source },
@@ -847,25 +1930,394 @@
             )
             .subscribe();
 
-          schoolChannels.push(channel);
+          hubChannels.push(channel);
         } catch {}
       });
     }
 
+    function setPreviewFromFile(file) {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = "";
+      }
+
+      if (!file) {
+        previewWrap.classList.remove("show");
+        previewImg.removeAttribute("src");
+        return;
+      }
+
+      previewObjectUrl = URL.createObjectURL(file);
+      previewImg.src = previewObjectUrl;
+      previewWrap.classList.add("show");
+    }
+
+    imageFile.addEventListener("change", () => {
+      setPreviewFromFile(imageFile.files?.[0] || null);
+    });
+
+    function updatePollVisibility() {
+      pollOptionsWrap.classList.toggle("hidden", postType.value !== "poll");
+    }
+
+    postType.addEventListener("change", updatePollVisibility);
+    updatePollVisibility();
+
+    async function uploadHubImage(file, uid) {
+      const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `hub/${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+
+      return {
+        path,
+        publicUrl: data?.publicUrl || ""
+      };
+    }
+
+    async function insertHubPostWithFallback(payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from("hub_posts")
+            .insert(payload)
+            .select()
+            .single();
+
+          if (!error && data) return data;
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not create Hub post.");
+    }
+
+    hubForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser || !canPostHub) return;
+
+      const title = postTitle.value.trim();
+      const type = postType.value || "update";
+      const category = postCategory.value.trim() || getTypeLabel(type);
+      const summary = postSummary.value.trim();
+      const body = postBody.value.trim();
+      const creditText = credits.value.trim();
+      const link = normalizeExternalUrl(externalUrl.value.trim());
+      const file = imageFile.files?.[0] || null;
+      const pollRaw = pollOptions.value
+        .split("\n")
+        .map(x => x.trim())
+        .filter(Boolean);
+
+      if (!title) {
+        setComposerMessage("Title is required.", "error");
+        return;
+      }
+
+      if (!summary && !body) {
+        setComposerMessage("Add a short description or full post body.", "error");
+        return;
+      }
+
+      if (type === "poll" && pollRaw.length < 2) {
+        setComposerMessage("Poll needs at least 2 options.", "error");
+        return;
+      }
+
+      savePostBtn.disabled = true;
+      savePostBtn.textContent = "Publishing...";
+      setComposerMessage("");
+
+      try {
+        let uploadedImageUrl = "";
+        let uploadedImagePath = "";
+
+        if (file) {
+          setComposerMessage("Uploading image...", "success");
+          const uploadResult = await uploadHubImage(file, currentUser.id);
+          uploadedImageUrl = uploadResult.publicUrl;
+          uploadedImagePath = uploadResult.path;
+        }
+
+        const creatorName = currentProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
+        const creatorUsername = currentProfile?.username || "";
+        const pollData = pollRaw.map(text => ({ text, votes: 0 }));
+
+        const snakePayload = {
+          title,
+          summary,
+          body,
+          post_type: type,
+          category,
+          credits: creditText,
+          external_url: link,
+          image_url: uploadedImageUrl,
+          image_path: uploadedImagePath,
+          poll_options: pollData,
+          pinned: !!isPinnedInput.checked,
+          featured: !!isFeaturedInput.checked || type === "featured",
+          published: !!isPublishedInput.checked,
+          hidden: false,
+          soft_deleted: false,
+          created_by: currentUser.id,
+          creator_name: creatorName,
+          creator_username: creatorUsername,
+          created_at: nowIso(),
+          updated_at: nowIso()
+        };
+
+        const camelPayload = {
+          title,
+          summary,
+          body,
+          postType: type,
+          category,
+          credits: creditText,
+          externalURL: link,
+          imageURL: uploadedImageUrl,
+          imagePath: uploadedImagePath,
+          pollOptions: pollData,
+          pinned: !!isPinnedInput.checked,
+          featured: !!isFeaturedInput.checked || type === "featured",
+          published: !!isPublishedInput.checked,
+          hidden: false,
+          softDeleted: false,
+          createdBy: currentUser.id,
+          creatorName,
+          creatorUsername,
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+
+        const minimalPayload = {
+          title,
+          summary,
+          body,
+          post_type: type,
+          category,
+          image_url: uploadedImageUrl,
+          created_by: currentUser.id,
+          created_at: nowIso()
+        };
+
+        await insertHubPostWithFallback([
+          snakePayload,
+          camelPayload,
+          minimalPayload
+        ]);
+
+        hubForm.reset();
+        imageFile.value = "";
+        setPreviewFromFile(null);
+        updatePollVisibility();
+
+        setComposerMessage("Hub post published.", "success");
+        await refreshAll();
+      } catch (err) {
+        console.error(err);
+        setComposerMessage(err?.message || "Could not publish Hub post.", "error");
+      }
+
+      savePostBtn.disabled = false;
+      savePostBtn.textContent = "Publish Hub Post";
+    });
+
+    async function updatePostById(table, id, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(payload)
+            .eq("id", id);
+
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not update post.");
+    }
+
+    async function softHidePost(post) {
+      await updatePostById(post.source || "hub_posts", post.id, [
+        {
+          hidden: true,
+          soft_deleted: true,
+          updated_at: nowIso()
+        },
+        {
+          hidden: true,
+          softDeleted: true,
+          updatedAt: nowIso()
+        },
+        {
+          hidden: true
+        }
+      ]);
+    }
+
+    async function permanentDeletePost(post) {
+      const { error } = await supabase
+        .from(post.source || "hub_posts")
+        .delete()
+        .eq("id", post.id);
+
+      if (error) throw error;
+    }
+
+    showComposerBtn.addEventListener("click", () => {
+      composerPanel.classList.remove("hidden");
+      composerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    closeComposerBtn.addEventListener("click", () => {
+      composerPanel.classList.add("hidden");
+    });
+
     searchInput.addEventListener("input", () => {
       updateClearButton();
-      renderLessons();
+      renderPosts();
     });
 
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
       updateClearButton();
       searchInput.focus();
-      renderLessons();
+      renderPosts();
+    });
+
+    tabsRow.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabsRow.querySelectorAll(".tab-btn").forEach(item => item.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter || "all";
+        renderPosts();
+      });
     });
 
     refreshBtn.addEventListener("click", refreshAll);
     refreshHeroBtn.addEventListener("click", refreshAll);
+
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase
+          .from(table)
+          .select("id", { count: "exact", head: true });
+
+        const { count, error } = await buildQuery(query);
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
+
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+        if (countWithoutStatus !== null) return countWithoutStatus;
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function loadInboxBadge() {
+      if (!currentUser || !inboxBadge) return;
+
+      try {
+        const [pendingRequests, unreadChats] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(pendingRequests || 0) + Number(unreadChats || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
 
     async function initPage() {
       const { data, error } = await supabase.auth.getUser();
@@ -876,8 +2328,19 @@
       }
 
       currentUser = data.user;
+      currentProfile = await loadMergedProfile(currentUser.id);
 
-      await refreshAll();
+      isAdmin = await checkAdmin(currentUser.id, currentProfile);
+      canPostHub = isAdmin || await checkHubAuthor(currentUser.id);
+
+      renderFounderProfile();
+      updateAuthorUI();
+
+      await Promise.all([
+        refreshAll(),
+        loadInboxBadge()
+      ]);
+
       setupRealtime();
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -889,66 +2352,78 @@
 
     window.addEventListener("beforeunload", () => {
       clearRealtimeChannels();
+      if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     });
 
-    initPage().catch((err) => {
+    initPage().catch(err => {
       console.error(err);
-      showEmpty("Could not load school page.");
+      showEmpty("Could not load OwnSpace Hub.");
     });
 
     /*
-      SUPABASE NEEDS FOR THIS PAGE:
+      OWNSPACE HUB NOTES:
 
-      TABLES:
-      - school_posts: select, realtime optional
-      - school_lessons: select, realtime optional
-      - schoolLessons: select, realtime optional if you created camelCase table
-      - school: select, realtime optional
+      MAIN TABLE:
+      - hub_posts
 
-      AUTH:
-      - logged-in user required
+      DISPLAY FALLBACK TABLES:
+      - hub_posts
+      - school_posts
+      - school_lessons
+      - schoolLessons
+      - school
 
-      IMPORTANT COLUMNS SUPPORTED:
-      school_posts / school_lessons / schoolLessons / school:
+      AUTHOR PERMISSION:
+      - admins table can post
+      - hub_authors table can post if can_post is not false
+
+      STORAGE:
+      - Upload bucket used here: media
+      - Path: hub/{userId}/filename
+
+      RECOMMENDED hub_posts COLUMNS:
       - id
       - title
-      - name
       - summary
-      - description
-      - subtitle
       - body
-      - content
-      - text
-      - image_url
-      - imageURL
-      - imageUrl
-      - photo_url
-      - photoURL
-      - media_url
-      - mediaUrl
+      - post_type
       - category
-      - topic
+      - credits
       - external_url
-      - externalURL
-      - url
-      - link
-      - published
-      - is_published
-      - hidden
-      - hidden_by_admin
-      - soft_deleted
+      - image_url
+      - image_path
+      - poll_options json/jsonb
+      - pinned boolean
+      - featured boolean
+      - published boolean
+      - hidden boolean
+      - soft_deleted boolean
+      - created_by
+      - creator_name
+      - creator_username
       - created_at
-      - createdAt
-      - timestamp
-      - order
+      - updated_at
+
+      RECOMMENDED hub_authors COLUMNS:
+      - id
+      - user_id
+      - role
+      - can_post
+      - can_upload_photo
+      - can_create_poll
+      - active
+      - approved_by
+      - created_at
 
       RLS IDEA:
-      - Authenticated users can select published, visible lessons
-      - Admin can insert/update/delete lessons
-      - Enable realtime only if you want school page to update live
+      - Authenticated users can select published=true and hidden=false hub_posts
+      - Admins can insert/update/delete all hub_posts
+      - Approved hub_authors can insert hub_posts
+      - Users can update/delete only their own Hub posts if you want contributor control
+      - Only admins should permanently delete other people's Hub posts
 
-      SHARE BUTTON:
-      - Not needed on school page because it does not display post cards.
+      NEXT PAGE:
+      - After this, create/update hub-admin.html so you can approve authors, pin posts, feature posts, create polls, and manage soft/permanent deletes from one admin panel.
     */
   </script>
 </body>
