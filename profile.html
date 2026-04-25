@@ -386,12 +386,16 @@
     }
     .dashboard-card{
       display:block;
-      text-decoration:none;
       color:inherit;
       background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
       padding:12px;
+    }
+    .dashboard-post-link{
+      display:block;
+      text-decoration:none;
+      color:inherit;
     }
     .dashboard-top{
       display:flex;
@@ -426,6 +430,35 @@
       display:block;
       background:var(--surface-3);
       border:1px solid var(--line-soft);
+    }
+    .dashboard-actions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:10px;
+    }
+    .dashboard-share-btn{
+      border:none;
+      cursor:pointer;
+      font-weight:800;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:11px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      text-decoration:none;
+      background:rgba(61,220,132,.12);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.18);
+      margin-left:auto;
+    }
+    .dashboard-share-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
     }
     .show-more-wrap{
       margin-top:14px;
@@ -1279,6 +1312,26 @@
     }
   }
 
+  async function sharePost(postId) {
+    const url = new URL("post.html", window.location.href);
+    url.searchParams.set("postId", postId);
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Check this post on BareWorld",
+          text: "Check this post on BareWorld",
+          url: url.toString()
+        });
+      } else {
+        await navigator.clipboard.writeText(url.toString());
+        alert("Post link copied.");
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
+    }
+  }
+
   function showAvatar(url) {
     const cleanUrl = (url || "").trim();
     if (!cleanUrl) {
@@ -1484,26 +1537,46 @@
     const visiblePosts = dashboardPosts.slice(0, dashboardVisibleCount);
 
     visiblePosts.forEach(post => {
-      const card = document.createElement("a");
-      card.className = "dashboard-card";
-      card.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
-
+      const postId = post.id || "";
       const caption = getPostCaption(post);
       const imageUrl = getPostImage(post);
 
+      const card = document.createElement("div");
+      card.className = "dashboard-card";
+
       card.innerHTML = `
-        <div class="dashboard-top">
-          <div class="dashboard-label">Recent Post</div>
-          <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
+        <a class="dashboard-post-link" href="post.html?postId=${encodeURIComponent(postId)}">
+          <div class="dashboard-top">
+            <div class="dashboard-label">Recent Post</div>
+            <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
+          </div>
+          ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
+          ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
+        </a>
+
+        <div class="dashboard-actions">
+          <button class="dashboard-share-btn" data-post-id="${escapeHtml(postId)}" type="button" aria-label="Share post">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
+              <path d="M12 16V4"></path>
+              <path d="M7 9l5-5 5 5"></path>
+            </svg>
+            <span>Share</span>
+          </button>
         </div>
-        ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
-        ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
       `;
 
       const img = card.querySelector(".dashboard-image");
       if (img) {
         img.addEventListener("error", () => {
           img.style.display = "none";
+        });
+      }
+
+      const shareBtn = card.querySelector(".dashboard-share-btn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+          await sharePost(postId);
         });
       }
 
@@ -1975,4 +2048,30 @@
   });
 
   initProfilePage();
+
+  /*
+    SUPABASE NEEDS FOR THIS PAGE:
+
+    TABLES:
+    - users: select, upsert
+    - public_profiles: select, upsert
+    - posts: select
+    - events: select
+    - event_members: select
+    - follows: select
+    - places: select
+    - nearby_places: select
+    - nudist_places: select
+    - place_visits: select
+
+    AUTH:
+    - logged-in user required
+
+    SHARE BUTTON:
+    - Added on Dashboard post cards.
+    - Uses native mobile share sheet when available.
+    - Desktop fallback copies post.html?postId=POST_ID.
+  */
 </script>
+</body>
+</html>
