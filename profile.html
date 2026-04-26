@@ -570,10 +570,23 @@
       color:var(--blue);
     }
 
+    .dashboard-label.community{
+      color:var(--purple);
+    }
+
     .dashboard-time{
       font-size:10.5px;
       color:var(--muted);
       flex-shrink:0;
+    }
+
+    .dashboard-title{
+      color:var(--text);
+      font-size:15px;
+      line-height:1.35;
+      font-weight:950;
+      word-break:break-word;
+      margin-bottom:7px;
     }
 
     .dashboard-text{
@@ -1395,7 +1408,7 @@
       publicProfiles: ["public_profiles", "publicProfiles"]
     };
 
-    const POSTS_TABLES = ["posts"];
+    const POSTS_TABLES = ["posts", "community_posts"];
     const EVENTS_TABLES = ["events"];
     const EVENT_MEMBERS_TABLES = ["event_members", "events_members", "eventMembers"];
     const FOLLOWS_TABLES = ["follows"];
@@ -1758,12 +1771,18 @@
 
       const url = new URL(file, window.location.href);
 
-      if (type === "post") url.searchParams.set("postId", id);
+      if (type === "post") {
+        url.searchParams.set("postId", id);
+        if (extra.source) url.searchParams.set("source", extra.source);
+      }
+
       if (type === "event") url.searchParams.set("eventId", id);
+
       if (type === "place") {
         url.searchParams.set("placeId", id);
         if (extra.source) url.searchParams.set("source", extra.source);
       }
+
       if (type === "community") url.searchParams.set("communityId", id);
       if (type === "profile") url.searchParams.set("uid", id);
 
@@ -1785,11 +1804,11 @@
       }
     }
 
-    async function sharePost(postId) {
+    async function sharePost(postId, source = "") {
       await shareUrl({
         title: "Check this post on OwnSpace",
         text: "Check this post on OwnSpace.",
-        url: buildItemUrl("post", postId),
+        url: buildItemUrl("post", postId, { source }),
         copiedText: "Post link copied."
       });
     }
@@ -2035,15 +2054,28 @@
     }
 
     function getPostOwnerId(post) {
-      return post?.user_id || post?.userId || post?.author_id || post?.authorId || post?.owner_id || post?.ownerId || post?.uid || "";
+      return post?.user_id || post?.userId || post?.author_id || post?.authorId || post?.owner_id || post?.ownerId || post?.created_by || post?.createdBy || post?.uid || "";
     }
 
     function getPostImage(post) {
       return post?.image_url || post?.imageURL || post?.imageUrl || post?.photo_url || post?.photoURL || post?.media_url || post?.mediaUrl || "";
     }
 
+    function getPostTitle(post) {
+      return post?.title || post?.heading || "";
+    }
+
     function getPostCaption(post) {
-      return post?.caption || post?.text || post?.content || "";
+      return post?.caption || post?.text || post?.content || post?.body || post?.description || "";
+    }
+
+    function getPostSource(post) {
+      return post?.__table || "";
+    }
+
+    function isCommunityPost(post) {
+      const source = getPostSource(post);
+      return source === "community_posts" || !!(post?.community_id || post?.communityId || post?.group_id || post?.groupId);
     }
 
     function isHiddenRow(row) {
@@ -2073,24 +2105,29 @@
 
       visiblePosts.forEach(post => {
         const postId = post.id || "";
+        const source = getPostSource(post);
+        const title = getPostTitle(post);
         const caption = getPostCaption(post);
         const imageUrl = getPostImage(post);
+        const communityPost = isCommunityPost(post);
+        const postUrl = buildItemUrl("post", postId, { source });
 
         const card = document.createElement("div");
         card.className = "dashboard-card";
 
         card.innerHTML = `
-          <a class="dashboard-post-link" href="post.html?postId=${encodeURIComponent(postId)}">
+          <a class="dashboard-post-link" href="${postUrl}">
             <div class="dashboard-top">
-              <div class="dashboard-label">Recent Post</div>
+              <div class="dashboard-label ${communityPost ? "community" : ""}">${communityPost ? "Community Post" : "Recent Post"}</div>
               <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
             </div>
+            ${title ? `<div class="dashboard-title">${escapeHtml(title)}</div>` : ""}
             ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
             ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
           </a>
 
           <div class="card-actions">
-            <a href="post.html?postId=${encodeURIComponent(postId)}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
+            <a href="${postUrl}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
             <button class="mini-btn btn-green share-btn" data-post-id="${escapeHtml(postId)}" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
@@ -2105,7 +2142,7 @@
         const shareBtn = card.querySelector(".share-btn");
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
-            await sharePost(postId);
+            await sharePost(postId, source);
           });
         }
 
@@ -2138,7 +2175,7 @@
 
         const tile = document.createElement("a");
         tile.className = "photo-tile";
-        tile.href = `post.html?postId=${encodeURIComponent(post.id || "")}`;
+        tile.href = buildItemUrl("post", post.id || "", { source: getPostSource(post) });
         tile.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Photo post">`;
 
         const img = tile.querySelector("img");
@@ -2799,21 +2836,24 @@
       OWNSPACE PROFILE PAGE UPDATE:
 
       FIXED / ADDED:
-      - Light theme is now default.
+      - Light theme is default.
       - Profile reads edit-profile saved fields from users + public_profiles.
       - No fake user/sample data.
-      - Clean settings gear icon kept.
-      - Added Share Profile button.
-      - Public/Private toggle is safer for Supabase schema differences.
+      - Dashboard now loads posts + community_posts.
+      - Community posts show label: Community Post.
+      - Post links include source parameter for future post.html support.
+      - Photos tab includes photo posts from normal posts and community posts.
       - Dashboard / Photos / Events / Places / Community stay in one row.
       - Dashboard shows first 10 posts, then Show More.
-      - Photos tab shows only photo posts.
       - Events show created + joined.
       - Places show added + visited.
       - Community tab shows created + joined.
       - Share button added to posts, events, places, and communities.
       - Network stays hidden until Followers / Following clicked.
       - Inbox badge counts pending message_requests + unread chat_messages only.
+
+      NEXT PAGE:
+      - post.html should be updated later to open both posts and community_posts.
     */
   </script>
 </body>
