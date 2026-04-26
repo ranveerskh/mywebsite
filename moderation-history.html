@@ -1,104 +1,807 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Moderation History</title>
+  <title>OwnSpace - Moderation History</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;--card:#121931;--soft:#161f3d;--line:rgba(255,255,255,.08);
-      --text:#fff;--muted:#9aa7c7;--green:#3ddc84;--red:#ff5d73;--yellow:#f5b942;--purple:#a78bfa;
+
+    :root,
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
     }
-    body{background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);color:var(--text);min-height:100vh;padding:14px}
-    .app{max-width:980px;margin:0 auto}
-    .topbar,.panel{background:rgba(18,25,49,.88);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-    .left-wrap{display:flex;align-items:center;gap:10px}
-    .back-btn{border:none;background:var(--soft);color:#fff;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;border:1px solid var(--line)}
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .section-title{font-size:20px;font-weight:800;margin-bottom:8px}
-    .section-note{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
-    .filters{display:grid;grid-template-columns:1fr 180px;gap:10px}
-    input,select{
-      width:100%;border:none;outline:none;padding:13px 14px;border-radius:14px;background:#0f1630;color:#fff;
-      border:1px solid rgba(255,255,255,.07);font-size:14px
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
-    select option{color:#000}
-    .loading{text-align:center;color:var(--muted);padding:28px 10px}
-    .list{display:grid;gap:12px}
-    .card{background:#0f1630;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px}
-    .card-title{font-size:16px;font-weight:800;margin-bottom:6px}
-    .card-sub{font-size:13px;color:var(--muted);line-height:1.7}
-    .note{margin-top:10px;color:#fff;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
-    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:8px}
-    .warn{background:rgba(245,185,66,.14);color:#ffe7b0;border:1px solid rgba(245,185,66,.20)}
-    .suspend{background:rgba(167,139,250,.14);color:#e8defd;border:1px solid rgba(167,139,250,.20)}
-    .ban{background:rgba(255,93,115,.14);color:#ffd3d9;border:1px solid rgba(255,93,115,.20)}
-    .dismiss{background:#182248;color:#c9d5ff;border:1px solid rgba(255,255,255,.06)}
-    .empty-box{text-align:center;padding:28px 10px;color:var(--muted);background:#0f1630;border-radius:18px;border:1px dashed rgba(255,255,255,.08)}
+
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
+    }
+
+    .app{max-width:920px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
+      align-items:center;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      position:relative;
+    }
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:13px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.13), rgba(167,139,250,.10)),
+        var(--surface);
+    }
+
+    .hero:before{
+      content:"";
+      position:absolute;
+      right:-80px;
+      bottom:-120px;
+      width:230px;
+      height:230px;
+      border-radius:50%;
+      background:rgba(61,220,132,.08);
+      pointer-events:none;
+    }
+
+    .hero-title{
+      position:relative;
+      font-size:20px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      margin-bottom:5px;
+    }
+
+    .hero-sub{
+      position:relative;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .summary-grid{
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .summary-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:17px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .summary-label{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:950;
+      margin-bottom:7px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .summary-value{
+      font-size:23px;
+      font-weight:950;
+      line-height:1;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:950;
+      margin-bottom:6px;
+      letter-spacing:-.01em;
+    }
+
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .filter-grid{
+      display:grid;
+      grid-template-columns:1.4fr 1fr 1fr 1fr;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+      align-items:center;
+    }
+
+    .search-box,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .search-box::placeholder{color:var(--muted)}
+    .select option{color:#111}
+
+    .action-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      cursor:pointer;
+      min-height:40px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .action-btn:disabled{opacity:.65;cursor:not-allowed}
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-bottom:10px;
+      line-height:1.5;
+    }
+
+    .message.ok{color:#22b36c}
+    .message.err{color:#e74c66}
+    html[data-theme="dark"] .message.ok{color:#86efac}
+    html[data-theme="dark"] .message.err{color:#fda4af}
+
+    .loading-box,
+    .empty-box,
+    .denied-box{
+      text-align:center;
+      color:var(--muted);
+      padding:22px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .group{
+      display:grid;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .group-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      position:sticky;
+      top:72px;
+      z-index:20;
+      backdrop-filter:blur(12px);
+    }
+
+    .group-title{
+      font-size:14px;
+      font-weight:950;
+      line-height:1.25;
+    }
+
+    .group-count{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+    }
+
+    .card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .card-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:9px;
+    }
+
+    .card-title{
+      font-size:16px;
+      font-weight:950;
+      line-height:1.35;
+      word-break:break-word;
+    }
+
+    .card-time{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:850;
+      white-space:nowrap;
+      text-align:right;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:9px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      padding:6px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .badge.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin:10px 0;
+    }
+
+    .meta-item{
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 11px;
+      font-size:13px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .meta-item strong{
+      display:block;
+      margin-bottom:4px;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .note{
+      color:var(--text);
+      font-size:14px;
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 11px;
+      margin-top:9px;
+    }
+
+    .inline-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      align-items:center;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:10px;
+      width:min(920px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      z-index:50;
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:9px 5px;
+      border-radius:14px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    @media(max-width:900px){
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .filter-grid{grid-template-columns:1fr 1fr}
+    }
 
     @media(max-width:700px){
-      body{padding:10px}
-      .filters{grid-template-columns:1fr}
-      .topbar{align-items:flex-start}
+      body{padding:10px 10px 108px}
+      .brand{font-size:17px}
+      .panel{padding:11px;border-radius:20px}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .filter-grid{grid-template-columns:1fr}
+      .meta-grid{grid-template-columns:1fr}
+      .toolbar .action-btn{flex:1}
+      .inline-actions .action-btn{flex:1}
+      .group-head{top:68px}
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Moderation history</div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Moderation History</div>
+      </div>
+
+      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+          <path d="M21 3v6h-6"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="accessPanel" class="panel">
+      <div id="accessLoading" class="loading-box">Checking admin access...</div>
+      <div id="accessDenied" class="denied-box hidden">You do not have admin access for this page.</div>
+    </div>
+
+    <div id="historyWrap" class="hidden">
+      <div class="panel hero">
+        <div class="hero-title">Moderation History</div>
+        <div class="hero-sub">
+          Clean record of warnings, suspensions, bans, report actions, verification reviews, Hub actions, communities, and places.
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Total</div>
+            <div id="sumTotal" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">User Actions</div>
+            <div id="sumUserActions" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">Content</div>
+            <div id="sumContentActions" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">Verification</div>
+            <div id="sumVerification" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">Today</div>
+            <div id="sumToday" class="summary-value">0</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <div class="section-title">History</div>
-      <div class="section-note">Every moderation action is saved here.</div>
-      <div class="filters">
-        <input type="text" id="searchInput" placeholder="Search by user id, note, category..." />
-        <select id="actionFilter">
-          <option value="all">All actions</option>
-          <option value="warn">Warn</option>
-          <option value="suspend">Suspend</option>
-          <option value="ban">Ban</option>
-          <option value="dismiss">Dismiss</option>
-        </select>
+      <div class="panel">
+        <div class="section-title">Filters & Sorting</div>
+        <div class="section-note">
+          Use grouping to stop everything from looking mixed together.
+        </div>
+
+        <div class="filter-grid">
+          <input id="searchInput" class="search-box" type="text" placeholder="Search user, admin, target, report, note, reason..." />
+
+          <select id="categoryFilter" class="select">
+            <option value="all">All categories</option>
+            <option value="user">User moderation</option>
+            <option value="content">Content actions</option>
+            <option value="report">Reports</option>
+            <option value="verification">Verification</option>
+            <option value="community">Communities</option>
+            <option value="hub">Hub</option>
+            <option value="place">Places</option>
+            <option value="system">System / Other</option>
+          </select>
+
+          <select id="actionFilter" class="select">
+            <option value="all">All actions</option>
+            <option value="warn">Warn</option>
+            <option value="suspend">Suspend</option>
+            <option value="ban">Ban</option>
+            <option value="restore">Restore</option>
+            <option value="hide">Hide / Delete</option>
+            <option value="approve">Approve</option>
+            <option value="reject">Reject</option>
+            <option value="resolve">Resolve / Dismiss</option>
+            <option value="feature">Feature / Pin</option>
+            <option value="author">Hub author</option>
+          </select>
+
+          <select id="targetTypeFilter" class="select">
+            <option value="all">All target types</option>
+            <option value="user">User</option>
+            <option value="profile">Profile</option>
+            <option value="post">Post</option>
+            <option value="event">Event</option>
+            <option value="place">Place</option>
+            <option value="community">Community</option>
+            <option value="hub_post">Hub post</option>
+            <option value="verification">Verification</option>
+            <option value="report">Report</option>
+          </select>
+
+          <select id="sortSelect" class="select">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="category">Category A-Z</option>
+            <option value="action">Action A-Z</option>
+            <option value="targetUser">Target user A-Z</option>
+            <option value="targetType">Target type A-Z</option>
+            <option value="admin">Admin A-Z</option>
+            <option value="activeUntil">Active until soonest</option>
+          </select>
+
+          <select id="groupSelect" class="select">
+            <option value="category">Group by category</option>
+            <option value="action">Group by action</option>
+            <option value="targetType">Group by target type</option>
+            <option value="targetUser">Group by target user</option>
+            <option value="date">Group by date</option>
+            <option value="admin">Group by admin</option>
+            <option value="none">No grouping</option>
+          </select>
+
+          <select id="dateFilter" class="select">
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+
+          <button id="clearFiltersBtn" class="action-btn yellow" type="button">Clear Filters</button>
+          <button id="exportCsvBtn" class="action-btn green" type="button">Export CSV</button>
+        </div>
+
+        <div id="pageMessage" class="message"></div>
+      </div>
+
+      <div class="panel">
+        <div id="loading" class="loading-box">Loading moderation history...</div>
+        <div id="historyList" class="hidden"></div>
+        <div id="emptyBox" class="empty-box hidden">No moderation history found.</div>
       </div>
     </div>
-
-    <div class="panel">
-      <div id="loading" class="loading">Loading history...</div>
-      <div id="list" class="list" style="display:none;"></div>
-      <div id="emptyBox" class="empty-box" style="display:none;">No moderation history found.</div>
-    </div>
   </div>
+
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
+      <span>Feed</span>
+    </a>
+
+    <a href="nearby.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
+      <span>Nearby</span>
+    </a>
+
+    <a href="nearby-communities.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 19a4 4 0 0 1 8 0"></path>
+          <circle cx="11" cy="9" r="3"></circle>
+          <path d="M17 11a3 3 0 0 1 3 3v5"></path>
+        </svg>
+      </span>
+      <span>Community</span>
+    </a>
+
+    <a href="admin.html" class="nav-link active">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l8 4v5c0 5-3.3 8.5-8 9-4.7-.5-8-4-8-9V7l8-4z"></path>
+          <path d="M9 12l2 2 4-5"></path>
+        </svg>
+      </span>
+      <span>Admin</span>
+    </a>
+
+    <a href="profile.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
+    </a>
+  </nav>
 
   <script type="module">
     import { supabase } from "./supabase.js";
 
     const backBtn = document.getElementById("backBtn");
-    const loading = document.getElementById("loading");
-    const list = document.getElementById("list");
-    const emptyBox = document.getElementById("emptyBox");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    const accessPanel = document.getElementById("accessPanel");
+    const accessLoading = document.getElementById("accessLoading");
+    const accessDenied = document.getElementById("accessDenied");
+    const historyWrap = document.getElementById("historyWrap");
+
+    const sumTotal = document.getElementById("sumTotal");
+    const sumUserActions = document.getElementById("sumUserActions");
+    const sumContentActions = document.getElementById("sumContentActions");
+    const sumVerification = document.getElementById("sumVerification");
+    const sumToday = document.getElementById("sumToday");
+
     const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
     const actionFilter = document.getElementById("actionFilter");
+    const targetTypeFilter = document.getElementById("targetTypeFilter");
+    const sortSelect = document.getElementById("sortSelect");
+    const groupSelect = document.getElementById("groupSelect");
+    const dateFilter = document.getElementById("dateFilter");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+    const exportCsvBtn = document.getElementById("exportCsvBtn");
+
+    const pageMessage = document.getElementById("pageMessage");
+    const loading = document.getElementById("loading");
+    const historyList = document.getElementById("historyList");
+    const emptyBox = document.getElementById("emptyBox");
 
     let currentUser = null;
     let allLogs = [];
     let historyChannel = null;
     let refreshTimer = null;
 
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      return themeValue === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    if (themeMediaQuery.addEventListener) {
+      themeMediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "admin.html";
     });
+
+    refreshBtn.addEventListener("click", () => {
+      loadHistory(true).catch(err => console.error("Refresh failed:", err));
+    });
+
+    function setMessage(text = "", type = "") {
+      pageMessage.textContent = text;
+      pageMessage.className = `message ${type}`;
+    }
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -112,6 +815,21 @@
         if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
       return fallback;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        (msg.includes("relation") && msg.includes("does not exist"))
+      );
     }
 
     function toMillis(value) {
@@ -138,195 +856,671 @@
     }
 
     function formatDate(value) {
-      if (!value) return "-";
+      const ms = toMillis(value);
+      if (!ms) return "-";
 
       try {
-        if (typeof value === "object" && typeof value.toDate === "function") {
-          return value.toDate().toLocaleString();
-        }
-      } catch {}
-
-      try {
-        if (typeof value === "object" && typeof value.seconds === "number") {
-          return new Date(value.seconds * 1000).toLocaleString();
-        }
-      } catch {}
-
-      try {
-        const d = new Date(value);
-        return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString();
+        return new Date(ms).toLocaleString();
       } catch {
         return "-";
       }
     }
 
+    function formatDateGroup(value) {
+      const ms = toMillis(value);
+      if (!ms) return "No date";
+
+      try {
+        return new Date(ms).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
+      } catch {
+        return "No date";
+      }
+    }
+
+    function isToday(value) {
+      const ms = toMillis(value);
+      if (!ms) return false;
+
+      const d = new Date(ms);
+      const now = new Date();
+
+      return (
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    }
+
     function normalizeAction(rawAction = "") {
-      const action = String(rawAction || "").toLowerCase();
+      const action = normalizeText(rawAction);
 
       if (action.includes("warn")) return "warn";
       if (action.includes("suspend")) return "suspend";
       if (action.includes("ban")) return "ban";
-      if (action.includes("dismiss")) return "dismiss";
-      if (action.includes("resolve")) return "dismiss";
-      if (action.includes("reject")) return "dismiss";
-      if (action.includes("approved")) return "dismiss";
-      if (action.includes("hidden")) return "dismiss";
-      if (action.includes("delete")) return "ban";
+      if (action.includes("restore")) return "restore";
 
-      return action || "action";
+      if (action.includes("hide") || action.includes("hidden") || action.includes("delete") || action.includes("deleted")) return "hide";
+
+      if (action.includes("approve") || action.includes("approved")) return "approve";
+      if (action.includes("reject") || action.includes("rejected")) return "reject";
+
+      if (action.includes("resolve") || action.includes("resolved") || action.includes("dismiss") || action.includes("dismissed") || action.includes("closed")) return "resolve";
+
+      if (action.includes("feature") || action.includes("unfeature") || action.includes("pin") || action.includes("unpin")) return "feature";
+
+      if (action.includes("author")) return "author";
+
+      return action || "other";
+    }
+
+    function normalizeCategory(rawAction = "", targetType = "", source = "") {
+      const action = normalizeText(rawAction);
+      const type = normalizeText(targetType);
+      const src = normalizeText(source);
+
+      if (
+        action.includes("verification") ||
+        type.includes("verification") ||
+        src.includes("verification")
+      ) return "verification";
+
+      if (
+        action.includes("hub") ||
+        type.includes("hub") ||
+        src.includes("hub")
+      ) return "hub";
+
+      if (
+        action.includes("community") ||
+        type.includes("community") ||
+        src.includes("community")
+      ) return "community";
+
+      if (
+        action.includes("place") ||
+        type.includes("place") ||
+        src.includes("place") ||
+        src.includes("nearby")
+      ) return "place";
+
+      if (
+        action.includes("report") ||
+        type.includes("report")
+      ) return "report";
+
+      if (
+        action.includes("content") ||
+        action.includes("hide") ||
+        action.includes("hidden") ||
+        action.includes("delete") ||
+        ["post", "event"].includes(type)
+      ) return "content";
+
+      if (
+        action.includes("user") ||
+        action.includes("warn") ||
+        action.includes("suspend") ||
+        action.includes("ban") ||
+        action.includes("restore") ||
+        ["user", "profile"].includes(type)
+      ) return "user";
+
+      return "system";
+    }
+
+    function categoryLabel(category) {
+      const map = {
+        user: "User moderation",
+        content: "Content actions",
+        report: "Reports",
+        verification: "Verification",
+        community: "Communities",
+        hub: "OwnSpace Hub",
+        place: "Places",
+        system: "System / Other"
+      };
+
+      return map[category] || "System / Other";
+    }
+
+    function actionLabel(action) {
+      const map = {
+        warn: "Warn",
+        suspend: "Suspend",
+        ban: "Ban",
+        restore: "Restore",
+        hide: "Hide / Delete",
+        approve: "Approve",
+        reject: "Reject",
+        resolve: "Resolve / Dismiss",
+        feature: "Feature / Pin",
+        author: "Hub Author",
+        other: "Other"
+      };
+
+      return map[action] || action;
+    }
+
+    function badgeClassForCategory(category) {
+      if (category === "user") return "yellow";
+      if (category === "content") return "red";
+      if (category === "report") return "purple";
+      if (category === "verification") return "green";
+      if (category === "community") return "blue";
+      if (category === "hub") return "purple";
+      if (category === "place") return "green";
+      return "blue";
+    }
+
+    function badgeClassForAction(action) {
+      if (action === "warn") return "yellow";
+      if (action === "suspend") return "purple";
+      if (action === "ban") return "red";
+      if (action === "restore") return "green";
+      if (action === "hide") return "red";
+      if (action === "approve") return "green";
+      if (action === "reject") return "red";
+      if (action === "resolve") return "blue";
+      if (action === "feature") return "purple";
+      if (action === "author") return "blue";
+      return "blue";
     }
 
     function normalizeLog(raw) {
       const d = raw || {};
-      const actionRaw = getField(d, ["action_type", "actionType", "action"], "action");
+
+      const actionRaw = String(getField(d, [
+        "action",
+        "action_type",
+        "actionType",
+        "type"
+      ], "action") || "action");
+
+      const targetType = String(getField(d, [
+        "target_type",
+        "targetType",
+        "object_type",
+        "objectType"
+      ], "") || "");
+
+      const source = String(getField(d, [
+        "source",
+        "target_source",
+        "targetSource"
+      ], "") || "");
+
       const actionType = normalizeAction(actionRaw);
+      const category = normalizeCategory(actionRaw, targetType, source);
+
+      const createdAt =
+        d.created_at ??
+        d.createdAt ??
+        d.created ??
+        d.timestamp ??
+        null;
+
+      const activeUntil =
+        d.active_until ??
+        d.activeUntil ??
+        d.warning_until ??
+        d.warningUntil ??
+        d.suspension_until ??
+        d.suspensionUntil ??
+        null;
+
+      const targetUserId = String(getField(d, [
+        "target_user_id",
+        "targetUserId",
+        "reported_user_id",
+        "reportedUserId",
+        "user_id",
+        "userId",
+        "uid"
+      ], "") || "");
+
+      const targetId = String(getField(d, [
+        "target_id",
+        "targetId",
+        "object_id",
+        "objectId"
+      ], "") || "");
+
+      const reportId = String(getField(d, [
+        "report_id",
+        "reportId",
+        "source_report_id",
+        "sourceReportId"
+      ], "") || "");
+
+      const adminUid = String(getField(d, [
+        "admin_uid",
+        "adminUid",
+        "admin_id",
+        "adminId",
+        "reviewed_by",
+        "reviewedBy"
+      ], "") || "");
+
+      const reason = String(getField(d, [
+        "reason",
+        "category",
+        "title"
+      ], "") || "");
+
+      const note = String(getField(d, [
+        "admin_note",
+        "adminNote",
+        "note",
+        "message",
+        "description"
+      ], "") || "");
 
       return {
-        id: getField(d, ["id"], ""),
+        id: String(getField(d, ["id"], "") || ""),
         actionRaw,
         actionType,
-
-        targetUserId: getField(d, [
-          "target_user_id",
-          "targetUserId",
-          "reported_user_id",
-          "reportedUserId",
-          "user_id",
-          "userId"
-        ], ""),
-
-        sourceReportId: getField(d, [
-          "source_report_id",
-          "sourceReportId",
-          "report_id",
-          "reportId"
-        ], ""),
-
-        targetType: getField(d, ["target_type", "targetType"], ""),
-        targetId: getField(d, ["target_id", "targetId"], ""),
-        category: getField(d, ["category", "reason", "source"], ""),
-
-        durationDays: getField(d, [
-          "duration_days",
-          "durationDays",
-          "days"
-        ], ""),
-
-        activeUntil: d.active_until ?? d.activeUntil ?? d.warning_until ?? d.warningUntil ?? d.suspension_until ?? d.suspensionUntil ?? null,
-
-        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
-
-        adminUid: getField(d, [
-          "admin_uid",
-          "adminUid",
-          "admin_id",
-          "adminId"
-        ], ""),
-
-        adminNote: getField(d, [
-          "admin_note",
-          "adminNote",
-          "note",
-          "message",
-          "description"
-        ], "")
+        category,
+        targetType: targetType || "",
+        targetId,
+        targetUserId,
+        reportId,
+        source,
+        reason,
+        note,
+        adminUid,
+        durationDays: String(getField(d, ["duration_days", "durationDays", "days"], "") || ""),
+        activeUntil,
+        createdAt,
+        createdMs: toMillis(createdAt),
+        raw: d
       };
     }
 
-    function getFilteredLogs() {
-      const q = searchInput.value.trim().toLowerCase();
-      const action = actionFilter.value;
-
-      return allLogs.filter(log => {
-        if (action !== "all" && log.actionType !== action) return false;
-        if (!q) return true;
-
-        const haystack = [
-          log.targetUserId || "",
-          log.actionRaw || "",
-          log.actionType || "",
-          log.category || "",
-          log.adminNote || "",
-          log.targetType || "",
-          log.targetId || "",
-          log.sourceReportId || "",
-          log.adminUid || ""
-        ].join(" ").toLowerCase();
-
-        return haystack.includes(q);
-      });
-    }
-
-    function renderLogs() {
-      const items = getFilteredLogs();
-      list.innerHTML = "";
-
-      if (!items.length) {
-        list.style.display = "none";
-        emptyBox.style.display = "block";
-        return;
+    async function selectAllSafe(table) {
+      try {
+        const { data, error } = await supabase.from(table).select("*");
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        if (!isMissingSchemaError(err)) console.warn(`Could not load ${table}:`, err?.message || err);
+        return [];
       }
-
-      emptyBox.style.display = "none";
-      list.style.display = "grid";
-
-      items.forEach(log => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const badgeClass =
-          log.actionType === "warn" ? "warn" :
-          log.actionType === "suspend" ? "suspend" :
-          log.actionType === "ban" ? "ban" : "dismiss";
-
-        const durationText = log.durationDays === "" || log.durationDays == null
-          ? "-"
-          : `${log.durationDays} days`;
-
-        card.innerHTML = `
-          <span class="badge ${badgeClass}">${escapeHtml(String(log.actionRaw || log.actionType || "action").toUpperCase())}</span>
-          <div class="card-title">User: ${escapeHtml(log.targetUserId || "-")}</div>
-          <div class="card-sub">
-            Report: ${escapeHtml(log.sourceReportId || "-")}<br>
-            Target: ${escapeHtml(log.targetType || "-")} • ${escapeHtml(log.targetId || "-")}<br>
-            Category: ${escapeHtml(log.category || "-")}<br>
-            Duration: ${escapeHtml(durationText)}<br>
-            Active until: ${escapeHtml(formatDate(log.activeUntil))}<br>
-            Created: ${escapeHtml(formatDate(log.createdAt))}<br>
-            Admin: ${escapeHtml(log.adminUid || "-")}
-          </div>
-          <div class="note">${escapeHtml(log.adminNote || "No admin note")}</div>
-        `;
-
-        list.appendChild(card);
-      });
     }
 
-    searchInput.addEventListener("input", renderLogs);
-    actionFilter.addEventListener("change", renderLogs);
+    async function selectRowByColumn(table, column, value) {
+      if (!value) return null;
 
-    async function checkAdminAccess(uid) {
-      const columns = ["id", "uid", "user_id", "userId"];
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .eq(column, value)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data || null;
+    }
+
+    async function ensureAdmin(uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
 
       for (const column of columns) {
         try {
-          const { data, error } = await supabase
-            .from("admins")
-            .select("*")
-            .eq(column, uid)
-            .maybeSingle();
-
-          if (!error && data) return true;
-        } catch {}
+          const row = await selectRowByColumn("admins", column, uid);
+          if (row) return true;
+        } catch (err) {
+          if (!isMissingSchemaError(err)) console.warn(`Admin check skipped admins.${column}`, err?.message || err);
+        }
       }
+
+      try {
+        const users = await selectAllSafe("users");
+        const me = users.find(row => {
+          const id = String(getField(row, ["uid", "id", "user_id", "userId"], "") || "");
+          return id === uid;
+        });
+
+        if (me && (me.is_admin === true || me.isAdmin === true || normalizeText(me.role) === "admin")) return true;
+      } catch {}
 
       return false;
     }
 
-    async function loadHistory() {
-      loading.style.display = "block";
-      list.style.display = "none";
-      emptyBox.style.display = "none";
+    function updateSummary() {
+      const todayCount = allLogs.filter(log => isToday(log.createdAt)).length;
+
+      sumTotal.textContent = String(allLogs.length);
+      sumUserActions.textContent = String(allLogs.filter(log => log.category === "user").length);
+      sumContentActions.textContent = String(allLogs.filter(log => log.category === "content").length);
+      sumVerification.textContent = String(allLogs.filter(log => log.category === "verification").length);
+      sumToday.textContent = String(todayCount);
+    }
+
+    function passesDateFilter(log) {
+      const value = dateFilter.value;
+
+      if (value === "all") return true;
+
+      const ms = log.createdMs;
+      if (!ms) return false;
+
+      if (value === "today") return isToday(log.createdAt);
+
+      const days = Number(value);
+      if (!Number.isFinite(days)) return true;
+
+      return ms >= Date.now() - days * 24 * 60 * 60 * 1000;
+    }
+
+    function getFilteredLogs() {
+      const q = normalizeText(searchInput.value);
+      const category = categoryFilter.value;
+      const action = actionFilter.value;
+      const targetType = targetTypeFilter.value;
+
+      let rows = allLogs.filter(log => {
+        if (category !== "all" && log.category !== category) return false;
+        if (action !== "all" && log.actionType !== action) return false;
+
+        if (targetType !== "all") {
+          const cleanType = normalizeText(log.targetType);
+          if (cleanType !== targetType) return false;
+        }
+
+        if (!passesDateFilter(log)) return false;
+
+        if (q) {
+          const haystack = [
+            log.id,
+            log.actionRaw,
+            log.actionType,
+            log.category,
+            categoryLabel(log.category),
+            actionLabel(log.actionType),
+            log.targetType,
+            log.targetId,
+            log.targetUserId,
+            log.reportId,
+            log.source,
+            log.reason,
+            log.note,
+            log.adminUid,
+            log.durationDays
+          ].join(" ").toLowerCase();
+
+          if (!haystack.includes(q)) return false;
+        }
+
+        return true;
+      });
+
+      rows = sortLogs(rows);
+
+      return rows;
+    }
+
+    function sortLogs(rows) {
+      const sort = sortSelect.value;
+
+      const textSort = (a, b, getter) => String(getter(a) || "").localeCompare(String(getter(b) || ""));
+
+      return [...rows].sort((a, b) => {
+        if (sort === "oldest") return a.createdMs - b.createdMs;
+        if (sort === "category") return textSort(a, b, x => categoryLabel(x.category)) || b.createdMs - a.createdMs;
+        if (sort === "action") return textSort(a, b, x => actionLabel(x.actionType)) || b.createdMs - a.createdMs;
+        if (sort === "targetUser") return textSort(a, b, x => x.targetUserId) || b.createdMs - a.createdMs;
+        if (sort === "targetType") return textSort(a, b, x => x.targetType) || b.createdMs - a.createdMs;
+        if (sort === "admin") return textSort(a, b, x => x.adminUid) || b.createdMs - a.createdMs;
+        if (sort === "activeUntil") {
+          const ams = toMillis(a.activeUntil) || Number.MAX_SAFE_INTEGER;
+          const bms = toMillis(b.activeUntil) || Number.MAX_SAFE_INTEGER;
+          return ams - bms || b.createdMs - a.createdMs;
+        }
+
+        return b.createdMs - a.createdMs;
+      });
+    }
+
+    function getGroupKey(log) {
+      const group = groupSelect.value;
+
+      if (group === "none") return "All history";
+      if (group === "action") return actionLabel(log.actionType);
+      if (group === "targetType") return log.targetType ? log.targetType : "No target type";
+      if (group === "targetUser") return log.targetUserId ? log.targetUserId : "No target user";
+      if (group === "date") return formatDateGroup(log.createdAt);
+      if (group === "admin") return log.adminUid ? log.adminUid : "No admin";
+      return categoryLabel(log.category);
+    }
+
+    function buildOpenLink(log) {
+      const type = normalizeText(log.targetType);
+      const id = log.targetId || "";
+
+      if (!id && !log.targetUserId && !log.reportId) return "";
+
+      if (type === "post") return `post.html?postId=${encodeURIComponent(id)}`;
+      if (type === "event") return `event.html?eventId=${encodeURIComponent(id)}`;
+      if (type === "place") return `place.html?placeId=${encodeURIComponent(id)}${log.source ? "&source=" + encodeURIComponent(log.source) : ""}`;
+      if (type === "community") return `community.html?communityId=${encodeURIComponent(id)}`;
+      if (type === "hub_post") return `hub.html?postId=${encodeURIComponent(id)}`;
+      if (type === "profile" || type === "user") return `member.html?uid=${encodeURIComponent(log.targetUserId || id)}`;
+      if (type === "verification") return `admin.html`;
+      if (type === "report") return `admin.html`;
+
+      if (log.targetUserId) return `member.html?uid=${encodeURIComponent(log.targetUserId)}`;
+      return "";
+    }
+
+    function renderLogCard(log) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const categoryClass = badgeClassForCategory(log.category);
+      const actionClass = badgeClassForAction(log.actionType);
+      const openLink = buildOpenLink(log);
+
+      const durationText = log.durationDays
+        ? `${log.durationDays} days`
+        : "-";
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div>
+            <div class="card-title">${escapeHtml(actionLabel(log.actionType))}</div>
+          </div>
+          <div class="card-time">${escapeHtml(formatDate(log.createdAt))}</div>
+        </div>
+
+        <div class="badge-row">
+          <span class="badge ${categoryClass}">${escapeHtml(categoryLabel(log.category))}</span>
+          <span class="badge ${actionClass}">${escapeHtml(log.actionRaw || actionLabel(log.actionType))}</span>
+          ${log.targetType ? `<span class="badge blue">${escapeHtml(log.targetType)}</span>` : ""}
+          ${log.source ? `<span class="badge purple">${escapeHtml(log.source)}</span>` : ""}
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Target User</strong>${escapeHtml(log.targetUserId || "-")}</div>
+          <div class="meta-item"><strong>Target ID</strong>${escapeHtml(log.targetId || "-")}</div>
+          <div class="meta-item"><strong>Report ID</strong>${escapeHtml(log.reportId || "-")}</div>
+          <div class="meta-item"><strong>Admin</strong>${escapeHtml(log.adminUid || "-")}</div>
+          <div class="meta-item"><strong>Reason / Category</strong>${escapeHtml(log.reason || "-")}</div>
+          <div class="meta-item"><strong>Duration</strong>${escapeHtml(durationText)}</div>
+          <div class="meta-item"><strong>Active Until</strong>${escapeHtml(formatDate(log.activeUntil))}</div>
+          <div class="meta-item"><strong>Log ID</strong>${escapeHtml(log.id || "-")}</div>
+        </div>
+
+        <div class="note">${escapeHtml(log.note || "No admin note")}</div>
+
+        <div class="inline-actions">
+          ${openLink ? `<a href="${escapeHtml(openLink)}" class="action-btn blue">Open Target</a>` : ""}
+          ${log.reportId ? `<button class="action-btn purple copy-id-btn" data-copy="${escapeHtml(log.reportId)}" type="button">Copy Report ID</button>` : ""}
+          ${log.targetUserId ? `<button class="action-btn green copy-id-btn" data-copy="${escapeHtml(log.targetUserId)}" type="button">Copy User ID</button>` : ""}
+        </div>
+      `;
+
+      card.querySelectorAll(".copy-id-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const text = btn.dataset.copy || "";
+          if (!text) return;
+
+          try {
+            await navigator.clipboard.writeText(text);
+            setMessage("Copied.", "ok");
+          } catch {
+            prompt("Copy this:", text);
+          }
+        });
+      });
+
+      return card;
+    }
+
+    function renderLogs() {
+      const rows = getFilteredLogs();
+      historyList.innerHTML = "";
+
+      if (!rows.length) {
+        loading.classList.add("hidden");
+        historyList.classList.add("hidden");
+        emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      emptyBox.classList.add("hidden");
+      loading.classList.add("hidden");
+      historyList.classList.remove("hidden");
+
+      const groups = new Map();
+
+      rows.forEach(log => {
+        const key = getGroupKey(log);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(log);
+      });
+
+      groups.forEach((items, key) => {
+        const group = document.createElement("div");
+        group.className = "group";
+
+        const head = document.createElement("div");
+        head.className = "group-head";
+        head.innerHTML = `
+          <div class="group-title">${escapeHtml(key)}</div>
+          <div class="group-count">${items.length} item${items.length === 1 ? "" : "s"}</div>
+        `;
+
+        const list = document.createElement("div");
+        list.className = "list";
+
+        items.forEach(log => list.appendChild(renderLogCard(log)));
+
+        group.appendChild(head);
+        group.appendChild(list);
+
+        historyList.appendChild(group);
+      });
+    }
+
+    function clearFilters() {
+      searchInput.value = "";
+      categoryFilter.value = "all";
+      actionFilter.value = "all";
+      targetTypeFilter.value = "all";
+      sortSelect.value = "newest";
+      groupSelect.value = "category";
+      dateFilter.value = "all";
+      setMessage("");
+      renderLogs();
+    }
+
+    function csvEscape(value) {
+      const s = String(value ?? "");
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+
+    function exportCsv() {
+      const rows = getFilteredLogs();
+
+      if (!rows.length) {
+        setMessage("No history to export with current filters.", "err");
+        return;
+      }
+
+      const headers = [
+        "created_at",
+        "category",
+        "action",
+        "action_raw",
+        "target_type",
+        "target_id",
+        "target_user_id",
+        "report_id",
+        "source",
+        "reason",
+        "duration_days",
+        "active_until",
+        "admin_uid",
+        "note",
+        "log_id"
+      ];
+
+      const body = rows.map(log => [
+        formatDate(log.createdAt),
+        categoryLabel(log.category),
+        actionLabel(log.actionType),
+        log.actionRaw,
+        log.targetType,
+        log.targetId,
+        log.targetUserId,
+        log.reportId,
+        log.source,
+        log.reason,
+        log.durationDays,
+        formatDate(log.activeUntil),
+        log.adminUid,
+        log.note,
+        log.id
+      ].map(csvEscape).join(","));
+
+      const csv = [headers.map(csvEscape).join(","), ...body].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ownspace-moderation-history-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+      setMessage("CSV exported.", "ok");
+    }
+
+    [
+      searchInput,
+      categoryFilter,
+      actionFilter,
+      targetTypeFilter,
+      sortSelect,
+      groupSelect,
+      dateFilter
+    ].forEach(el => {
+      el.addEventListener("input", renderLogs);
+      el.addEventListener("change", renderLogs);
+    });
+
+    clearFiltersBtn.addEventListener("click", clearFilters);
+    exportCsvBtn.addEventListener("click", exportCsv);
+
+    async function loadHistory(showLoading = true) {
+      setMessage("");
+
+      if (showLoading) {
+        loading.classList.remove("hidden");
+        historyList.classList.add("hidden");
+        emptyBox.classList.add("hidden");
+      }
 
       let rows = [];
       let lastError = null;
@@ -351,6 +1545,24 @@
         try {
           const { data, error } = await supabase
             .from("moderation_history")
+            .select("*")
+            .order("createdAt", { ascending: false });
+
+          if (!error) {
+            rows = data || [];
+            lastError = null;
+          } else {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError) {
+        try {
+          const { data, error } = await supabase
+            .from("moderation_history")
             .select("*");
 
           if (error) throw error;
@@ -363,17 +1575,17 @@
       }
 
       allLogs = rows
-        .map(normalizeLog)
-        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+        .map(row => normalizeLog({ id: row.id, ...row }))
+        .sort((a, b) => b.createdMs - a.createdMs);
 
-      loading.style.display = "none";
+      updateSummary();
       renderLogs();
     }
 
     function scheduleRefresh() {
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
-        loadHistory().catch(err => console.error("History refresh failed:", err));
+        loadHistory(false).catch(err => console.error("History refresh failed:", err));
       }, 350);
     }
 
@@ -404,14 +1616,19 @@
 
       currentUser = data.user;
 
-      const isAdmin = await checkAdminAccess(currentUser.id);
+      const isAdmin = await ensureAdmin(currentUser.id);
+
+      accessLoading.classList.add("hidden");
 
       if (!isAdmin) {
-        loading.textContent = "Access denied. Admin only.";
+        accessDenied.classList.remove("hidden");
         return;
       }
 
-      await loadHistory();
+      accessPanel.classList.add("hidden");
+      historyWrap.classList.remove("hidden");
+
+      await loadHistory(true);
       setupRealtime();
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -431,35 +1648,9 @@
 
     initPage().catch((error) => {
       console.error(error);
-      loading.textContent = "Could not load moderation history.";
+      accessLoading.classList.add("hidden");
+      accessDenied.classList.remove("hidden");
     });
-
-    /*
-      SUPABASE NEEDS FOR THIS PAGE:
-
-      TABLES:
-      - admins: select
-      - moderation_history: select, realtime
-
-      IMPORTANT COLUMNS SUPPORTED:
-      moderation_history:
-      - id
-      - action OR action_type
-      - admin_uid
-      - target_user_id
-      - target_type
-      - target_id
-      - report_id
-      - source
-      - category
-      - admin_note
-      - duration_days
-      - active_until
-      - created_at
-
-      SHARE BUTTON:
-      - Not needed on this page because it does not display post cards.
-    */
   </script>
 </body>
 </html>
