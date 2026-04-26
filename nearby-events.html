@@ -124,51 +124,15 @@
       box-shadow:var(--shadow);
     }
 
-    .nearby-summary{
-      display:grid;
-      gap:10px;
-    }
-
-    .chip-row-two{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:7px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:9px 8px;
-      border-radius:14px;
-      font-size:12px;
-      font-weight:950;
-      border:1px solid var(--line);
-      background:var(--surface-2);
-      color:var(--text);
-      min-height:40px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      text-align:center;
-    }
-
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
-
     .top-actions{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:12px;
+      gap:8px;
     }
 
     .action-btn{
       border:none;
-      border-radius:15px;
+      border-radius:14px;
       padding:11px 10px;
       font-size:13px;
       font-weight:950;
@@ -466,11 +430,6 @@
     @media (max-width:700px){
       .brand{font-size:17px}
 
-      .chip{
-        font-size:12px;
-        min-height:40px;
-      }
-
       .top-actions{
         grid-template-columns:1fr 1fr;
         gap:8px;
@@ -549,15 +508,6 @@
     </div>
 
     <div class="panel">
-      <div class="nearby-summary">
-        <span id="locationChip" class="chip chip-blue">Location -</span>
-
-        <div class="chip-row-two">
-          <span id="browserChip" class="chip chip-yellow">GPS Off</span>
-          <span id="countChip" class="chip chip-green">Events 0</span>
-        </div>
-      </div>
-
       <div class="top-actions">
         <button id="gpsToggleBtn" class="action-btn btn-yellow" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -657,11 +607,7 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
-    const locationChip = document.getElementById("locationChip");
-    const browserChip = document.getElementById("browserChip");
-    const countChip = document.getElementById("countChip");
     const inboxBadge = document.getElementById("inboxBadge");
-
     const topGpsBtn = document.getElementById("topGpsBtn");
     const gpsToggleBtn = document.getElementById("gpsToggleBtn");
     const gpsBtnText = document.getElementById("gpsBtnText");
@@ -705,7 +651,6 @@
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -734,13 +679,9 @@
 
     function setGpsUi(isOn) {
       if (isOn) {
-        browserChip.textContent = "GPS On";
-        browserChip.className = "chip chip-green";
         gpsBtnText.textContent = "GPS On";
         gpsToggleBtn.className = "action-btn btn-green";
       } else {
-        browserChip.textContent = "GPS Off";
-        browserChip.className = "chip chip-yellow";
         gpsBtnText.textContent = "GPS Off";
         gpsToggleBtn.className = "action-btn btn-yellow";
       }
@@ -999,14 +940,6 @@
       return dt ? dt.getTime() : Number.MAX_SAFE_INTEGER;
     }
 
-    function renderViewerLocation() {
-      if (!viewerProfile) return;
-
-      const parts = [viewerProfile.city, viewerProfile.province, viewerProfile.country].filter(Boolean);
-      locationChip.textContent = parts.length ? parts.join(", ") : "Location not set";
-      setGpsUi(!!browserCoords);
-    }
-
     async function countRows(table, buildQuery) {
       try {
         const query = supabase.from(table).select("id", { count: "exact", head: true });
@@ -1134,14 +1067,11 @@
       if (!navigator.geolocation) {
         browserCoords = null;
         setGpsUi(false);
-        browserChip.textContent = "GPS unsupported";
-        browserChip.className = "chip chip-red";
+        setPageStatus("GPS is not supported on this device.", "status-err");
         renderEvents();
         return;
       }
 
-      browserChip.textContent = "Checking GPS...";
-      browserChip.className = "chip chip-yellow";
       gpsBtnText.textContent = "Checking...";
       gpsToggleBtn.disabled = true;
       setPageStatus("Checking browser location...", "");
@@ -1165,8 +1095,6 @@
               viewerProfile.lat = browserCoords.lat;
               viewerProfile.lng = browserCoords.lng;
 
-              renderViewerLocation();
-              setGpsUi(true);
               setPageStatus("GPS On. Events with distance data are sorted closer first.", "status-ok");
             } catch (err) {
               console.error(err);
@@ -1217,14 +1145,12 @@
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
-      countChip.textContent = "Events 0";
     }
 
-    function showList(count) {
+    function showList() {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
-      countChip.textContent = `Events ${count}`;
     }
 
     function isJoined(eventId) {
@@ -1701,7 +1627,7 @@
         listWrap.appendChild(card);
       });
 
-      showList(rows.length);
+      showList();
     }
 
     async function selectProfileRow(table, uid) {
@@ -1733,8 +1659,6 @@
         ...(userRow || {}),
         uid
       }, uid);
-
-      renderViewerLocation();
     }
 
     async function loadEvents() {
@@ -1793,7 +1717,6 @@
         loadInboxBadge()
       ]);
 
-      renderViewerLocation();
       renderEvents();
     }
 
@@ -1823,6 +1746,7 @@
       currentUser = authData.user;
 
       try {
+        setGpsUi(false);
         await loadViewer(currentUser.id);
         await refreshAll();
 
