@@ -1,31 +1,14 @@
-
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OwnSpace - Nearby Events</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -44,17 +27,39 @@
       --nav-bg:rgba(255,255,255,.98);
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
     body{
       background:
         radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
         radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:8px 8px 108px;
     }
+
     .app{max-width:760px;margin:0 auto}
     .hidden{display:none!important}
+
     .topbar{
       position:sticky;
       top:0;
@@ -71,6 +76,7 @@
       gap:8px;
       box-shadow:var(--shadow);
     }
+
     .top-icon-btn{
       width:42px;
       height:42px;
@@ -87,23 +93,28 @@
       flex-shrink:0;
       position:relative;
     }
+
     .top-icon-btn svg{
       width:19px;
       height:19px;
       display:block;
     }
+
     .top-center{text-align:center;min-width:0}
+
     .brand{
       font-size:18px;
       font-weight:950;
       line-height:1.05;
       letter-spacing:-.02em;
     }
+
     .brand-sub{
       font-size:10px;
       color:var(--muted);
       margin-top:2px;
     }
+
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
@@ -112,11 +123,13 @@
       margin-bottom:10px;
       box-shadow:var(--shadow);
     }
+
     .chip-row{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:6px;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
@@ -133,17 +146,20 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
+
     .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
     .top-actions{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
       gap:7px;
       margin-top:9px;
     }
+
     .action-btn{
       border:none;
       border-radius:12px;
@@ -162,21 +178,26 @@
       border:1px solid var(--line);
       white-space:nowrap;
     }
+
     .action-btn svg{
       width:15px;
       height:15px;
       display:block;
       flex-shrink:0;
     }
+
     .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
     .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
     .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
     .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
     .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-soft{background:var(--surface-3);border-color:var(--line)}
+
     .action-btn:disabled{
       opacity:.65;
       cursor:not-allowed;
     }
+
     .status-text{
       min-height:18px;
       font-size:12.5px;
@@ -184,14 +205,19 @@
       line-height:1.45;
       color:var(--muted);
     }
-    .status-ok{color:#9cf0bf}
-    .status-err{color:#ffb3bd}
+
+    .status-ok{color:#22b36c}
+    .status-err{color:#e74c66}
+    html[data-theme="dark"] .status-ok{color:#9cf0bf}
+    html[data-theme="dark"] .status-err{color:#ffb3bd}
+
     .tabs{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:6px;
       margin-bottom:10px;
     }
+
     .tab-link{
       text-decoration:none;
       color:var(--text);
@@ -208,14 +234,17 @@
       font-weight:950;
       white-space:nowrap;
     }
+
     .tab-link.active{
       background:rgba(76,201,255,.14);
       border-color:rgba(76,201,255,.22);
     }
+
     .search-wrap{
       position:relative;
       margin-bottom:10px;
     }
+
     .search-box{
       width:100%;
       border:none;
@@ -227,7 +256,9 @@
       border:1px solid var(--line);
       font-size:14px;
     }
+
     .search-box::placeholder{color:var(--muted)}
+
     .clear-btn{
       position:absolute;
       right:7px;
@@ -247,10 +278,12 @@
       font-size:14px;
       font-weight:950;
     }
+
     .list{
       display:grid;
       gap:10px;
     }
+
     .loading-box,
     .empty-box{
       text-align:center;
@@ -262,6 +295,7 @@
       font-size:14px;
       line-height:1.55;
     }
+
     .card{
       background:var(--surface-2);
       border:1px solid var(--line);
@@ -269,6 +303,7 @@
       padding:12px;
       overflow:hidden;
     }
+
     .cover{
       width:100%;
       max-height:260px;
@@ -279,6 +314,7 @@
       border:1px solid var(--line);
       margin-bottom:10px;
     }
+
     .card-title{
       font-size:16px;
       font-weight:950;
@@ -286,12 +322,14 @@
       margin-bottom:8px;
       word-break:break-word;
     }
+
     .badge-row{
       display:flex;
       gap:7px;
       flex-wrap:wrap;
       margin-bottom:10px;
     }
+
     .mini-badge{
       display:inline-flex;
       align-items:center;
@@ -305,11 +343,13 @@
       color:var(--text);
       white-space:nowrap;
     }
+
     .mini-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
     .mini-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .mini-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .mini-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .mini-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
     .meta-grid{
       display:grid;
       gap:6px;
@@ -318,6 +358,7 @@
       line-height:1.52;
       margin-bottom:10px;
     }
+
     .desc{
       color:var(--text);
       line-height:1.55;
@@ -326,6 +367,7 @@
       word-break:break-word;
       margin-bottom:12px;
     }
+
     .card-actions{
       display:flex;
       gap:7px;
@@ -333,9 +375,11 @@
       margin-top:10px;
       align-items:center;
     }
+
     .share-btn{
       margin-left:auto;
     }
+
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -353,6 +397,7 @@
       box-shadow:0 22px 44px rgba(0,0,0,.22);
       overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
       color:var(--muted);
@@ -371,10 +416,12 @@
       cursor:pointer;
       position:relative;
     }
+
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
+
     .icon-svg{
       width:20px;
       height:20px;
@@ -383,11 +430,13 @@
       justify-content:center;
       line-height:1;
     }
+
     .icon-svg svg{
       width:20px;
       height:20px;
       display:block;
     }
+
     .nav-badge{
       position:absolute;
       top:5px;
@@ -406,45 +455,48 @@
       line-height:1;
       border:2px solid var(--nav-bg);
     }
+
     @media (max-width:700px){
       .brand{font-size:17px}
+
       .chip-row{
         grid-template-columns:repeat(2,1fr);
         gap:5px;
       }
-      .chip{
-        font-size:10px;
-      }
-      .top-actions{
-        grid-template-columns:1fr;
-      }
+
+      .chip{font-size:10px}
+
+      .top-actions{grid-template-columns:1fr}
+
       .tab-link{
         font-size:11.5px;
         padding:8px 3px;
       }
-      .share-btn{
-        margin-left:0;
-      }
+
+      .share-btn{margin-left:0}
+
       .bottom-nav{
         padding:7px;
         gap:5px;
       }
+
       .nav-link{
         font-size:10px;
         padding:8px 3px;
       }
     }
+
     @media(max-width:390px){
       .action-btn{
         font-size:11.5px;
         padding:8px 9px;
       }
-      .tab-link{
-        font-size:10.8px;
-      }
+
+      .tab-link{font-size:10.8px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -457,32 +509,37 @@
           <path d="M19 12h3"></path>
         </svg>
       </button>
+
       <div class="top-center">
         <div class="brand">OwnSpace</div>
         <div class="brand-sub">Nearby events</div>
       </div>
-      <a href="edit-profile.html#location" class="top-icon-btn" aria-label="Location settings">
+
+      <a href="settings.html" class="top-icon-btn" aria-label="Nearby settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
-          <circle cx="12" cy="9" r="2.5"></circle>
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
+          <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04A1.8 1.8 0 0 0 14.8 19.6a1.8 1.8 0 0 0-1.1 1.65V21.4a2.1 2.1 0 0 1-4.2 0v-.06A1.8 1.8 0 0 0 8.4 19.7a1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.8 15.1a1.8 1.8 0 0 0-1.65-1.1H2.1a2.1 2.1 0 0 1 0-4.2h.06A1.8 1.8 0 0 0 3.8 8.7a1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 0 1 6.37 3.7l.04.04A1.8 1.8 0 0 0 8.4 4.1a1.8 1.8 0 0 0 1.1-1.65V2.4a2.1 2.1 0 0 1 4.2 0v.06a1.8 1.8 0 0 0 1.1 1.64 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04A1.8 1.8 0 0 0 19.4 8.7c.28.6.9 1.1 1.65 1.1h.06a2.1 2.1 0 0 1 0 4.2h-.06A1.8 1.8 0 0 0 19.4 15z"></path>
         </svg>
       </a>
     </div>
+
     <div class="panel">
       <div class="chip-row">
         <span id="locationChip" class="chip chip-blue">Location -</span>
-        <span id="modeChip" class="chip chip-purple">Mode same city</span>
+        <span id="modeChip" class="chip chip-purple">Mode -</span>
         <span id="browserChip" class="chip chip-yellow">GPS off</span>
         <span id="countChip" class="chip chip-green">Events 0</span>
       </div>
+
       <div class="top-actions">
         <a href="edit-profile.html#location" class="action-btn btn-primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
             <circle cx="12" cy="9" r="2.5"></circle>
           </svg>
-          <span>Location Settings</span>
+          <span>Edit Location</span>
         </a>
+
         <button id="gpsBtn2" class="action-btn btn-green" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3"></circle>
@@ -493,6 +550,7 @@
           </svg>
           <span>Use GPS</span>
         </button>
+
         <a href="create-event.html" class="action-btn btn-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 5v14"></path>
@@ -501,23 +559,28 @@
           <span>Create Event</span>
         </a>
       </div>
+
       <div id="pageStatus" class="status-text"></div>
     </div>
+
     <div class="panel">
       <div class="tabs">
         <a href="nearby.html" class="tab-link">People</a>
         <a href="nearby-events.html" class="tab-link active">Events</a>
         <a href="nearby-places.html" class="tab-link">Places</a>
       </div>
+
       <div class="search-wrap">
-        <input id="searchInput" class="search-box" type="text" placeholder="Search nearby events, city, venue..." />
+        <input id="searchInput" class="search-box" type="text" placeholder="Search event, city, province, country, venue..." />
         <button id="clearBtn" class="clear-btn hidden" type="button">×</button>
       </div>
-      <div id="listLoading" class="loading-box">Loading nearby events...</div>
+
+      <div id="listLoading" class="loading-box">Loading events...</div>
       <div id="listWrap" class="list hidden"></div>
-      <div id="emptyBox" class="empty-box hidden">No nearby events found.</div>
+      <div id="emptyBox" class="empty-box hidden">No events found.</div>
     </div>
   </div>
+
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
@@ -529,6 +592,7 @@
       </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link active">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -538,6 +602,7 @@
       </span>
       <span>Nearby</span>
     </a>
+
     <a href="search.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -547,6 +612,7 @@
       </span>
       <span>Search</span>
     </a>
+
     <a href="inbox.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -556,6 +622,7 @@
       <span>Inbox</span>
       <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
+
     <a href="profile.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -566,27 +633,33 @@
       <span>Profile</span>
     </a>
   </nav>
+
   <script type="module">
     import { supabase } from "./supabase.js";
+
     const locationChip = document.getElementById("locationChip");
     const modeChip = document.getElementById("modeChip");
     const browserChip = document.getElementById("browserChip");
     const countChip = document.getElementById("countChip");
     const inboxBadge = document.getElementById("inboxBadge");
+
     const useBrowserLocationBtn = document.getElementById("useBrowserLocationBtn");
     const gpsBtn2 = document.getElementById("gpsBtn2");
     const pageStatus = document.getElementById("pageStatus");
+
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearBtn");
     const listLoading = document.getElementById("listLoading");
     const listWrap = document.getElementById("listWrap");
     const emptyBox = document.getElementById("emptyBox");
+
     let currentUser = null;
     let viewerProfile = null;
     let browserCoords = null;
     let eventsData = [];
     let memberMap = new Map();
     let memberRowMap = new Map();
+
     const ICONS = {
       open: `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -603,47 +676,61 @@
         </svg>
       `
     };
+
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || "light";
     }
+
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+
+      return themeValue === "dark" ? "dark" : "light";
     }
+
     function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
+
     applyTheme();
+
     window.addEventListener("storage", (e) => {
-      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme") applyTheme();
     });
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
       });
     }
+
     function setPageStatus(text = "", type = "") {
       pageStatus.textContent = text;
       pageStatus.className = `status-text ${type}`;
     }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
+
     function normalizeText(value) {
       return String(value || "").trim().toLowerCase();
     }
+
     function titleText(value) {
       return String(value || "").trim();
     }
+
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     }
+
     function getField(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
@@ -651,9 +738,11 @@
       }
       return "";
     }
+
     function nowIso() {
       return new Date().toISOString();
     }
+
     function readLat(obj) {
       return num(
         obj?.lat ??
@@ -664,6 +753,7 @@
         obj?.coords?.latitude
       );
     }
+
     function readLng(obj) {
       return num(
         obj?.lng ??
@@ -678,48 +768,109 @@
         obj?.coords?.longitude
       );
     }
+
+    function normalizeNearbyMode(value, fallbackLocationVisibility = "") {
+      const v = normalizeText(value);
+      const oldVisibility = normalizeText(fallbackLocationVisibility);
+
+      if (["city", "gps", "everywhere"].includes(v)) return v;
+      if (oldVisibility === "gps") return "gps";
+      return "city";
+    }
+
+    function normalizeLocationVisibility(value) {
+      const v = normalizeText(value);
+
+      if (v === "gps") return "approximate";
+      if (["hidden", "approximate", "city"].includes(v)) return v;
+      return "city";
+    }
+
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
+
       const aliases = [c];
+
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
       if (c === "canada") aliases.push("ca");
+      if (c === "india") aliases.push("bharat", "hindustan");
+
       return aliases.join(" ");
     }
+
+    function provinceAliases(province) {
+      const p = normalizeText(province);
+      if (!p) return "";
+
+      const aliases = [p];
+
+      if (p === "ontario") aliases.push("on", "ont");
+      if (p === "british columbia") aliases.push("bc", "b.c.");
+      if (p === "alberta") aliases.push("ab");
+      if (p === "quebec") aliases.push("qc");
+      if (p === "manitoba") aliases.push("mb");
+      if (p === "saskatchewan") aliases.push("sk");
+      if (p === "nova scotia") aliases.push("ns");
+      if (p === "new brunswick") aliases.push("nb");
+      if (p === "newfoundland and labrador") aliases.push("nl");
+      if (p === "prince edward island") aliases.push("pei", "pe");
+      if (p === "yukon") aliases.push("yt");
+
+      return aliases.join(" ");
+    }
+
     function buildLocationSearch(d) {
       const existing = titleText(d.location_search || d.locationSearch);
       const city = titleText(d.city || d.location_city || d.locationCity || "");
       const province = titleText(d.province || d.state || d.region || "");
       const country = titleText(d.country || d.location_country || d.locationCountry || "");
-      return [existing, city, province, country, countryAliases(country)]
+
+      return [
+        existing,
+        city,
+        province,
+        country,
+        provinceAliases(province),
+        countryAliases(country)
+      ]
         .filter(Boolean)
         .join(" ")
         .trim()
         .toLowerCase();
     }
+
     function kmDistance(lat1, lng1, lat2, lng2) {
       if ([lat1, lng1, lat2, lng2].some(v => v === null || v === undefined)) return null;
+
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLng = (lng2 - lng1) * Math.PI / 180;
+
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * Math.PI / 180) *
         Math.cos(lat2 * Math.PI / 180) *
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2);
+
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
+
     function formatDistance(distanceKm) {
       if (distanceKm === null || distanceKm === undefined) return "";
       if (distanceKm < 1) return "Under 1 km";
       if (distanceKm < 10) return `${distanceKm.toFixed(1)} km away`;
       return `${Math.round(distanceKm)} km away`;
     }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const locationVisibilityRaw = getField(d, ["location_visibility", "locationVisibility"]) || "city";
+      const nearbyModeRaw = getField(d, ["nearby_discovery_mode", "nearbyDiscoveryMode", "nearby_mode", "nearbyMode"]);
+
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "fullName", "full_name", "username"]) || "Member",
@@ -727,81 +878,190 @@
         city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
         province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
         country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
-        locationVisibility: getField(d, ["location_visibility", "locationVisibility", "nearby_mode", "nearbyMode"]) || "city",
+        nearbyDiscoveryMode: normalizeNearbyMode(nearbyModeRaw, locationVisibilityRaw),
+        locationVisibility: normalizeLocationVisibility(locationVisibilityRaw),
         lat: readLat(d),
         lng: readLng(d)
       };
     }
+
     function normalizeEvent(raw, fallbackId = "") {
       const d = raw || {};
+      const status = String(d.status || d.event_status || d.eventStatus || "").toLowerCase();
+
       return {
         id: d.id || fallbackId || "",
-        title: getField(d, ["title", "name"]) || "Untitled Event",
-        description: getField(d, ["description", "desc"]),
+        title: getField(d, ["title", "name", "event_title", "eventTitle"]) || "Untitled Event",
+        description: getField(d, ["description", "desc", "about", "details"]),
         city: getField(d, ["city", "location_city", "locationCity"]),
         province: getField(d, ["province", "state", "region"]),
         country: getField(d, ["country", "location_country", "locationCountry"]),
         locationSearch: buildLocationSearch(d),
-        venue: getField(d, ["venue", "spot"]),
-        address: getField(d, ["address"]),
-        date: getField(d, ["date"]),
-        time: getField(d, ["time"]),
+        venue: getField(d, ["venue", "spot", "place_name", "placeName"]),
+        address: getField(d, ["address", "full_address", "fullAddress"]),
+        date: getField(d, ["date", "event_date", "eventDate", "start_date", "startDate"]),
+        time: getField(d, ["time", "event_time", "eventTime", "start_time", "startTime"]),
+        startAt: d.start_at || d.startAt || d.starts_at || d.startsAt || d.datetime || d.date_time || d.dateTime || null,
         visibility: getField(d, ["visibility", "event_visibility", "eventVisibility"]) || "public",
-        creatorId: getField(d, ["creator_id", "creatorId", "user_id", "userId", "uid"]),
-        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
+        creatorId: getField(d, ["creator_id", "creatorId", "user_id", "userId", "uid", "created_by", "createdBy"]),
+        creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        category: getField(d, ["category", "topic", "type"]) || "Event",
+        keywords: getField(d, ["keywords", "tags", "search_keywords", "searchKeywords"]),
+        status,
+        cancelled: status === "cancelled" || status === "canceled" || d.cancelled === true || d.canceled === true,
         hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
         lat: readLat(d),
         lng: readLng(d)
       };
     }
+
+    function parseEventDateTime(dateStr, timeStr, startAt = null) {
+      if (startAt) {
+        const direct = new Date(startAt);
+        if (!Number.isNaN(direct.getTime())) return direct;
+      }
+
+      const dateRaw = String(dateStr || "").trim();
+      if (!dateRaw) return null;
+
+      let year;
+      let month;
+      let day;
+
+      const iso = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+      if (iso) {
+        year = Number(iso[1]);
+        month = Number(iso[2]) - 1;
+        day = Number(iso[3]);
+      } else {
+        const parsed = new Date(dateRaw);
+        if (Number.isNaN(parsed.getTime())) return null;
+
+        year = parsed.getFullYear();
+        month = parsed.getMonth();
+        day = parsed.getDate();
+      }
+
+      let hour = 23;
+      let minute = 59;
+      const timeRaw = String(timeStr || "").trim().toLowerCase();
+
+      if (timeRaw) {
+        let match = timeRaw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+
+        if (match) {
+          hour = Number(match[1]) % 12;
+          minute = Number(match[2]);
+          if (match[3] === "pm") hour += 12;
+        } else {
+          match = timeRaw.match(/^(\d{1,2})\s*(am|pm)$/);
+
+          if (match) {
+            hour = Number(match[1]) % 12;
+            minute = 0;
+            if (match[2] === "pm") hour += 12;
+          } else {
+            match = timeRaw.match(/^(\d{1,2}):(\d{2})$/);
+
+            if (match) {
+              hour = Number(match[1]);
+              minute = Number(match[2]);
+            }
+          }
+        }
+      }
+
+      return new Date(year, month, day, hour, minute, 0, 0);
+    }
+
+    function isExpired(model) {
+      const dt = parseEventDateTime(model.date, model.time, model.startAt);
+      return dt ? Date.now() > dt.getTime() : false;
+    }
+
+    function eventTimeMs(model) {
+      const dt = parseEventDateTime(model.date, model.time, model.startAt);
+      return dt ? dt.getTime() : Number.MAX_SAFE_INTEGER;
+    }
+
     function renderViewerLocation() {
       if (!viewerProfile) return;
+
       const parts = [viewerProfile.city, viewerProfile.province, viewerProfile.country].filter(Boolean);
       locationChip.textContent = parts.length ? parts.join(", ") : "Location not set";
+
       if (!browserCoords) {
         browserChip.textContent = "GPS off";
         browserChip.className = "chip chip-yellow";
       }
+
       updateModeChip();
     }
+
     function updateModeChip() {
       const q = searchInput.value.trim();
-      const hasCity = !!normalizeText(viewerProfile?.city);
+      const mode = viewerProfile?.nearbyDiscoveryMode || "city";
+
       if (q) {
-        modeChip.textContent = "Mode search all";
-      } else if (hasCity) {
-        modeChip.textContent = "Mode same city";
-      } else if (browserCoords) {
-        modeChip.textContent = "Mode GPS";
+        modeChip.textContent = "Search all";
+      } else if (mode === "gps") {
+        modeChip.textContent = "GPS mode";
+      } else if (mode === "everywhere") {
+        modeChip.textContent = "Everywhere";
       } else {
-        modeChip.textContent = "Mode no location";
+        modeChip.textContent = "City mode";
       }
     }
+
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase.from(table).select("id", { count: "exact", head: true });
+        const { count, error } = await buildQuery(query);
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
     async function countPendingMessageRequests(uid) {
       const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
-      for (const col of targetColumns) {
-        try {
-          const { count, error } = await supabase
-            .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
-          if (!error) return count || 0;
-        } catch {}
+      const statusColumns = ["status", "request_status", "requestStatus"];
+
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
+
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
       }
+
       return 0;
     }
+
     async function countUnreadChatMessages(uid) {
       try {
         const { data: threads } = await supabase
           .from("chat_threads")
           .select("id")
           .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
         if (!Array.isArray(threads) || !threads.length) return 0;
+
         const threadIds = threads.map(t => t.id).filter(Boolean);
         if (!threadIds.length) return 0;
+
         const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
         for (const field of seenFields) {
           try {
             const { count, error } = await supabase
@@ -810,10 +1070,13 @@
               .in("thread_id", threadIds)
               .neq("sender_id", uid)
               .is(field, null);
+
             if (!error) return count || 0;
           } catch {}
         }
+
         const boolFields = ["is_read", "read"];
+
         for (const field of boolFields) {
           try {
             const { count, error } = await supabase
@@ -822,20 +1085,26 @@
               .in("thread_id", threadIds)
               .neq("sender_id", uid)
               .eq(field, false);
+
             if (!error) return count || 0;
           } catch {}
         }
       } catch {}
+
       return 0;
     }
+
     async function loadInboxBadge() {
       if (!currentUser) return;
+
       try {
         const [requests, unreadMessages] = await Promise.all([
           countPendingMessageRequests(currentUser.id),
           countUnreadChatMessages(currentUser.id)
         ]);
+
         const total = Number(requests || 0) + Number(unreadMessages || 0);
+
         if (!total) {
           inboxBadge.classList.add("hidden");
         } else {
@@ -846,56 +1115,250 @@
         inboxBadge.classList.add("hidden");
       }
     }
-    function parseEventDateTime(dateStr, timeStr) {
-      const dateRaw = String(dateStr || "").trim();
-      if (!dateRaw) return null;
-      let year;
-      let month;
-      let day;
-      const iso = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (iso) {
-        year = Number(iso[1]);
-        month = Number(iso[2]) - 1;
-        day = Number(iso[3]);
-      } else {
-        const parsed = new Date(dateRaw);
-        if (Number.isNaN(parsed.getTime())) return null;
-        year = parsed.getFullYear();
-        month = parsed.getMonth();
-        day = parsed.getDate();
+
+    async function updateCoordsInTable(table, uid, coords) {
+      const variants = [
+        { match: "uid", payload: { lat: coords.lat, lng: coords.lng, updated_at: nowIso() } },
+        { match: "id", payload: { lat: coords.lat, lng: coords.lng, updated_at: nowIso() } },
+        { match: "user_id", payload: { lat: coords.lat, lng: coords.lng, updated_at: nowIso() } },
+        { match: "userId", payload: { lat: coords.lat, lng: coords.lng, updatedAt: nowIso() } }
+      ];
+
+      for (const item of variants) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .update(item.payload)
+            .eq(item.match, uid);
+
+          if (!error) return true;
+        } catch {}
       }
-      let hour = 23;
-      let minute = 59;
-      const timeRaw = String(timeStr || "").trim().toLowerCase();
-      if (timeRaw) {
-        let match = timeRaw.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
-        if (match) {
-          hour = Number(match[1]) % 12;
-          minute = Number(match[2]);
-          if (match[3] === "pm") hour += 12;
-        } else {
-          match = timeRaw.match(/^(\d{1,2})\s*(am|pm)$/);
-          if (match) {
-            hour = Number(match[1]) % 12;
-            minute = 0;
-            if (match[2] === "pm") hour += 12;
-          } else {
-            match = timeRaw.match(/^(\d{1,2}):(\d{2})$/);
-            if (match) {
-              hour = Number(match[1]);
-              minute = Number(match[2]);
+
+      return false;
+    }
+
+    async function requestBrowserLocation() {
+      if (!navigator.geolocation) {
+        browserCoords = null;
+        browserChip.textContent = "GPS unsupported";
+        browserChip.className = "chip chip-red";
+        renderEvents();
+        return;
+      }
+
+      browserChip.textContent = "Checking GPS...";
+      browserChip.className = "chip chip-yellow";
+      setPageStatus("Checking browser location...", "");
+
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            browserCoords = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            browserChip.textContent = "GPS on";
+            browserChip.className = "chip chip-green";
+
+            try {
+              await Promise.all([
+                updateCoordsInTable("users", currentUser.id, browserCoords),
+                updateCoordsInTable("public_profiles", currentUser.id, browserCoords)
+              ]);
+
+              viewerProfile.lat = browserCoords.lat;
+              viewerProfile.lng = browserCoords.lng;
+
+              renderViewerLocation();
+              browserChip.textContent = "GPS on";
+              browserChip.className = "chip chip-green";
+              setPageStatus("GPS enabled. Events with distance data are sorted closer first.", "status-ok");
+            } catch (err) {
+              console.error(err);
+              setPageStatus("GPS worked, but saved location could not be updated.", "status-err");
             }
+
+            resolve();
+          },
+          () => {
+            browserCoords = null;
+            browserChip.textContent = "GPS off";
+            browserChip.className = "chip chip-yellow";
+            setPageStatus("Could not use browser GPS. Using saved profile location and search.", "status-err");
+            resolve();
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000
           }
+        );
+      });
+
+      renderEvents();
+    }
+
+    function openLoading() {
+      listLoading.classList.remove("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.add("hidden");
+      listWrap.innerHTML = "";
+    }
+
+    function showEmpty(text) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.add("hidden");
+      emptyBox.classList.remove("hidden");
+      emptyBox.textContent = text;
+      countChip.textContent = "Events 0";
+    }
+
+    function showList(count) {
+      listLoading.classList.add("hidden");
+      listWrap.classList.remove("hidden");
+      emptyBox.classList.add("hidden");
+      countChip.textContent = `Events ${count}`;
+    }
+
+    function isJoined(eventId) {
+      return memberMap.has(eventId) && memberMap.get(eventId) === true;
+    }
+
+    function getViewerCoords() {
+      return {
+        lat: browserCoords?.lat ?? viewerProfile?.lat ?? null,
+        lng: browserCoords?.lng ?? viewerProfile?.lng ?? null
+      };
+    }
+
+    function buildBaseEventRows() {
+      const viewerCity = normalizeText(viewerProfile?.city);
+      const viewerProvince = normalizeText(viewerProfile?.province);
+      const viewerCountry = normalizeText(viewerProfile?.country);
+      const viewerCoords = getViewerCoords();
+
+      return eventsData
+        .filter(model => !model.hidden && !model.cancelled)
+        .filter(model => model.visibility !== "private" || model.creatorId === currentUser.id || isJoined(model.id))
+        .map(model => {
+          const city = normalizeText(model.city);
+          const province = normalizeText(model.province);
+          const country = normalizeText(model.country);
+
+          const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
+          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
+          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
+
+          let distanceKm = null;
+
+          if (
+            viewerCoords.lat !== null &&
+            viewerCoords.lng !== null &&
+            model.lat !== null &&
+            model.lng !== null
+          ) {
+            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng);
+          }
+
+          const searchable = [
+            model.title,
+            model.description,
+            model.creatorName,
+            model.category,
+            model.venue,
+            model.address,
+            model.city,
+            model.province,
+            model.country,
+            model.keywords,
+            model.locationSearch
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          const mine = model.creatorId === currentUser.id;
+          const withinGpsRange = distanceKm !== null && distanceKm <= 100;
+
+          return {
+            ...model,
+            sameCountry,
+            sameProvince,
+            sameCity,
+            withinGpsRange,
+            distanceKm,
+            mine,
+            joined: isJoined(model.id),
+            expired: isExpired(model),
+            distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
+            placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
+            searchable
+          };
+        });
+    }
+
+    function buildNearbyEvents() {
+      const q = normalizeText(searchInput.value);
+      const mode = viewerProfile?.nearbyDiscoveryMode || "city";
+      const viewerHasSavedLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
+      let rows = buildBaseEventRows();
+
+      if (q) {
+        rows = rows.filter(row => row.searchable.includes(q));
+      } else if (mode === "gps") {
+        const hasGps = !!(browserCoords || (viewerProfile?.lat !== null && viewerProfile?.lng !== null));
+
+        if (hasGps) {
+          rows = rows.filter(row => row.mine || row.joined || row.withinGpsRange || row.sameCity || row.sameProvince);
+        } else if (viewerHasSavedLocation) {
+          rows = rows.filter(row => row.mine || row.joined || row.sameCity || row.sameProvince);
+        } else {
+          rows = rows.filter(row => row.mine || row.joined);
+        }
+      } else if (mode === "everywhere") {
+        rows = rows;
+      } else {
+        if (viewerHasSavedLocation) {
+          rows = rows.filter(row => row.mine || row.joined || row.sameCity || row.sameProvince);
+        } else {
+          rows = rows.filter(row => row.mine || row.joined);
         }
       }
-      return new Date(year, month, day, hour, minute, 0, 0);
+
+      rows.sort((a, b) => {
+        if (a.mine && !b.mine) return -1;
+        if (b.mine && !a.mine) return 1;
+
+        if (a.joined && !b.joined) return -1;
+        if (b.joined && !a.joined) return 1;
+
+        if (a.expired !== b.expired) return a.expired ? 1 : -1;
+
+        if (a.sameCity && !b.sameCity) return -1;
+        if (b.sameCity && !a.sameCity) return 1;
+
+        if (a.sameProvince && !b.sameProvince) return -1;
+        if (b.sameProvince && !a.sameProvince) return 1;
+
+        const aHasDistance = a.distanceKm !== null;
+        const bHasDistance = b.distanceKm !== null;
+
+        if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
+        if (aHasDistance && !bHasDistance) return -1;
+        if (bHasDistance && !aHasDistance) return 1;
+
+        return eventTimeMs(a) - eventTimeMs(b);
+      });
+
+      return rows;
     }
-    function isExpired(model) {
-      const dt = parseEventDateTime(model.date, model.time);
-      return dt ? Date.now() > dt.getTime() : false;
-    }
+
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.id) return;
+
       const variants = [
         payload,
         {
@@ -910,6 +1373,7 @@
           read: false
         }
       ];
+
       for (const item of variants) {
         try {
           const { error } = await supabase.from("notifications").insert(item);
@@ -917,182 +1381,64 @@
         } catch {}
       }
     }
-    async function requestBrowserLocation() {
-      if (!navigator.geolocation) {
-        browserCoords = null;
-        browserChip.textContent = "GPS unsupported";
-        browserChip.className = "chip chip-red";
-        renderEvents();
-        return;
-      }
-      browserChip.textContent = "Checking GPS...";
-      browserChip.className = "chip chip-yellow";
-      setPageStatus("Checking browser location...", "");
-      await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            browserCoords = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            browserChip.textContent = "GPS on";
-            browserChip.className = "chip chip-green";
-            try {
-              await supabase
-                .from("users")
-                .update({
-                  lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  updated_at: nowIso()
-                })
-                .eq("uid", currentUser.id);
-              await supabase
-                .from("public_profiles")
-                .update({
-                  lat: browserCoords.lat,
-                  lng: browserCoords.lng,
-                  updated_at: nowIso()
-                })
-                .eq("uid", currentUser.id);
-              viewerProfile.lat = browserCoords.lat;
-              viewerProfile.lng = browserCoords.lng;
-              renderViewerLocation();
-              browserChip.textContent = "GPS on";
-              browserChip.className = "chip chip-green";
-              setPageStatus("GPS enabled. Same-city events still stay first.", "status-ok");
-            } catch (err) {
-              console.error(err);
-              setPageStatus("GPS worked, but saved location could not be updated.", "status-err");
-            }
-            resolve();
-          },
-          () => {
-            browserCoords = null;
-            browserChip.textContent = "GPS off";
-            browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved city instead.", "status-err");
-            resolve();
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 10000,
-            maximumAge: 60000
-          }
-        );
-      });
-      renderEvents();
-    }
-    function openLoading() {
-      listLoading.classList.remove("hidden");
-      listWrap.classList.add("hidden");
-      emptyBox.classList.add("hidden");
-      listWrap.innerHTML = "";
-    }
-    function showEmpty(text) {
-      listLoading.classList.add("hidden");
-      listWrap.classList.add("hidden");
-      emptyBox.classList.remove("hidden");
-      emptyBox.textContent = text;
-      countChip.textContent = "Events 0";
-    }
-    function showList(count) {
-      listLoading.classList.add("hidden");
-      listWrap.classList.remove("hidden");
-      emptyBox.classList.add("hidden");
-      countChip.textContent = `Events ${count}`;
-    }
-    function isJoined(eventId) {
-      return memberMap.has(eventId) && memberMap.get(eventId) === true;
-    }
-    function getViewerCoords() {
-      return {
-        lat: browserCoords?.lat ?? viewerProfile?.lat ?? null,
-        lng: browserCoords?.lng ?? viewerProfile?.lng ?? null
-      };
-    }
-    function buildNearbyEvents() {
-      const q = normalizeText(searchInput.value);
-      const viewerCity = normalizeText(viewerProfile?.city);
-      const viewerCoords = getViewerCoords();
-      return eventsData
-        .filter(model => !model.hidden)
-        .filter(model => model.visibility !== "private" || model.creatorId === currentUser.id || isJoined(model.id))
-        .map(model => {
-          const city = normalizeText(model.city);
-          const sameCity = !!viewerCity && !!city && viewerCity === city;
-          let distanceKm = null;
-          if (
-            viewerCoords.lat !== null &&
-            viewerCoords.lng !== null &&
-            model.lat !== null &&
-            model.lng !== null
-          ) {
-            distanceKm = kmDistance(viewerCoords.lat, viewerCoords.lng, model.lat, model.lng);
-          }
-          const searchable = [
-            model.title,
-            model.description,
-            model.creatorName,
-            model.venue,
-            model.address,
-            model.locationSearch
-          ].filter(Boolean).join(" ").toLowerCase();
-          const mine = model.creatorId === currentUser.id;
-          return {
-            ...model,
-            sameCity,
-            distanceKm,
-            mine,
-            joined: isJoined(model.id),
-            expired: isExpired(model),
-            distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : "",
-            placeLabel: [model.city, model.province, model.country].filter(Boolean).join(", "),
-            searchable
-          };
-        })
-        .filter(row => {
-          if (q) return row.searchable.includes(q);
-          if (row.mine) return true;
-          if (viewerCity && row.sameCity) return true;
-          if (!viewerCity && browserCoords && row.distanceKm !== null && row.distanceKm <= 25) return true;
-          return false;
-        })
-        .sort((a, b) => {
-          if (a.mine && !b.mine) return -1;
-          if (b.mine && !a.mine) return 1;
-          if (a.sameCity && !b.sameCity) return -1;
-          if (b.sameCity && !a.sameCity) return 1;
-          if (a.expired !== b.expired) return a.expired ? 1 : -1;
-          const aHasDistance = a.distanceKm !== null;
-          const bHasDistance = b.distanceKm !== null;
-          if (aHasDistance && bHasDistance && a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
-          if (aHasDistance && !bHasDistance) return -1;
-          if (bHasDistance && !aHasDistance) return 1;
-          const aTime = parseEventDateTime(a.date, a.time)?.getTime() || 0;
-          const bTime = parseEventDateTime(b.date, b.time)?.getTime() || 0;
-          return aTime - bTime;
-        });
-    }
+
     async function joinEvent(model, btn) {
       btn.disabled = true;
       setPageStatus("");
+
       try {
-        const { data: insertData, error } = await supabase
-          .from("event_members")
-          .insert({
+        const payloads = [
+          {
             event_id: model.id,
             user_id: currentUser.id,
             display_name: viewerProfile?.displayName || currentUser.email || "Member",
             username: viewerProfile?.username || "",
             joined_at: nowIso()
-          })
-          .select("id")
-          .single();
-        if (error) throw error;
-        memberMap.set(model.id, true);
-        if (insertData?.id) {
-          memberRowMap.set(model.id, insertData.id);
+          },
+          {
+            eventId: model.id,
+            userId: currentUser.id,
+            displayName: viewerProfile?.displayName || currentUser.email || "Member",
+            username: viewerProfile?.username || "",
+            joinedAt: nowIso()
+          },
+          {
+            event_id: model.id,
+            user_id: currentUser.id
+          }
+        ];
+
+        let inserted = null;
+        let lastError = null;
+
+        for (const payload of payloads) {
+          try {
+            const { data, error } = await supabase
+              .from("event_members")
+              .insert(payload)
+              .select("id")
+              .maybeSingle();
+
+            if (!error) {
+              inserted = data || null;
+              lastError = null;
+              break;
+            }
+
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
         }
+
+        if (lastError) throw lastError;
+
+        memberMap.set(model.id, true);
+
+        if (inserted?.id) {
+          memberRowMap.set(model.id, inserted.id);
+        }
+
         await createNotificationSafe(model.creatorId, {
           type: "event_join",
           title: "Event joined",
@@ -1103,6 +1449,8 @@
           created_at: nowIso(),
           is_read: false
         });
+
+        await loadJoinedState();
         renderEvents();
         setPageStatus("Joined event.", "status-ok");
       } catch (err) {
@@ -1111,27 +1459,56 @@
         btn.disabled = false;
       }
     }
+
     async function leaveEvent(model, btn) {
       btn.disabled = true;
       setPageStatus("");
+
       try {
         const rowId = memberRowMap.get(model.id);
+
         if (rowId) {
           const { error } = await supabase
             .from("event_members")
             .delete()
             .eq("id", rowId);
+
           if (error) throw error;
         } else {
-          const { error } = await supabase
-            .from("event_members")
-            .delete()
-            .eq("event_id", model.id)
-            .eq("user_id", currentUser.id);
-          if (error) throw error;
+          const attempts = [
+            ["event_id", "user_id"],
+            ["eventId", "userId"]
+          ];
+
+          let done = false;
+          let lastError = null;
+
+          for (const [eventCol, userCol] of attempts) {
+            try {
+              const { error } = await supabase
+                .from("event_members")
+                .delete()
+                .eq(eventCol, model.id)
+                .eq(userCol, currentUser.id);
+
+              if (!error) {
+                done = true;
+                break;
+              }
+
+              lastError = error;
+            } catch (err) {
+              lastError = err;
+            }
+          }
+
+          if (!done && lastError) throw lastError;
         }
+
         memberMap.set(model.id, false);
         memberRowMap.delete(model.id);
+
+        await loadJoinedState();
         renderEvents();
         setPageStatus("Left event.", "status-ok");
       } catch (err) {
@@ -1140,15 +1517,18 @@
         btn.disabled = false;
       }
     }
+
     function buildEventShareUrl(eventId) {
       const url = new URL("event.html", window.location.href);
       url.searchParams.set("eventId", eventId);
       return url.toString();
     }
+
     async function shareEvent(model) {
       const url = buildEventShareUrl(model.id);
       const title = `${model.title || "Event"} on OwnSpace`;
-      const text = `Check this event on OwnSpace.`;
+      const text = "Check this event on OwnSpace.";
+
       try {
         if (navigator.share) {
           await navigator.share({ title, text, url });
@@ -1159,50 +1539,81 @@
           prompt("Copy this event link:", url);
         }
       } catch (err) {
-        console.error("Share failed:", err);
+        if (err?.name !== "AbortError") console.error("Share failed:", err);
       }
     }
+
     function renderEvents() {
       openLoading();
       updateModeChip();
-      const viewerHasCity = !!normalizeText(viewerProfile?.city);
-      const q = searchInput.value.trim();
+
+      const q = normalizeText(searchInput.value);
+      const mode = viewerProfile?.nearbyDiscoveryMode || "city";
+      const viewerHasLocation =
+        !!normalizeText(viewerProfile?.city) &&
+        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.country);
+
       const rows = buildNearbyEvents();
-      if (!viewerHasCity && !browserCoords && !q) {
-        showEmpty("Set your city in profile or use GPS to see nearby events. Your own events will still appear when available.");
-        return;
-      }
+
       if (!rows.length) {
         if (q) {
-          showEmpty("No events matched your search.");
+          showEmpty("No matching events found. Try another city, province, country, venue or event title.");
+        } else if (mode === "gps") {
+          showEmpty("No nearby events found in GPS mode. Try Search Everywhere in profile settings or search a city/country.");
+        } else if (mode === "everywhere") {
+          showEmpty("No events are visible yet.");
+        } else if (!viewerHasLocation) {
+          showEmpty("Add your city/province/country, use GPS, or search by city/country/event name.");
         } else {
-          showEmpty("No events found in your city yet. Search can still find events from other cities.");
+          showEmpty("No events found near your saved city. Search can still find events from other cities.");
         }
+
         return;
       }
+
       listWrap.innerHTML = "";
+
       rows.forEach(model => {
         const imageHtml = model.imageURL
           ? `<img class="cover" src="${escapeHtml(model.imageURL)}" alt="Event image">`
           : "";
+
         const badges = [];
+
         if (model.mine) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
+        badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "Event")}</span>`);
         badges.push(`<span class="mini-badge ${model.visibility === "private" ? "mini-yellow" : "mini-blue"}">${model.visibility === "private" ? "Private" : "Public"}</span>`);
+
         if (model.joined) badges.push(`<span class="mini-badge mini-green">Joined</span>`);
         if (model.expired) badges.push(`<span class="mini-badge mini-red">Expired</span>`);
         else badges.push(`<span class="mini-badge mini-green">Upcoming</span>`);
+
         if (model.sameCity) {
           badges.push(`<span class="mini-badge mini-purple">Same city</span>`);
-        } else if (model.distanceLabel) {
-          badges.push(`<span class="mini-badge mini-purple">${escapeHtml(model.distanceLabel)}</span>`);
+        } else if (model.sameProvince) {
+          badges.push(`<span class="mini-badge mini-purple">Same province/state</span>`);
+        } else if (model.sameCountry) {
+          badges.push(`<span class="mini-badge mini-purple">Same country</span>`);
         }
+
+        if (model.distanceLabel) {
+          badges.push(`<span class="mini-badge mini-green">${escapeHtml(model.distanceLabel)}</span>`);
+        }
+
         const venueText = [model.venue, model.address].filter(Boolean).join(" • ") || "Not added";
+        const openUrl = `event.html?eventId=${encodeURIComponent(model.id)}`;
+
         const card = document.createElement("div");
         card.className = "card";
+
         card.innerHTML = `
           ${imageHtml}
+
           <div class="card-title">${escapeHtml(model.title)}</div>
+
           <div class="badge-row">${badges.join("")}</div>
+
           <div class="meta-grid">
             <div><strong>Location:</strong> ${escapeHtml(model.placeLabel || "Not added")}</div>
             <div><strong>Date:</strong> ${escapeHtml(model.date || "-")}</div>
@@ -1210,124 +1621,186 @@
             <div><strong>Venue:</strong> ${escapeHtml(venueText)}</div>
             <div><strong>Host:</strong> ${escapeHtml(model.creatorName || "Member")}</div>
           </div>
+
           <div class="desc">${escapeHtml(model.description || "No description added.")}</div>
+
           <div class="card-actions">
-            <a class="action-btn btn-primary" href="event.html?eventId=${encodeURIComponent(model.id)}">${ICONS.open}<span>Open</span></a>
+            <a class="action-btn btn-primary" href="${openUrl}">${ICONS.open}<span>Open</span></a>
+
             ${
               model.mine
-                ? `<a class="action-btn btn-purple" href="event.html?eventId=${encodeURIComponent(model.id)}">Manage</a>`
+                ? `<a class="action-btn btn-purple" href="${openUrl}">Manage</a>`
                 : model.expired
                 ? `<button class="action-btn btn-red" type="button" disabled>Expired</button>`
                 : model.joined
                 ? `<button class="action-btn btn-red leave-btn" type="button">Leave</button>`
                 : `<button class="action-btn btn-green join-btn" type="button">Join</button>`
             }
-            <button class="action-btn btn-green share-btn" data-share-event="${escapeHtml(model.id)}" type="button">${ICONS.share}<span>Share</span></button>
+
+            <button class="action-btn btn-green share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
+
         const cover = card.querySelector(".cover");
+
         if (cover) {
           cover.addEventListener("error", () => {
             cover.style.display = "none";
           });
         }
+
         const joinBtn = card.querySelector(".join-btn");
+
         if (joinBtn) {
           joinBtn.addEventListener("click", async () => {
             await joinEvent(model, joinBtn);
           });
         }
+
         const leaveBtn = card.querySelector(".leave-btn");
+
         if (leaveBtn) {
           leaveBtn.addEventListener("click", async () => {
             await leaveEvent(model, leaveBtn);
           });
         }
+
         const shareBtn = card.querySelector(".share-btn");
+
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
             await shareEvent(model);
           });
         }
+
         listWrap.appendChild(card);
       });
+
       showList(rows.length);
     }
+
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
     async function loadViewer(uid) {
-      const [userRes, publicRes] = await Promise.all([
-        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
-        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
+      const [userRow, publicRow] = await Promise.all([
+        selectProfileRow("users", uid),
+        selectProfileRow("public_profiles", uid)
       ]);
-      if (userRes.error) throw userRes.error;
-      if (publicRes.error) throw publicRes.error;
+
       viewerProfile = normalizeProfile({
-        ...(publicRes.data || {}),
-        ...(userRes.data || {}),
+        ...(publicRow || {}),
+        ...(userRow || {}),
         uid
       }, uid);
+
       renderViewerLocation();
     }
+
     async function loadEvents() {
       const { data, error } = await supabase
         .from("events")
         .select("*");
+
       if (error) throw error;
+
       eventsData = (data || []).map(row => normalizeEvent(row, row.id));
     }
+
     async function loadJoinedState() {
       memberMap = new Map();
       memberRowMap = new Map();
-      try {
-        const { data, error } = await supabase
-          .from("event_members")
-          .select("*")
-          .eq("user_id", currentUser.id);
-        if (error) throw error;
-        (data || []).forEach(row => {
-          const eventId = row.event_id || row.eventId;
-          if (eventId) {
-            memberMap.set(eventId, true);
-            if (row.id) {
-              memberRowMap.set(eventId, row.id);
+
+      const attempts = [
+        ["user_id", "event_id"],
+        ["userId", "eventId"]
+      ];
+
+      for (const [userColumn, eventColumn] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("event_members")
+            .select("*")
+            .eq(userColumn, currentUser.id);
+
+          if (error) throw error;
+
+          (data || []).forEach(row => {
+            const eventId = row[eventColumn] || row.event_id || row.eventId;
+
+            if (eventId) {
+              memberMap.set(eventId, true);
+
+              if (row.id) {
+                memberRowMap.set(eventId, row.id);
+              }
             }
-          }
-        });
-      } catch (err) {
-        console.error("event_members load error:", err);
+          });
+
+          return;
+        } catch (err) {
+          console.warn("event_members load attempt skipped:", err?.message || err);
+        }
       }
     }
+
     async function refreshAll() {
       openLoading();
+
       await Promise.all([
         loadEvents(),
         loadJoinedState(),
         loadInboxBadge()
       ]);
+
       renderViewerLocation();
       renderEvents();
     }
+
     searchInput.addEventListener("input", () => {
       clearBtn.classList.toggle("hidden", !searchInput.value.trim());
       renderEvents();
     });
+
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
       clearBtn.classList.add("hidden");
       searchInput.focus();
       renderEvents();
     });
+
     useBrowserLocationBtn.addEventListener("click", requestBrowserLocation);
     gpsBtn2.addEventListener("click", requestBrowserLocation);
+
     async function initPage() {
       const { data: authData, error: authError } = await supabase.auth.getUser();
+
       if (authError || !authData?.user) {
         window.location.href = "login.html";
         return;
       }
+
       currentUser = authData.user;
+
       try {
         await loadViewer(currentUser.id);
         await refreshAll();
+
         supabase.auth.onAuthStateChange((event, session) => {
           if (!session?.user) {
             window.location.href = "login.html";
@@ -1335,26 +1808,11 @@
         });
       } catch (err) {
         console.error(err);
-        showEmpty("Could not load nearby events.");
+        showEmpty("Could not load events.");
       }
     }
+
     initPage();
-    /*
-      OWNSPACE NEARBY EVENTS UPDATE:
-      FIXED / ADDED:
-      - BareWorld renamed to OwnSpace.
-      - Cleaner OwnSpace gradient UI.
-      - People / Events / Places tabs stay aligned in one row.
-      - Location chips are more compact.
-      - Create Event / GPS / Location Settings buttons cleaned.
-      - Event cards cleaned with better badges.
-      - Added Share button to every event.
-      - Join / Leave / Manage buttons are cleaner.
-      - Bottom nav icons cleaned.
-      - Inbox badge now counts only:
-        pending message_requests + unread chat_messages.
-      - Theme supports osTheme and old bwTheme.
-    */
   </script>
 </body>
 </html>
