@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,25 +9,6 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --red:#ff5d73;
-      --purple:#a78bfa;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -47,11 +28,30 @@
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
     body{
       background:
         radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
         radial-gradient(circle at 86% 12%, rgba(167,139,250,.09), transparent 24%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:8px 8px 108px;
@@ -69,8 +69,11 @@
       color:var(--muted);
     }
 
-    .success{color:#9cf0bf}
-    .error{color:#ffb3bd}
+    .success{color:#22b36c}
+    .error{color:#e74c66}
+
+    html[data-theme="dark"] .success{color:#9cf0bf}
+    html[data-theme="dark"] .error{color:#ffb3bd}
 
     .topbar{
       position:sticky;
@@ -392,8 +395,8 @@
     }
 
     .verified-dot{
-      width:20px;
-      height:20px;
+      width:21px;
+      height:21px;
       border-radius:999px;
       display:inline-flex;
       align-items:center;
@@ -404,10 +407,14 @@
       box-shadow:
         0 0 0 3px rgba(32,199,111,.18),
         0 8px 18px rgba(32,199,111,.22);
-      font-size:12px;
-      font-weight:950;
-      line-height:1;
       flex-shrink:0;
+    }
+
+    .verified-dot svg{
+      width:13px;
+      height:13px;
+      display:block;
+      stroke-width:3;
     }
 
     .mini-username{
@@ -559,11 +566,15 @@
     .slider{
       position:absolute;
       inset:0;
-      background:rgba(255,255,255,.12);
+      background:rgba(15,23,42,.12);
       border:1px solid var(--line);
       border-radius:999px;
       transition:.2s ease;
       cursor:pointer;
+    }
+
+    html[data-theme="dark"] .slider{
+      background:rgba(255,255,255,.12);
     }
 
     .slider:before{
@@ -576,6 +587,7 @@
       border-radius:50%;
       background:#fff;
       transition:.2s ease;
+      box-shadow:0 2px 8px rgba(0,0,0,.16);
     }
 
     .switch input:checked + .slider{
@@ -838,8 +850,12 @@
       margin-top:10px;
       padding:11px;
       border-radius:15px;
-      background:rgba(0,0,0,.12);
+      background:rgba(255,255,255,.22);
       border:1px solid var(--line);
+    }
+
+    html[data-theme="dark"] .confirm-box{
+      background:rgba(0,0,0,.12);
     }
 
     .check-row{
@@ -980,7 +996,7 @@
       <div class="page-head">
         <div>
           <div class="page-title">Settings</div>
-          <div class="page-sub">Account, privacy, feedback, feature requests, and account removal options.</div>
+          <div class="page-sub">Manage your account, privacy, nearby discovery, feedback and account actions.</div>
         </div>
       </div>
 
@@ -1040,7 +1056,11 @@
                   <div>
                     <div class="mini-name">
                       <span id="displayName">Member</span>
-                      <span id="verifiedDot" class="verified-dot hidden">✓</span>
+                      <span id="verifiedDot" class="verified-dot hidden" title="Verified">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                      </span>
                     </div>
 
                     <div id="usernameText" class="mini-username hidden">@username</div>
@@ -1064,8 +1084,8 @@
                   </div>
 
                   <div class="info-box">
-                    <small>User ID</small>
-                    <span id="uid">-</span>
+                    <small>Profile</small>
+                    <span id="uid">Ready</span>
                   </div>
 
                   <div class="info-box">
@@ -1107,7 +1127,7 @@
               </span>
               <div class="accordion-copy">
                 <strong>Appearance</strong>
-                <span>Dark, light or system theme</span>
+                <span>Light, dark or system theme</span>
               </div>
             </div>
             <span class="accordion-arrow">
@@ -1124,22 +1144,22 @@
 
               <div class="setting-card">
                 <div class="setting-title">Theme</div>
-                <div class="setting-desc">This applies instantly and is also saved to your account.</div>
+                <div class="setting-desc">Light is the default. You can switch anytime.</div>
 
                 <div class="option-list">
-                  <label class="option">
-                    <input type="radio" name="themePreference" value="dark" />
-                    <div class="option-text">
-                      <strong>Dark</strong>
-                      <span>Best for the current OwnSpace look and low-light use.</span>
-                    </div>
-                  </label>
-
                   <label class="option">
                     <input type="radio" name="themePreference" value="light" />
                     <div class="option-text">
                       <strong>Light</strong>
-                      <span>Bright and clean interface for daytime use.</span>
+                      <span>Bright and clean interface for everyday use.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="themePreference" value="dark" />
+                    <div class="option-text">
+                      <strong>Dark</strong>
+                      <span>Good for low-light use.</span>
                     </div>
                   </label>
 
@@ -1169,7 +1189,7 @@
               </span>
               <div class="accordion-copy">
                 <strong>Privacy & Nearby</strong>
-                <span>Private account, profile visibility and location</span>
+                <span>Private account, profile visibility and nearby discovery</span>
               </div>
             </div>
             <span class="accordion-arrow">
@@ -1182,13 +1202,13 @@
           <div class="accordion-body">
             <div class="section-box">
               <div class="section-heading">Privacy & Nearby</div>
-              <div class="section-sub">Control who can see your account and whether you appear in nearby discovery.</div>
+              <div class="section-sub">Control who can see your account and how your profile appears in discovery.</div>
 
               <div class="setting-card">
                 <div class="toggle-row">
                   <div class="toggle-copy">
                     <strong>Private account</strong>
-                    <span>Only approved followers can view your profile and posts.</span>
+                    <span>Only approved followers can view your private profile content.</span>
                   </div>
 
                   <label class="switch">
@@ -1230,12 +1250,43 @@
                 <div class="toggle-row">
                   <div class="toggle-copy">
                     <strong>Show me in Nearby</strong>
-                    <span>Allow your profile to appear in nearby discovery features.</span>
+                    <span>Allow your profile to appear in nearby discovery and people search.</span>
                   </div>
 
                   <label class="switch">
                     <input type="checkbox" id="showInNearbyToggle" />
                     <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="setting-title">Nearby discovery mode</div>
+                <div class="setting-desc">Choose how Nearby should find people for you.</div>
+
+                <div class="option-list">
+                  <label class="option">
+                    <input type="radio" name="nearbyDiscoveryMode" value="city" />
+                    <div class="option-text">
+                      <strong>City Mode</strong>
+                      <span>Prioritize people in your saved city, province/state and country.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="nearbyDiscoveryMode" value="gps" />
+                    <div class="option-text">
+                      <strong>GPS Mode</strong>
+                      <span>Use browser GPS when available and sort closer people first.</span>
+                    </div>
+                  </label>
+
+                  <label class="option">
+                    <input type="radio" name="nearbyDiscoveryMode" value="everywhere" />
+                    <div class="option-text">
+                      <strong>Search Everywhere</strong>
+                      <span>Let search show matching people from any city, province/state or country.</span>
+                    </div>
                   </label>
                 </div>
 
@@ -1249,7 +1300,7 @@
                     <input type="radio" name="locationVisibility" value="hidden" />
                     <div class="option-text">
                       <strong>Hidden</strong>
-                      <span>Use location privately and do not show your location to others.</span>
+                      <span>Do not show your location text on your public profile.</span>
                     </div>
                   </label>
 
@@ -1257,15 +1308,15 @@
                     <input type="radio" name="locationVisibility" value="approximate" />
                     <div class="option-text">
                       <strong>Approximate</strong>
-                      <span>Show only rough distance or general nearby area.</span>
+                      <span>Show rough nearby info when available, not your exact location.</span>
                     </div>
                   </label>
 
                   <label class="option">
                     <input type="radio" name="locationVisibility" value="city" />
                     <div class="option-text">
-                      <strong>City + approximate distance</strong>
-                      <span>Show your city and rough distance, but not exact address.</span>
+                      <strong>City</strong>
+                      <span>Show your saved city, province/state and country when available.</span>
                     </div>
                   </label>
                 </div>
@@ -1344,7 +1395,7 @@
                 <form id="featureForm" class="form-grid">
                   <div class="field">
                     <label class="label" for="featureTitle">Feature Title</label>
-                    <input id="featureTitle" class="input" type="text" placeholder="Example: Add community polls" required />
+                    <input id="featureTitle" class="input" type="text" placeholder="Example: Better nearby search" required />
                   </div>
 
                   <div class="grid-2">
@@ -1432,7 +1483,7 @@
               </span>
               <div class="accordion-copy">
                 <strong>Quick Links</strong>
-                <span>Important pages, verification and admin shortcuts</span>
+                <span>Important pages, verification and shortcuts</span>
               </div>
             </div>
             <span class="accordion-arrow">
@@ -1572,7 +1623,7 @@
               </span>
               <div class="accordion-copy">
                 <strong>Account Actions</strong>
-                <span>Logout, temporary hide, reactivate, or permanent delete request</span>
+                <span>Logout, hide, reactivate, or request permanent deletion</span>
               </div>
             </div>
             <span class="accordion-arrow">
@@ -1585,7 +1636,7 @@
           <div class="accordion-body">
             <div class="section-box">
               <div class="section-heading">Account Actions</div>
-              <div class="section-sub">Use temporary hide when you may return later. Permanent deletion is handled by admin review for safety.</div>
+              <div class="section-sub">You can sign out, temporarily hide your profile, or request permanent account deletion.</div>
 
               <div class="danger-box">
                 <h3>Logout</h3>
@@ -1597,8 +1648,7 @@
               <div class="danger-box">
                 <h3>Temporarily Hide Account</h3>
                 <p>
-                  Soft delete hides your profile from public areas, removes you from Nearby, makes your profile private,
-                  and keeps your account available for reactivation later.
+                  This hides your profile from public areas and removes you from Nearby. You can reactivate your account later from this page.
                 </p>
 
                 <div id="softDeleteActions">
@@ -1606,21 +1656,20 @@
                   <button id="reactivateBtn" class="btn btn-green hidden" type="button">Reactivate My Account</button>
                 </div>
 
-                <div class="danger-note">This is reversible. Your data is not permanently deleted by this button.</div>
+                <div class="danger-note">This is reversible. Your profile can be restored by reactivating it.</div>
                 <div id="softDeleteMessage" class="status-message"></div>
               </div>
 
               <div class="danger-box">
                 <h3>Permanent Delete Request</h3>
                 <p>
-                  Permanent deletion cannot safely be completed from the browser. This sends a request for admin review.
-                  After approval, admin can delete your Auth user and related records from the server side.
+                  This sends a deletion request for review. Once approved and completed, your account cannot be restored.
                 </p>
 
                 <div class="confirm-box">
                   <label class="check-row">
                     <input id="deleteConfirmCheck" type="checkbox" />
-                    <span>I understand permanent deletion cannot be undone after admin approval.</span>
+                    <span>I understand permanent deletion cannot be undone after it is completed.</span>
                   </label>
 
                   <input id="deleteConfirmText" class="input" type="text" placeholder="Type DELETE MY ACCOUNT" />
@@ -1631,7 +1680,7 @@
                 </div>
 
                 <div class="danger-note">
-                  This creates a pending request in <strong>account_delete_requests</strong>. It does not directly delete your Supabase Auth account.
+                  We may keep limited safety records where required for platform protection and legal compliance.
                 </div>
 
                 <div id="permanentDeleteMessage" class="status-message"></div>
@@ -1882,8 +1931,47 @@
       );
     }
 
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || "light";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      return themeValue === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    function cleanThemeValue(value) {
+      return ["light", "dark", "system"].includes(value) ? value : "light";
+    }
+
+    function normalizeNearbyMode(value, fallbackLocationVisibility = "") {
+      const v = String(value || "").trim().toLowerCase();
+      const oldVisibility = String(fallbackLocationVisibility || "").trim().toLowerCase();
+
+      if (["city", "gps", "everywhere"].includes(v)) return v;
+      if (oldVisibility === "gps") return "gps";
+      return "city";
+    }
+
+    function normalizeLocationVisibility(value) {
+      const v = String(value || "").trim().toLowerCase();
+
+      if (v === "gps") return "approximate";
+      if (["hidden", "approximate", "city"].includes(v)) return v;
+      return "city";
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const rawLocationVisibility = getString(d, ["location_visibility", "locationVisibility"], "city");
+      const rawNearbyMode = getString(d, ["nearby_discovery_mode", "nearbyDiscoveryMode", "nearby_mode", "nearbyMode"], "");
 
       return {
         uid: getString(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
@@ -1897,9 +1985,10 @@
         genderVisible: getBool(d, ["gender_visible", "genderVisible"], false),
         moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], ""),
         blockedUsers: getArray(d, ["blocked_users", "blockedUsers"], []),
-        themePreference: getString(d, ["theme_preference", "themePreference"], getStoredTheme()) || getStoredTheme(),
+        themePreference: cleanThemeValue(getString(d, ["theme_preference", "themePreference"], getStoredTheme())),
         showInNearby: getBool(d, ["show_in_nearby", "showInNearby"], false),
-        locationVisibility: getString(d, ["location_visibility", "locationVisibility"], "hidden") || "hidden",
+        nearbyDiscoveryMode: normalizeNearbyMode(rawNearbyMode, rawLocationVisibility),
+        locationVisibility: normalizeLocationVisibility(rawLocationVisibility),
         createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
         softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated", "is_deactivated", "isDeactivated"], false),
         isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin", "hidden_by_admin", "hiddenByAdmin"], false),
@@ -1940,22 +2029,6 @@
       avatarPlaceholder.classList.remove("hidden");
     });
 
-    function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
-    }
-
-    function resolveTheme(themeValue) {
-      if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-      }
-
-      return themeValue === "light" ? "light" : "dark";
-    }
-
-    function applyTheme(themeValue = getStoredTheme()) {
-      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-    }
-
     function getSelectedRadioValue(name) {
       const checked = document.querySelector(`input[name="${name}"]:checked`);
       return checked ? checked.value : "";
@@ -1969,7 +2042,7 @@
 
     applyTheme();
 
-    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     if (themeMediaQuery.addEventListener) {
       themeMediaQuery.addEventListener("change", () => {
@@ -1978,7 +2051,7 @@
     }
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme") applyTheme();
     });
 
     backBtn.addEventListener("click", () => {
@@ -2334,11 +2407,17 @@
       }
     }
 
+    function nearbyModeLabel(mode) {
+      if (mode === "gps") return "GPS";
+      if (mode === "everywhere") return "Everywhere";
+      return "City";
+    }
+
     function updateMiniStatuses() {
       statusAccount.textContent = currentProfile.softDeleted ? "Hidden" : currentProfile.deleteRequested ? "Delete pending" : "Active";
       statusPrivacy.textContent = currentProfile.isPrivate ? "Private" : "Public";
-      statusNearby.textContent = currentProfile.showInNearby && !currentProfile.softDeleted ? "On" : "Off";
-      statusTheme.textContent = (currentProfile.themePreference || getStoredTheme() || "dark").replace(/^./, c => c.toUpperCase());
+      statusNearby.textContent = currentProfile.showInNearby && !currentProfile.softDeleted ? nearbyModeLabel(currentProfile.nearbyDiscoveryMode) : "Off";
+      statusTheme.textContent = cleanThemeValue(currentProfile.themePreference || getStoredTheme()).replace(/^./, c => c.toUpperCase());
 
       softDeleteBtn.classList.toggle("hidden", !!currentProfile.softDeleted);
       reactivateBtn.classList.toggle("hidden", !currentProfile.softDeleted);
@@ -2391,13 +2470,17 @@
     }
 
     async function saveThemePreference(themeValue) {
-      localStorage.setItem("osTheme", themeValue);
-      localStorage.setItem("bwTheme", themeValue);
-      applyTheme(themeValue);
+      const cleanValue = cleanThemeValue(themeValue);
+
+      localStorage.setItem("osTheme", cleanValue);
+      localStorage.removeItem("bwTheme");
+      applyTheme(cleanValue);
 
       await saveSettingsPatch({
-        userSnakePatch: { theme_preference: themeValue },
-        userCamelPatch: { themePreference: themeValue },
+        userSnakePatch: { theme_preference: cleanValue },
+        userCamelPatch: { themePreference: cleanValue },
+        publicSnakePatch: { theme_preference: cleanValue },
+        publicCamelPatch: { themePreference: cleanValue },
         successTarget: themeStatus,
         successText: "Theme updated."
       });
@@ -2415,11 +2498,13 @@
       const isPrivate = !!privateAccountToggle.checked;
       const cityVisible = !!cityVisibleToggle.checked;
       const genderVisible = !!genderVisibleToggle.checked;
-      const showInNearby = !!showInNearbyToggle.checked && !currentProfile.softDeleted;
-      const locationVisibility = getSelectedRadioValue("locationVisibility") || "hidden";
+      let showInNearby = !!showInNearbyToggle.checked && !currentProfile.softDeleted;
+      const nearbyDiscoveryMode = normalizeNearbyMode(getSelectedRadioValue("nearbyDiscoveryMode") || "city");
+      const locationVisibility = normalizeLocationVisibility(getSelectedRadioValue("locationVisibility") || "city");
 
       if (currentProfile.softDeleted && showInNearbyToggle.checked) {
         showInNearbyToggle.checked = false;
+        showInNearby = false;
         setStatus(privacyStatus, "Reactivate your account before showing it in Nearby.", "error");
         return;
       }
@@ -2430,6 +2515,7 @@
           city_visible: cityVisible,
           gender_visible: genderVisible,
           show_in_nearby: showInNearby,
+          nearby_discovery_mode: nearbyDiscoveryMode,
           location_visibility: locationVisibility
         },
         userCamelPatch: {
@@ -2437,6 +2523,7 @@
           cityVisible,
           genderVisible,
           showInNearby,
+          nearbyDiscoveryMode,
           locationVisibility
         },
         publicSnakePatch: {
@@ -2444,6 +2531,7 @@
           city_visible: cityVisible,
           gender_visible: genderVisible,
           show_in_nearby: showInNearby,
+          nearby_discovery_mode: nearbyDiscoveryMode,
           location_visibility: locationVisibility
         },
         publicCamelPatch: {
@@ -2451,10 +2539,11 @@
           cityVisible,
           genderVisible,
           showInNearby,
+          nearbyDiscoveryMode,
           locationVisibility
         },
         successTarget: privacyStatus,
-        successText: "Privacy and nearby settings updated."
+        successText: "Privacy and Nearby settings updated."
       });
     }
 
@@ -2464,6 +2553,10 @@
     showInNearbyToggle.addEventListener("change", savePrivacyAndNearbyState);
 
     document.querySelectorAll('input[name="locationVisibility"]').forEach(radio => {
+      radio.addEventListener("change", savePrivacyAndNearbyState);
+    });
+
+    document.querySelectorAll('input[name="nearbyDiscoveryMode"]').forEach(radio => {
       radio.addEventListener("change", savePrivacyAndNearbyState);
     });
 
@@ -2542,6 +2635,8 @@
               await saveSettingsPatch({
                 userSnakePatch: { blocked_users: currentBlockedUsers },
                 userCamelPatch: { blockedUsers: currentBlockedUsers },
+                publicSnakePatch: { blocked_users: currentBlockedUsers },
+                publicCamelPatch: { blockedUsers: currentBlockedUsers },
                 successTarget: blockedStatus,
                 successText: "Account unblocked."
               });
@@ -2945,7 +3040,7 @@
 
         deleteConfirmText.value = "";
         deleteConfirmCheck.checked = false;
-        setStatus(permanentDeleteMessage, "Permanent delete request submitted for admin review.", "success");
+        setStatus(permanentDeleteMessage, "Permanent delete request submitted.", "success");
       } catch (error) {
         console.error(error);
         setStatus(permanentDeleteMessage, error?.message || "Could not submit delete request.", "error");
@@ -2959,12 +3054,13 @@
       cityVisibleToggle.checked = !!currentProfile.cityVisible;
       genderVisibleToggle.checked = !!currentProfile.genderVisible;
       showInNearbyToggle.checked = !!currentProfile.showInNearby && !currentProfile.softDeleted;
-      setCheckedRadioValue("locationVisibility", currentProfile.locationVisibility || "hidden");
+      setCheckedRadioValue("nearbyDiscoveryMode", currentProfile.nearbyDiscoveryMode || "city");
+      setCheckedRadioValue("locationVisibility", currentProfile.locationVisibility || "city");
 
-      const themeValue = currentProfile.themePreference || getStoredTheme() || "dark";
+      const themeValue = cleanThemeValue(currentProfile.themePreference || getStoredTheme() || "light");
       setCheckedRadioValue("themePreference", themeValue);
       localStorage.setItem("osTheme", themeValue);
-      localStorage.setItem("bwTheme", themeValue);
+      localStorage.removeItem("bwTheme");
       applyTheme(themeValue);
     }
 
@@ -3022,7 +3118,7 @@
         applyProfileHeader(currentProfile, isCurrentUserAdmin);
 
         emailEl.textContent = currentUser.email || "-";
-        uidEl.textContent = currentUser.id || "-";
+        uidEl.textContent = "Ready";
         verifiedEl.textContent = currentProfile.isVerified ? "Yes" : "No";
         createdAtEl.textContent = formatDate(currentProfile.createdAt || currentUserData.created_at || currentUserData.createdAt, currentUser);
 
@@ -3060,82 +3156,6 @@
     }
 
     loadSettings();
-
-    /*
-      OWNSPACE SETTINGS UPDATE:
-
-      FIXED / ADDED:
-      - BareWorld renamed to OwnSpace.
-      - Clean SVG icons.
-      - Settings sorted into clear control-center sections.
-      - Feedback form added.
-      - Feature request form added.
-      - Soft delete / temporary hide added.
-      - Reactivate account added.
-      - Permanent delete request added through account_delete_requests.
-      - Permanent delete does NOT directly delete Supabase Auth user from browser.
-      - Inbox badge counts only:
-        1) pending message_requests
-        2) unread chat_messages
-      - Bottom nav matches newer pages.
-
-      TABLES USED:
-      - users
-      - public_profiles
-      - verification_requests
-      - admins
-      - feedback
-      - feature_requests
-      - account_delete_requests
-      - message_requests
-      - chat_threads
-      - chat_messages
-
-      RECOMMENDED NEW TABLES:
-
-      feedback:
-      - id uuid primary key default gen_random_uuid()
-      - user_id uuid/text
-      - uid uuid/text
-      - name text
-      - email text
-      - type text
-      - message text
-      - rating int
-      - status text default 'pending'
-      - created_at timestamptz default now()
-      - updated_at timestamptz default now()
-
-      feature_requests:
-      - id uuid primary key default gen_random_uuid()
-      - user_id uuid/text
-      - uid uuid/text
-      - name text
-      - email text
-      - title text
-      - description text
-      - category text
-      - priority text
-      - status text default 'pending'
-      - created_at timestamptz default now()
-      - updated_at timestamptz default now()
-
-      account_delete_requests:
-      - id uuid primary key default gen_random_uuid()
-      - user_id uuid/text
-      - uid uuid/text
-      - email text
-      - name text
-      - status text default 'pending'
-      - request_type text
-      - reason text
-      - created_at timestamptz default now()
-      - updated_at timestamptz default now()
-
-      IMPORTANT:
-      - Permanent account deletion should be done by admin/server/Edge Function using service role.
-      - Frontend only submits the request.
-    */
   </script>
 </body>
 </html>
