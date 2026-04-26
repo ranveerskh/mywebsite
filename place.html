@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,25 +9,6 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -47,11 +28,30 @@
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
     body{
       background:
         radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
         radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:8px 8px 108px;
@@ -381,8 +381,10 @@
       color:var(--muted);
     }
 
-    .message.ok{color:#9cf0bf}
-    .message.err{color:#ffb3bd}
+    .message.ok{color:#22b36c}
+    .message.err{color:#e74c66}
+    html[data-theme="dark"] .message.ok{color:#9cf0bf}
+    html[data-theme="dark"] .message.err{color:#ffb3bd}
 
     .edit-form{
       display:grid;
@@ -561,7 +563,7 @@
     </div>
 
     <div id="notFoundPanel" class="panel hidden">
-      <div class="empty-box">Place not found.</div>
+      <div id="notFoundText" class="empty-box">Place not found.</div>
     </div>
 
     <div id="placePanel" class="hidden">
@@ -598,8 +600,8 @@
           </div>
 
           <div class="meta-item">
-            <strong>Status</strong>
-            <span id="adminStatusText">-</span>
+            <strong>Review</strong>
+            <span id="reviewStatusText">-</span>
           </div>
         </div>
 
@@ -633,6 +635,8 @@
                 <option value="Club">Club</option>
                 <option value="Retreat">Retreat</option>
                 <option value="Private Spot">Private Spot</option>
+                <option value="Wellness">Wellness</option>
+                <option value="Community">Community</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -665,7 +669,7 @@
           <div class="grid-2">
             <div class="field">
               <label class="label" for="editWebsite">Website / Link</label>
-              <input id="editWebsite" class="input" type="text" placeholder="https://example.com" />
+              <input id="editWebsite" class="input" type="text" placeholder="example.com" />
             </div>
 
             <div class="field">
@@ -776,6 +780,7 @@
 
     const loadingPanel = document.getElementById("loadingPanel");
     const notFoundPanel = document.getElementById("notFoundPanel");
+    const notFoundText = document.getElementById("notFoundText");
     const placePanel = document.getElementById("placePanel");
 
     const heroImage = document.getElementById("heroImage");
@@ -786,7 +791,7 @@
     const provinceText = document.getElementById("provinceText");
     const countryText = document.getElementById("countryText");
     const addressText = document.getElementById("addressText");
-    const adminStatusText = document.getElementById("adminStatusText");
+    const reviewStatusText = document.getElementById("reviewStatusText");
     const descText = document.getElementById("descText");
     const topActionRow = document.getElementById("topActionRow");
     const topMessage = document.getElementById("topMessage");
@@ -887,14 +892,15 @@
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
@@ -907,7 +913,7 @@
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
     if (mq.addEventListener) {
       mq.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -948,6 +954,13 @@
       return String(value || "").trim();
     }
 
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
@@ -955,8 +968,30 @@
       const aliases = [c];
 
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
       if (c === "canada") aliases.push("ca");
+      if (c === "india") aliases.push("bharat", "hindustan");
+
+      return aliases.join(" ");
+    }
+
+    function provinceAliases(province) {
+      const p = normalizeText(province);
+      if (!p) return "";
+
+      const aliases = [p];
+
+      if (p === "ontario") aliases.push("on", "ont");
+      if (p === "british columbia") aliases.push("bc", "b.c.");
+      if (p === "alberta") aliases.push("ab");
+      if (p === "quebec") aliases.push("qc");
+      if (p === "manitoba") aliases.push("mb");
+      if (p === "saskatchewan") aliases.push("sk");
+      if (p === "nova scotia") aliases.push("ns");
+      if (p === "new brunswick") aliases.push("nb");
+      if (p === "newfoundland and labrador") aliases.push("nl");
+      if (p === "prince edward island") aliases.push("pei", "pe");
+      if (p === "yukon") aliases.push("yt");
 
       return aliases.join(" ");
     }
@@ -966,19 +1001,32 @@
         titleText(city),
         titleText(province),
         titleText(country),
+        provinceAliases(province),
         countryAliases(country)
       ]
-      .filter(Boolean)
-      .join(" ")
-      .trim()
-      .toLowerCase();
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
-    function normalizeHref(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
+    function buildFullSearchText(place) {
+      return [
+        place.name,
+        place.category,
+        place.description,
+        place.city,
+        place.province,
+        place.country,
+        place.address,
+        place.website,
+        place.creatorName,
+        buildLocationSearch(place.city, place.province, place.country)
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
     function getField(raw, names, fallback = "") {
@@ -1019,6 +1067,17 @@
       );
     }
 
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("column") ||
+        msg.includes("does not exist")
+      );
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
 
@@ -1045,15 +1104,18 @@
         d.verified === true ||
         d.is_verified === true ||
         d.isVerified === true ||
-        ["approved", "active", "verified"].includes(status);
+        ["approved", "active", "verified", "public"].includes(status);
 
       const rejected =
         status === "rejected" ||
+        status === "declined" ||
         d.rejected === true;
 
       const pending =
         d.pending === true ||
         status === "pending" ||
+        status === "review" ||
+        status === "under_review" ||
         (!approved && !rejected);
 
       return {
@@ -1062,9 +1124,9 @@
         name: getField(d, ["name", "title", "place_name", "placeName"]) || "Unnamed Place",
         category: getField(d, ["category", "topic"]) || "General",
         description: getField(d, ["description", "desc", "notes"]),
-        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
-        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
-        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
         address: getField(d, ["address", "full_address", "fullAddress"]),
         website: getField(d, ["website", "url", "link"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
@@ -1118,21 +1180,11 @@
     }
 
     async function findPlace(placeId, source) {
-      if (source && PLACE_SOURCES.includes(source)) {
-        try {
-          const { data, error } = await supabase
-            .from(source)
-            .select("*")
-            .eq("id", placeId)
-            .maybeSingle();
+      const sources = source && PLACE_SOURCES.includes(source)
+        ? [source, ...PLACE_SOURCES.filter(item => item !== source)]
+        : PLACE_SOURCES;
 
-          if (!error && data) {
-            return normalizePlace({ id: data.id, ...data }, data.id, source);
-          }
-        } catch {}
-      }
-
-      for (const tableName of PLACE_SOURCES) {
+      for (const tableName of sources) {
         try {
           const { data, error } = await supabase
             .from(tableName)
@@ -1160,7 +1212,12 @@
             .eq("id", placeId);
 
           if (!error) return;
+
           lastError = error;
+
+          if (!isMissingSchemaError(error)) {
+            console.warn("Place update attempt failed:", error?.message || error);
+          }
         } catch (err) {
           lastError = err;
         }
@@ -1170,6 +1227,8 @@
     }
 
     async function deletePlaceById(tableName, placeId) {
+      let deleteError = null;
+
       try {
         const { error } = await supabase
           .from(tableName)
@@ -1177,40 +1236,66 @@
           .eq("id", placeId);
 
         if (!error) return;
+        deleteError = error;
+      } catch (err) {
+        deleteError = err;
+      }
+
+      try {
+        await updatePlaceById(tableName, placeId, [
+          {
+            hidden: true,
+            soft_deleted: true,
+            deleted_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            softDeleted: true,
+            deletedAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
+      } catch (err) {
+        throw deleteError || err;
+      }
+    }
+
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase
+          .from(table)
+          .select("id", { count: "exact", head: true });
+
+        const { count, error } = await buildQuery(query);
+
+        if (!error) return count || 0;
       } catch {}
 
-      await updatePlaceById(tableName, placeId, [
-        {
-          hidden: true,
-          soft_deleted: true,
-          deleted_at: nowIso(),
-          updated_at: nowIso()
-        },
-        {
-          hidden: true,
-          softDeleted: true,
-          deletedAt: nowIso(),
-          updatedAt: nowIso()
-        },
-        {
-          hidden: true
-        }
-      ]);
+      return null;
     }
 
     async function countPendingMessageRequests(uid) {
       const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
-        try {
-          const { count, error } = await supabase
-            .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
 
-          if (!error) return count || 0;
-        } catch {}
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
       }
 
       return 0;
@@ -1260,46 +1345,6 @@
         }
       } catch {}
 
-      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
-      const seenColumns = ["seen_at", "read_at", "seenAt", "readAt"];
-
-      for (const receiverColumn of receiverColumns) {
-        for (const seenColumn of seenColumns) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .eq(receiverColumn, uid)
-              .neq("sender_id", uid)
-              .is(seenColumn, null);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        try {
-          const { count, error } = await supabase
-            .from("chat_messages")
-            .select("id", { count: "exact", head: true })
-            .eq(receiverColumn, uid)
-            .neq("sender_id", uid)
-            .eq("is_read", false);
-
-          if (!error) return count || 0;
-        } catch {}
-
-        try {
-          const { count, error } = await supabase
-            .from("chat_messages")
-            .select("id", { count: "exact", head: true })
-            .eq(receiverColumn, uid)
-            .neq("sender_id", uid)
-            .eq("read", false);
-
-          if (!error) return count || 0;
-        } catch {}
-      }
-
       return 0;
     }
 
@@ -1334,14 +1379,12 @@
       for (const userColumn of userColumns) {
         for (const placeColumn of placeColumns) {
           try {
-            let query = supabase
+            const { data, error } = await supabase
               .from("place_visits")
               .select("id")
               .eq(userColumn, currentUser.id)
               .eq(placeColumn, currentPlaceId)
               .limit(1);
-
-            const { data, error } = await query;
 
             if (!error) {
               return Array.isArray(data) && data.length > 0;
@@ -1378,6 +1421,12 @@
           city: currentPlace?.city || "",
           createdAt: nowIso(),
           updatedAt: nowIso()
+        },
+        {
+          user_id: currentUser.id,
+          place_id: currentPlaceId,
+          status: "visited",
+          created_at: nowIso()
         }
       ];
 
@@ -1549,7 +1598,40 @@
       button.disabled = false;
     }
 
+    function getReviewLabel() {
+      if (!currentPlace) return "-";
+      if (currentPlace.approved) return "Public";
+      if (currentPlace.rejected) return isCreator ? "Needs update" : "Not available";
+      return isCreator ? "Under review" : "Not public";
+    }
+
+    function getReviewBadge() {
+      if (currentPlace.approved) {
+        return {
+          className: "badge-green",
+          icon: ICONS.check,
+          text: "Public"
+        };
+      }
+
+      if (currentPlace.rejected) {
+        return {
+          className: "badge-red",
+          icon: ICONS.report,
+          text: isCreator ? "Needs update" : "Not available"
+        };
+      }
+
+      return {
+        className: "badge-yellow",
+        icon: ICONS.star,
+        text: isCreator ? "Under review" : "Not public"
+      };
+    }
+
     function renderBadges() {
+      const review = getReviewBadge();
+
       const badges = [];
 
       badges.push(`
@@ -1560,9 +1642,9 @@
       `);
 
       badges.push(`
-        <span class="badge ${currentPlace.approved ? "badge-green" : currentPlace.rejected ? "badge-red" : "badge-yellow"}">
-          ${currentPlace.approved ? ICONS.check : currentPlace.rejected ? ICONS.report : ICONS.star}
-          ${currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending"}
+        <span class="badge ${review.className}">
+          ${review.icon}
+          ${escapeHtml(review.text)}
         </span>
       `);
 
@@ -1777,7 +1859,7 @@
       provinceText.textContent = currentPlace.province || "-";
       countryText.textContent = currentPlace.country || "-";
       addressText.textContent = currentPlace.address || "-";
-      adminStatusText.textContent = currentPlace.approved ? "Approved" : currentPlace.rejected ? "Rejected" : "Pending approval";
+      reviewStatusText.textContent = getReviewLabel();
       descText.textContent = currentPlace.description || "No description added.";
 
       if (currentPlace.imageURL) {
@@ -1815,7 +1897,7 @@
       const province = editProvince.value.trim();
       const country = editCountry.value.trim();
       const address = editAddress.value.trim();
-      const website = editWebsite.value.trim();
+      const website = normalizeHref(editWebsite.value.trim());
       const imageURL = editImageURL.value.trim();
       const description = editDescription.value.trim();
       const latText = editLat.value.trim();
@@ -1826,18 +1908,8 @@
         return;
       }
 
-      if (!city) {
-        setEditMessage("City is required.", "err");
-        return;
-      }
-
-      if (!province) {
-        setEditMessage("Province / State is required.", "err");
-        return;
-      }
-
-      if (!country) {
-        setEditMessage("Country is required.", "err");
+      if (!city || !province || !country) {
+        setEditMessage("City, province/state and country are required.", "err");
         return;
       }
 
@@ -1859,113 +1931,24 @@
         return;
       }
 
+      if (lat !== null && (lat < -90 || lat > 90)) {
+        setEditMessage("Latitude must be between -90 and 90.", "err");
+        return;
+      }
+
+      if (lng !== null && (lng < -180 || lng > 180)) {
+        setEditMessage("Longitude must be between -180 and 180.", "err");
+        return;
+      }
+
       const saveBtn = document.getElementById("saveEditBtn");
       saveBtn.disabled = true;
       setEditMessage("");
 
       try {
-        const locationSearch = buildLocationSearch(city, province, country);
+        const updatedAt = nowIso();
 
-        const snakePayload = {
-          name,
-          category,
-          city,
-          location_city: city,
-          current_city: city,
-          province,
-          state: province,
-          region: province,
-          location_province: province,
-          current_province: province,
-          country,
-          location_country: country,
-          current_country: country,
-          location_search: locationSearch,
-          address,
-          website,
-          image_url: imageURL,
-          description,
-          lat,
-          lng,
-          updated_at: nowIso()
-        };
-
-        const camelPayload = {
-          name,
-          category,
-          city,
-          locationCity: city,
-          currentCity: city,
-          province,
-          state: province,
-          region: province,
-          locationProvince: province,
-          currentProvince: province,
-          country,
-          locationCountry: country,
-          currentCountry: country,
-          locationSearch,
-          address,
-          website,
-          imageURL,
-          description,
-          lat,
-          lng,
-          updatedAt: nowIso()
-        };
-
-        const minimalSnakePayload = {
-          name,
-          category,
-          city,
-          province,
-          country,
-          address,
-          website,
-          image_url: imageURL,
-          description,
-          lat,
-          lng,
-          updated_at: nowIso()
-        };
-
-        const minimalCamelPayload = {
-          name,
-          category,
-          city,
-          province,
-          country,
-          address,
-          website,
-          imageURL,
-          description,
-          lat,
-          lng,
-          updatedAt: nowIso()
-        };
-
-        const ultraMinimalPayload = {
-          name,
-          category,
-          city,
-          province,
-          country,
-          address,
-          website,
-          description,
-          lat,
-          lng
-        };
-
-        await updatePlaceById(currentSource, currentPlaceId, [
-          snakePayload,
-          camelPayload,
-          minimalSnakePayload,
-          minimalCamelPayload,
-          ultraMinimalPayload
-        ]);
-
-        currentPlace = {
+        const previewPlace = {
           ...currentPlace,
           name,
           category,
@@ -1979,6 +1962,105 @@
           lat,
           lng
         };
+
+        const locationSearch = buildLocationSearch(city, province, country);
+        const searchText = buildFullSearchText(previewPlace);
+
+        const fullSnakePayload = {
+          name,
+          place_name: name,
+          category,
+          description,
+          city,
+          province,
+          state: province,
+          region: province,
+          country,
+          location_search: locationSearch,
+          search_text: searchText,
+          keywords: searchText,
+          address,
+          website,
+          url: website,
+          link: website,
+          image_url: imageURL,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const commonSnakePayload = {
+          name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          search_text: searchText,
+          address,
+          website,
+          image_url: imageURL,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const minimalSnakePayload = {
+          name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          address,
+          website,
+          image_url: imageURL,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const camelPayload = {
+          name,
+          placeName: name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          locationSearch,
+          searchText,
+          address,
+          website,
+          imageURL,
+          lat,
+          lng,
+          updatedAt: updatedAt
+        };
+
+        const ultraMinimalPayload = {
+          name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          address,
+          website,
+          lat,
+          lng
+        };
+
+        await updatePlaceById(currentSource, currentPlaceId, [
+          fullSnakePayload,
+          commonSnakePayload,
+          minimalSnakePayload,
+          camelPayload,
+          ultraMinimalPayload
+        ]);
+
+        currentPlace = previewPlace;
 
         await renderPlaceView();
         setEditMessage("Place updated.", "ok");
@@ -2009,6 +2091,7 @@
       if (!currentPlaceId) {
         loadingPanel.classList.add("hidden");
         notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "Place not found.";
         return;
       }
 
@@ -2018,20 +2101,22 @@
         if (!currentPlace || currentPlace.hidden) {
           loadingPanel.classList.add("hidden");
           notFoundPanel.classList.remove("hidden");
+          notFoundText.textContent = "Place not found.";
           return;
         }
 
         currentSource = currentPlace.source || currentSource || "nearby_places";
-        currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
         isCreator = currentPlace.createdBy === currentUser.id;
-        hasVisited = await loadVisitState();
 
         if (!isCreator && (currentPlace.pending || currentPlace.rejected)) {
           loadingPanel.classList.add("hidden");
           notFoundPanel.classList.remove("hidden");
-          notFoundPanel.querySelector(".empty-box").textContent = "This place is not public yet.";
+          notFoundText.textContent = "This place is not public yet.";
           return;
         }
+
+        currentSubmitterProfile = await loadProfile(currentPlace.createdBy);
+        hasVisited = await loadVisitState();
 
         await renderPlaceView();
 
@@ -2041,6 +2126,7 @@
         console.error(err);
         loadingPanel.classList.add("hidden");
         notFoundPanel.classList.remove("hidden");
+        notFoundText.textContent = "Could not load this place.";
       }
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -2051,27 +2137,6 @@
     }
 
     initPage();
-
-    /*
-      OWNSPACE PLACE DETAIL UPDATE:
-
-      FIXED / ADDED:
-      - Cleaned UI to match nearby.html / nearby-events.html / nearby-places.html.
-      - Bottom nav changed back to consistent 5 buttons.
-      - Removed extra Create button from bottom nav.
-      - Green verified badge is brighter and visible.
-      - Website button label instead of Open Link.
-      - Share button placed cleanly.
-      - Report button stays for non-creators.
-      - Edit/Delete buttons stay only for creator.
-      - Been There / Visited logic supports RPC first, then manual fallback.
-      - Inbox badge counts only:
-        pending message_requests + unread chat_messages.
-      - Supports both:
-        place.html?placeId=...
-        place.html?placeId=...&source=...
-      - Theme supports osTheme and old bwTheme.
-    */
   </script>
 </body>
 </html>
