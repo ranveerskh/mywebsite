@@ -1,33 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Admin</title>
+  <title>OwnSpace - Admin</title>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -47,14 +28,36 @@
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
-    body{
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      padding:12px 12px 110px;
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
 
-    .app{max-width:860px;margin:0 auto}
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:10px 10px 108px;
+    }
+
+    .app{max-width:920px;margin:0 auto}
     .hidden{display:none!important}
 
     .topbar{
@@ -65,88 +68,117 @@
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:8px 10px;
-      margin-bottom:12px;
+      padding:7px 9px;
+      margin-bottom:10px;
       display:grid;
-      grid-template-columns:44px 1fr 44px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:10px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
 
     .top-icon-btn{
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:14px;
-      border:1px solid var(--line);
+      border-radius:13px;
       cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
+      border:1px solid var(--line);
+      display:flex;
       align-items:center;
       justify-content:center;
-      width:44px;
-      height:44px;
-      padding:0;
+      text-decoration:none;
+      position:relative;
     }
 
     .top-icon-btn svg{width:19px;height:19px;display:block}
     .top-center{text-align:center;min-width:0}
-    .brand{font-size:20px;font-weight:900;line-height:1.05}
-    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .brand{font-size:18px;font-weight:950;line-height:1.05;letter-spacing:-.02em}
+    .brand-sub{font-size:10px;color:var(--muted);margin-top:2px}
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      padding:14px;
-      margin-bottom:12px;
+      padding:13px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
     }
 
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.13), rgba(167,139,250,.10)),
+        var(--surface);
+    }
+
+    .hero:before{
+      content:"";
+      position:absolute;
+      right:-80px;
+      bottom:-120px;
+      width:230px;
+      height:230px;
+      border-radius:50%;
+      background:rgba(61,220,132,.08);
+      pointer-events:none;
+    }
+
     .hero-title{
-      font-size:19px;
-      font-weight:900;
-      margin-bottom:4px;
+      position:relative;
+      font-size:20px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      margin-bottom:5px;
     }
 
     .hero-sub{
+      position:relative;
       color:var(--muted);
       font-size:13px;
       line-height:1.55;
     }
 
     .summary-grid{
+      position:relative;
       display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
       margin-top:12px;
     }
 
     .summary-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
+      border-radius:17px;
+      padding:12px;
+      min-width:0;
     }
 
     .summary-label{
       color:var(--muted);
-      font-size:12px;
-      margin-bottom:8px;
-      font-weight:800;
+      font-size:11px;
+      font-weight:950;
+      margin-bottom:7px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .summary-value{
-      font-size:22px;
-      font-weight:1000;
+      font-size:23px;
+      font-weight:950;
       line-height:1;
     }
 
     .tabs{
       display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:8px;
+      grid-template-columns:repeat(8,1fr);
+      gap:7px;
     }
 
     .tab-btn{
@@ -155,16 +187,17 @@
       color:var(--text);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:11px 8px;
-      font-weight:900;
-      font-size:13px;
+      padding:10px 6px;
+      font-size:11.5px;
+      font-weight:950;
       cursor:pointer;
-      min-height:44px;
+      min-height:42px;
+      white-space:nowrap;
     }
 
     .tab-btn.active{
       background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.20);
+      border-color:rgba(76,201,255,.22);
     }
 
     .loading-box,
@@ -172,7 +205,7 @@
     .denied-box{
       text-align:center;
       color:var(--muted);
-      padding:24px 12px;
+      padding:22px 12px;
       background:var(--surface-2);
       border-radius:16px;
       border:1px dashed var(--line);
@@ -182,8 +215,9 @@
 
     .section-title{
       font-size:18px;
-      font-weight:900;
-      margin-bottom:8px;
+      font-weight:950;
+      margin-bottom:6px;
+      letter-spacing:-.01em;
     }
 
     .section-note{
@@ -198,50 +232,71 @@
       gap:8px;
       flex-wrap:wrap;
       margin-bottom:12px;
+      align-items:center;
     }
+
+    .search-box{
+      flex:1;
+      min-width:220px;
+      border:none;
+      outline:none;
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:14px;
+    }
+
+    .search-box::placeholder{color:var(--muted)}
 
     .action-btn{
       border:none;
       border-radius:12px;
-      padding:10px 13px;
-      font-size:13px;
-      font-weight:900;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:6px;
       cursor:pointer;
       min-height:40px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      gap:6px;
     }
 
-    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
-
-    .action-btn:disabled{
-      opacity:.65;
-      cursor:not-allowed;
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
     }
+
+    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .action-btn:disabled{opacity:.65;cursor:not-allowed}
 
     .message{
       min-height:18px;
       font-size:13px;
-      margin-top:8px;
+      margin-bottom:10px;
       line-height:1.5;
     }
 
-    .message.ok{color:#86efac}
-    .message.err{color:#fda4af}
+    .message.ok{color:#22b36c}
+    .message.err{color:#e74c66}
+    html[data-theme="dark"] .message.ok{color:#86efac}
+    html[data-theme="dark"] .message.err{color:#fda4af}
 
     .list{
       display:grid;
-      gap:12px;
+      gap:10px;
     }
 
     .card{
@@ -254,15 +309,15 @@
 
     .card-top{
       display:flex;
-      justify-content:space-between;
       align-items:flex-start;
+      justify-content:space-between;
       gap:10px;
-      margin-bottom:8px;
+      margin-bottom:9px;
     }
 
     .card-title{
       font-size:16px;
-      font-weight:900;
+      font-weight:950;
       line-height:1.35;
       word-break:break-word;
     }
@@ -270,6 +325,7 @@
     .card-time{
       color:var(--muted);
       font-size:11px;
+      font-weight:850;
       white-space:nowrap;
     }
 
@@ -281,22 +337,20 @@
       word-break:break-word;
     }
 
-    .muted{color:var(--muted)}
-
     .meta-grid{
       display:grid;
+      grid-template-columns:repeat(2,1fr);
       gap:8px;
-      margin-top:10px;
-      margin-bottom:10px;
+      margin:10px 0;
     }
 
     .meta-item{
       background:var(--surface-3);
       border:1px solid var(--line);
       border-radius:14px;
-      padding:10px 12px;
+      padding:10px 11px;
       font-size:13px;
-      line-height:1.55;
+      line-height:1.5;
       word-break:break-word;
     }
 
@@ -306,27 +360,29 @@
       color:var(--muted);
       font-size:11px;
       text-transform:uppercase;
-      letter-spacing:.25px;
+      letter-spacing:.04em;
     }
 
     .badge-row{
       display:flex;
-      gap:8px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-bottom:10px;
+      margin-bottom:9px;
     }
 
     .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:5px 9px;
+      gap:5px;
+      padding:6px 9px;
       border-radius:999px;
       font-size:11px;
-      font-weight:900;
+      font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-3);
       color:var(--text);
+      line-height:1;
     }
 
     .badge.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
@@ -340,6 +396,7 @@
       gap:8px;
       flex-wrap:wrap;
       margin-top:12px;
+      align-items:center;
     }
 
     .editor{
@@ -352,23 +409,25 @@
 
     .form{
       display:grid;
-      gap:12px;
+      gap:11px;
     }
 
     .grid-2{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:12px;
+      gap:10px;
     }
 
     .field{
       display:grid;
-      gap:7px;
+      gap:6px;
     }
 
+    .field.full{grid-column:1/-1}
+
     .label{
-      font-size:13px;
-      font-weight:900;
+      font-size:12px;
+      font-weight:950;
       color:var(--text);
     }
 
@@ -378,8 +437,8 @@
       width:100%;
       border:none;
       outline:none;
-      padding:13px 14px;
-      border-radius:16px;
+      padding:12px 13px;
+      border-radius:15px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
@@ -387,55 +446,14 @@
     }
 
     .textarea{
-      min-height:110px;
+      min-height:96px;
       resize:vertical;
       line-height:1.55;
     }
 
-    .select option{color:#000}
-
-    .switch-row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .switch-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background:var(--surface-3);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .school-mode-row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      margin-bottom:12px;
-    }
-
-    .school-mode-btn{
-      border:none;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      font-size:13px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .school-mode-btn.active{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.22);
-    }
+    .input::placeholder,
+    .textarea::placeholder{color:var(--muted)}
+    .select option{color:#111}
 
     .proof-warning{
       background:rgba(245,185,66,.10);
@@ -453,16 +471,17 @@
       left:50%;
       transform:translateX(-50%);
       bottom:10px;
-      width:min(860px, calc(100% - 16px));
+      width:min(920px, calc(100% - 16px));
       background:var(--nav-bg);
       border:1px solid var(--line);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
       box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
 
     .nav-link{
@@ -473,35 +492,53 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
       border:none;
       background:transparent;
       cursor:pointer;
+      position:relative;
     }
-
-    .nav-link .icon{font-size:18px;line-height:1;display:block}
 
     .nav-link.active{
       background:rgba(76,201,255,.14);
       color:var(--text);
     }
 
-    @media (max-width:900px){
-      .summary-grid{grid-template-columns:repeat(2,1fr)}
-      .tabs{grid-template-columns:repeat(3,1fr)}
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
     }
 
-    @media (max-width:700px){
-      body{padding:10px 10px 110px}
-      .brand{font-size:18px}
-      .summary-grid{grid-template-columns:1fr 1fr}
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    @media(max-width:900px){
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .tabs{grid-template-columns:repeat(4,1fr)}
+    }
+
+    @media(max-width:700px){
+      body{padding:10px 10px 108px}
+      .brand{font-size:17px}
+      .panel{padding:11px;border-radius:20px}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
       .tabs{grid-template-columns:repeat(2,1fr)}
-      .grid-2{grid-template-columns:1fr}
-      .school-mode-row{grid-template-columns:1fr}
+      .meta-grid,.grid-2{grid-template-columns:1fr}
+      .toolbar .action-btn{flex:1}
+      .inline-actions .action-btn{flex:1}
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
     }
   </style>
 </head>
@@ -510,17 +547,22 @@
   <div class="app">
     <div class="topbar">
       <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
       </button>
 
       <div class="top-center">
-        <div class="brand">BareWorld</div>
+        <div class="brand">OwnSpace</div>
         <div class="brand-sub">Admin Panel</div>
       </div>
 
-      <div></div>
+      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+          <path d="M21 3v6h-6"></path>
+        </svg>
+      </button>
     </div>
 
     <div id="accessPanel" class="panel">
@@ -529,14 +571,16 @@
     </div>
 
     <div id="adminWrap" class="hidden">
-      <div class="panel">
+      <div class="panel hero">
         <div class="hero-title">Central Admin</div>
-        <div class="hero-sub">Manage places, reports, school content, verification, and moderation history.</div>
+        <div class="hero-sub">
+          Manage users, reports, verifications, communities, Hub posts, places, and moderation history from one clean OwnSpace admin panel.
+        </div>
 
         <div class="summary-grid">
           <div class="summary-card">
-            <div class="summary-label">Pending Places</div>
-            <div id="sumPlaces" class="summary-value">0</div>
+            <div class="summary-label">Users</div>
+            <div id="sumUsers" class="summary-value">0</div>
           </div>
 
           <div class="summary-card">
@@ -550,7 +594,12 @@
           </div>
 
           <div class="summary-card">
-            <div class="summary-label">History Logs</div>
+            <div class="summary-label">Communities</div>
+            <div id="sumCommunities" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">History</div>
             <div id="sumHistory" class="summary-value">0</div>
           </div>
         </div>
@@ -559,10 +608,12 @@
       <div class="panel">
         <div class="tabs">
           <button class="tab-btn active" data-tab="dashboard" type="button">Dashboard</button>
-          <button class="tab-btn" data-tab="places" type="button">Places</button>
+          <button class="tab-btn" data-tab="users" type="button">Users</button>
           <button class="tab-btn" data-tab="reports" type="button">Reports</button>
-          <button class="tab-btn" data-tab="school" type="button">School</button>
           <button class="tab-btn" data-tab="verification" type="button">Verification</button>
+          <button class="tab-btn" data-tab="communities" type="button">Communities</button>
+          <button class="tab-btn" data-tab="hub" type="button">Hub</button>
+          <button class="tab-btn" data-tab="places" type="button">Places</button>
           <button class="tab-btn" data-tab="history" type="button">History</button>
         </div>
       </div>
@@ -577,27 +628,54 @@
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
 
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
 
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
+    <a href="nearby-communities.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 19a4 4 0 0 1 8 0"></path>
+          <circle cx="11" cy="9" r="3"></circle>
+          <path d="M17 11a3 3 0 0 1 3 3v5"></path>
+        </svg>
+      </span>
+      <span>Community</span>
     </a>
 
     <a href="search.html" class="nav-link">
-      <span class="icon">⌕</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
       <span>Search</span>
     </a>
 
     <a href="profile.html" class="nav-link active">
-      <span class="icon">◉</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -608,15 +686,17 @@
     const VERIFICATION_BUCKET = "verification";
 
     const backBtn = document.getElementById("backBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
 
     const accessPanel = document.getElementById("accessPanel");
     const accessLoading = document.getElementById("accessLoading");
     const accessDenied = document.getElementById("accessDenied");
     const adminWrap = document.getElementById("adminWrap");
 
-    const sumPlaces = document.getElementById("sumPlaces");
+    const sumUsers = document.getElementById("sumUsers");
     const sumReports = document.getElementById("sumReports");
     const sumVerification = document.getElementById("sumVerification");
+    const sumCommunities = document.getElementById("sumCommunities");
     const sumHistory = document.getElementById("sumHistory");
 
     const pageMessage = document.getElementById("pageMessage");
@@ -626,42 +706,57 @@
     let currentUser = null;
     let currentTab = "dashboard";
 
-    let state = {
-      placesFilter: "pending",
+    const state = {
+      usersFilter: "all",
+      usersSearch: "",
       reportsFilter: "open",
-      schoolMode: "create",
-      schoolEdit: { source: "school_posts", id: null }
+      verificationFilter: "pending",
+      communitiesFilter: "active",
+      placesFilter: "pending",
+      hubFilter: "published",
+      hubAuthorSearch: ""
     };
 
-    const SCHOOL_SOURCES = ["school_posts", "school_lessons", "school"];
+    const ICONS = {
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      refresh: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+          <path d="M21 3v6h-6"></path>
+        </svg>
+      `
+    };
 
     function nowIso() {
       return new Date().toISOString();
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+      return themeValue === "dark" ? "dark" : "light";
     }
 
-    function applyTheme(themeValue) {
+    function applyTheme(themeValue = getStoredTheme()) {
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
-    applyTheme(getStoredTheme());
+    applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme(getStoredTheme());
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     if (themeMediaQuery.addEventListener) {
       themeMediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -671,6 +766,10 @@
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
       else window.location.href = "profile.html";
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+      await refreshCurrent();
     });
 
     function setMessage(text = "", type = "") {
@@ -692,40 +791,53 @@
     function val(obj, names, fallback = "") {
       for (const name of names) {
         const value = obj?.[name];
-
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-          return value;
-        }
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
-
       return fallback;
     }
 
     function boolVal(obj, names, fallback = false) {
       for (const name of names) {
         const value = obj?.[name];
-
-        if (value !== undefined && value !== null) {
-          return !!value;
-        }
+        if (value !== undefined && value !== null) return !!value;
       }
-
       return fallback;
+    }
+
+    function normalizeStatus(status = "") {
+      return String(status || "").toLowerCase().trim();
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        (msg.includes("relation") && msg.includes("does not exist"))
+      );
+    }
+
+    function isColumnError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("column") ||
+        msg.includes("could not find") ||
+        msg.includes("does not exist")
+      );
     }
 
     function tsMs(ts) {
       if (!ts) return 0;
 
       try {
-        if (typeof ts === "object" && typeof ts.toDate === "function") {
-          return ts.toDate().getTime();
-        }
+        if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().getTime();
       } catch {}
 
       try {
-        if (typeof ts === "object" && typeof ts.seconds === "number") {
-          return ts.seconds * 1000;
-        }
+        if (typeof ts === "object" && typeof ts.seconds === "number") return ts.seconds * 1000;
       } catch {}
 
       try {
@@ -751,15 +863,11 @@
       if (!ts) return "Just now";
 
       try {
-        if (typeof ts === "object" && typeof ts.toDate === "function") {
-          return ts.toDate().toLocaleString();
-        }
+        if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().toLocaleString();
       } catch {}
 
       try {
-        if (typeof ts === "object" && typeof ts.seconds === "number") {
-          return new Date(ts.seconds * 1000).toLocaleString();
-        }
+        if (typeof ts === "object" && typeof ts.seconds === "number") return new Date(ts.seconds * 1000).toLocaleString();
       } catch {}
 
       try {
@@ -770,19 +878,25 @@
       return "Just now";
     }
 
-    function normalizeStatus(status = "") {
-      return String(status || "").toLowerCase().trim();
+    function normalizeUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
     }
 
-    function getBadgeLabel(type) {
-      if (type === "creator") return "Verified Creator";
-      if (type === "business") return "Verified Business";
-      return "Verified Account";
+    function badgeClass(status) {
+      const s = normalizeStatus(status);
+
+      if (["approved", "active", "published", "resolved", "verified"].includes(s)) return "green";
+      if (["pending", "open", "need_more_info", "review"].includes(s)) return "yellow";
+      if (["featured", "pinned", "admin", "creator"].includes(s)) return "purple";
+      if (["rejected", "hidden", "banned", "suspended", "warned", "deleted"].includes(s)) return "red";
+      return "blue";
     }
 
     async function selectAll(table) {
       const { data, error } = await supabase.from(table).select("*");
-
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     }
@@ -791,9 +905,20 @@
       try {
         return await selectAll(table);
       } catch (err) {
-        console.warn(`Could not load ${table}`, err?.message || err);
+        if (!isMissingSchemaError(err)) console.warn(`Could not load ${table}:`, err?.message || err);
         return [];
       }
+    }
+
+    async function selectAllFromTables(tables) {
+      const out = [];
+
+      for (const table of tables) {
+        const rows = await selectAllSafe(table);
+        rows.forEach(row => out.push({ ...row, __table: table }));
+      }
+
+      return out;
     }
 
     async function selectRowByColumn(table, column, value) {
@@ -817,9 +942,19 @@
           const row = await selectRowByColumn("admins", column, uid);
           if (row) return true;
         } catch (err) {
-          console.warn(`Admin check skipped admins.${column}`, err?.message || err);
+          if (!isMissingSchemaError(err)) console.warn(`Admin check skipped admins.${column}`, err?.message || err);
         }
       }
+
+      try {
+        const userRows = await selectAllSafe("users");
+        const me = userRows.find(row => {
+          const id = val(row, ["uid", "id", "user_id", "userId"], "");
+          return id === uid;
+        });
+
+        if (me && (me.is_admin === true || me.isAdmin === true || normalizeStatus(me.role) === "admin")) return true;
+      } catch {}
 
       return false;
     }
@@ -858,6 +993,7 @@
 
           if (!error) return data || [];
           lastError = error;
+          if (isMissingSchemaError(error) || isColumnError(error)) continue;
         } catch (err) {
           lastError = err;
         }
@@ -882,11 +1018,7 @@
     }
 
     async function deleteById(table, id) {
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq("id", id);
-
+      const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
     }
 
@@ -942,6 +1074,172 @@
       }
     }
 
+    function getUserId(row) {
+      return String(val(row, ["uid", "id", "user_id", "userId"], "") || "");
+    }
+
+    function getUserName(row) {
+      return String(val(row, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member");
+    }
+
+    function getUsername(row) {
+      return String(val(row, ["username", "handle", "user_name", "userName"], "") || "");
+    }
+
+    function getUserEmail(row) {
+      return String(val(row, ["email"], "") || "");
+    }
+
+    function getUserStatus(row) {
+      return normalizeStatus(val(row, ["moderation_status", "moderationStatus", "status"], "active") || "active");
+    }
+
+    function isHiddenUser(row) {
+      return !!(
+        row?.is_hidden_by_admin ||
+        row?.isHiddenByAdmin ||
+        row?.soft_deleted ||
+        row?.softDeleted ||
+        row?.deactivated ||
+        row?.banned
+      ) || getUserStatus(row) === "banned";
+    }
+
+    function mergeUserRows(usersRows, publicRows) {
+      const map = new Map();
+
+      usersRows.forEach(row => {
+        const uid = getUserId(row);
+        if (!uid) return;
+        map.set(uid, { ...row, uid, __sources: ["users"] });
+      });
+
+      publicRows.forEach(row => {
+        const uid = getUserId(row);
+        if (!uid) return;
+        if (map.has(uid)) {
+          map.set(uid, { ...map.get(uid), ...row, uid, __sources: [...(map.get(uid).__sources || []), "public_profiles"] });
+        } else {
+          map.set(uid, { ...row, uid, __sources: ["public_profiles"] });
+        }
+      });
+
+      return Array.from(map.values());
+    }
+
+    function getReportStatus(row) {
+      return normalizeStatus(val(row, ["status"], "open") || "open");
+    }
+
+    function isReportOpen(row) {
+      const s = getReportStatus(row);
+      return !["resolved", "closed", "done", "dismissed"].includes(s);
+    }
+
+    function normalizeCommunity(row) {
+      const status = normalizeStatus(val(row, ["status"], "active") || "active");
+      const hidden = !!(
+        row?.hidden ||
+        row?.hidden_by_admin ||
+        row?.hiddenByAdmin ||
+        row?.soft_deleted ||
+        row?.softDeleted
+      ) || status === "deleted";
+
+      return {
+        id: String(val(row, ["id"], "") || ""),
+        name: String(val(row, ["name", "title", "community_name", "communityName"], "Untitled Community") || "Untitled Community"),
+        description: String(val(row, ["description", "desc", "about"], "") || ""),
+        category: String(val(row, ["category", "topic"], "General") || "General"),
+        privacy: String(val(row, ["privacy", "visibility"], "public") || "public"),
+        creatorId: String(val(row, ["creator_id", "creatorId", "created_by", "createdBy", "owner_id", "ownerId", "user_id", "userId", "uid"], "") || ""),
+        creatorName: String(val(row, ["creator_name", "creatorName", "owner_name", "ownerName", "display_name", "displayName"], "Member") || "Member"),
+        status,
+        approved: row.approved === true || row.is_approved === true || row.isApproved === true || ["approved", "active", "published"].includes(status),
+        pending: row.pending === true || row.is_pending === true || row.isPending === true || status === "pending",
+        rejected: row.rejected === true || row.is_rejected === true || row.isRejected === true || status === "rejected",
+        featured: !!(row.featured || row.is_featured || row.isFeatured),
+        pinned: !!(row.pinned || row.is_pinned || row.isPinned),
+        hidden,
+        memberCount: Number(row.member_count ?? row.memberCount ?? row.members_count ?? row.membersCount ?? 0) || 0,
+        createdAt: row.created_at ?? row.createdAt ?? row.timestamp ?? null,
+        __raw: row
+      };
+    }
+
+    function normalizePlace(row) {
+      const status = normalizeStatus(val(row, ["status"], "") || "");
+      const hidden = !!(
+        row?.hidden ||
+        row?.hidden_by_admin ||
+        row?.hiddenByAdmin ||
+        row?.soft_deleted ||
+        row?.softDeleted
+      ) || status === "deleted";
+
+      return {
+        id: String(val(row, ["id"], "") || ""),
+        name: String(val(row, ["name", "title", "place_name", "placeName"], "Unnamed Place") || "Unnamed Place"),
+        city: String(val(row, ["city", "location_city", "locationCity"], "No city") || "No city"),
+        category: String(val(row, ["category", "topic"], "General") || "General"),
+        address: String(val(row, ["address"], "") || ""),
+        website: String(val(row, ["website", "url", "link"], "") || ""),
+        description: String(val(row, ["description", "desc"], "") || ""),
+        creatorId: String(val(row, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"], "") || ""),
+        creatorName: String(val(row, ["creator_name", "creatorName", "display_name", "displayName"], "Unknown") || "Unknown"),
+        status: status || (row.approved === true ? "approved" : "pending"),
+        approved: row.approved === true || row.is_approved === true || row.isApproved === true || status === "approved",
+        rejected: row.rejected === true || row.is_rejected === true || row.isRejected === true || status === "rejected",
+        pending: row.pending === true || status === "pending" || (row.approved !== true && status !== "approved" && status !== "rejected"),
+        hidden,
+        createdAt: row.created_at ?? row.createdAt ?? row.timestamp ?? null,
+        __raw: row
+      };
+    }
+
+    function normalizeHubPost(row) {
+      const status = normalizeStatus(val(row, ["status"], "") || "");
+      const hidden = !!(
+        row?.hidden ||
+        row?.hidden_by_admin ||
+        row?.hiddenByAdmin ||
+        row?.soft_deleted ||
+        row?.softDeleted
+      ) || status === "deleted";
+
+      const published = row.published !== false && row.is_published !== false && row.isPublished !== false && status !== "draft";
+
+      return {
+        id: String(val(row, ["id"], "") || ""),
+        title: String(val(row, ["title", "name"], "Untitled Hub Post") || "Untitled Hub Post"),
+        summary: String(val(row, ["summary", "description", "caption"], "") || ""),
+        type: String(val(row, ["post_type", "postType", "type"], "update") || "update"),
+        category: String(val(row, ["category", "topic"], "General") || "General"),
+        creatorId: String(val(row, ["created_by", "createdBy", "user_id", "userId", "author_id", "authorId", "uid"], "") || ""),
+        creatorName: String(val(row, ["creator_name", "creatorName", "author_name", "authorName", "display_name", "displayName"], "OwnSpace") || "OwnSpace"),
+        featured: !!(row.featured || row.is_featured || row.isFeatured),
+        pinned: !!(row.pinned || row.is_pinned || row.isPinned),
+        published,
+        hidden,
+        status: hidden ? "hidden" : published ? "published" : "draft",
+        createdAt: row.created_at ?? row.createdAt ?? row.timestamp ?? null,
+        __raw: row
+      };
+    }
+
+    function getBadgeLabel(type) {
+      const t = normalizeStatus(type);
+      if (t === "creator") return "Verified Creator";
+      if (t === "business") return "Verified Business";
+      return "Verified Account";
+    }
+
+    async function refreshCurrent() {
+      setMessage("");
+      await loadSummary();
+      await loadSection(currentTab);
+    }
+
     function setActiveTab(tab) {
       currentTab = tab;
 
@@ -957,53 +1255,51 @@
     });
 
     async function loadSummary() {
-      const [places, reports, verifications, history] = await Promise.all([
-        selectAllSafe("nearby_places"),
+      const [
+        usersRows,
+        publicRows,
+        reports,
+        verifications,
+        communitiesRaw,
+        history
+      ] = await Promise.all([
+        selectAllSafe("users"),
+        selectAllSafe("public_profiles"),
         selectAllSafe("reports"),
         selectAllSafe("verification_requests"),
+        selectAllSafe("communities"),
         selectAllSafe("moderation_history")
       ]);
 
-      sumPlaces.textContent = String(
-        places.filter(p => {
-          const status = normalizeStatus(val(p, ["status"], ""));
-          return status === "pending" || p.pending === true || p.approved !== true;
-        }).length
-      );
+      const users = mergeUserRows(usersRows, publicRows);
+      const communities = communitiesRaw.map(normalizeCommunity);
 
-      sumReports.textContent = String(
-        reports.filter(r => {
-          const status = normalizeStatus(val(r, ["status"], ""));
-          return !["resolved", "closed", "done"].includes(status);
-        }).length
-      );
-
-      sumVerification.textContent = String(
-        verifications.filter(v => {
-          const status = normalizeStatus(val(v, ["status"], "pending"));
-          return status === "pending" || status === "need_more_info";
-        }).length
-      );
-
+      sumUsers.textContent = String(users.length);
+      sumReports.textContent = String(reports.filter(isReportOpen).length);
+      sumVerification.textContent = String(verifications.filter(v => {
+        const s = normalizeStatus(val(v, ["status"], "pending"));
+        return s === "pending" || s === "need_more_info";
+      }).length);
+      sumCommunities.textContent = String(communities.filter(c => !c.hidden).length);
       sumHistory.textContent = String(history.length);
     }
 
-    async function loadSection(tab, showFreshMessage = false) {
+    async function loadSection(tab, refreshSummary = false) {
       setMessage("");
       setSectionLoading(true);
       sectionContent.innerHTML = "";
 
       try {
         if (tab === "dashboard") await loadDashboard();
-        else if (tab === "places") await loadPlaces();
+        else if (tab === "users") await loadUsers();
         else if (tab === "reports") await loadReports();
-        else if (tab === "school") await loadSchool();
         else if (tab === "verification") await loadVerification();
+        else if (tab === "communities") await loadCommunities();
+        else if (tab === "hub") await loadHub();
+        else if (tab === "places") await loadPlaces();
         else if (tab === "history") await loadHistory();
 
-        if (showFreshMessage) {
-          await loadSummary();
-        }
+        if (refreshSummary) await loadSummary();
       } catch (err) {
         console.error(err);
         sectionContent.innerHTML = `<div class="empty-box">Could not load this section.<br>${escapeHtml(err?.message || "")}</div>`;
@@ -1013,53 +1309,58 @@
     }
 
     async function loadDashboard() {
-      const [placesRaw, reportsRaw, verificationsRaw, historyRaw] = await Promise.all([
-        selectAllSafe("nearby_places"),
+      const [
+        reports,
+        verifications,
+        communitiesRaw,
+        hubPostsRaw,
+        placesRaw,
+        historyRaw
+      ] = await Promise.all([
         selectAllSafe("reports"),
         selectAllSafe("verification_requests"),
+        selectAllSafe("communities"),
+        selectAllSafe("hub_posts"),
+        selectAllSafe("nearby_places"),
         selectAllSafe("moderation_history")
       ]);
 
-      const places = placesRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
-      const reports = reportsRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
-      const verifications = verificationsRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
-      const history = historyRaw.map(d => ({ ...d })).sort((a, b) => createdMs(b) - createdMs(a));
+      const openReports = reports.filter(isReportOpen).sort((a, b) => createdMs(b) - createdMs(a)).slice(0, 5);
 
-      const pendingPlaces = places.filter(p => {
-        const status = normalizeStatus(val(p, ["status"], ""));
-        return status === "pending" || p.pending === true || p.approved !== true;
-      }).slice(0, 5);
+      const pendingVerification = verifications
+        .filter(v => {
+          const s = normalizeStatus(val(v, ["status"], "pending"));
+          return s === "pending" || s === "need_more_info";
+        })
+        .sort((a, b) => createdMs(b) - createdMs(a))
+        .slice(0, 5);
 
-      const openReports = reports.filter(r => {
-        const status = normalizeStatus(val(r, ["status"], ""));
-        return !["resolved", "closed", "done"].includes(status);
-      }).slice(0, 5);
+      const pendingCommunities = communitiesRaw
+        .map(normalizeCommunity)
+        .filter(c => !c.hidden && (c.pending || !c.approved))
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
+        .slice(0, 5);
 
-      const pendingVerification = verifications.filter(v => {
-        const status = normalizeStatus(val(v, ["status"], "pending"));
-        return status === "pending" || status === "need_more_info";
-      }).slice(0, 5);
+      const pendingPlaces = placesRaw
+        .map(normalizePlace)
+        .filter(p => !p.hidden && p.pending && !p.approved && !p.rejected)
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
+        .slice(0, 5);
 
-      const recentHistory = history.slice(0, 8);
+      const recentHub = hubPostsRaw
+        .map(normalizeHubPost)
+        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
+        .slice(0, 5);
+
+      const recentHistory = historyRaw
+        .sort((a, b) => createdMs(b) - createdMs(a))
+        .slice(0, 8);
 
       sectionContent.innerHTML = `
         <div class="section-title">Dashboard</div>
         <div class="section-note">Quick view of pending work and recent admin actions.</div>
 
         <div class="list">
-          <div class="card">
-            <div class="card-title">Pending Places</div>
-            ${pendingPlaces.length ? pendingPlaces.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(val(item, ["name", "title", "place_name", "placeName"], "Unnamed Place"))}</strong>
-                ${escapeHtml(val(item, ["city", "location_city", "locationCity"], "No city"))} • ${escapeHtml(val(item, ["category"], "General"))}
-              </div>
-            `).join("") : `<div class="empty-box">No pending places.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn blue dash-go" data-tab="places" type="button">Open Places</button>
-            </div>
-          </div>
-
           <div class="card">
             <div class="card-title">Open Reports</div>
             ${openReports.length ? openReports.map(item => `
@@ -1074,15 +1375,54 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Verification</div>
+            <div class="card-title">Verification Requests</div>
             ${pendingVerification.length ? pendingVerification.map(item => `
               <div class="meta-item">
-                <strong>${escapeHtml(val(item, ["full_legal_name", "full_name", "username", "email"], "Request"))}</strong>
+                <strong>${escapeHtml(val(item, ["full_legal_name", "full_name", "username", "email"], "Verification Request"))}</strong>
                 ${escapeHtml(getBadgeLabel(val(item, ["badge_type", "verification_type"], "account")))} • ${escapeHtml(val(item, ["status"], "pending"))}
               </div>
             `).join("") : `<div class="empty-box">No pending verification.</div>`}
             <div class="inline-actions">
               <button class="action-btn green dash-go" data-tab="verification" type="button">Open Verification</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pending Communities</div>
+            ${pendingCommunities.length ? pendingCommunities.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.name)}</strong>
+                ${escapeHtml(item.category)} • ${escapeHtml(item.creatorName)}
+              </div>
+            `).join("") : `<div class="empty-box">No pending communities.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn blue dash-go" data-tab="communities" type="button">Open Communities</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pending Places</div>
+            ${pendingPlaces.length ? pendingPlaces.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.name)}</strong>
+                ${escapeHtml(item.city)} • ${escapeHtml(item.category)}
+              </div>
+            `).join("") : `<div class="empty-box">No pending places.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn yellow dash-go" data-tab="places" type="button">Open Places</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent Hub Posts</div>
+            ${recentHub.length ? recentHub.map(item => `
+              <div class="meta-item">
+                <strong>${escapeHtml(item.title)}</strong>
+                ${escapeHtml(item.type)} • ${escapeHtml(item.status)}
+              </div>
+            `).join("") : `<div class="empty-box">No Hub posts yet.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn purple dash-go" data-tab="hub" type="button">Open Hub</button>
             </div>
           </div>
 
@@ -1095,7 +1435,7 @@
               </div>
             `).join("") : `<div class="empty-box">No history yet.</div>`}
             <div class="inline-actions">
-              <button class="action-btn yellow dash-go" data-tab="history" type="button">Open History</button>
+              <button class="action-btn red dash-go" data-tab="history" type="button">Open History</button>
             </div>
           </div>
         </div>
@@ -1106,198 +1446,289 @@
       });
     }
 
-    async function loadPlaces() {
-      const docs = (await selectAllSafe("nearby_places"))
-        .map(d => ({ ...d }))
-        .sort((a, b) => createdMs(b) - createdMs(a));
+    async function updateUserModeration(targetUid, action) {
+      if (!targetUid) return;
 
-      const filtered = docs.filter(item => {
-        const status = normalizeStatus(val(item, ["status"], ""));
-        const isPending = status === "pending" || item.pending === true || item.approved !== true;
-        const isApproved = item.approved === true || status === "approved";
-        const isRejected = status === "rejected" || item.rejected === true;
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const untilIso = new Date(Date.now() + thirtyDaysMs).toISOString();
 
-        if (state.placesFilter === "pending") return isPending && !isApproved && !isRejected;
-        if (state.placesFilter === "approved") return isApproved;
-        if (state.placesFilter === "rejected") return isRejected;
+      if (action === "warn") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            { moderation_status: "warned", warning_until: untilIso, updated_at: nowIso() },
+            { moderationStatus: "warned", warningUntil: untilIso, updatedAt: nowIso() },
+            { moderation_status: "warned" }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            { moderation_status: "warned", warning_until: untilIso, updated_at: nowIso() },
+            { moderationStatus: "warned", warningUntil: untilIso, updatedAt: nowIso() },
+            { moderation_status: "warned" }
+          ])
+        ]);
+      }
+
+      if (action === "suspend") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            { moderation_status: "suspended", suspended: true, suspension_until: untilIso, updated_at: nowIso() },
+            { moderationStatus: "suspended", suspended: true, suspensionUntil: untilIso, updatedAt: nowIso() },
+            { moderation_status: "suspended" }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            { moderation_status: "suspended", suspended: true, suspension_until: untilIso, updated_at: nowIso() },
+            { moderationStatus: "suspended", suspended: true, suspensionUntil: untilIso, updatedAt: nowIso() },
+            { moderation_status: "suspended" }
+          ])
+        ]);
+      }
+
+      if (action === "ban") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            { moderation_status: "banned", banned: true, is_hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+            { moderationStatus: "banned", banned: true, isHiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+            { moderation_status: "banned" }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            { moderation_status: "banned", banned: true, is_hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+            { moderationStatus: "banned", banned: true, isHiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+            { moderation_status: "banned" }
+          ])
+        ]);
+      }
+
+      if (action === "restore") {
+        await Promise.allSettled([
+          updateByIdWithFallback("users", targetUid, [
+            {
+              moderation_status: "active",
+              banned: false,
+              suspended: false,
+              is_hidden_by_admin: false,
+              soft_deleted: false,
+              warning_until: null,
+              suspension_until: null,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "active",
+              banned: false,
+              suspended: false,
+              isHiddenByAdmin: false,
+              softDeleted: false,
+              warningUntil: null,
+              suspensionUntil: null,
+              updatedAt: nowIso()
+            },
+            { moderation_status: "active" }
+          ]),
+          updateByIdWithFallback("public_profiles", targetUid, [
+            {
+              moderation_status: "active",
+              banned: false,
+              suspended: false,
+              is_hidden_by_admin: false,
+              soft_deleted: false,
+              warning_until: null,
+              suspension_until: null,
+              updated_at: nowIso()
+            },
+            {
+              moderationStatus: "active",
+              banned: false,
+              suspended: false,
+              isHiddenByAdmin: false,
+              softDeleted: false,
+              warningUntil: null,
+              suspensionUntil: null,
+              updatedAt: nowIso()
+            },
+            { moderation_status: "active" }
+          ])
+        ]);
+      }
+    }
+
+    async function loadUsers() {
+      const [usersRows, publicRows] = await Promise.all([
+        selectAllSafe("users"),
+        selectAllSafe("public_profiles")
+      ]);
+
+      let users = mergeUserRows(usersRows, publicRows)
+        .sort((a, b) => getUserName(a).localeCompare(getUserName(b)));
+
+      const q = state.usersSearch.trim().toLowerCase();
+
+      users = users.filter(user => {
+        const status = getUserStatus(user);
+        const hidden = isHiddenUser(user);
+        const verified = boolVal(user, ["verified", "is_verified", "isVerified"], false);
+
+        if (state.usersFilter === "warned" && status !== "warned") return false;
+        if (state.usersFilter === "suspended" && status !== "suspended") return false;
+        if (state.usersFilter === "banned" && !hidden && status !== "banned") return false;
+        if (state.usersFilter === "verified" && !verified) return false;
+
+        if (q) {
+          const text = [
+            getUserId(user),
+            getUserName(user),
+            getUsername(user),
+            getUserEmail(user),
+            status
+          ].join(" ").toLowerCase();
+
+          if (!text.includes(q)) return false;
+        }
+
         return true;
       });
 
       sectionContent.innerHTML = `
-        <div class="section-title">Places</div>
-        <div class="section-note">Approve, reject, or delete place submissions.</div>
+        <div class="section-title">Users</div>
+        <div class="section-note">Search users, view moderation state, warn, suspend, ban, restore, or add Hub author permission.</div>
 
         <div class="toolbar">
-          <button class="action-btn ${state.placesFilter === "pending" ? "blue" : ""} places-filter" data-filter="pending" type="button">Pending</button>
-          <button class="action-btn ${state.placesFilter === "approved" ? "green" : ""} places-filter" data-filter="approved" type="button">Approved</button>
-          <button class="action-btn ${state.placesFilter === "rejected" ? "red" : ""} places-filter" data-filter="rejected" type="button">Rejected</button>
-          <button class="action-btn ${state.placesFilter === "all" ? "purple" : ""} places-filter" data-filter="all" type="button">All</button>
+          <input id="usersSearchInput" class="search-box" type="text" placeholder="Search by name, username, email, UID..." value="${escapeHtml(state.usersSearch)}" />
+
+          <button class="action-btn ${state.usersFilter === "all" ? "blue" : ""} users-filter" data-filter="all" type="button">All</button>
+          <button class="action-btn ${state.usersFilter === "verified" ? "green" : ""} users-filter" data-filter="verified" type="button">Verified</button>
+          <button class="action-btn ${state.usersFilter === "warned" ? "yellow" : ""} users-filter" data-filter="warned" type="button">Warned</button>
+          <button class="action-btn ${state.usersFilter === "suspended" ? "purple" : ""} users-filter" data-filter="suspended" type="button">Suspended</button>
+          <button class="action-btn ${state.usersFilter === "banned" ? "red" : ""} users-filter" data-filter="banned" type="button">Banned</button>
         </div>
 
         <div class="list">
-          ${filtered.length ? filtered.map(item => {
-            const status = normalizeStatus(val(item, ["status"], ""));
-            const statusClass = item.approved === true || status === "approved"
-              ? "green" : status === "rejected" || item.rejected === true
-              ? "red" : "yellow";
-
-            const id = val(item, ["id"], "");
+          ${users.length ? users.map(user => {
+            const uid = getUserId(user);
+            const status = getUserStatus(user);
+            const verified = boolVal(user, ["verified", "is_verified", "isVerified"], false);
+            const hidden = isHiddenUser(user);
 
             return `
               <div class="card">
                 <div class="card-top">
-                  <div class="card-title">${escapeHtml(val(item, ["name", "title", "place_name", "placeName"], "Unnamed Place"))}</div>
-                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
+                  <div class="card-title">${escapeHtml(getUserName(user))}</div>
+                  <div class="card-time">${escapeHtml(uid.slice(0, 8))}</div>
                 </div>
 
                 <div class="badge-row">
-                  <span class="badge ${statusClass}">${escapeHtml(val(item, ["status"], item.approved ? "approved" : "pending"))}</span>
-                  <span class="badge blue">${escapeHtml(val(item, ["city", "location_city", "locationCity"], "No city"))}</span>
-                  <span class="badge purple">${escapeHtml(val(item, ["category"], "General"))}</span>
+                  <span class="badge ${badgeClass(hidden ? "banned" : status)}">${escapeHtml(hidden ? "hidden/banned" : status || "active")}</span>
+                  ${verified ? `<span class="badge green">Verified</span>` : `<span class="badge">Not verified</span>`}
+                  ${getUsername(user) ? `<span class="badge blue">@${escapeHtml(getUsername(user))}</span>` : ""}
                 </div>
 
                 <div class="meta-grid">
-                  <div class="meta-item"><strong>Address</strong>${escapeHtml(val(item, ["address"], "Not added"))}</div>
-                  <div class="meta-item"><strong>Website</strong>${escapeHtml(val(item, ["website", "url", "link"], "Not added"))}</div>
-                  <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(val(item, ["creator_name", "creatorName", "created_by", "createdBy"], "Unknown"))}</div>
+                  <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
+                  <div class="meta-item"><strong>Email</strong>${escapeHtml(getUserEmail(user) || "Not added")}</div>
+                  <div class="meta-item"><strong>Trust</strong>${escapeHtml(String(val(user, ["trust_score", "trustScore"], 50)))}%</div>
+                  <div class="meta-item"><strong>Points</strong>${escapeHtml(String(val(user, ["points_balance", "pointsBalance"], 0)))}</div>
                 </div>
 
-                <div class="card-text">${escapeHtml(val(item, ["description"], "No description added."))}</div>
-
                 <div class="inline-actions">
-                  <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(id)}&source=nearby_places">Open</a>
-                  <button class="action-btn green approve-place-btn" data-id="${escapeHtml(id)}" type="button">Approve</button>
-                  <button class="action-btn yellow reject-place-btn" data-id="${escapeHtml(id)}" type="button">Reject</button>
-                  <button class="action-btn red delete-place-btn" data-id="${escapeHtml(id)}" type="button">Delete</button>
+                  <a href="member.html?uid=${encodeURIComponent(uid)}" class="action-btn blue">${ICONS.open} Open</a>
+                  <button class="action-btn yellow user-action" data-action="warn" data-uid="${escapeHtml(uid)}" type="button">Warn 30d</button>
+                  <button class="action-btn purple user-action" data-action="suspend" data-uid="${escapeHtml(uid)}" type="button">Suspend 30d</button>
+                  <button class="action-btn red user-action" data-action="ban" data-uid="${escapeHtml(uid)}" type="button">Ban / Hide</button>
+                  <button class="action-btn green user-action" data-action="restore" data-uid="${escapeHtml(uid)}" type="button">Restore</button>
+                  <button class="action-btn blue hub-author-btn" data-uid="${escapeHtml(uid)}" data-name="${escapeHtml(getUserName(user))}" type="button">Make Hub Author</button>
                 </div>
               </div>
             `;
-          }).join("") : `<div class="empty-box">No places found in this filter.</div>`}
+          }).join("") : `<div class="empty-box">No users found.</div>`}
         </div>
       `;
 
-      sectionContent.querySelectorAll(".places-filter").forEach(btn => {
+      const usersSearchInput = document.getElementById("usersSearchInput");
+      usersSearchInput.addEventListener("input", () => {
+        state.usersSearch = usersSearchInput.value;
+        clearTimeout(usersSearchInput._timer);
+        usersSearchInput._timer = setTimeout(loadUsers, 300);
+      });
+
+      sectionContent.querySelectorAll(".users-filter").forEach(btn => {
         btn.addEventListener("click", () => {
-          state.placesFilter = btn.dataset.filter;
-          loadPlaces();
+          state.usersFilter = btn.dataset.filter;
+          loadUsers();
         });
       });
 
-      sectionContent.querySelectorAll(".approve-place-btn").forEach(btn => {
+      sectionContent.querySelectorAll(".user-action").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          if (!id) return;
+          const uid = btn.dataset.uid;
+          const action = btn.dataset.action;
+          if (!uid || !action) return;
+
+          if (action === "ban") {
+            const ok = confirm("Ban/hide this user?");
+            if (!ok) return;
+          }
 
           btn.disabled = true;
 
           try {
-            await updateByIdWithFallback("nearby_places", id, [
-              {
-                approved: true,
-                is_approved: true,
-                is_public: true,
-                pending: false,
-                rejected: false,
-                status: "approved",
-                visibility: "public",
-                reviewed_at: nowIso(),
-                reviewed_by: currentUser.id,
-                updated_at: nowIso()
-              },
-              {
-                approved: true,
-                isApproved: true,
-                isPublic: true,
-                pending: false,
-                rejected: false,
-                status: "approved",
-                visibility: "public",
-                reviewedAt: nowIso(),
-                reviewedBy: currentUser.id,
-                updatedAt: nowIso()
-              },
-              {
-                status: "approved",
-                approved: true
-              }
-            ]);
+            await updateUserModeration(uid, action);
+            await logAdminAction(`user_${action}`, {
+              targetUserId: uid,
+              targetType: "user"
+            });
 
-            await logAdminAction("place_approved", { targetId: id, targetType: "place" });
             await loadSummary();
-            await loadPlaces();
-            setMessage("Place approved.", "ok");
+            await loadUsers();
+            setMessage(`User ${action} action saved.`, "ok");
           } catch (err) {
             console.error(err);
-            setMessage("Could not approve place.", "err");
+            setMessage(`Could not ${action} user.`, "err");
             btn.disabled = false;
           }
         });
       });
 
-      sectionContent.querySelectorAll(".reject-place-btn").forEach(btn => {
+      sectionContent.querySelectorAll(".hub-author-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          if (!id) return;
+          const uid = btn.dataset.uid;
+          const name = btn.dataset.name || "Member";
+          if (!uid) return;
 
           btn.disabled = true;
 
           try {
-            await updateByIdWithFallback("nearby_places", id, [
+            await insertWithFallback("hub_authors", [
               {
-                approved: false,
-                pending: false,
-                rejected: true,
-                status: "rejected",
-                reviewed_at: nowIso(),
-                reviewed_by: currentUser.id,
+                user_id: uid,
+                display_name: name,
+                can_post: true,
+                active: true,
+                created_by: currentUser.id,
+                created_at: nowIso(),
                 updated_at: nowIso()
               },
               {
-                approved: false,
-                pending: false,
-                rejected: true,
-                status: "rejected",
-                reviewedAt: nowIso(),
-                reviewedBy: currentUser.id,
+                userId: uid,
+                displayName: name,
+                canPost: true,
+                active: true,
+                createdBy: currentUser.id,
+                createdAt: nowIso(),
                 updatedAt: nowIso()
               },
               {
-                status: "rejected",
-                rejected: true
+                uid,
+                active: true,
+                created_at: nowIso()
               }
             ]);
 
-            await logAdminAction("place_rejected", { targetId: id, targetType: "place" });
-            await loadSummary();
-            await loadPlaces();
-            setMessage("Place rejected.", "ok");
+            await logAdminAction("hub_author_added", {
+              targetUserId: uid,
+              targetType: "hub_author"
+            });
+
+            setMessage("Hub author permission added.", "ok");
           } catch (err) {
             console.error(err);
-            setMessage("Could not reject place.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          if (!id) return;
-
-          const ok = confirm("Delete this place?");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await deleteById("nearby_places", id);
-            await logAdminAction("place_deleted", { targetId: id, targetType: "place" });
-            await loadSummary();
-            await loadPlaces();
-            setMessage("Place deleted.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not delete place.", "err");
+            setMessage("Could not add Hub author. Maybe already exists or RLS blocked it.", "err");
             btn.disabled = false;
           }
         });
@@ -1312,183 +1743,38 @@
 
       if (targetType === "post") {
         await updateByIdWithFallback("posts", targetId, [
-          {
-            hidden: true,
-            hidden_by_admin: true,
-            soft_deleted: true,
-            updated_at: nowIso()
-          },
-          {
-            hidden: true,
-            hiddenByAdmin: true,
-            softDeleted: true,
-            updatedAt: nowIso()
-          },
-          {
-            hidden: true
-          }
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+          { hidden: true }
+        ]);
+
+        await updateByIdWithFallback("community_posts", targetId, [
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+          { hidden: true }
+        ]).catch(() => {});
+      } else if (targetType === "community") {
+        await updateByIdWithFallback("communities", targetId, [
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+          { hidden: true }
         ]);
       } else if (targetType === "event") {
         await updateByIdWithFallback("events", targetId, [
-          {
-            hidden: true,
-            hidden_by_admin: true,
-            soft_deleted: true,
-            updated_at: nowIso()
-          },
-          {
-            hidden: true,
-            hiddenByAdmin: true,
-            softDeleted: true,
-            updatedAt: nowIso()
-          },
-          {
-            hidden: true
-          }
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+          { hidden: true }
         ]);
       } else if (targetType === "place") {
-        let source = val(report, ["target_source", "targetSource", "source"], "nearby_places");
-
-        if (source === "publicProfiles") source = "public_profiles";
-        if (source === "nearbyPlaces") source = "nearby_places";
-
+        const source = val(report, ["target_source", "targetSource", "source"], "nearby_places") || "nearby_places";
         await updateByIdWithFallback(source, targetId, [
-          {
-            hidden: true,
-            hidden_by_admin: true,
-            soft_deleted: true,
-            updated_at: nowIso()
-          },
-          {
-            hidden: true,
-            hiddenByAdmin: true,
-            softDeleted: true,
-            updatedAt: nowIso()
-          },
-          {
-            hidden: true
-          }
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+          { hidden: true }
         ]);
-      }
-    }
-
-    async function updateUserModeration(targetUid, action) {
-      if (!targetUid) return;
-
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-      const untilIso = new Date(Date.now() + thirtyDaysMs).toISOString();
-
-      if (action === "warn") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            {
-              moderation_status: "warned",
-              warning_until: untilIso,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "warned",
-              warningUntil: untilIso,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "warned"
-            }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            {
-              moderation_status: "warned",
-              warning_until: untilIso,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "warned",
-              warningUntil: untilIso,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "warned"
-            }
-          ])
-        ]);
-      }
-
-      if (action === "suspend") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            {
-              moderation_status: "suspended",
-              suspended: true,
-              suspension_until: untilIso,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "suspended",
-              suspended: true,
-              suspensionUntil: untilIso,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "suspended"
-            }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            {
-              moderation_status: "suspended",
-              suspension_until: untilIso,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "suspended",
-              suspensionUntil: untilIso,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "suspended"
-            }
-          ])
-        ]);
-      }
-
-      if (action === "ban") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            {
-              moderation_status: "banned",
-              banned: true,
-              is_hidden_by_admin: true,
-              soft_deleted: true,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "banned",
-              banned: true,
-              isHiddenByAdmin: true,
-              softDeleted: true,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "banned"
-            }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            {
-              moderation_status: "banned",
-              is_hidden_by_admin: true,
-              soft_deleted: true,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "banned",
-              isHiddenByAdmin: true,
-              softDeleted: true,
-              updatedAt: nowIso()
-            },
-            {
-              moderation_status: "banned"
-            }
-          ])
-        ]);
+      } else if (targetType === "profile" || targetType === "user") {
+        const targetUid = val(report, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId", "target_uid", "targetUid"], targetId);
+        await updateUserModeration(targetUid, "ban");
       }
     }
 
@@ -1496,7 +1782,7 @@
       const targetUid = val(report, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId", "target_uid", "targetUid"], "");
       const reportId = val(report, ["id"], "");
 
-      if (targetUid && ["warn", "suspend", "ban"].includes(action)) {
+      if (targetUid && ["warn", "suspend", "ban", "restore"].includes(action)) {
         await updateUserModeration(targetUid, action);
       }
 
@@ -1534,16 +1820,15 @@
         .sort((a, b) => createdMs(b) - createdMs(a));
 
       const filtered = docs.filter(item => {
-        const status = normalizeStatus(val(item, ["status"], ""));
-
-        if (state.reportsFilter === "open") return !["resolved", "closed", "done"].includes(status);
-        if (state.reportsFilter === "resolved") return ["resolved", "closed", "done"].includes(status);
+        const open = isReportOpen(item);
+        if (state.reportsFilter === "open") return open;
+        if (state.reportsFilter === "resolved") return !open;
         return true;
       });
 
       sectionContent.innerHTML = `
         <div class="section-title">Reports</div>
-        <div class="section-note">Review reports and take moderation action.</div>
+        <div class="section-note">Review reports and take moderation action. Warnings and suspensions are set for 30 days.</div>
 
         <div class="toolbar">
           <button class="action-btn ${state.reportsFilter === "open" ? "blue" : ""} reports-filter" data-filter="open" type="button">Open</button>
@@ -1554,7 +1839,9 @@
         <div class="list">
           ${filtered.length ? filtered.map(item => {
             const id = val(item, ["id"], "");
-            const status = normalizeStatus(val(item, ["status"], ""));
+            const status = getReportStatus(item);
+            const targetType = val(item, ["target_type", "targetType", "type"], "unknown");
+            const targetId = val(item, ["target_id", "targetId"], "");
 
             return `
               <div class="card">
@@ -1564,24 +1851,26 @@
                 </div>
 
                 <div class="badge-row">
-                  <span class="badge yellow">${escapeHtml(val(item, ["target_type", "targetType", "type"], "unknown"))}</span>
-                  <span class="badge ${["resolved","closed","done"].includes(status) ? "green" : "red"}">${escapeHtml(val(item, ["status"], "open"))}</span>
+                  <span class="badge yellow">${escapeHtml(targetType)}</span>
+                  <span class="badge ${isReportOpen(item) ? "red" : "green"}">${escapeHtml(status || "open")}</span>
                 </div>
 
                 <div class="meta-grid">
-                  <div class="meta-item"><strong>Reporter</strong>${escapeHtml(val(item, ["reporter_id", "reporterId"], "Unknown"))}</div>
+                  <div class="meta-item"><strong>Reporter</strong>${escapeHtml(val(item, ["reporter_id", "reporterId", "from_user_id", "fromUserId"], "Unknown"))}</div>
                   <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId"], "Unknown"))}</div>
-                  <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId"], "Not linked"))}</div>
+                  <div class="meta-item"><strong>Target ID</strong>${escapeHtml(targetId || "Not linked")}</div>
+                  <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["target_source", "targetSource", "source"], "Not set"))}</div>
                 </div>
 
                 <div class="card-text">${escapeHtml(val(item, ["reason", "text", "description"], "No report description added."))}</div>
 
                 <div class="inline-actions">
+                  ${targetId ? `<a class="action-btn blue" href="${targetType === "post" ? "post.html?postId=" + encodeURIComponent(targetId) : targetType === "community" ? "community.html?communityId=" + encodeURIComponent(targetId) : targetType === "place" ? "place.html?placeId=" + encodeURIComponent(targetId) : targetType === "event" ? "event.html?eventId=" + encodeURIComponent(targetId) : "#"}">${ICONS.open} Open</a>` : ""}
                   <button class="action-btn yellow hide-content-btn" data-id="${escapeHtml(id)}" type="button">Hide Content</button>
-                  <button class="action-btn blue warn-btn" data-id="${escapeHtml(id)}" type="button">Warn</button>
-                  <button class="action-btn purple suspend-btn" data-id="${escapeHtml(id)}" type="button">Suspend</button>
-                  <button class="action-btn red ban-btn" data-id="${escapeHtml(id)}" type="button">Ban</button>
-                  <button class="action-btn green resolve-btn" data-id="${escapeHtml(id)}" type="button">Resolve</button>
+                  <button class="action-btn blue report-action" data-action="warn" data-id="${escapeHtml(id)}" type="button">Warn</button>
+                  <button class="action-btn purple report-action" data-action="suspend" data-id="${escapeHtml(id)}" type="button">Suspend</button>
+                  <button class="action-btn red report-action" data-action="ban" data-id="${escapeHtml(id)}" type="button">Ban</button>
+                  <button class="action-btn green report-action" data-action="resolve" data-id="${escapeHtml(id)}" type="button">Resolve</button>
                 </div>
               </div>
             `;
@@ -1605,13 +1894,11 @@
 
           try {
             await hideReportedContent(report);
-
             await logAdminAction("content_hidden", {
               reportId: val(report, ["id"], ""),
               targetId: val(report, ["target_id", "targetId"], ""),
               targetType: val(report, ["target_type", "targetType", "type"], "")
             });
-
             setMessage("Reported content hidden.", "ok");
           } catch (err) {
             console.error(err);
@@ -1621,526 +1908,152 @@
         });
       });
 
-      sectionContent.querySelectorAll(".warn-btn").forEach(btn => {
+      sectionContent.querySelectorAll(".report-action").forEach(btn => {
         btn.addEventListener("click", async () => {
           const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          if (!report) return;
+          const action = btn.dataset.action;
+          if (!report || !action) return;
+
+          if (action === "ban") {
+            const ok = confirm("Ban this user and hide reported content when possible?");
+            if (!ok) return;
+          }
 
           btn.disabled = true;
 
           try {
-            await applyModerationAction(report, "warn");
+            await applyModerationAction(report, action);
+            if (action === "ban") await hideReportedContent(report).catch(() => {});
             await loadSummary();
             await loadReports();
-            setMessage("User warned.", "ok");
+            setMessage(`Report ${action} saved.`, "ok");
           } catch (err) {
             console.error(err);
-            setMessage("Could not warn user.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".suspend-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          if (!report) return;
-
-          btn.disabled = true;
-
-          try {
-            await applyModerationAction(report, "suspend");
-            await loadSummary();
-            await loadReports();
-            setMessage("User suspended.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not suspend user.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".ban-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          if (!report) return;
-
-          const ok = confirm("Ban this user?");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await applyModerationAction(report, "ban");
-            await hideReportedContent(report).catch(() => {});
-            await loadSummary();
-            await loadReports();
-            setMessage("User banned and content hidden when possible.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not ban user.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".resolve-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          if (!report) return;
-
-          btn.disabled = true;
-
-          try {
-            await applyModerationAction(report, "resolve");
-            await loadSummary();
-            await loadReports();
-            setMessage("Report resolved.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not resolve report.", "err");
+            setMessage(`Could not ${action} report.`, "err");
             btn.disabled = false;
           }
         });
       });
     }
-
-    async function loadSchool() {
-      const all = [];
-
-      for (const source of SCHOOL_SOURCES) {
-        try {
-          const rows = await selectAllSafe(source);
-
-          rows.forEach(row => {
-            all.push({
-              id: val(row, ["id"], ""),
-              source,
-              ...row
-            });
-          });
-        } catch {}
-      }
-
-      all.sort((a, b) => createdMs(b) - createdMs(a));
-
-      const publishedLessons = all.filter(item => {
-        const published = boolVal(item, ["published", "is_published", "isPublished"], true);
-        const hidden = boolVal(item, ["hidden", "hidden_by_admin", "soft_deleted"], false);
-        return published && !hidden;
-      });
-
-      sectionContent.innerHTML = `
-        <div class="section-title">School</div>
-        <div class="section-note">Create new school content or manage published lessons.</div>
-
-        <div class="school-mode-row">
-          <button class="school-mode-btn ${state.schoolMode === "create" ? "active" : ""}" data-mode="create" type="button">Create New</button>
-          <button class="school-mode-btn ${state.schoolMode === "published" ? "active" : ""}" data-mode="published" type="button">Published</button>
-        </div>
-
-        <div id="schoolInner"></div>
-      `;
-
-      sectionContent.querySelectorAll(".school-mode-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.schoolMode = btn.dataset.mode;
-          state.schoolEdit = { source: "school_posts", id: null };
-          loadSchool();
-        });
-      });
-
-      const schoolInner = document.getElementById("schoolInner");
-
-      if (state.schoolMode === "create") {
-        renderSchoolCreate(schoolInner, all);
-      } else {
-        renderSchoolPublished(schoolInner, publishedLessons, all);
-      }
-    }
-
-    function renderSchoolCreate(container, all) {
-      const edit = state.schoolEdit;
-      const editItem = edit.id
-        ? all.find(x => String(x.id) === String(edit.id) && x.source === edit.source)
-        : null;
-
-      container.innerHTML = `
-        <div class="editor">
-          <form id="schoolForm" class="form">
-            <div class="grid-2">
-              <div class="field">
-                <label class="label" for="schoolTitle">Title</label>
-                <input id="schoolTitle" class="input" type="text" placeholder="Lesson title" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="schoolCategory">Category</label>
-                <input id="schoolCategory" class="input" type="text" placeholder="Category" />
-              </div>
-            </div>
-
-            <div class="grid-2">
-              <div class="field">
-                <label class="label" for="schoolSummary">Summary</label>
-                <input id="schoolSummary" class="input" type="text" placeholder="Short summary" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="schoolImageURL">Image URL</label>
-                <input id="schoolImageURL" class="input" type="text" placeholder="https://example.com/photo.jpg" />
-              </div>
-            </div>
-
-            <div class="grid-2">
-              <div class="field">
-                <label class="label" for="schoolOrder">Order</label>
-                <input id="schoolOrder" class="input" type="number" placeholder="Optional order" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="schoolSource">Collection</label>
-                <select id="schoolSource" class="select">
-                  <option value="school_posts">school_posts</option>
-                  <option value="school_lessons">school_lessons</option>
-                  <option value="school">school</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="label" for="schoolBody">Body</label>
-              <textarea id="schoolBody" class="textarea" placeholder="Full lesson body"></textarea>
-            </div>
-
-            <div class="switch-row">
-              <label class="switch-chip">
-                <input id="schoolPublished" type="checkbox" checked />
-                <span>Published</span>
-              </label>
-            </div>
-
-            <div class="toolbar">
-              <button id="saveSchoolBtn" class="action-btn blue" type="submit">${editItem ? "Update Lesson" : "Create Lesson"}</button>
-              <button id="clearSchoolBtn" class="action-btn" type="button">Clear</button>
-            </div>
-
-            <div id="schoolMessage" class="message"></div>
-          </form>
-        </div>
-      `;
-
-      const schoolTitle = document.getElementById("schoolTitle");
-      const schoolCategory = document.getElementById("schoolCategory");
-      const schoolSummary = document.getElementById("schoolSummary");
-      const schoolImageURL = document.getElementById("schoolImageURL");
-      const schoolOrder = document.getElementById("schoolOrder");
-      const schoolSource = document.getElementById("schoolSource");
-      const schoolBody = document.getElementById("schoolBody");
-      const schoolPublished = document.getElementById("schoolPublished");
-      const schoolMessage = document.getElementById("schoolMessage");
-      const schoolForm = document.getElementById("schoolForm");
-      const clearSchoolBtn = document.getElementById("clearSchoolBtn");
-
-      function setSchoolMessage(text = "", type = "") {
-        schoolMessage.textContent = text;
-        schoolMessage.className = `message ${type}`;
-      }
-
-      if (editItem) {
-        schoolTitle.value = val(editItem, ["title"], "");
-        schoolCategory.value = val(editItem, ["category"], "");
-        schoolSummary.value = val(editItem, ["summary", "description"], "");
-        schoolImageURL.value = val(editItem, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL"], "");
-        schoolOrder.value = val(editItem, ["sort_order", "order"], "");
-        schoolSource.value = editItem.source || "school_posts";
-        schoolBody.value = val(editItem, ["body", "content", "text"], "");
-        schoolPublished.checked = boolVal(editItem, ["published", "is_published", "isPublished"], true);
-        setSchoolMessage("Editing existing lesson.", "ok");
-      }
-
-      clearSchoolBtn.addEventListener("click", () => {
-        state.schoolEdit = { source: "school_posts", id: null };
-        loadSchool();
-      });
-
-      schoolForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const title = schoolTitle.value.trim();
-        const category = schoolCategory.value.trim();
-        const summary = schoolSummary.value.trim();
-        const imageURL = schoolImageURL.value.trim();
-        const body = schoolBody.value.trim();
-        const published = !!schoolPublished.checked;
-        const orderValue = schoolOrder.value.trim() ? Number(schoolOrder.value.trim()) : null;
-
-        if (!title) {
-          setSchoolMessage("Title is required.", "err");
-          return;
-        }
-
-        const targetSource = schoolSource.value || state.schoolEdit.source || "school_posts";
-        const editing = !!state.schoolEdit.id;
-
-        const snakePayload = {
-          title,
-          category,
-          summary,
-          description: summary,
-          image_url: imageURL,
-          body,
-          content: body,
-          published,
-          is_published: published,
-          sort_order: orderValue,
-          "order": orderValue,
-          updated_at: nowIso()
-        };
-
-        const camelPayload = {
-          title,
-          category,
-          summary,
-          description: summary,
-          imageURL,
-          body,
-          content: body,
-          published,
-          isPublished: published,
-          order: orderValue,
-          updatedAt: nowIso()
-        };
-
-        const minimalPayload = {
-          title,
-          category,
-          summary,
-          body,
-          published
-        };
-
-        try {
-          if (editing) {
-            await updateByIdWithFallback(state.schoolEdit.source, state.schoolEdit.id, [
-              snakePayload,
-              camelPayload,
-              minimalPayload
-            ]);
-
-            await logAdminAction("school_updated", {
-              targetId: state.schoolEdit.id,
-              source: state.schoolEdit.source
-            });
-
-            setSchoolMessage("Lesson updated.", "ok");
-          } else {
-            await insertWithFallback(targetSource, [
-              {
-                ...snakePayload,
-                created_at: nowIso()
-              },
-              {
-                ...camelPayload,
-                createdAt: nowIso()
-              },
-              {
-                ...minimalPayload,
-                created_at: nowIso()
-              }
-            ]);
-
-            await logAdminAction("school_created", {
-              source: targetSource
-            });
-
-            setSchoolMessage("Lesson created.", "ok");
-          }
-
-          state.schoolEdit = { source: "school_posts", id: null };
-          state.schoolMode = "published";
-          await loadSummary();
-          await loadSchool();
-        } catch (err) {
-          console.error(err);
-          setSchoolMessage(err?.message || "Could not save lesson.", "err");
-        }
-      });
-    }
-
-    function renderSchoolPublished(container, publishedLessons, all) {
-      container.innerHTML = `
-        <div class="list">
-          ${publishedLessons.length ? publishedLessons.map(item => {
-            const id = val(item, ["id"], "");
-
-            return `
-              <div class="card">
-                <div class="card-top">
-                  <div class="card-title">${escapeHtml(val(item, ["title"], "Untitled Lesson"))}</div>
-                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
-                </div>
-
-                <div class="badge-row">
-                  <span class="badge blue">${escapeHtml(val(item, ["category"], "General"))}</span>
-                  <span class="badge purple">${escapeHtml(item.source)}</span>
-                  <span class="badge green">Published</span>
-                </div>
-
-                <div class="card-text">${escapeHtml(val(item, ["summary", "description"], "No summary added."))}</div>
-
-                <div class="inline-actions">
-                  <button class="action-btn purple edit-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" type="button">Edit</button>
-                  <button class="action-btn yellow unpublish-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" type="button">Unpublish</button>
-                  <button class="action-btn red delete-school-btn" data-id="${escapeHtml(id)}" data-source="${escapeHtml(item.source)}" type="button">Delete</button>
-                </div>
-              </div>
-            `;
-          }).join("") : `<div class="empty-box">No published school content yet.</div>`}
-        </div>
-      `;
-
-      container.querySelectorAll(".edit-school-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.schoolMode = "create";
-          state.schoolEdit = {
-            source: btn.dataset.source,
-            id: btn.dataset.id
-          };
-          loadSchool();
-        });
-      });
-
-      container.querySelectorAll(".unpublish-school-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-
-          try {
-            await updateByIdWithFallback(btn.dataset.source, btn.dataset.id, [
-              {
-                published: false,
-                is_published: false,
-                updated_at: nowIso()
-              },
-              {
-                published: false,
-                isPublished: false,
-                updatedAt: nowIso()
-              },
-              {
-                published: false
-              }
-            ]);
-
-            await logAdminAction("school_unpublished", {
-              targetId: btn.dataset.id,
-              source: btn.dataset.source
-            });
-
-            await loadSummary();
-            await loadSchool();
-            setMessage("Lesson unpublished.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not unpublish lesson.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      container.querySelectorAll(".delete-school-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const ok = confirm("Delete this lesson?");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await deleteById(btn.dataset.source, btn.dataset.id);
-
-            await logAdminAction("school_deleted", {
-              targetId: btn.dataset.id,
-              source: btn.dataset.source
-            });
-
-            await loadSummary();
-            await loadSchool();
-            setMessage("Lesson deleted.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not delete lesson.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-    }
-
-    async function createSignedProofUrl(path) {
-  if (!path) throw new Error("Proof file missing.");
-
-  let cleanPath = String(path || "").trim();
-
-  // If a full Supabase storage URL was saved by mistake, extract only the file path
-  if (cleanPath.includes("/storage/v1/object/")) {
-    const marker1 = "/verification/";
-    const marker2 = "/object/sign/verification/";
-    const marker3 = "/object/public/verification/";
-
-    if (cleanPath.includes(marker2)) {
-      cleanPath = cleanPath.split(marker2)[1].split("?")[0];
-    } else if (cleanPath.includes(marker3)) {
-      cleanPath = cleanPath.split(marker3)[1].split("?")[0];
-    } else if (cleanPath.includes(marker1)) {
-      cleanPath = cleanPath.split(marker1)[1].split("?")[0];
-    }
-  }
-
-  if (cleanPath.startsWith("verification/")) {
-    cleanPath = cleanPath.replace("verification/", "");
-  }
-
-  cleanPath = decodeURIComponent(cleanPath);
-
-  const { data, error } = await supabase.storage
-    .from(VERIFICATION_BUCKET)
-    .createSignedUrl(cleanPath, 300);
-
-  if (error) throw error;
-
-  return data.signedUrl;
-}
-
-async function openProof(path) {
-  try {
-    const signedUrl = await createSignedProofUrl(path);
-    window.open(signedUrl, "_blank", "noopener,noreferrer");
-  } catch (err) {
-    console.error("Proof open failed:", err);
-    setMessage("Could not open proof file: " + (err.message || "Unknown error"), "err");
-  }
-}
 
     function getProofPaths(req) {
       return [
-        val(req, ["govt_id_path"], ""),
-        val(req, ["selfie_code_path"], ""),
-        val(req, ["business_proof_path"], "")
+        val(req, ["govt_id_path", "government_id_path", "id_path"], ""),
+        val(req, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], ""),
+        val(req, ["business_proof_path", "business_path"], "")
       ].filter(Boolean);
     }
 
-    async function deleteVerificationProofFiles(req) {
-      const paths = getProofPaths(req);
+    function cleanStoragePath(path) {
+      let cleanPath = String(path || "").trim();
 
+      if (cleanPath.includes("/storage/v1/object/")) {
+        const markers = [
+          "/object/sign/verification/",
+          "/object/public/verification/",
+          "/verification/"
+        ];
+
+        for (const marker of markers) {
+          if (cleanPath.includes(marker)) {
+            cleanPath = cleanPath.split(marker)[1].split("?")[0];
+            break;
+          }
+        }
+      }
+
+      if (cleanPath.startsWith("verification/")) {
+        cleanPath = cleanPath.replace("verification/", "");
+      }
+
+      try {
+        cleanPath = decodeURIComponent(cleanPath);
+      } catch {}
+
+      return cleanPath;
+    }
+
+    async function createSignedProofUrl(path) {
+      const cleanPath = cleanStoragePath(path);
+      if (!cleanPath) throw new Error("Proof file missing.");
+
+      const { data, error } = await supabase.storage
+        .from(VERIFICATION_BUCKET)
+        .createSignedUrl(cleanPath, 300);
+
+      if (error) throw error;
+      return data.signedUrl;
+    }
+
+    async function openProof(path) {
+      try {
+        const signedUrl = await createSignedProofUrl(path);
+        window.open(signedUrl, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        console.error("Proof open failed:", err);
+        setMessage("Could not open proof file: " + (err.message || "Unknown error"), "err");
+      }
+    }
+
+    async function deleteVerificationProofFiles(req) {
+      const paths = getProofPaths(req).map(cleanStoragePath).filter(Boolean);
       if (!paths.length) return;
 
-      const { error } = await supabase.storage
-        .from(VERIFICATION_BUCKET)
-        .remove(paths);
+      const { error } = await supabase.storage.from(VERIFICATION_BUCKET).remove(paths);
+      if (error) console.warn("Proof delete failed:", error.message || error);
+    }
 
-      if (error) {
-        console.warn("Proof delete failed:", error.message || error);
-      }
+    async function updateVerificationUser(uid, approved, badgeType) {
+      await Promise.allSettled([
+        updateByIdWithFallback("users", uid, [
+          {
+            is_verified: approved,
+            verified: approved,
+            verification_status: approved ? "approved" : "rejected",
+            verification_badge: approved ? badgeType : null,
+            verified_at: approved ? nowIso() : null,
+            age_verified: approved,
+            legal_name_checked: approved,
+            updated_at: nowIso()
+          },
+          {
+            isVerified: approved,
+            verified: approved,
+            verificationStatus: approved ? "approved" : "rejected",
+            verificationBadge: approved ? badgeType : null,
+            verifiedAt: approved ? nowIso() : null,
+            ageVerified: approved,
+            legalNameChecked: approved,
+            updatedAt: nowIso()
+          },
+          {
+            is_verified: approved
+          }
+        ]),
+        updateByIdWithFallback("public_profiles", uid, [
+          {
+            is_verified: approved,
+            verified: approved,
+            verification_status: approved ? "approved" : "rejected",
+            verification_badge: approved ? badgeType : null,
+            verified_at: approved ? nowIso() : null,
+            age_verified: approved,
+            updated_at: nowIso()
+          },
+          {
+            isVerified: approved,
+            verified: approved,
+            verificationStatus: approved ? "approved" : "rejected",
+            verificationBadge: approved ? badgeType : null,
+            verifiedAt: approved ? nowIso() : null,
+            ageVerified: approved,
+            updatedAt: nowIso()
+          },
+          {
+            is_verified: approved
+          }
+        ])
+      ]);
     }
 
     async function approveVerification(req) {
@@ -2162,18 +2075,15 @@ async function openProof(path) {
           age_verified: true,
           proof_deleted: true,
           proof_deleted_at: nowIso(),
-
           govt_id_path: null,
           govt_id_url: null,
           selfie_code_path: null,
           selfie_with_id_url: null,
           business_proof_path: null,
           business_proof_url: null,
-
           full_legal_name: null,
           full_name: null,
           dob: null,
-
           updated_at: nowIso()
         },
         {
@@ -2192,56 +2102,7 @@ async function openProof(path) {
         }
       ]);
 
-      await Promise.allSettled([
-        updateByIdWithFallback("users", uid, [
-          {
-            is_verified: true,
-            verified: true,
-            verification_status: "approved",
-            verification_badge: badgeType,
-            verified_at: nowIso(),
-            age_verified: true,
-            legal_name_checked: true,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: true,
-            verified: true,
-            verificationStatus: "approved",
-            verificationBadge: badgeType,
-            verifiedAt: nowIso(),
-            ageVerified: true,
-            legalNameChecked: true,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: true
-          }
-        ]),
-        updateByIdWithFallback("public_profiles", uid, [
-          {
-            is_verified: true,
-            verified: true,
-            verification_status: "approved",
-            verification_badge: badgeType,
-            verified_at: nowIso(),
-            age_verified: true,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: true,
-            verified: true,
-            verificationStatus: "approved",
-            verificationBadge: badgeType,
-            verifiedAt: nowIso(),
-            ageVerified: true,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: true
-          }
-        ])
-      ]);
+      await updateVerificationUser(uid, true, badgeType);
 
       await logAdminAction("verification_approved", {
         targetUserId: uid,
@@ -2269,18 +2130,15 @@ async function openProof(path) {
           reviewed_by: currentUser.id,
           proof_deleted: true,
           proof_deleted_at: nowIso(),
-
           govt_id_path: null,
           govt_id_url: null,
           selfie_code_path: null,
           selfie_with_id_url: null,
           business_proof_path: null,
           business_proof_url: null,
-
           full_legal_name: null,
           full_name: null,
           dob: null,
-
           updated_at: nowIso()
         },
         {
@@ -2299,46 +2157,7 @@ async function openProof(path) {
         }
       ]);
 
-      await Promise.allSettled([
-        updateByIdWithFallback("users", uid, [
-          {
-            is_verified: false,
-            verified: false,
-            verification_status: "rejected",
-            verification_badge: null,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: false,
-            verified: false,
-            verificationStatus: "rejected",
-            verificationBadge: null,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: false
-          }
-        ]),
-        updateByIdWithFallback("public_profiles", uid, [
-          {
-            is_verified: false,
-            verified: false,
-            verification_status: "rejected",
-            verification_badge: null,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: false,
-            verified: false,
-            verificationStatus: "rejected",
-            verificationBadge: null,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: false
-          }
-        ])
-      ]);
+      await updateVerificationUser(uid, false, "");
 
       await logAdminAction("verification_rejected", {
         targetUserId: uid,
@@ -2390,31 +2209,39 @@ async function openProof(path) {
         .map(d => ({ ...d }))
         .sort((a, b) => createdMs(b) - createdMs(a));
 
+      const filtered = docs.filter(item => {
+        const s = normalizeStatus(val(item, ["status"], "pending"));
+        if (state.verificationFilter === "pending") return s === "pending" || s === "need_more_info";
+        if (state.verificationFilter === "approved") return s === "approved";
+        if (state.verificationFilter === "rejected") return s === "rejected";
+        return true;
+      });
+
       sectionContent.innerHTML = `
         <div class="section-title">Verification</div>
-        <div class="section-note">
-          Review verification requests. After approval or rejection, proof files are deleted and sensitive fields are cleared.
-        </div>
+        <div class="section-note">Review verification requests. After approval or rejection, proof files are deleted and sensitive fields are cleared.</div>
 
         <div class="proof-warning">
-          Personal verification proof must not be kept longer than needed. Use Approve or Reject only after review.
+          Personal verification proof must not be kept longer than needed. Open proof files only for review, then approve/reject so files can be removed.
+        </div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.verificationFilter === "pending" ? "yellow" : ""} verification-filter" data-filter="pending" type="button">Pending</button>
+          <button class="action-btn ${state.verificationFilter === "approved" ? "green" : ""} verification-filter" data-filter="approved" type="button">Approved</button>
+          <button class="action-btn ${state.verificationFilter === "rejected" ? "red" : ""} verification-filter" data-filter="rejected" type="button">Rejected</button>
+          <button class="action-btn ${state.verificationFilter === "all" ? "purple" : ""} verification-filter" data-filter="all" type="button">All</button>
         </div>
 
         <div class="list">
-          ${docs.length ? docs.map(item => {
+          ${filtered.length ? filtered.map(item => {
             const id = val(item, ["id"], "");
             const uid = val(item, ["uid", "user_id", "userId"], "");
             const status = normalizeStatus(val(item, ["status"], "pending"));
             const badgeType = val(item, ["badge_type", "verification_type"], "account");
 
-            const govtPath = val(item, ["govt_id_path"], "");
-            const selfiePath = val(item, ["selfie_code_path"], "");
-            const businessProofPath = val(item, ["business_proof_path"], "");
-
-            const statusClass =
-              status === "approved" ? "green" :
-              status === "rejected" ? "red" :
-              status === "need_more_info" ? "purple" : "yellow";
+            const govtPath = val(item, ["govt_id_path", "government_id_path", "id_path"], "");
+            const selfiePath = val(item, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], "");
+            const businessProofPath = val(item, ["business_proof_path", "business_path"], "");
 
             return `
               <div class="card">
@@ -2424,10 +2251,10 @@ async function openProof(path) {
                 </div>
 
                 <div class="badge-row">
-                  <span class="badge ${statusClass}">${escapeHtml(status || "pending")}</span>
+                  <span class="badge ${badgeClass(status)}">${escapeHtml(status || "pending")}</span>
                   <span class="badge blue">${escapeHtml(val(item, ["username"], "No username"))}</span>
-                  <span class="badge ${boolVal(item, ["proof_deleted"], false) ? "green" : "yellow"}">
-                    ${boolVal(item, ["proof_deleted"], false) ? "Proof deleted" : "Proof stored"}
+                  <span class="badge ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "green" : "yellow"}">
+                    ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "Proof deleted" : "Proof stored"}
                   </span>
                 </div>
 
@@ -2436,23 +2263,18 @@ async function openProof(path) {
                   <div class="meta-item"><strong>Full Legal Name</strong>${escapeHtml(val(item, ["full_legal_name", "full_name"], "Cleared / not available"))}</div>
                   <div class="meta-item"><strong>Email</strong>${escapeHtml(val(item, ["email"], "Not added"))}</div>
                   <div class="meta-item"><strong>DOB</strong>${escapeHtml(val(item, ["dob"], "Cleared / not available"))}</div>
-                  <div class="meta-item"><strong>18+ Confirmed</strong>${boolVal(item, ["age_confirmed"], false) ? "Yes" : "No"}</div>
-                  <div class="meta-item"><strong>Daily Code</strong>${escapeHtml(val(item, ["daily_code"], "Not added"))}</div>
-                  <div class="meta-item"><strong>Code Date</strong>${escapeHtml(val(item, ["code_date"], "Not added"))}</div>
-                  <div class="meta-item"><strong>Consent</strong>${boolVal(item, ["consent_given"], false) ? "Yes" : "No"}</div>
-                  <div class="meta-item"><strong>Social Link</strong>${escapeHtml(val(item, ["social_link"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Business Name</strong>${escapeHtml(val(item, ["business_name"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Business Link</strong>${escapeHtml(val(item, ["business_link"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Admin Note</strong>${escapeHtml(val(item, ["admin_note", "rejection_reason"], "No note"))}</div>
+                  <div class="meta-item"><strong>18+ Confirmed</strong>${boolVal(item, ["age_confirmed", "ageConfirmed"], false) ? "Yes" : "No"}</div>
+                  <div class="meta-item"><strong>Daily Code</strong>${escapeHtml(val(item, ["daily_code", "dailyCode"], "Not added"))}</div>
+                  <div class="meta-item"><strong>Social Link</strong>${escapeHtml(val(item, ["social_link", "socialLink"], "Not required / not added"))}</div>
+                  <div class="meta-item"><strong>Business Name</strong>${escapeHtml(val(item, ["business_name", "businessName"], "Not required / not added"))}</div>
+                  <div class="meta-item"><strong>Business Link</strong>${escapeHtml(val(item, ["business_link", "businessLink"], "Not required / not added"))}</div>
+                  <div class="meta-item"><strong>Admin Note</strong>${escapeHtml(val(item, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "No note"))}</div>
                 </div>
-
-                <div class="card-text">${escapeHtml(val(item, ["reason"], "No reason added."))}</div>
 
                 <div class="inline-actions">
                   ${govtPath ? `<button class="action-btn blue open-proof-btn" data-path="${escapeHtml(govtPath)}" type="button">Open ID</button>` : ""}
                   ${selfiePath ? `<button class="action-btn purple open-proof-btn" data-path="${escapeHtml(selfiePath)}" type="button">Open Selfie</button>` : ""}
                   ${businessProofPath ? `<button class="action-btn yellow open-proof-btn" data-path="${escapeHtml(businessProofPath)}" type="button">Open Business Proof</button>` : ""}
-
                   <button class="action-btn green approve-verification-btn" data-id="${escapeHtml(id)}" type="button">Approve</button>
                   <button class="action-btn purple more-info-verification-btn" data-id="${escapeHtml(id)}" type="button">Need More Info</button>
                   <button class="action-btn red reject-verification-btn" data-id="${escapeHtml(id)}" type="button">Reject</button>
@@ -2462,6 +2284,13 @@ async function openProof(path) {
           }).join("") : `<div class="empty-box">No verification requests found.</div>`}
         </div>
       `;
+
+      sectionContent.querySelectorAll(".verification-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.verificationFilter = btn.dataset.filter;
+          loadVerification();
+        });
+      });
 
       sectionContent.querySelectorAll(".open-proof-btn").forEach(btn => {
         btn.addEventListener("click", () => openProof(btn.dataset.path));
@@ -2534,6 +2363,535 @@ async function openProof(path) {
       });
     }
 
+    async function loadCommunities() {
+      const rows = (await selectAllSafe("communities")).map(normalizeCommunity);
+
+      const filtered = rows.filter(item => {
+        if (state.communitiesFilter === "pending") return !item.hidden && (item.pending || !item.approved) && !item.rejected;
+        if (state.communitiesFilter === "active") return !item.hidden && item.approved && !item.rejected;
+        if (state.communitiesFilter === "featured") return !item.hidden && item.featured;
+        if (state.communitiesFilter === "hidden") return item.hidden || item.rejected;
+        return true;
+      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Communities</div>
+        <div class="section-note">Approve, feature, hide, restore, or manage communities.</div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.communitiesFilter === "active" ? "green" : ""} communities-filter" data-filter="active" type="button">Active</button>
+          <button class="action-btn ${state.communitiesFilter === "pending" ? "yellow" : ""} communities-filter" data-filter="pending" type="button">Pending</button>
+          <button class="action-btn ${state.communitiesFilter === "featured" ? "purple" : ""} communities-filter" data-filter="featured" type="button">Featured</button>
+          <button class="action-btn ${state.communitiesFilter === "hidden" ? "red" : ""} communities-filter" data-filter="hidden" type="button">Hidden</button>
+          <button class="action-btn ${state.communitiesFilter === "all" ? "blue" : ""} communities-filter" data-filter="all" type="button">All</button>
+        </div>
+
+        <div class="list">
+          ${filtered.length ? filtered.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.name)}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge ${badgeClass(item.hidden ? "hidden" : item.approved ? "approved" : item.rejected ? "rejected" : "pending")}">${escapeHtml(item.hidden ? "hidden" : item.approved ? "approved" : item.rejected ? "rejected" : "pending")}</span>
+                <span class="badge blue">${escapeHtml(item.category)}</span>
+                <span class="badge yellow">${escapeHtml(item.privacy)}</span>
+                ${item.featured ? `<span class="badge purple">Featured</span>` : ""}
+                ${item.pinned ? `<span class="badge purple">Pinned</span>` : ""}
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item"><strong>Community ID</strong>${escapeHtml(item.id || "Missing")}</div>
+                <div class="meta-item"><strong>Owner</strong>${escapeHtml(item.creatorName || item.creatorId || "Unknown")}</div>
+                <div class="meta-item"><strong>Members</strong>${escapeHtml(String(item.memberCount || 0))}</div>
+                <div class="meta-item"><strong>Creator ID</strong>${escapeHtml(item.creatorId || "Unknown")}</div>
+              </div>
+
+              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+
+              <div class="inline-actions">
+                <a class="action-btn blue" href="community.html?communityId=${encodeURIComponent(item.id)}">${ICONS.open} Open</a>
+                <button class="action-btn green community-action" data-action="approve" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
+                <button class="action-btn purple community-action" data-action="${item.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(item.id)}" type="button">${item.featured ? "Unfeature" : "Feature"}</button>
+                <button class="action-btn yellow community-action" data-action="${item.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(item.id)}" type="button">${item.pinned ? "Unpin" : "Pin"}</button>
+                <button class="action-btn red community-action" data-action="hide" data-id="${escapeHtml(item.id)}" type="button">Hide</button>
+                <button class="action-btn green community-action" data-action="restore" data-id="${escapeHtml(item.id)}" type="button">Restore</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No communities found.</div>`}
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".communities-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.communitiesFilter = btn.dataset.filter;
+          loadCommunities();
+        });
+      });
+
+      sectionContent.querySelectorAll(".community-action").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const action = btn.dataset.action;
+          if (!id || !action) return;
+
+          if (action === "hide") {
+            const ok = confirm("Hide this community?");
+            if (!ok) return;
+          }
+
+          btn.disabled = true;
+
+          try {
+            let payloads = [];
+
+            if (action === "approve") {
+              payloads = [
+                { approved: true, is_approved: true, pending: false, rejected: false, status: "approved", updated_at: nowIso() },
+                { approved: true, isApproved: true, pending: false, rejected: false, status: "approved", updatedAt: nowIso() },
+                { approved: true, status: "approved" }
+              ];
+            }
+
+            if (action === "feature" || action === "unfeature") {
+              const value = action === "feature";
+              payloads = [
+                { featured: value, is_featured: value, updated_at: nowIso() },
+                { featured: value, isFeatured: value, updatedAt: nowIso() },
+                { featured: value }
+              ];
+            }
+
+            if (action === "pin" || action === "unpin") {
+              const value = action === "pin";
+              payloads = [
+                { pinned: value, is_pinned: value, updated_at: nowIso() },
+                { pinned: value, isPinned: value, updatedAt: nowIso() },
+                { pinned: value }
+              ];
+            }
+
+            if (action === "hide") {
+              payloads = [
+                { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
+                { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+                { hidden: true }
+              ];
+            }
+
+            if (action === "restore") {
+              payloads = [
+                { hidden: false, hidden_by_admin: false, soft_deleted: false, rejected: false, status: "approved", approved: true, updated_at: nowIso() },
+                { hidden: false, hiddenByAdmin: false, softDeleted: false, rejected: false, status: "approved", approved: true, updatedAt: nowIso() },
+                { hidden: false, status: "approved" }
+              ];
+            }
+
+            await updateByIdWithFallback("communities", id, payloads);
+
+            await logAdminAction(`community_${action}`, {
+              targetId: id,
+              targetType: "community"
+            });
+
+            await loadSummary();
+            await loadCommunities();
+            setMessage(`Community ${action} saved.`, "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage(`Could not ${action} community.`, "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadHub() {
+      const [hubRowsRaw, authorRows] = await Promise.all([
+        selectAllSafe("hub_posts"),
+        selectAllSafe("hub_authors")
+      ]);
+
+      const posts = hubRowsRaw.map(normalizeHubPost).filter(post => {
+        if (state.hubFilter === "published") return post.published && !post.hidden;
+        if (state.hubFilter === "featured") return (post.featured || post.pinned) && !post.hidden;
+        if (state.hubFilter === "hidden") return post.hidden;
+        if (state.hubFilter === "draft") return !post.published && !post.hidden;
+        return true;
+      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      sectionContent.innerHTML = `
+        <div class="section-title">OwnSpace Hub</div>
+        <div class="section-note">Manage Hub posts and approved Hub authors. The public Hub page reads from <strong>hub_posts</strong>.</div>
+
+        <div class="editor">
+          <div class="section-title">Add Hub Author</div>
+          <div class="section-note">Paste a user UID to allow them to publish in OwnSpace Hub.</div>
+
+          <div class="toolbar">
+            <input id="hubAuthorUidInput" class="search-box" type="text" placeholder="User UID..." value="${escapeHtml(state.hubAuthorSearch)}" />
+            <button id="addHubAuthorBtn" class="action-btn green" type="button">Add Author</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.hubFilter === "published" ? "green" : ""} hub-filter" data-filter="published" type="button">Published</button>
+          <button class="action-btn ${state.hubFilter === "featured" ? "purple" : ""} hub-filter" data-filter="featured" type="button">Featured</button>
+          <button class="action-btn ${state.hubFilter === "draft" ? "yellow" : ""} hub-filter" data-filter="draft" type="button">Draft</button>
+          <button class="action-btn ${state.hubFilter === "hidden" ? "red" : ""} hub-filter" data-filter="hidden" type="button">Hidden</button>
+          <button class="action-btn ${state.hubFilter === "all" ? "blue" : ""} hub-filter" data-filter="all" type="button">All</button>
+          <a href="ownspace-hub.html" class="action-btn blue">${ICONS.open} Open Hub</a>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-title">Hub Authors</div>
+          <div class="badge-row" style="margin-top:10px;">
+            ${authorRows.length ? authorRows.slice(0, 20).map(a => {
+              const uid = val(a, ["user_id", "userId", "uid", "id"], "");
+              return `<span class="badge ${a.active === false || a.disabled === true ? "red" : "green"}">${escapeHtml(val(a, ["display_name", "displayName", "name"], uid || "Author"))}</span>`;
+            }).join("") : `<span class="badge yellow">No authors found</span>`}
+          </div>
+        </div>
+
+        <div class="list">
+          ${posts.length ? posts.map(post => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(post.title)}</div>
+                <div class="card-time">${escapeHtml(fmtDate(post.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge ${badgeClass(post.status)}">${escapeHtml(post.status)}</span>
+                <span class="badge blue">${escapeHtml(post.type)}</span>
+                <span class="badge yellow">${escapeHtml(post.category)}</span>
+                ${post.featured ? `<span class="badge purple">Featured</span>` : ""}
+                ${post.pinned ? `<span class="badge purple">Pinned</span>` : ""}
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item"><strong>Post ID</strong>${escapeHtml(post.id)}</div>
+                <div class="meta-item"><strong>Author</strong>${escapeHtml(post.creatorName || post.creatorId || "Unknown")}</div>
+              </div>
+
+              <div class="card-text">${escapeHtml(post.summary || "No summary added.")}</div>
+
+              <div class="inline-actions">
+                <a href="ownspace-hub.html?postId=${encodeURIComponent(post.id)}" class="action-btn blue">${ICONS.open} Open</a>
+                <button class="action-btn purple hub-action" data-action="${post.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(post.id)}" type="button">${post.featured ? "Unfeature" : "Feature"}</button>
+                <button class="action-btn yellow hub-action" data-action="${post.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(post.id)}" type="button">${post.pinned ? "Unpin" : "Pin"}</button>
+                <button class="action-btn green hub-action" data-action="publish" data-id="${escapeHtml(post.id)}" type="button">Publish</button>
+                <button class="action-btn red hub-action" data-action="hide" data-id="${escapeHtml(post.id)}" type="button">Hide</button>
+                <button class="action-btn green hub-action" data-action="restore" data-id="${escapeHtml(post.id)}" type="button">Restore</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No Hub posts found.</div>`}
+        </div>
+      `;
+
+      const hubAuthorUidInput = document.getElementById("hubAuthorUidInput");
+      const addHubAuthorBtn = document.getElementById("addHubAuthorBtn");
+
+      hubAuthorUidInput.addEventListener("input", () => {
+        state.hubAuthorSearch = hubAuthorUidInput.value.trim();
+      });
+
+      addHubAuthorBtn.addEventListener("click", async () => {
+        const uid = hubAuthorUidInput.value.trim();
+        if (!uid) {
+          setMessage("Paste user UID first.", "err");
+          return;
+        }
+
+        addHubAuthorBtn.disabled = true;
+
+        try {
+          await insertWithFallback("hub_authors", [
+            {
+              user_id: uid,
+              can_post: true,
+              active: true,
+              created_by: currentUser.id,
+              created_at: nowIso(),
+              updated_at: nowIso()
+            },
+            {
+              userId: uid,
+              canPost: true,
+              active: true,
+              createdBy: currentUser.id,
+              createdAt: nowIso(),
+              updatedAt: nowIso()
+            },
+            {
+              uid,
+              active: true,
+              created_at: nowIso()
+            }
+          ]);
+
+          await logAdminAction("hub_author_added", {
+            targetUserId: uid,
+            targetType: "hub_author"
+          });
+
+          state.hubAuthorSearch = "";
+          await loadHub();
+          setMessage("Hub author added.", "ok");
+        } catch (err) {
+          console.error(err);
+          setMessage("Could not add Hub author. Maybe duplicate or RLS blocked it.", "err");
+          addHubAuthorBtn.disabled = false;
+        }
+      });
+
+      sectionContent.querySelectorAll(".hub-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.hubFilter = btn.dataset.filter;
+          loadHub();
+        });
+      });
+
+      sectionContent.querySelectorAll(".hub-action").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const action = btn.dataset.action;
+          if (!id || !action) return;
+
+          if (action === "hide") {
+            const ok = confirm("Hide this Hub post?");
+            if (!ok) return;
+          }
+
+          btn.disabled = true;
+
+          try {
+            let payloads = [];
+
+            if (action === "feature" || action === "unfeature") {
+              const value = action === "feature";
+              payloads = [
+                { featured: value, is_featured: value, updated_at: nowIso() },
+                { featured: value, isFeatured: value, updatedAt: nowIso() },
+                { featured: value }
+              ];
+            }
+
+            if (action === "pin" || action === "unpin") {
+              const value = action === "pin";
+              payloads = [
+                { pinned: value, is_pinned: value, updated_at: nowIso() },
+                { pinned: value, isPinned: value, updatedAt: nowIso() },
+                { pinned: value }
+              ];
+            }
+
+            if (action === "publish") {
+              payloads = [
+                { published: true, is_published: true, hidden: false, soft_deleted: false, updated_at: nowIso() },
+                { published: true, isPublished: true, hidden: false, softDeleted: false, updatedAt: nowIso() },
+                { published: true }
+              ];
+            }
+
+            if (action === "hide") {
+              payloads = [
+                { hidden: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
+                { hidden: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+                { hidden: true }
+              ];
+            }
+
+            if (action === "restore") {
+              payloads = [
+                { hidden: false, soft_deleted: false, status: "published", published: true, updated_at: nowIso() },
+                { hidden: false, softDeleted: false, status: "published", published: true, updatedAt: nowIso() },
+                { hidden: false, published: true }
+              ];
+            }
+
+            await updateByIdWithFallback("hub_posts", id, payloads);
+
+            await logAdminAction(`hub_${action}`, {
+              targetId: id,
+              targetType: "hub_post"
+            });
+
+            await loadHub();
+            setMessage(`Hub post ${action} saved.`, "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage(`Could not ${action} Hub post.`, "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadPlaces() {
+      const rows = (await selectAllSafe("nearby_places")).map(normalizePlace);
+
+      const filtered = rows.filter(item => {
+        if (state.placesFilter === "pending") return !item.hidden && item.pending && !item.approved && !item.rejected;
+        if (state.placesFilter === "approved") return !item.hidden && item.approved;
+        if (state.placesFilter === "rejected") return item.rejected;
+        if (state.placesFilter === "hidden") return item.hidden;
+        return true;
+      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+
+      sectionContent.innerHTML = `
+        <div class="section-title">Places</div>
+        <div class="section-note">Approve, reject, hide, restore, or delete place submissions.</div>
+
+        <div class="toolbar">
+          <button class="action-btn ${state.placesFilter === "pending" ? "yellow" : ""} places-filter" data-filter="pending" type="button">Pending</button>
+          <button class="action-btn ${state.placesFilter === "approved" ? "green" : ""} places-filter" data-filter="approved" type="button">Approved</button>
+          <button class="action-btn ${state.placesFilter === "rejected" ? "red" : ""} places-filter" data-filter="rejected" type="button">Rejected</button>
+          <button class="action-btn ${state.placesFilter === "hidden" ? "red" : ""} places-filter" data-filter="hidden" type="button">Hidden</button>
+          <button class="action-btn ${state.placesFilter === "all" ? "blue" : ""} places-filter" data-filter="all" type="button">All</button>
+        </div>
+
+        <div class="list">
+          ${filtered.length ? filtered.map(item => `
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">${escapeHtml(item.name)}</div>
+                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge ${badgeClass(item.hidden ? "hidden" : item.status)}">${escapeHtml(item.hidden ? "hidden" : item.status)}</span>
+                <span class="badge blue">${escapeHtml(item.city)}</span>
+                <span class="badge purple">${escapeHtml(item.category)}</span>
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item"><strong>Address</strong>${escapeHtml(item.address || "Not added")}</div>
+                <div class="meta-item"><strong>Website</strong>${escapeHtml(item.website || "Not added")}</div>
+                <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(item.creatorName || item.creatorId || "Unknown")}</div>
+                <div class="meta-item"><strong>Place ID</strong>${escapeHtml(item.id || "Missing")}</div>
+              </div>
+
+              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+
+              <div class="inline-actions">
+                <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(item.id)}&source=nearby_places">${ICONS.open} Open</a>
+                <button class="action-btn green place-action" data-action="approve" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
+                <button class="action-btn yellow place-action" data-action="reject" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
+                <button class="action-btn red place-action" data-action="hide" data-id="${escapeHtml(item.id)}" type="button">Hide</button>
+                <button class="action-btn green place-action" data-action="restore" data-id="${escapeHtml(item.id)}" type="button">Restore</button>
+                <button class="action-btn red delete-place-btn" data-id="${escapeHtml(item.id)}" type="button">Delete</button>
+              </div>
+            </div>
+          `).join("") : `<div class="empty-box">No places found in this filter.</div>`}
+        </div>
+      `;
+
+      sectionContent.querySelectorAll(".places-filter").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.placesFilter = btn.dataset.filter;
+          loadPlaces();
+        });
+      });
+
+      sectionContent.querySelectorAll(".place-action").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const action = btn.dataset.action;
+          if (!id || !action) return;
+
+          if (action === "hide") {
+            const ok = confirm("Hide this place?");
+            if (!ok) return;
+          }
+
+          btn.disabled = true;
+
+          try {
+            let payloads = [];
+
+            if (action === "approve") {
+              payloads = [
+                { approved: true, is_approved: true, is_public: true, pending: false, rejected: false, status: "approved", visibility: "public", reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
+                { approved: true, isApproved: true, isPublic: true, pending: false, rejected: false, status: "approved", visibility: "public", reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
+                { approved: true, status: "approved" }
+              ];
+            }
+
+            if (action === "reject") {
+              payloads = [
+                { approved: false, pending: false, rejected: true, status: "rejected", reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
+                { approved: false, pending: false, rejected: true, status: "rejected", reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
+                { rejected: true, status: "rejected" }
+              ];
+            }
+
+            if (action === "hide") {
+              payloads = [
+                { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
+                { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+                { hidden: true }
+              ];
+            }
+
+            if (action === "restore") {
+              payloads = [
+                { hidden: false, hidden_by_admin: false, soft_deleted: false, rejected: false, approved: true, status: "approved", updated_at: nowIso() },
+                { hidden: false, hiddenByAdmin: false, softDeleted: false, rejected: false, approved: true, status: "approved", updatedAt: nowIso() },
+                { hidden: false, approved: true, status: "approved" }
+              ];
+            }
+
+            await updateByIdWithFallback("nearby_places", id, payloads);
+
+            await logAdminAction(`place_${action}`, {
+              targetId: id,
+              targetType: "place"
+            });
+
+            await loadSummary();
+            await loadPlaces();
+            setMessage(`Place ${action} saved.`, "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage(`Could not ${action} place.`, "err");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          if (!id) return;
+
+          const ok = confirm("Permanently delete this place?");
+          if (!ok) return;
+
+          btn.disabled = true;
+
+          try {
+            await deleteById("nearby_places", id);
+
+            await logAdminAction("place_deleted", {
+              targetId: id,
+              targetType: "place"
+            });
+
+            await loadSummary();
+            await loadPlaces();
+            setMessage("Place deleted.", "ok");
+          } catch (err) {
+            console.error(err);
+            setMessage("Could not delete place.", "err");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
     async function loadHistory() {
       const docs = (await selectAllSafe("moderation_history"))
         .map(d => ({ ...d }))
@@ -2555,7 +2913,9 @@ async function openProof(path) {
                 <div class="meta-item"><strong>Admin</strong>${escapeHtml(val(item, ["admin_uid", "adminUid", "admin_id", "adminId"], "Unknown"))}</div>
                 <div class="meta-item"><strong>Target Type</strong>${escapeHtml(val(item, ["target_type", "targetType"], "Not set"))}</div>
                 <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId", "target_user_id", "targetUserId", "report_id", "reportId"], "Not set"))}</div>
-                <div class="meta-item"><strong>Note</strong>${escapeHtml(val(item, ["note", "admin_note", "adminNote", "reason"], "No note"))}</div>
+                <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["source"], "Not set"))}</div>
+                <div class="meta-item"><strong>Reason</strong>${escapeHtml(val(item, ["reason"], "No reason"))}</div>
+                <div class="meta-item"><strong>Note</strong>${escapeHtml(val(item, ["note", "admin_note", "adminNote"], "No note"))}</div>
               </div>
             </div>
           `).join("") : `<div class="empty-box">No moderation history found.</div>`}
@@ -2601,6 +2961,28 @@ async function openProof(path) {
     }
 
     initAdmin();
+
+    /*
+      OWNSPACE ADMIN.HTML UPDATE
+
+      MAIN CHANGES:
+      - Renamed BareWorld to OwnSpace.
+      - Light theme is default.
+      - Removed old School tab and replaced it with Hub.
+      - Added Users tab.
+      - Added Communities tab.
+      - Improved Reports moderation actions:
+        warn 30 days, suspend 30 days, ban/hide, hide content, resolve.
+      - Verification still deletes proof files after approve/reject.
+      - Hub tab can manage hub_posts and add hub_authors.
+      - Places tab supports approve/reject/hide/restore/delete.
+      - History tab reads moderation_history.
+      - Clean SVG bottom navigation.
+      - nearby-communities.html is used for community list nav.
+
+      NEXT PAGE:
+      - admin rules / Supabase RLS policies should be checked next if any button says permission denied.
+    */
   </script>
 </body>
 </html>
