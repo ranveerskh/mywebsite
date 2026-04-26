@@ -391,6 +391,54 @@
     .badge.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .badge.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
+    .trust-wrap{
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 11px;
+      margin:8px 0 10px;
+    }
+
+    .trust-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      font-weight:950;
+      margin-bottom:7px;
+    }
+
+    .trust-head span:first-child{
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      font-size:11px;
+    }
+
+    .trust-track{
+      width:100%;
+      height:9px;
+      border-radius:999px;
+      background:rgba(107,120,147,.18);
+      overflow:hidden;
+    }
+
+    .trust-fill{
+      height:100%;
+      width:50%;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));
+      transition:width .25s ease;
+    }
+
+    .trust-note{
+      margin-top:6px;
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+
     .inline-actions{
       display:flex;
       gap:8px;
@@ -574,7 +622,7 @@
       <div class="panel hero">
         <div class="hero-title">Central Admin</div>
         <div class="hero-sub">
-          Manage users, reports, verifications, communities, Hub posts, places, and moderation history from one clean OwnSpace admin panel.
+          Manage users, reports, verifications, communities, Hub posts, places, trust score, and moderation history from one clean OwnSpace admin panel.
         </div>
 
         <div class="summary-grid">
@@ -599,7 +647,7 @@
           </div>
 
           <div class="summary-card">
-            <div class="summary-label">History</div>
+            <div class="summary-label">Low Trust</div>
             <div id="sumHistory" class="summary-value">0</div>
           </div>
         </div>
@@ -717,6 +765,26 @@
       hubAuthorSearch: ""
     };
 
+    const TRUST = {
+      default: 50,
+      min: 0,
+      max: 100,
+      verificationApproved: 25,
+      verificationRejected: -5,
+      communityApproved: 8,
+      communityHidden: -10,
+      placeApproved: 6,
+      placeRejected: -3,
+      placeHidden: -10,
+      hubAuthorAdded: 5,
+      hubPostPublished: 4,
+      hubPostHidden: -8,
+      warned: -12,
+      suspended: -25,
+      banned: -100,
+      restoredFloor: 50
+    };
+
     const ICONS = {
       open: `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
@@ -829,6 +897,44 @@
       );
     }
 
+    function clampNumber(value, min, max) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, Math.round(n)));
+    }
+
+    function clampTrust(value) {
+      return clampNumber(value, TRUST.min, TRUST.max);
+    }
+
+    function getTrustScore(row) {
+      return clampTrust(val(row, ["trust_score", "trustScore"], TRUST.default));
+    }
+
+    function getTrustText(score) {
+      const s = clampTrust(score);
+      if (s >= 80) return "High trust";
+      if (s >= 55) return "Normal trust";
+      if (s >= 30) return "Low trust";
+      return "Very low trust";
+    }
+
+    function trustBar(score) {
+      const s = clampTrust(score);
+      return `
+        <div class="trust-wrap">
+          <div class="trust-head">
+            <span>Trust Bar</span>
+            <span>${s}% · ${escapeHtml(getTrustText(s))}</span>
+          </div>
+          <div class="trust-track">
+            <div class="trust-fill" style="width:${s}%"></div>
+          </div>
+          <div class="trust-note">Purchased points do not increase trust. Trust changes only from safety, verification, approvals, and moderation actions.</div>
+        </div>
+      `;
+    }
+
     function tsMs(ts) {
       if (!ts) return 0;
 
@@ -932,6 +1038,23 @@
 
       if (error) throw error;
       return data || null;
+    }
+
+    async function selectUserRow(uid) {
+      if (!uid) return null;
+
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const table of ["users", "public_profiles"]) {
+        for (const column of columns) {
+          try {
+            const row = await selectRowByColumn(table, column, uid);
+            if (row) return row;
+          } catch {}
+        }
+      }
+
+      return null;
     }
 
     async function ensureAdmin(uid) {
@@ -1038,6 +1161,9 @@
         reason: payload.reason || "",
         note: payload.note || "",
         admin_note: payload.adminNote || payload.admin_note || "",
+        trust_before: payload.trustBefore ?? null,
+        trust_after: payload.trustAfter ?? null,
+        trust_delta: payload.trustDelta ?? null,
         created_at: nowIso()
       };
 
@@ -1054,12 +1180,16 @@
         reason: payload.reason || "",
         note: payload.note || "",
         adminNote: payload.adminNote || payload.admin_note || "",
+        trustBefore: payload.trustBefore ?? null,
+        trustAfter: payload.trustAfter ?? null,
+        trustDelta: payload.trustDelta ?? null,
         createdAt: nowIso()
       };
 
       const minimalPayload = {
         action,
         admin_uid: currentUser.id,
+        target_user_id: payload.targetUserId || payload.target_user_id || null,
         created_at: nowIso()
       };
 
@@ -1072,6 +1202,76 @@
       } catch (err) {
         console.warn("Could not log admin action:", err?.message || err);
       }
+    }
+
+    async function updateTrustScore(targetUid, newScore, reason = "trust_update", extra = {}) {
+      if (!targetUid) return null;
+
+      const existing = await selectUserRow(targetUid);
+      const before = existing ? getTrustScore(existing) : TRUST.default;
+      const after = clampTrust(newScore);
+      const delta = after - before;
+
+      const payloads = [
+        {
+          trust_score: after,
+          trustScore: after,
+          trust_updated_at: nowIso(),
+          trust_reason: reason,
+          updated_at: nowIso()
+        },
+        {
+          trustScore: after,
+          trustUpdatedAt: nowIso(),
+          trustReason: reason,
+          updatedAt: nowIso()
+        },
+        {
+          trust_score: after,
+          updated_at: nowIso()
+        }
+      ];
+
+      await Promise.allSettled([
+        updateByIdWithFallback("users", targetUid, payloads),
+        updateByIdWithFallback("public_profiles", targetUid, payloads)
+      ]);
+
+      await logAdminAction("trust_updated", {
+        targetUserId: targetUid,
+        targetType: "user",
+        reason,
+        trustBefore: before,
+        trustAfter: after,
+        trustDelta: delta,
+        ...extra
+      });
+
+      return { before, after, delta };
+    }
+
+    async function changeTrustScore(targetUid, delta, reason = "trust_change", extra = {}) {
+      if (!targetUid) return null;
+
+      const existing = await selectUserRow(targetUid);
+      const before = existing ? getTrustScore(existing) : TRUST.default;
+      const after = clampTrust(before + Number(delta || 0));
+
+      return updateTrustScore(targetUid, after, reason, extra);
+    }
+
+    async function restoreTrustFloor(targetUid, floor = TRUST.restoredFloor, reason = "trust_restore", extra = {}) {
+      if (!targetUid) return null;
+
+      const existing = await selectUserRow(targetUid);
+      const before = existing ? getTrustScore(existing) : TRUST.default;
+      const after = Math.max(before, floor);
+
+      return updateTrustScore(targetUid, after, reason, extra);
+    }
+
+    async function forceTrustZero(targetUid, reason = "trust_ban", extra = {}) {
+      return updateTrustScore(targetUid, 0, reason, extra);
     }
 
     function getUserId(row) {
@@ -1260,15 +1460,13 @@
         publicRows,
         reports,
         verifications,
-        communitiesRaw,
-        history
+        communitiesRaw
       ] = await Promise.all([
         selectAllSafe("users"),
         selectAllSafe("public_profiles"),
         selectAllSafe("reports"),
         selectAllSafe("verification_requests"),
-        selectAllSafe("communities"),
-        selectAllSafe("moderation_history")
+        selectAllSafe("communities")
       ]);
 
       const users = mergeUserRows(usersRows, publicRows);
@@ -1281,7 +1479,7 @@
         return s === "pending" || s === "need_more_info";
       }).length);
       sumCommunities.textContent = String(communities.filter(c => !c.hidden).length);
-      sumHistory.textContent = String(history.length);
+      sumHistory.textContent = String(users.filter(u => getTrustScore(u) <= 40).length);
     }
 
     async function loadSection(tab, refreshSummary = false) {
@@ -1315,15 +1513,21 @@
         communitiesRaw,
         hubPostsRaw,
         placesRaw,
-        historyRaw
+        historyRaw,
+        usersRows,
+        publicRows
       ] = await Promise.all([
         selectAllSafe("reports"),
         selectAllSafe("verification_requests"),
         selectAllSafe("communities"),
         selectAllSafe("hub_posts"),
         selectAllSafe("nearby_places"),
-        selectAllSafe("moderation_history")
+        selectAllSafe("moderation_history"),
+        selectAllSafe("users"),
+        selectAllSafe("public_profiles")
       ]);
+
+      const users = mergeUserRows(usersRows, publicRows);
 
       const openReports = reports.filter(isReportOpen).sort((a, b) => createdMs(b) - createdMs(a)).slice(0, 5);
 
@@ -1352,13 +1556,18 @@
         .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
         .slice(0, 5);
 
+      const lowTrustUsers = users
+        .filter(u => getTrustScore(u) <= 40)
+        .sort((a, b) => getTrustScore(a) - getTrustScore(b))
+        .slice(0, 5);
+
       const recentHistory = historyRaw
         .sort((a, b) => createdMs(b) - createdMs(a))
         .slice(0, 8);
 
       sectionContent.innerHTML = `
         <div class="section-title">Dashboard</div>
-        <div class="section-note">Quick view of pending work and recent admin actions.</div>
+        <div class="section-note">Quick view of pending work, trust alerts, and recent admin actions.</div>
 
         <div class="list">
           <div class="card">
@@ -1371,6 +1580,19 @@
             `).join("") : `<div class="empty-box">No open reports.</div>`}
             <div class="inline-actions">
               <button class="action-btn purple dash-go" data-tab="reports" type="button">Open Reports</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Low Trust Users</div>
+            ${lowTrustUsers.length ? lowTrustUsers.map(user => `
+              <div class="meta-item">
+                <strong>${escapeHtml(getUserName(user))}</strong>
+                ${escapeHtml(getUsername(user) ? "@" + getUsername(user) : getUserId(user))} • Trust ${escapeHtml(String(getTrustScore(user)))}%
+              </div>
+            `).join("") : `<div class="empty-box">No low trust users.</div>`}
+            <div class="inline-actions">
+              <button class="action-btn red dash-go-users-low" type="button">Open Low Trust</button>
             </div>
           </div>
 
@@ -1444,6 +1666,13 @@
       sectionContent.querySelectorAll(".dash-go").forEach(btn => {
         btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
       });
+
+      sectionContent.querySelectorAll(".dash-go-users-low").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.usersFilter = "low_trust";
+          setActiveTab("users");
+        });
+      });
     }
 
     async function updateUserModeration(targetUid, action) {
@@ -1465,6 +1694,8 @@
             { moderation_status: "warned" }
           ])
         ]);
+
+        await changeTrustScore(targetUid, TRUST.warned, "admin_warned_user");
       }
 
       if (action === "suspend") {
@@ -1480,6 +1711,8 @@
             { moderation_status: "suspended" }
           ])
         ]);
+
+        await changeTrustScore(targetUid, TRUST.suspended, "admin_suspended_user");
       }
 
       if (action === "ban") {
@@ -1495,6 +1728,8 @@
             { moderation_status: "banned" }
           ])
         ]);
+
+        await forceTrustZero(targetUid, "admin_banned_user");
       }
 
       if (action === "restore") {
@@ -1546,6 +1781,8 @@
             { moderation_status: "active" }
           ])
         ]);
+
+        await restoreTrustFloor(targetUid, TRUST.restoredFloor, "admin_restored_user");
       }
     }
 
@@ -1564,11 +1801,13 @@
         const status = getUserStatus(user);
         const hidden = isHiddenUser(user);
         const verified = boolVal(user, ["verified", "is_verified", "isVerified"], false);
+        const trustScore = getTrustScore(user);
 
         if (state.usersFilter === "warned" && status !== "warned") return false;
         if (state.usersFilter === "suspended" && status !== "suspended") return false;
         if (state.usersFilter === "banned" && !hidden && status !== "banned") return false;
         if (state.usersFilter === "verified" && !verified) return false;
+        if (state.usersFilter === "low_trust" && trustScore > 40) return false;
 
         if (q) {
           const text = [
@@ -1576,7 +1815,8 @@
             getUserName(user),
             getUsername(user),
             getUserEmail(user),
-            status
+            status,
+            String(trustScore)
           ].join(" ").toLowerCase();
 
           if (!text.includes(q)) return false;
@@ -1587,13 +1827,14 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Users</div>
-        <div class="section-note">Search users, view moderation state, warn, suspend, ban, restore, or add Hub author permission.</div>
+        <div class="section-note">Search users, view Trust Bar, warn, suspend, ban, restore, or add Hub author permission.</div>
 
         <div class="toolbar">
           <input id="usersSearchInput" class="search-box" type="text" placeholder="Search by name, username, email, UID..." value="${escapeHtml(state.usersSearch)}" />
 
           <button class="action-btn ${state.usersFilter === "all" ? "blue" : ""} users-filter" data-filter="all" type="button">All</button>
           <button class="action-btn ${state.usersFilter === "verified" ? "green" : ""} users-filter" data-filter="verified" type="button">Verified</button>
+          <button class="action-btn ${state.usersFilter === "low_trust" ? "red" : ""} users-filter" data-filter="low_trust" type="button">Low Trust</button>
           <button class="action-btn ${state.usersFilter === "warned" ? "yellow" : ""} users-filter" data-filter="warned" type="button">Warned</button>
           <button class="action-btn ${state.usersFilter === "suspended" ? "purple" : ""} users-filter" data-filter="suspended" type="button">Suspended</button>
           <button class="action-btn ${state.usersFilter === "banned" ? "red" : ""} users-filter" data-filter="banned" type="button">Banned</button>
@@ -1605,6 +1846,7 @@
             const status = getUserStatus(user);
             const verified = boolVal(user, ["verified", "is_verified", "isVerified"], false);
             const hidden = isHiddenUser(user);
+            const trustScore = getTrustScore(user);
 
             return `
               <div class="card">
@@ -1617,12 +1859,15 @@
                   <span class="badge ${badgeClass(hidden ? "banned" : status)}">${escapeHtml(hidden ? "hidden/banned" : status || "active")}</span>
                   ${verified ? `<span class="badge green">Verified</span>` : `<span class="badge">Not verified</span>`}
                   ${getUsername(user) ? `<span class="badge blue">@${escapeHtml(getUsername(user))}</span>` : ""}
+                  <span class="badge ${badgeClass(trustScore <= 40 ? "banned" : trustScore >= 80 ? "verified" : "active")}">Trust ${trustScore}%</span>
                 </div>
+
+                ${trustBar(trustScore)}
 
                 <div class="meta-grid">
                   <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
                   <div class="meta-item"><strong>Email</strong>${escapeHtml(getUserEmail(user) || "Not added")}</div>
-                  <div class="meta-item"><strong>Trust</strong>${escapeHtml(String(val(user, ["trust_score", "trustScore"], 50)))}%</div>
+                  <div class="meta-item"><strong>Trust</strong>${escapeHtml(String(trustScore))}%</div>
                   <div class="meta-item"><strong>Points</strong>${escapeHtml(String(val(user, ["points_balance", "pointsBalance"], 0)))}</div>
                 </div>
 
@@ -1661,7 +1906,7 @@
           if (!uid || !action) return;
 
           if (action === "ban") {
-            const ok = confirm("Ban/hide this user?");
+            const ok = confirm("Ban/hide this user? Trust will become 0.");
             if (!ok) return;
           }
 
@@ -1676,7 +1921,7 @@
 
             await loadSummary();
             await loadUsers();
-            setMessage(`User ${action} action saved.`, "ok");
+            setMessage(`User ${action} action saved and Trust Bar updated.`, "ok");
           } catch (err) {
             console.error(err);
             setMessage(`Could not ${action} user.`, "err");
@@ -1720,12 +1965,16 @@
               }
             ]);
 
+            await changeTrustScore(uid, TRUST.hubAuthorAdded, "hub_author_permission_added");
+
             await logAdminAction("hub_author_added", {
               targetUserId: uid,
               targetType: "hub_author"
             });
 
-            setMessage("Hub author permission added.", "ok");
+            await loadSummary();
+            await loadUsers();
+            setMessage("Hub author permission added and Trust Bar updated.", "ok");
           } catch (err) {
             console.error(err);
             setMessage("Could not add Hub author. Maybe already exists or RLS blocked it.", "err");
@@ -1828,7 +2077,7 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Reports</div>
-        <div class="section-note">Review reports and take moderation action. Warnings and suspensions are set for 30 days.</div>
+        <div class="section-note">Review reports and take moderation action. Warnings and suspensions are set for 30 days and also update Trust Bar.</div>
 
         <div class="toolbar">
           <button class="action-btn ${state.reportsFilter === "open" ? "blue" : ""} reports-filter" data-filter="open" type="button">Open</button>
@@ -1915,7 +2164,7 @@
           if (!report || !action) return;
 
           if (action === "ban") {
-            const ok = confirm("Ban this user and hide reported content when possible?");
+            const ok = confirm("Ban this user and hide reported content when possible? Trust will become 0.");
             if (!ok) return;
           }
 
@@ -1926,7 +2175,7 @@
             if (action === "ban") await hideReportedContent(report).catch(() => {});
             await loadSummary();
             await loadReports();
-            setMessage(`Report ${action} saved.`, "ok");
+            setMessage(`Report ${action} saved and Trust Bar updated when user was linked.`, "ok");
           } catch (err) {
             console.error(err);
             setMessage(`Could not ${action} report.`, "err");
@@ -2054,6 +2303,12 @@
           }
         ])
       ]);
+
+      if (approved) {
+        await changeTrustScore(uid, TRUST.verificationApproved, "verification_approved");
+      } else {
+        await changeTrustScore(uid, TRUST.verificationRejected, "verification_rejected");
+      }
     }
 
     async function approveVerification(req) {
@@ -2219,7 +2474,7 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Verification</div>
-        <div class="section-note">Review verification requests. After approval or rejection, proof files are deleted and sensitive fields are cleared.</div>
+        <div class="section-note">Review verification requests. Approval increases Trust Bar. Rejection slightly lowers Trust Bar. Proof files are deleted after approval/rejection.</div>
 
         <div class="proof-warning">
           Personal verification proof must not be kept longer than needed. Open proof files only for review, then approve/reject so files can be removed.
@@ -2301,7 +2556,7 @@
           const req = docs.find(x => String(x.id) === String(btn.dataset.id));
           if (!req) return;
 
-          const ok = confirm("Approve this verification? Proof files will be deleted after approval.");
+          const ok = confirm("Approve this verification? Proof files will be deleted after approval and Trust Bar will increase.");
           if (!ok) return;
 
           btn.disabled = true;
@@ -2310,7 +2565,7 @@
             await approveVerification(req);
             await loadSummary();
             await loadVerification();
-            setMessage("Verification approved and proof files deleted.", "ok");
+            setMessage("Verification approved, proof files deleted, and Trust Bar updated.", "ok");
           } catch (err) {
             console.error(err);
             setMessage(err?.message || "Could not approve verification.", "err");
@@ -2333,7 +2588,7 @@
             await rejectVerification(req);
             await loadSummary();
             await loadVerification();
-            setMessage("Verification rejected and proof files deleted.", "ok");
+            setMessage("Verification rejected, proof files deleted, and Trust Bar updated.", "ok");
           } catch (err) {
             console.error(err);
             setMessage(err?.message || "Could not reject verification.", "err");
@@ -2376,7 +2631,7 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Communities</div>
-        <div class="section-note">Approve, feature, hide, restore, or manage communities.</div>
+        <div class="section-note">Approve, feature, hide, restore, or manage communities. Approval increases creator Trust Bar.</div>
 
         <div class="toolbar">
           <button class="action-btn ${state.communitiesFilter === "active" ? "green" : ""} communities-filter" data-filter="active" type="button">Active</button>
@@ -2413,11 +2668,11 @@
 
               <div class="inline-actions">
                 <a class="action-btn blue" href="community.html?communityId=${encodeURIComponent(item.id)}">${ICONS.open} Open</a>
-                <button class="action-btn green community-action" data-action="approve" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
-                <button class="action-btn purple community-action" data-action="${item.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(item.id)}" type="button">${item.featured ? "Unfeature" : "Feature"}</button>
-                <button class="action-btn yellow community-action" data-action="${item.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(item.id)}" type="button">${item.pinned ? "Unpin" : "Pin"}</button>
-                <button class="action-btn red community-action" data-action="hide" data-id="${escapeHtml(item.id)}" type="button">Hide</button>
-                <button class="action-btn green community-action" data-action="restore" data-id="${escapeHtml(item.id)}" type="button">Restore</button>
+                <button class="action-btn green community-action" data-action="approve" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Approve</button>
+                <button class="action-btn purple community-action" data-action="${item.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">${item.featured ? "Unfeature" : "Feature"}</button>
+                <button class="action-btn yellow community-action" data-action="${item.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">${item.pinned ? "Unpin" : "Pin"}</button>
+                <button class="action-btn red community-action" data-action="hide" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Hide</button>
+                <button class="action-btn green community-action" data-action="restore" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Restore</button>
               </div>
             </div>
           `).join("") : `<div class="empty-box">No communities found.</div>`}
@@ -2435,10 +2690,11 @@
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
           const action = btn.dataset.action;
+          const creatorId = btn.dataset.creator || "";
           if (!id || !action) return;
 
           if (action === "hide") {
-            const ok = confirm("Hide this community?");
+            const ok = confirm("Hide this community? Creator Trust Bar will decrease.");
             if (!ok) return;
           }
 
@@ -2491,14 +2747,27 @@
 
             await updateByIdWithFallback("communities", id, payloads);
 
+            if (creatorId && action === "approve") {
+              await changeTrustScore(creatorId, TRUST.communityApproved, "community_approved", { targetId: id, targetType: "community" });
+            }
+
+            if (creatorId && action === "hide") {
+              await changeTrustScore(creatorId, TRUST.communityHidden, "community_hidden", { targetId: id, targetType: "community" });
+            }
+
+            if (creatorId && action === "restore") {
+              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "community_restored", { targetId: id, targetType: "community" });
+            }
+
             await logAdminAction(`community_${action}`, {
               targetId: id,
+              targetUserId: creatorId,
               targetType: "community"
             });
 
             await loadSummary();
             await loadCommunities();
-            setMessage(`Community ${action} saved.`, "ok");
+            setMessage(`Community ${action} saved and Trust Bar updated when creator was linked.`, "ok");
           } catch (err) {
             console.error(err);
             setMessage(`Could not ${action} community.`, "err");
@@ -2528,7 +2797,7 @@
 
         <div class="editor">
           <div class="section-title">Add Hub Author</div>
-          <div class="section-note">Paste a user UID to allow them to publish in OwnSpace Hub.</div>
+          <div class="section-note">Paste a user UID to allow them to publish in OwnSpace Hub. This gives a small Trust Bar boost.</div>
 
           <div class="toolbar">
             <input id="hubAuthorUidInput" class="search-box" type="text" placeholder="User UID..." value="${escapeHtml(state.hubAuthorSearch)}" />
@@ -2580,11 +2849,11 @@
 
               <div class="inline-actions">
                 <a href="hub.html?postId=${encodeURIComponent(post.id)}" class="action-btn blue">${ICONS.open} Open</a>
-                <button class="action-btn purple hub-action" data-action="${post.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(post.id)}" type="button">${post.featured ? "Unfeature" : "Feature"}</button>
-                <button class="action-btn yellow hub-action" data-action="${post.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(post.id)}" type="button">${post.pinned ? "Unpin" : "Pin"}</button>
-                <button class="action-btn green hub-action" data-action="publish" data-id="${escapeHtml(post.id)}" type="button">Publish</button>
-                <button class="action-btn red hub-action" data-action="hide" data-id="${escapeHtml(post.id)}" type="button">Hide</button>
-                <button class="action-btn green hub-action" data-action="restore" data-id="${escapeHtml(post.id)}" type="button">Restore</button>
+                <button class="action-btn purple hub-action" data-action="${post.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">${post.featured ? "Unfeature" : "Feature"}</button>
+                <button class="action-btn yellow hub-action" data-action="${post.pinned ? "unpin" : "pin"}" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">${post.pinned ? "Unpin" : "Pin"}</button>
+                <button class="action-btn green hub-action" data-action="publish" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">Publish</button>
+                <button class="action-btn red hub-action" data-action="hide" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">Hide</button>
+                <button class="action-btn green hub-action" data-action="restore" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">Restore</button>
               </div>
             </div>
           `).join("") : `<div class="empty-box">No Hub posts found.</div>`}
@@ -2632,14 +2901,17 @@
             }
           ]);
 
+          await changeTrustScore(uid, TRUST.hubAuthorAdded, "hub_author_added");
+
           await logAdminAction("hub_author_added", {
             targetUserId: uid,
             targetType: "hub_author"
           });
 
           state.hubAuthorSearch = "";
+          await loadSummary();
           await loadHub();
-          setMessage("Hub author added.", "ok");
+          setMessage("Hub author added and Trust Bar updated.", "ok");
         } catch (err) {
           console.error(err);
           setMessage("Could not add Hub author. Maybe duplicate or RLS blocked it.", "err");
@@ -2658,6 +2930,7 @@
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
           const action = btn.dataset.action;
+          const creatorId = btn.dataset.creator || "";
           if (!id || !action) return;
 
           if (action === "hide") {
@@ -2714,13 +2987,27 @@
 
             await updateByIdWithFallback("hub_posts", id, payloads);
 
+            if (creatorId && action === "publish") {
+              await changeTrustScore(creatorId, TRUST.hubPostPublished, "hub_post_published", { targetId: id, targetType: "hub_post" });
+            }
+
+            if (creatorId && action === "hide") {
+              await changeTrustScore(creatorId, TRUST.hubPostHidden, "hub_post_hidden", { targetId: id, targetType: "hub_post" });
+            }
+
+            if (creatorId && action === "restore") {
+              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "hub_post_restored", { targetId: id, targetType: "hub_post" });
+            }
+
             await logAdminAction(`hub_${action}`, {
               targetId: id,
+              targetUserId: creatorId,
               targetType: "hub_post"
             });
 
+            await loadSummary();
             await loadHub();
-            setMessage(`Hub post ${action} saved.`, "ok");
+            setMessage(`Hub post ${action} saved and Trust Bar updated when author was linked.`, "ok");
           } catch (err) {
             console.error(err);
             setMessage(`Could not ${action} Hub post.`, "err");
@@ -2743,7 +3030,7 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Places</div>
-        <div class="section-note">Approve, reject, hide, restore, or delete place submissions.</div>
+        <div class="section-note">Approve, reject, hide, restore, or delete place submissions. Approval increases creator Trust Bar.</div>
 
         <div class="toolbar">
           <button class="action-btn ${state.placesFilter === "pending" ? "yellow" : ""} places-filter" data-filter="pending" type="button">Pending</button>
@@ -2778,11 +3065,11 @@
 
               <div class="inline-actions">
                 <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(item.id)}&source=nearby_places">${ICONS.open} Open</a>
-                <button class="action-btn green place-action" data-action="approve" data-id="${escapeHtml(item.id)}" type="button">Approve</button>
-                <button class="action-btn yellow place-action" data-action="reject" data-id="${escapeHtml(item.id)}" type="button">Reject</button>
-                <button class="action-btn red place-action" data-action="hide" data-id="${escapeHtml(item.id)}" type="button">Hide</button>
-                <button class="action-btn green place-action" data-action="restore" data-id="${escapeHtml(item.id)}" type="button">Restore</button>
-                <button class="action-btn red delete-place-btn" data-id="${escapeHtml(item.id)}" type="button">Delete</button>
+                <button class="action-btn green place-action" data-action="approve" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Approve</button>
+                <button class="action-btn yellow place-action" data-action="reject" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Reject</button>
+                <button class="action-btn red place-action" data-action="hide" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Hide</button>
+                <button class="action-btn green place-action" data-action="restore" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Restore</button>
+                <button class="action-btn red delete-place-btn" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Delete</button>
               </div>
             </div>
           `).join("") : `<div class="empty-box">No places found in this filter.</div>`}
@@ -2800,10 +3087,11 @@
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
           const action = btn.dataset.action;
+          const creatorId = btn.dataset.creator || "";
           if (!id || !action) return;
 
           if (action === "hide") {
-            const ok = confirm("Hide this place?");
+            const ok = confirm("Hide this place? Creator Trust Bar will decrease.");
             if (!ok) return;
           }
 
@@ -2846,14 +3134,31 @@
 
             await updateByIdWithFallback("nearby_places", id, payloads);
 
+            if (creatorId && action === "approve") {
+              await changeTrustScore(creatorId, TRUST.placeApproved, "place_approved", { targetId: id, targetType: "place" });
+            }
+
+            if (creatorId && action === "reject") {
+              await changeTrustScore(creatorId, TRUST.placeRejected, "place_rejected", { targetId: id, targetType: "place" });
+            }
+
+            if (creatorId && action === "hide") {
+              await changeTrustScore(creatorId, TRUST.placeHidden, "place_hidden", { targetId: id, targetType: "place" });
+            }
+
+            if (creatorId && action === "restore") {
+              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "place_restored", { targetId: id, targetType: "place" });
+            }
+
             await logAdminAction(`place_${action}`, {
               targetId: id,
+              targetUserId: creatorId,
               targetType: "place"
             });
 
             await loadSummary();
             await loadPlaces();
-            setMessage(`Place ${action} saved.`, "ok");
+            setMessage(`Place ${action} saved and Trust Bar updated when creator was linked.`, "ok");
           } catch (err) {
             console.error(err);
             setMessage(`Could not ${action} place.`, "err");
@@ -2865,6 +3170,7 @@
       sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
+          const creatorId = btn.dataset.creator || "";
           if (!id) return;
 
           const ok = confirm("Permanently delete this place?");
@@ -2875,14 +3181,19 @@
           try {
             await deleteById("nearby_places", id);
 
+            if (creatorId) {
+              await changeTrustScore(creatorId, TRUST.placeHidden, "place_deleted", { targetId: id, targetType: "place" });
+            }
+
             await logAdminAction("place_deleted", {
               targetId: id,
+              targetUserId: creatorId,
               targetType: "place"
             });
 
             await loadSummary();
             await loadPlaces();
-            setMessage("Place deleted.", "ok");
+            setMessage("Place deleted and Trust Bar updated when creator was linked.", "ok");
           } catch (err) {
             console.error(err);
             setMessage("Could not delete place.", "err");
@@ -2899,26 +3210,40 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Moderation History</div>
-        <div class="section-note">Recent admin actions and logs.</div>
+        <div class="section-note">Recent admin actions, Trust Bar changes, and moderation logs.</div>
 
         <div class="list">
-          ${docs.length ? docs.map(item => `
-            <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</div>
-                <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
-              </div>
+          ${docs.length ? docs.map(item => {
+            const trustBefore = val(item, ["trust_before", "trustBefore"], "");
+            const trustAfter = val(item, ["trust_after", "trustAfter"], "");
+            const trustDelta = val(item, ["trust_delta", "trustDelta"], "");
+            const hasTrust = trustAfter !== "";
 
-              <div class="meta-grid">
-                <div class="meta-item"><strong>Admin</strong>${escapeHtml(val(item, ["admin_uid", "adminUid", "admin_id", "adminId"], "Unknown"))}</div>
-                <div class="meta-item"><strong>Target Type</strong>${escapeHtml(val(item, ["target_type", "targetType"], "Not set"))}</div>
-                <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId", "target_user_id", "targetUserId", "report_id", "reportId"], "Not set"))}</div>
-                <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["source"], "Not set"))}</div>
-                <div class="meta-item"><strong>Reason</strong>${escapeHtml(val(item, ["reason"], "No reason"))}</div>
-                <div class="meta-item"><strong>Note</strong>${escapeHtml(val(item, ["note", "admin_note", "adminNote"], "No note"))}</div>
+            return `
+              <div class="card">
+                <div class="card-top">
+                  <div class="card-title">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</div>
+                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
+                </div>
+
+                <div class="badge-row">
+                  <span class="badge ${badgeClass(val(item, ["action", "action_type", "actionType"], ""))}">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</span>
+                  ${hasTrust ? `<span class="badge blue">Trust ${escapeHtml(String(trustBefore || "-"))}% → ${escapeHtml(String(trustAfter))}%</span>` : ""}
+                  ${trustDelta !== "" ? `<span class="badge ${Number(trustDelta) >= 0 ? "green" : "red"}">${Number(trustDelta) >= 0 ? "+" : ""}${escapeHtml(String(trustDelta))}</span>` : ""}
+                </div>
+
+                <div class="meta-grid">
+                  <div class="meta-item"><strong>Admin</strong>${escapeHtml(val(item, ["admin_uid", "adminUid", "admin_id", "adminId"], "Unknown"))}</div>
+                  <div class="meta-item"><strong>Target Type</strong>${escapeHtml(val(item, ["target_type", "targetType"], "Not set"))}</div>
+                  <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId"], "Not set"))}</div>
+                  <div class="meta-item"><strong>Target ID</strong>${escapeHtml(val(item, ["target_id", "targetId", "report_id", "reportId"], "Not set"))}</div>
+                  <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["source"], "Not set"))}</div>
+                  <div class="meta-item"><strong>Reason</strong>${escapeHtml(val(item, ["reason"], "No reason"))}</div>
+                  <div class="meta-item"><strong>Note</strong>${escapeHtml(val(item, ["note", "admin_note", "adminNote"], "No note"))}</div>
+                </div>
               </div>
-            </div>
-          `).join("") : `<div class="empty-box">No moderation history found.</div>`}
+            `;
+          }).join("") : `<div class="empty-box">No moderation history found.</div>`}
         </div>
       `;
     }
@@ -2963,25 +3288,32 @@
     initAdmin();
 
     /*
-      OWNSPACE ADMIN.HTML UPDATE
+      OWNSPACE ADMIN.HTML TRUST ENGINE UPDATE
 
-      MAIN CHANGES:
-      - Renamed BareWorld to OwnSpace.
-      - Light theme is default.
-      - Removed old School tab and replaced it with Hub.
-      - Added Users tab.
-      - Added Communities tab.
-      - Improved Reports moderation actions:
-        warn 30 days, suspend 30 days, ban/hide, hide content, resolve.
-      - Verification still deletes proof files after approve/reject.
-      - Hub tab can manage hub_posts and add hub_authors.
-      - Places tab supports approve/reject/hide/restore/delete.
-      - History tab reads moderation_history.
-      - Clean SVG bottom navigation.
-      - nearby-communities.html is used for community list nav.
+      TRUST CHANGES:
+      - Verification approved: +25
+      - Verification rejected: -5
+      - Community approved: +8
+      - Community hidden: -10
+      - Place approved: +6
+      - Place rejected: -3
+      - Place hidden/deleted: -10
+      - Hub author added: +5
+      - Hub post published: +4
+      - Hub post hidden: -8
+      - Warn: -12
+      - Suspend: -25
+      - Ban: Trust becomes 0
+      - Restore: Trust becomes at least 50
 
-      NEXT PAGE:
-      - admin rules / Supabase RLS policies should be checked next if any button says permission denied.
+      IMPORTANT:
+      - Purchased points do not increase trust.
+      - Users should not be allowed to edit trust_score in RLS.
+      - Admin actions write trust_score to users and public_profiles.
+      - moderation_history stores trust_before, trust_after, trust_delta when columns exist.
+
+      NEXT:
+      - Update Supabase RLS so only admins can update trust_score / moderation fields.
     */
   </script>
 </body>
