@@ -1,383 +1,651 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Verification Admin</title>
+  <title>OwnSpace - Verification Admin</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    :root{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
+
+    :root,
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+    }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
       --line:rgba(255,255,255,.08);
-      --text:#fff;
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
       --green:#3ddc84;
       --yellow:#f5b942;
-      --red:#ff5d73;
       --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
     }
+
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
+      padding:10px 10px 108px;
     }
+
     .app{max-width:980px;margin:0 auto}
+    .hidden{display:none!important}
+
     .topbar{
       position:sticky;
       top:0;
-      z-index:30;
+      z-index:40;
       backdrop-filter:blur(14px);
-      background:rgba(11,16,32,.82);
-      border:1px solid rgba(255,255,255,.04);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:12px 14px;
-      margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:8px;
+      box-shadow:var(--shadow);
     }
-    .left-wrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .back-btn,.chip-btn{
+
+    .top-icon-btn{
+      width:42px;
+      height:42px;
       border:none;
-      background:var(--soft);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-decoration:none;
-      display:inline-block;
+      position:relative;
     }
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
+
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
 
     .panel{
-      background:rgba(18,25,49,.88);
+      background:var(--surface);
       border:1px solid var(--line);
       border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
+      padding:13px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
     }
-    .section-title{
+
+    .hero-title{
       font-size:20px;
-      font-weight:800;
-      margin-bottom:8px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      margin-bottom:6px;
     }
-    .section-note{
+
+    .hero-sub{
       color:var(--muted);
       font-size:13px;
-      line-height:1.6;
-      margin-bottom:14px;
+      line-height:1.55;
+      margin-bottom:11px;
     }
+
+    .chip-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .chip svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
     .filters{
       display:grid;
-      grid-template-columns:1fr 180px;
-      gap:10px;
+      grid-template-columns:1fr 170px 170px;
+      gap:9px;
       margin-top:10px;
     }
-    input,select,textarea{
+
+    .input,
+    .textarea,
+    .select{
       width:100%;
       border:none;
       outline:none;
-      padding:13px 14px;
-      border-radius:14px;
-      background:#0f1630;
-      color:#fff;
-      border:1px solid rgba(255,255,255,.07);
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
       font-size:14px;
     }
-    select option{color:#000}
-    textarea{
-      min-height:90px;
+
+    .input::placeholder,
+    .textarea::placeholder{color:var(--muted)}
+
+    .textarea{
+      min-height:86px;
       resize:vertical;
+      line-height:1.55;
     }
-    .loading{
+
+    .select option{color:#000}
+
+    .message{
+      min-height:18px;
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.5;
+    }
+
+    .message.ok{color:#22b36c}
+    .message.err{color:#e74c66}
+    html[data-theme="dark"] .message.ok{color:#86efac}
+    html[data-theme="dark"] .message.err{color:#fda4af}
+
+    .loading-box,
+    .empty-box,
+    .denied-box{
       text-align:center;
       color:var(--muted);
-      padding:28px 10px;
+      padding:24px 12px;
+      background:var(--surface-2);
+      border-radius:16px;
+      border:1px dashed var(--line);
+      line-height:1.6;
+      font-size:14px;
     }
+
     .list{
       display:grid;
-      gap:14px;
+      gap:10px;
     }
-    .card{
-      background:#0f1630;
-      border:1px solid rgba(255,255,255,.06);
+
+    .request-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
       border-radius:20px;
-      padding:14px;
+      padding:12px;
+      overflow:hidden;
     }
+
     .card-head{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      gap:12px;
+      gap:10px;
       margin-bottom:10px;
       flex-wrap:wrap;
     }
+
     .card-title{
       font-size:18px;
-      font-weight:800;
-      line-height:1.4;
+      font-weight:950;
+      line-height:1.35;
+      word-break:break-word;
+      letter-spacing:-.02em;
     }
+
     .card-sub{
       color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
+      font-size:12px;
+      line-height:1.55;
       margin-top:4px;
       word-break:break-word;
     }
-    .status-badge{
-      display:inline-block;
-      padding:6px 10px;
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      padding:6px 9px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+      line-height:1;
+    }
+
+    .badge svg{
+      width:12px;
+      height:12px;
       flex-shrink:0;
     }
-    .status-pending{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .status-approved{
-      background:rgba(61,220,132,.14);
-      color:#c9f7dd;
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .status-rejected{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .grid{
+
+    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .info-grid{
       display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-top:8px;
-      margin-bottom:12px;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-bottom:10px;
     }
+
     .info-box{
-      background:#111936;
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:14px;
-      padding:12px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:10px 11px;
+      min-width:0;
     }
+
     .info-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:6px;
-      font-size:12px;
+      margin-bottom:5px;
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.04em;
     }
-    .info-box div,.info-box a{
-      color:#fff;
-      font-size:14px;
-      line-height:1.6;
+
+    .info-box div,
+    .info-box a{
+      color:var(--text);
+      font-size:13px;
+      line-height:1.5;
       word-break:break-word;
     }
+
     .info-box a{
       text-decoration:none;
+      color:var(--blue);
+      font-weight:850;
     }
-    .info-box a:hover{
-      text-decoration:underline;
-    }
+
+    .info-box a:hover{text-decoration:underline}
+
     .reason-box{
-      background:#111936;
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:14px;
-      padding:12px;
-      margin-bottom:12px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:10px 11px;
+      margin-bottom:10px;
     }
+
     .reason-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:6px;
-      font-size:12px;
+      margin-bottom:5px;
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.04em;
     }
+
     .reason-box div{
-      color:#fff;
-      font-size:14px;
-      line-height:1.7;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.6;
       white-space:pre-wrap;
       word-break:break-word;
     }
+
+    .proof-warning{
+      background:rgba(245,185,66,.10);
+      border:1px solid rgba(245,185,66,.20);
+      border-radius:15px;
+      padding:10px 11px;
+      color:var(--text);
+      font-size:12px;
+      line-height:1.55;
+      margin-bottom:10px;
+    }
+
+    .admin-note-block{
+      display:grid;
+      gap:6px;
+      margin-top:10px;
+    }
+
+    .label{
+      font-size:12px;
+      font-weight:950;
+      color:var(--text);
+    }
+
     .actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top:12px;
+      margin-top:10px;
     }
-    .approve-btn,.reject-btn,.save-note-btn,.open-btn{
+
+    .action-btn{
       border:none;
       border-radius:12px;
-      padding:10px 14px;
-      font-size:13px;
-      font-weight:800;
+      padding:9px 12px;
+      font-size:12px;
+      font-weight:950;
       cursor:pointer;
       text-decoration:none;
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-height:38px;
+      color:var(--text);
+      background:var(--surface-3);
+      border:1px solid var(--line);
     }
-    .approve-btn{
-      background:rgba(61,220,132,.14);
-      color:#c9f7dd;
-      border:1px solid rgba(61,220,132,.20);
+
+    .action-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
     }
-    .reject-btn{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.20);
-    }
-    .save-note-btn{
-      background:rgba(167,139,250,.14);
-      color:#e8defd;
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .open-btn{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,.20);
-    }
-    button:disabled{
+
+    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
+    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
+    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+
+    .action-btn:disabled{
       opacity:.65;
       cursor:not-allowed;
     }
-    .message{
-      min-height:20px;
-      font-size:14px;
-      margin-top:10px;
-    }
-    .success{color:#9cf0bf}
-    .error{color:#ffb3bd}
-    .empty-box{
-      text-align:center;
-      padding:28px 10px;
-      color:var(--muted);
-      background:#0f1630;
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.08);
-    }
-    .hidden{display:none!important}
 
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:12px;
-      width:min(980px, calc(100% - 20px));
-      background:rgba(12,18,35,.92);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(18px);
+      bottom:10px;
+      width:min(980px, calc(100% - 16px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
+
     .nav-link{
       text-decoration:none;
-      color:#b9c4e3;
+      color:var(--muted);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
     }
-    .nav-link .icon{font-size:18px;line-height:1}
 
-    @media (max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{padding:10px 12px}
-      .brand{font-size:20px}
-      .back-btn,.chip-btn{padding:9px 10px;font-size:12px}
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+    }
+
+    .icon-svg{
+      width:20px;
+      height:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+    }
+
+    .icon-svg svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
+
+    @media(max-width:760px){
+      body{padding:10px 10px 108px}
       .filters{grid-template-columns:1fr}
-      .grid{grid-template-columns:1fr}
+      .info-grid{grid-template-columns:1fr}
+      .brand{font-size:17px}
+      .panel{padding:11px;border-radius:20px}
+      .request-card{border-radius:18px}
+      .actions .action-btn{flex:1}
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
-        <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Verification admin</div>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Verification Admin</div>
+      </div>
+
+      <a href="admin.html" class="top-icon-btn" aria-label="Admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3 4 7v6c0 5 3.4 7.7 8 8 4.6-.3 8-3 8-8V7l-8-4z"></path>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div id="accessPanel" class="panel">
+      <div id="accessLoading" class="loading-box">Checking admin access...</div>
+      <div id="accessDenied" class="denied-box hidden">Access denied. Admin only.</div>
+    </div>
+
+    <div id="mainWrap" class="hidden">
+      <div class="panel">
+        <div class="hero-title">Verification Requests</div>
+        <div class="hero-sub">
+          Review Verified Account, Verified Creator, and Verified Business requests. Proof files should be deleted after approval or rejection.
         </div>
+
+        <div class="chip-row">
+          <span id="pendingChip" class="chip chip-yellow">Pending: 0</span>
+          <span id="approvedChip" class="chip chip-green">Approved: 0</span>
+          <span id="rejectedChip" class="chip chip-red">Rejected: 0</span>
+          <span id="infoChip" class="chip chip-purple">Need info: 0</span>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" class="input" type="text" placeholder="Search name, username, email, user id..." />
+
+          <select id="statusFilter" class="select">
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="need_more_info">Need more info</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+
+          <select id="badgeFilter" class="select">
+            <option value="all">All badges</option>
+            <option value="account">Verified Account</option>
+            <option value="creator">Verified Creator</option>
+            <option value="business">Verified Business</option>
+          </select>
+        </div>
+
+        <div id="pageMessage" class="message"></div>
       </div>
 
-      <div class="top-actions">
-        <a href="profile.html" class="chip-btn">Profile</a>
-        <a href="settings.html" class="chip-btn">Settings</a>
+      <div class="panel">
+        <div id="loading" class="loading-box">Loading verification requests...</div>
+        <div id="list" class="list hidden"></div>
+        <div id="emptyBox" class="empty-box hidden">No verification requests found.</div>
       </div>
-    </div>
-
-    <div class="panel">
-      <div class="section-title">Verification Requests</div>
-      <div class="section-note">
-        Review verification requests and approve or reject them.
-      </div>
-
-      <div class="filters">
-        <input type="text" id="searchInput" placeholder="Search by name or email..." />
-        <select id="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="pending">Pending only</option>
-          <option value="approved">Approved only</option>
-          <option value="rejected">Rejected only</option>
-        </select>
-      </div>
-
-      <div id="pageMessage" class="message"></div>
-    </div>
-
-    <div class="panel">
-      <div id="loading" class="loading">Loading verification requests...</div>
-      <div id="list" class="list hidden"></div>
-      <div id="emptyBox" class="empty-box hidden">No verification requests found.</div>
     </div>
   </div>
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+      </span>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      </span>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
+
+    <a href="search.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="M20 20l-4.2-4.2"></path>
+        </svg>
+      </span>
+      <span>Search</span>
     </a>
-    <a href="nearby-events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+
+    <a href="inbox.html" class="nav-link">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
-    <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+
+    <a href="profile.html" class="nav-link active">
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
       <span>Profile</span>
     </a>
   </nav>
@@ -385,29 +653,115 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
+    const VERIFICATION_BUCKET = "verification";
+
     const backBtn = document.getElementById("backBtn");
+
+    const accessPanel = document.getElementById("accessPanel");
+    const accessLoading = document.getElementById("accessLoading");
+    const accessDenied = document.getElementById("accessDenied");
+    const mainWrap = document.getElementById("mainWrap");
+
+    const pendingChip = document.getElementById("pendingChip");
+    const approvedChip = document.getElementById("approvedChip");
+    const rejectedChip = document.getElementById("rejectedChip");
+    const infoChip = document.getElementById("infoChip");
+
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const badgeFilter = document.getElementById("badgeFilter");
+    const pageMessage = document.getElementById("pageMessage");
+
     const loading = document.getElementById("loading");
     const list = document.getElementById("list");
     const emptyBox = document.getElementById("emptyBox");
-    const pageMessage = document.getElementById("pageMessage");
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     let currentUser = null;
     let allRequests = [];
     let verificationChannel = null;
     let refreshTimer = null;
 
-    backBtn.addEventListener("click", () => {
-      if (document.referrer) history.back();
-      else window.location.href = "settings.html";
-    });
+    const ICONS = {
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17 17 7"></path>
+          <path d="M9 7h8v8"></path>
+          <path d="M19 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path>
+        </svg>
+      `,
+      check: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      `,
+      x: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      `,
+      info: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 16v-4"></path>
+          <path d="M12 8h.01"></path>
+        </svg>
+      `,
+      save: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <path d="M17 21v-8H7v8"></path>
+          <path d="M7 3v5h8"></path>
+        </svg>
+      `,
+      trash: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+        </svg>
+      `
+    };
 
     function nowIso() {
       return new Date().toISOString();
     }
 
-    function setMessage(text, type = "") {
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      return themeValue === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "admin.html";
+    });
+
+    function setMessage(text = "", type = "") {
       pageMessage.textContent = text;
       pageMessage.className = `message ${type}`;
     }
@@ -418,30 +772,28 @@
       return div.innerHTML;
     }
 
-    function normalizeHref(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
-    }
-
     function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
-        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
+        }
       }
+
       return fallback;
     }
 
-    function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-      return (
-        msg.includes("does not exist") ||
-        msg.includes("not found in the schema cache") ||
-        msg.includes("could not find the table") ||
-        msg.includes("could not find") ||
-        msg.includes("column")
-      );
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+
+      return fallback;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
     }
 
     function toMillis(value) {
@@ -468,8 +820,6 @@
     }
 
     function formatDate(value) {
-      if (!value) return "Just now";
-
       const ms = toMillis(value);
       if (!ms) return "Just now";
 
@@ -480,61 +830,120 @@
       }
     }
 
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find the table") ||
+        msg.includes("could not find") ||
+        msg.includes("relation") && msg.includes("does not exist") ||
+        msg.includes("column")
+      );
+    }
+
+    function normalizeHref(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) return value;
+      return "https://" + value;
+    }
+
+    function getBadgeType(raw) {
+      const value = normalizeText(getField(raw, [
+        "badge_type",
+        "badgeType",
+        "verification_type",
+        "verificationType",
+        "account_type",
+        "accountType"
+      ], "account"));
+
+      if (value.includes("business")) return "business";
+      if (value.includes("creator")) return "creator";
+      return "account";
+    }
+
+    function getBadgeLabel(type) {
+      if (type === "business") return "Verified Business";
+      if (type === "creator") return "Verified Creator";
+      return "Verified Account";
+    }
+
+    function getStatusLabel(status) {
+      if (status === "need_more_info") return "Need More Info";
+      if (status === "approved") return "Approved";
+      if (status === "rejected") return "Rejected";
+      return "Pending";
+    }
+
     function statusBadgeClass(status) {
-      if (status === "approved") return "status-approved";
-      if (status === "rejected") return "status-rejected";
-      return "status-pending";
+      if (status === "approved") return "badge-green";
+      if (status === "rejected") return "badge-red";
+      if (status === "need_more_info") return "badge-purple";
+      return "badge-yellow";
     }
 
     function normalizeRequest(row) {
       const d = row || {};
-      const uid = String(getField(d, ["uid", "user_id", "userId", "target_user_id", "targetUserId"], "") || "");
-      const rowId = String(getField(d, ["id"], "") || "");
+      const uid = String(getField(d, [
+        "uid",
+        "user_id",
+        "userId",
+        "target_user_id",
+        "targetUserId"
+      ], "") || "");
+
+      const badgeType = getBadgeType(d);
+      const status = normalizeText(getField(d, ["status"], "pending")) || "pending";
+
+      const createdAt = d.created_at ?? d.createdAt ?? d.created ?? null;
 
       return {
-        id: rowId,
-        uid: uid || rowId,
-        fullName: String(getField(d, ["full_name", "fullName", "name", "real_name", "realName"], "No name") || "No name"),
+        id: String(getField(d, ["id"], "") || ""),
+        uid,
+        fullLegalName: String(getField(d, [
+          "full_legal_name",
+          "fullLegalName",
+          "full_name",
+          "fullName",
+          "name",
+          "real_name",
+          "realName"
+        ], "") || ""),
+        username: String(getField(d, ["username", "handle"], "") || ""),
         email: String(getField(d, ["email"], "") || ""),
-        accountType: String(getField(d, ["account_type", "accountType"], "personal") || "personal"),
+        dob: String(getField(d, ["dob", "date_of_birth", "dateOfBirth"], "") || ""),
+        badgeType,
+        status,
         socialLink: String(getField(d, ["social_link", "socialLink", "website", "link"], "") || ""),
-        idPhotoURL: String(getField(d, ["id_photo_url", "idPhotoURL", "idPhotoUrl"], "") || ""),
-        selfieWithIdURL: String(getField(d, ["selfie_with_id_url", "selfieWithIdURL", "selfieWithIdUrl"], "") || ""),
-        reason: String(getField(d, ["reason"], "No reason provided") || "No reason provided"),
-        adminNote: String(getField(d, ["admin_note", "adminNote"], "") || ""),
-        status: String(getField(d, ["status"], "pending") || "pending").toLowerCase(),
-        createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
+        businessName: String(getField(d, ["business_name", "businessName"], "") || ""),
+        businessLink: String(getField(d, ["business_link", "businessLink"], "") || ""),
+        reason: String(getField(d, ["reason", "message", "note"], "") || ""),
+        adminNote: String(getField(d, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "") || ""),
+        dailyCode: String(getField(d, ["daily_code", "dailyCode"], "") || ""),
+        codeDate: String(getField(d, ["code_date", "codeDate"], "") || ""),
+        ageConfirmed: getBool(d, ["age_confirmed", "ageConfirmed", "is_18_plus", "is18Plus"], false),
+        consentGiven: getBool(d, ["consent_given", "consentGiven", "consent"], false),
+        proofDeleted: getBool(d, ["proof_deleted", "proofDeleted"], false),
+        govtIdPath: String(getField(d, ["govt_id_path", "govtIdPath", "id_photo_path", "idPhotoPath"], "") || ""),
+        govtIdUrl: String(getField(d, ["govt_id_url", "govtIdURL", "govtIdUrl", "id_photo_url", "idPhotoURL", "idPhotoUrl"], "") || ""),
+        selfiePath: String(getField(d, ["selfie_code_path", "selfieCodePath", "selfie_with_id_path", "selfieWithIdPath"], "") || ""),
+        selfieUrl: String(getField(d, ["selfie_with_id_url", "selfieWithIdURL", "selfieWithIdUrl", "selfie_code_url", "selfieCodeUrl"], "") || ""),
+        businessProofPath: String(getField(d, ["business_proof_path", "businessProofPath"], "") || ""),
+        businessProofUrl: String(getField(d, ["business_proof_url", "businessProofURL", "businessProofUrl"], "") || ""),
+        createdAt,
         updatedAt: d.updated_at ?? d.updatedAt ?? null,
-        createdAtMs: toMillis(d.created_at ?? d.createdAt ?? d.created ?? null),
+        reviewedAt: d.reviewed_at ?? d.reviewedAt ?? null,
+        createdAtMs: toMillis(createdAt),
         raw: d
       };
     }
 
-    function getFilteredRequests() {
-      const q = searchInput.value.trim().toLowerCase();
-      const status = statusFilter.value;
-
-      return allRequests.filter(item => {
-        const matchesStatus = status === "all" ? true : (item.status || "pending") === status;
-        if (!matchesStatus) return false;
-
-        if (!q) return true;
-
-        const haystack = [
-          item.fullName || "",
-          item.email || "",
-          item.accountType || "",
-          item.reason || "",
-          item.uid || "",
-          item.id || "",
-          item.socialLink || ""
-        ].join(" ").toLowerCase();
-
-        return haystack.includes(q);
-      });
-    }
-
     async function selectByColumn(table, column, value) {
+      if (!value) return null;
+
       try {
         const { data, error } = await supabase
           .from(table)
@@ -548,6 +957,7 @@
         if (!isMissingSchemaError(err)) {
           console.warn(`Select failed ${table}.${column}:`, err?.message || err);
         }
+
         return null;
       }
     }
@@ -588,42 +998,19 @@
       throw lastError || new Error(`Could not update ${table}.`);
     }
 
-    async function updateVerificationRequest(item, status, note) {
-      const snakePayload = {
-        status,
-        admin_note: note || "",
-        reviewed_at: nowIso(),
-        reviewed_by: currentUser?.id || "",
-        updated_at: nowIso()
-      };
+    async function updateRequestByIdOrUid(item, payloads) {
+      const targets = [];
 
-      const camelPayload = {
-        status,
-        adminNote: note || "",
-        reviewedAt: nowIso(),
-        reviewedBy: currentUser?.id || "",
-        updatedAt: nowIso()
-      };
-
-      const minimalPayload = {
-        status,
-        updated_at: nowIso()
-      };
-
-      const payloads = [snakePayload, camelPayload, minimalPayload];
-
-      const updateTargets = [];
-
-      if (item.id) updateTargets.push(["id", item.id]);
+      if (item.id) targets.push(["id", item.id]);
       if (item.uid) {
-        updateTargets.push(["uid", item.uid]);
-        updateTargets.push(["user_id", item.uid]);
-        updateTargets.push(["userId", item.uid]);
+        targets.push(["uid", item.uid]);
+        targets.push(["user_id", item.uid]);
+        targets.push(["userId", item.uid]);
       }
 
       let lastError = null;
 
-      for (const [column, value] of updateTargets) {
+      for (const [column, value] of targets) {
         try {
           await updateByColumnWithPayloads("verification_requests", column, value, payloads);
           return true;
@@ -635,149 +1022,599 @@
       throw lastError || new Error("Could not update verification request.");
     }
 
-    async function upsertOrUpdateProfile(table, uid, payloads) {
+    async function updateProfileTable(table, uid, payloads) {
+      const matchColumns = ["uid", "id", "user_id", "userId"];
       let lastError = null;
 
-      for (const payload of payloads) {
-        try {
-          const { error } = await supabase
-            .from(table)
-            .upsert({ uid, ...payload }, { onConflict: "uid" });
+      for (const matchColumn of matchColumns) {
+        for (const payload of payloads) {
+          try {
+            const { error } = await supabase
+              .from(table)
+              .update(payload)
+              .eq(matchColumn, uid);
 
-          if (!error) return true;
-          lastError = error;
-        } catch (err) {
-          lastError = err;
+            if (!error) return true;
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
         }
       }
 
-      for (const payload of payloads) {
-        try {
+      try {
+        for (const payload of payloads) {
+          const base = { uid, ...payload };
+
           const { error } = await supabase
             .from(table)
-            .update(payload)
-            .eq("uid", uid);
+            .insert(base);
 
           if (!error) return true;
           lastError = error;
-        } catch (err) {
-          lastError = err;
         }
+      } catch (err) {
+        lastError = err;
       }
 
-      for (const payload of payloads) {
-        try {
-          const { error } = await supabase
-            .from(table)
-            .update(payload)
-            .eq("id", uid);
-
-          if (!error) return true;
-          lastError = error;
-        } catch (err) {
-          lastError = err;
-        }
+      if (lastError && !isMissingSchemaError(lastError)) {
+        console.warn(`Profile update failed for ${table}:`, lastError?.message || lastError);
       }
 
-      throw lastError || new Error(`Could not update ${table}.`);
+      return false;
     }
 
-    async function updateUserVerified(uid, isVerified) {
-      if (!uid) throw new Error("Missing request user id.");
+    async function updateUserVerification(uid, isVerified, badgeType = "account", status = "approved") {
+      if (!uid) throw new Error("Missing user id.");
 
-      const userPayloads = [
-        {
-          is_verified: isVerified,
-          verified: isVerified,
-          verification_status: isVerified ? "approved" : "rejected",
-          updated_at: nowIso()
-        },
-        {
-          isVerified,
-          verified: isVerified,
-          verificationStatus: isVerified ? "approved" : "rejected",
-          updatedAt: nowIso()
-        },
-        {
-          is_verified: isVerified
-        }
-      ];
-
-      const publicPayloads = [
-        {
-          is_verified: isVerified,
-          verified: isVerified,
-          verification_status: isVerified ? "approved" : "rejected",
-          updated_at: nowIso()
-        },
-        {
-          isVerified,
-          verified: isVerified,
-          verificationStatus: isVerified ? "approved" : "rejected",
-          updatedAt: nowIso()
-        },
-        {
-          is_verified: isVerified
-        }
-      ];
-
-      await Promise.all([
-        upsertOrUpdateProfile("users", uid, userPayloads),
-        upsertOrUpdateProfile("public_profiles", uid, publicPayloads)
-      ]);
-    }
-
-    async function approveRequest(item, note) {
-      await updateVerificationRequest(item, "approved", note);
-      await updateUserVerified(item.uid, true);
-    }
-
-    async function rejectRequest(item, note) {
-      await updateVerificationRequest(item, "rejected", note);
-      await updateUserVerified(item.uid, false);
-    }
-
-    async function saveAdminNote(item, note) {
       const snakePayload = {
-        admin_note: note || "",
+        is_verified: isVerified,
+        verified: isVerified,
+        verification_status: status,
+        verification_badge: isVerified ? badgeType : null,
+        verification_type: isVerified ? badgeType : null,
+        verified_at: isVerified ? nowIso() : null,
+        age_verified: isVerified,
         updated_at: nowIso()
       };
 
       const camelPayload = {
-        adminNote: note || "",
+        isVerified,
+        verified: isVerified,
+        verificationStatus: status,
+        verificationBadge: isVerified ? badgeType : null,
+        verificationType: isVerified ? badgeType : null,
+        verifiedAt: isVerified ? nowIso() : null,
+        ageVerified: isVerified,
         updatedAt: nowIso()
       };
 
       const minimalPayload = {
-        admin_note: note || ""
+        is_verified: isVerified,
+        verified: isVerified,
+        verification_status: status
       };
 
-      const payloads = [snakePayload, camelPayload, minimalPayload];
+      await Promise.allSettled([
+        updateProfileTable("users", uid, [snakePayload, camelPayload, minimalPayload]),
+        updateProfileTable("public_profiles", uid, [snakePayload, camelPayload, minimalPayload])
+      ]);
+    }
 
-      const updateTargets = [];
+    function cleanStoragePath(value) {
+      let path = String(value || "").trim();
+      if (!path) return "";
 
-      if (item.id) updateTargets.push(["id", item.id]);
-      if (item.uid) {
-        updateTargets.push(["uid", item.uid]);
-        updateTargets.push(["user_id", item.uid]);
-        updateTargets.push(["userId", item.uid]);
+      if (/^https?:\/\//i.test(path)) {
+        try {
+          const url = new URL(path);
+          const rawPath = decodeURIComponent(url.pathname);
+
+          const markers = [
+            `/storage/v1/object/sign/${VERIFICATION_BUCKET}/`,
+            `/storage/v1/object/public/${VERIFICATION_BUCKET}/`,
+            `/storage/v1/object/${VERIFICATION_BUCKET}/`,
+            `/${VERIFICATION_BUCKET}/`
+          ];
+
+          for (const marker of markers) {
+            if (rawPath.includes(marker)) {
+              path = rawPath.split(marker)[1] || "";
+              break;
+            }
+          }
+        } catch {}
       }
 
+      if (path.startsWith(`${VERIFICATION_BUCKET}/`)) {
+        path = path.slice(VERIFICATION_BUCKET.length + 1);
+      }
+
+      path = path.split("?")[0];
+      path = decodeURIComponent(path);
+      return path.replace(/^\/+/, "").trim();
+    }
+
+    function getProofValues(item) {
+      return [
+        item.govtIdPath,
+        item.govtIdUrl,
+        item.selfiePath,
+        item.selfieUrl,
+        item.businessProofPath,
+        item.businessProofUrl
+      ].filter(Boolean);
+    }
+
+    function getProofPaths(item) {
+      const paths = getProofValues(item)
+        .map(cleanStoragePath)
+        .filter(Boolean);
+
+      return [...new Set(paths)];
+    }
+
+    async function createSignedProofUrl(value) {
+      if (!value) throw new Error("Proof file missing.");
+
+      const raw = String(value || "").trim();
+
+      if (/^https?:\/\//i.test(raw) && !raw.includes("/storage/v1/object/")) {
+        return normalizeHref(raw);
+      }
+
+      const path = cleanStoragePath(raw);
+      if (!path) throw new Error("Proof file path missing.");
+
+      const { data, error } = await supabase.storage
+        .from(VERIFICATION_BUCKET)
+        .createSignedUrl(path, 300);
+
+      if (error) throw error;
+
+      return data?.signedUrl || "";
+    }
+
+    async function openProof(value) {
+      try {
+        const url = await createSignedProofUrl(value);
+        if (!url) throw new Error("Could not create proof link.");
+        window.open(url, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        console.error("Proof open failed:", err);
+        setMessage("Could not open proof file: " + (err?.message || "Unknown error"), "err");
+      }
+    }
+
+    async function deleteProofFiles(item) {
+      const paths = getProofPaths(item);
+
+      if (!paths.length) return;
+
+      try {
+        const { error } = await supabase.storage
+          .from(VERIFICATION_BUCKET)
+          .remove(paths);
+
+        if (error) {
+          console.warn("Proof file delete failed:", error?.message || error);
+        }
+      } catch (err) {
+        console.warn("Proof file delete failed:", err?.message || err);
+      }
+    }
+
+    async function createNotificationSafe(targetUid, payload = {}) {
+      if (!targetUid || !currentUser || targetUid === currentUser.id) return;
+
+      const snakePayload = {
+        type: payload.type || "verification",
+        title: payload.title || "",
+        text: payload.text || "",
+        from_user_id: currentUser.id,
+        to_user_id: targetUid,
+        created_at: nowIso(),
+        is_read: false,
+        read: false
+      };
+
+      const camelPayload = {
+        type: snakePayload.type,
+        title: snakePayload.title,
+        text: snakePayload.text,
+        fromUserId: currentUser.id,
+        toUserId: targetUid,
+        createdAt: nowIso(),
+        isRead: false,
+        read: false
+      };
+
+      try {
+        await insertWithFallback("notifications", [
+          snakePayload,
+          camelPayload,
+          {
+            type: snakePayload.type,
+            text: snakePayload.text,
+            to_user_id: targetUid,
+            created_at: nowIso()
+          }
+        ]);
+      } catch (err) {
+        console.warn("Notification failed:", err?.message || err);
+      }
+    }
+
+    async function insertWithFallback(table, payloads) {
       let lastError = null;
 
-      for (const [column, value] of updateTargets) {
+      for (const payload of payloads) {
         try {
-          await updateByColumnWithPayloads("verification_requests", column, value, payloads);
-          return true;
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
         } catch (err) {
           lastError = err;
         }
       }
 
-      throw lastError || new Error("Could not save admin note.");
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function logAdminAction(action, payload = {}) {
+      if (!currentUser?.id) return;
+
+      const snakePayload = {
+        action,
+        action_type: action,
+        admin_uid: currentUser.id,
+        admin_id: currentUser.id,
+        target_id: payload.targetId || "",
+        target_user_id: payload.targetUserId || "",
+        target_type: payload.targetType || "verification",
+        reason: payload.reason || "",
+        note: payload.note || "",
+        admin_note: payload.adminNote || "",
+        created_at: nowIso()
+      };
+
+      const camelPayload = {
+        action,
+        actionType: action,
+        adminUid: currentUser.id,
+        adminId: currentUser.id,
+        targetId: payload.targetId || "",
+        targetUserId: payload.targetUserId || "",
+        targetType: payload.targetType || "verification",
+        reason: payload.reason || "",
+        note: payload.note || "",
+        adminNote: payload.adminNote || "",
+        createdAt: nowIso()
+      };
+
+      try {
+        await insertWithFallback("moderation_history", [
+          snakePayload,
+          camelPayload,
+          {
+            action,
+            admin_uid: currentUser.id,
+            target_id: payload.targetId || "",
+            target_user_id: payload.targetUserId || "",
+            created_at: nowIso()
+          }
+        ]);
+      } catch (err) {
+        console.warn("History log failed:", err?.message || err);
+      }
+    }
+
+    function sensitiveClearSnake(status, note = "") {
+      return {
+        status,
+        admin_note: note || "",
+        reviewed_at: nowIso(),
+        reviewed_by: currentUser?.id || "",
+        proof_deleted: true,
+        proof_deleted_at: nowIso(),
+
+        govt_id_path: null,
+        govt_id_url: null,
+        id_photo_path: null,
+        id_photo_url: null,
+        selfie_code_path: null,
+        selfie_code_url: null,
+        selfie_with_id_path: null,
+        selfie_with_id_url: null,
+        business_proof_path: null,
+        business_proof_url: null,
+
+        full_legal_name: null,
+        full_name: null,
+        real_name: null,
+        dob: null,
+        date_of_birth: null,
+        daily_code: null,
+        code_date: null,
+
+        updated_at: nowIso()
+      };
+    }
+
+    function sensitiveClearCamel(status, note = "") {
+      return {
+        status,
+        adminNote: note || "",
+        reviewedAt: nowIso(),
+        reviewedBy: currentUser?.id || "",
+        proofDeleted: true,
+        proofDeletedAt: nowIso(),
+
+        govtIdPath: null,
+        govtIdUrl: null,
+        idPhotoPath: null,
+        idPhotoURL: null,
+        selfieCodePath: null,
+        selfieCodeUrl: null,
+        selfieWithIdPath: null,
+        selfieWithIdURL: null,
+        businessProofPath: null,
+        businessProofURL: null,
+
+        fullLegalName: null,
+        fullName: null,
+        realName: null,
+        dob: null,
+        dateOfBirth: null,
+        dailyCode: null,
+        codeDate: null,
+
+        updatedAt: nowIso()
+      };
+    }
+
+    async function approveRequest(item, note) {
+      if (!item.uid) throw new Error("Missing request user id.");
+
+      await deleteProofFiles(item);
+
+      await updateRequestByIdOrUid(item, [
+        sensitiveClearSnake("approved", note),
+        sensitiveClearCamel("approved", note),
+        {
+          status: "approved",
+          admin_note: note || "",
+          proof_deleted: true,
+          reviewed_at: nowIso(),
+          reviewed_by: currentUser?.id || "",
+          updated_at: nowIso()
+        }
+      ]);
+
+      await updateUserVerification(item.uid, true, item.badgeType, "approved");
+
+      await createNotificationSafe(item.uid, {
+        type: "verification_approved",
+        title: "Verification approved",
+        text: `Your ${getBadgeLabel(item.badgeType)} request was approved.`
+      });
+
+      await logAdminAction("verification_approved", {
+        targetId: item.id,
+        targetUserId: item.uid,
+        targetType: "verification",
+        adminNote: note || ""
+      });
+    }
+
+    async function rejectRequest(item, note) {
+      if (!item.uid) throw new Error("Missing request user id.");
+
+      await deleteProofFiles(item);
+
+      await updateRequestByIdOrUid(item, [
+        sensitiveClearSnake("rejected", note),
+        sensitiveClearCamel("rejected", note),
+        {
+          status: "rejected",
+          admin_note: note || "",
+          rejection_reason: note || "",
+          proof_deleted: true,
+          reviewed_at: nowIso(),
+          reviewed_by: currentUser?.id || "",
+          updated_at: nowIso()
+        }
+      ]);
+
+      await updateUserVerification(item.uid, false, item.badgeType, "rejected");
+
+      await createNotificationSafe(item.uid, {
+        type: "verification_rejected",
+        title: "Verification rejected",
+        text: note
+          ? `Your verification request was rejected. Reason: ${note}`
+          : "Your verification request was rejected."
+      });
+
+      await logAdminAction("verification_rejected", {
+        targetId: item.id,
+        targetUserId: item.uid,
+        targetType: "verification",
+        reason: note || ""
+      });
+    }
+
+    async function needMoreInfo(item, note) {
+      if (!item.uid) throw new Error("Missing request user id.");
+      if (!note.trim()) throw new Error("Admin note is required for Need More Info.");
+
+      await updateRequestByIdOrUid(item, [
+        {
+          status: "need_more_info",
+          admin_note: note,
+          reviewed_at: nowIso(),
+          reviewed_by: currentUser?.id || "",
+          updated_at: nowIso()
+        },
+        {
+          status: "need_more_info",
+          adminNote: note,
+          reviewedAt: nowIso(),
+          reviewedBy: currentUser?.id || "",
+          updatedAt: nowIso()
+        },
+        {
+          status: "need_more_info",
+          admin_note: note
+        }
+      ]);
+
+      await createNotificationSafe(item.uid, {
+        type: "verification_need_more_info",
+        title: "Verification needs more info",
+        text: note
+      });
+
+      await logAdminAction("verification_need_more_info", {
+        targetId: item.id,
+        targetUserId: item.uid,
+        targetType: "verification",
+        adminNote: note
+      });
+    }
+
+    async function saveAdminNote(item, note) {
+      await updateRequestByIdOrUid(item, [
+        {
+          admin_note: note || "",
+          updated_at: nowIso()
+        },
+        {
+          adminNote: note || "",
+          updatedAt: nowIso()
+        },
+        {
+          admin_note: note || ""
+        }
+      ]);
+
+      await logAdminAction("verification_note_saved", {
+        targetId: item.id,
+        targetUserId: item.uid,
+        targetType: "verification",
+        adminNote: note || ""
+      });
+    }
+
+    async function deleteProofOnly(item) {
+      await deleteProofFiles(item);
+
+      await updateRequestByIdOrUid(item, [
+        {
+          proof_deleted: true,
+          proof_deleted_at: nowIso(),
+
+          govt_id_path: null,
+          govt_id_url: null,
+          id_photo_path: null,
+          id_photo_url: null,
+          selfie_code_path: null,
+          selfie_code_url: null,
+          selfie_with_id_path: null,
+          selfie_with_id_url: null,
+          business_proof_path: null,
+          business_proof_url: null,
+
+          updated_at: nowIso()
+        },
+        {
+          proofDeleted: true,
+          proofDeletedAt: nowIso(),
+          govtIdPath: null,
+          govtIdUrl: null,
+          idPhotoPath: null,
+          idPhotoURL: null,
+          selfieCodePath: null,
+          selfieCodeUrl: null,
+          selfieWithIdPath: null,
+          selfieWithIdURL: null,
+          businessProofPath: null,
+          businessProofURL: null,
+          updatedAt: nowIso()
+        },
+        {
+          proof_deleted: true
+        }
+      ]);
+
+      await logAdminAction("verification_proof_deleted", {
+        targetId: item.id,
+        targetUserId: item.uid,
+        targetType: "verification"
+      });
+    }
+
+    function getFilteredRequests() {
+      const q = normalizeText(searchInput.value);
+      const status = statusFilter.value || "all";
+      const badge = badgeFilter.value || "all";
+
+      return allRequests.filter(item => {
+        if (status !== "all" && item.status !== status) return false;
+        if (badge !== "all" && item.badgeType !== badge) return false;
+
+        if (!q) return true;
+
+        const haystack = [
+          item.id,
+          item.uid,
+          item.fullLegalName,
+          item.username,
+          item.email,
+          item.badgeType,
+          item.status,
+          item.socialLink,
+          item.businessName,
+          item.businessLink,
+          item.reason,
+          item.adminNote
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    function updateCounts() {
+      const pending = allRequests.filter(x => x.status === "pending").length;
+      const approved = allRequests.filter(x => x.status === "approved").length;
+      const rejected = allRequests.filter(x => x.status === "rejected").length;
+      const needInfo = allRequests.filter(x => x.status === "need_more_info").length;
+
+      pendingChip.textContent = `Pending: ${pending}`;
+      approvedChip.textContent = `Approved: ${approved}`;
+      rejectedChip.textContent = `Rejected: ${rejected}`;
+      infoChip.textContent = `Need info: ${needInfo}`;
+    }
+
+    function proofButton(label, value, className = "blue") {
+      if (!value) return "";
+
+      return `
+        <button class="action-btn ${className} open-proof-btn" data-proof="${escapeHtml(value)}" type="button">
+          ${ICONS.open}
+          <span>${escapeHtml(label)}</span>
+        </button>
+      `;
     }
 
     function renderList() {
+      updateCounts();
+
       const items = getFilteredRequests();
       list.innerHTML = "";
 
@@ -790,93 +1627,156 @@
       emptyBox.classList.add("hidden");
       list.classList.remove("hidden");
 
-      items.forEach((req) => {
-        const uid = req.uid;
+      items.forEach(req => {
         const key = req.id || req.uid;
-
-        const socialLink = normalizeHref(req.socialLink);
-        const idPhotoLink = normalizeHref(req.idPhotoURL);
-        const selfieLink = normalizeHref(req.selfieWithIdURL);
-
         const card = document.createElement("div");
-        card.className = "card";
+        card.className = "request-card";
+
+        const socialHref = normalizeHref(req.socialLink);
+        const businessHref = normalizeHref(req.businessLink);
 
         card.innerHTML = `
           <div class="card-head">
             <div>
-              <div class="card-title">${escapeHtml(req.fullName || "No name")}</div>
+              <div class="card-title">
+                ${escapeHtml(req.fullLegalName || req.username || req.email || "Verification Request")}
+              </div>
+
               <div class="card-sub">
-                ${escapeHtml(req.email || "-")} • ${escapeHtml(req.accountType || "personal")}<br>
-                UID: ${escapeHtml(uid || "-")}<br>
+                ${req.email ? `${escapeHtml(req.email)}<br>` : ""}
+                UID: ${escapeHtml(req.uid || "-")}<br>
                 Request ID: ${escapeHtml(req.id || "-")}<br>
                 Submitted: ${escapeHtml(formatDate(req.createdAt))}
               </div>
             </div>
-            <span class="status-badge ${statusBadgeClass(req.status || "pending")}">
-              ${escapeHtml((req.status || "pending").toUpperCase())}
+
+            <span class="badge ${statusBadgeClass(req.status)}">
+              ${escapeHtml(getStatusLabel(req.status))}
             </span>
           </div>
 
-          <div class="grid">
+          <div class="badge-row">
+            <span class="badge badge-blue">${escapeHtml(getBadgeLabel(req.badgeType))}</span>
+            ${req.proofDeleted ? `<span class="badge badge-green">${ICONS.check} Proof deleted</span>` : `<span class="badge badge-yellow">Proof stored</span>`}
+            ${req.ageConfirmed ? `<span class="badge badge-green">18+ confirmed</span>` : `<span class="badge badge-red">18+ not confirmed</span>`}
+            ${req.consentGiven ? `<span class="badge badge-green">Consent yes</span>` : `<span class="badge badge-red">Consent missing</span>`}
+          </div>
+
+          <div class="proof-warning">
+            Review proofs only for the decision. After approval/rejection, this page deletes proof files and clears sensitive fields where supported.
+          </div>
+
+          <div class="info-grid">
             <div class="info-box">
-              <small>Social / Website</small>
+              <small>Username</small>
+              <div>${escapeHtml(req.username || "Not added")}</div>
+            </div>
+
+            <div class="info-box">
+              <small>DOB</small>
+              <div>${escapeHtml(req.dob || "Cleared / not added")}</div>
+            </div>
+
+            <div class="info-box">
+              <small>Daily Code</small>
+              <div>${escapeHtml(req.dailyCode || "Not added")}</div>
+            </div>
+
+            <div class="info-box">
+              <small>Code Date</small>
+              <div>${escapeHtml(req.codeDate || "Not added")}</div>
+            </div>
+
+            <div class="info-box">
+              <small>Social Link</small>
               <div>
-                ${req.socialLink ? `<a href="${escapeHtml(socialLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.socialLink)}</a>` : "Not provided"}
+                ${req.socialLink ? `<a href="${escapeHtml(socialHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.socialLink)}</a>` : "Not required / not added"}
               </div>
             </div>
 
             <div class="info-box">
-              <small>Public Profile</small>
+              <small>Business</small>
               <div>
-                ${uid ? `<a href="member.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open member profile</a>` : "Missing UID"}
+                ${escapeHtml(req.businessName || "Not required / not added")}
+                ${req.businessLink ? `<br><a href="${escapeHtml(businessHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(req.businessLink)}</a>` : ""}
               </div>
             </div>
 
             <div class="info-box">
-              <small>ID Photo Link</small>
+              <small>Profile</small>
               <div>
-                ${req.idPhotoURL ? `<a href="${escapeHtml(idPhotoLink)}" target="_blank" rel="noopener noreferrer">Open ID photo</a>` : "Not provided"}
+                ${req.uid ? `<a href="member.html?uid=${encodeURIComponent(req.uid)}" target="_blank" rel="noopener noreferrer">Open member profile</a>` : "Missing UID"}
               </div>
             </div>
 
             <div class="info-box">
-              <small>Selfie with ID Link</small>
-              <div>
-                ${req.selfieWithIdURL ? `<a href="${escapeHtml(selfieLink)}" target="_blank" rel="noopener noreferrer">Open selfie with ID</a>` : "Not provided"}
-              </div>
+              <small>Reviewed</small>
+              <div>${escapeHtml(req.reviewedAt ? formatDate(req.reviewedAt) : "Not reviewed yet")}</div>
             </div>
           </div>
 
           <div class="reason-box">
-            <small>Reason</small>
-            <div>${escapeHtml(req.reason || "No reason provided")}</div>
+            <small>Reason / Message</small>
+            <div>${escapeHtml(req.reason || "No reason added.")}</div>
           </div>
 
-          <div class="field">
-            <label style="display:block;margin-bottom:8px;font-size:13px;color:#d7def5;font-weight:700;">Admin Note</label>
-            <textarea class="admin-note-input" data-key="${escapeHtml(key)}" placeholder="Write admin note...">${escapeHtml(req.adminNote || "")}</textarea>
+          <div class="admin-note-block">
+            <label class="label">Admin Note</label>
+            <textarea class="textarea admin-note-input" data-key="${escapeHtml(key)}" placeholder="Write admin note / rejection reason / info needed...">${escapeHtml(req.adminNote || "")}</textarea>
           </div>
 
           <div class="actions">
-            ${uid ? `<a class="open-btn" href="verification.html?uid=${encodeURIComponent(uid)}" target="_blank" rel="noopener noreferrer">Open user page</a>` : ""}
-            <button class="save-note-btn" data-action="save-note" data-key="${escapeHtml(key)}">Save Note</button>
-            <button class="approve-btn" data-action="approve" data-key="${escapeHtml(key)}">Approve</button>
-            <button class="reject-btn" data-action="reject" data-key="${escapeHtml(key)}">Reject</button>
+            ${proofButton("Open ID", req.govtIdPath || req.govtIdUrl, "blue")}
+            ${proofButton("Open Selfie", req.selfiePath || req.selfieUrl, "purple")}
+            ${proofButton("Open Business Proof", req.businessProofPath || req.businessProofUrl, "yellow")}
+
+            <button class="action-btn purple action-run-btn" data-action="save-note" data-key="${escapeHtml(key)}" type="button">
+              ${ICONS.save}
+              <span>Save Note</span>
+            </button>
+
+            <button class="action-btn yellow action-run-btn" data-action="need-info" data-key="${escapeHtml(key)}" type="button">
+              ${ICONS.info}
+              <span>Need Info</span>
+            </button>
+
+            <button class="action-btn green action-run-btn" data-action="approve" data-key="${escapeHtml(key)}" type="button">
+              ${ICONS.check}
+              <span>Approve</span>
+            </button>
+
+            <button class="action-btn red action-run-btn" data-action="reject" data-key="${escapeHtml(key)}" type="button">
+              ${ICONS.x}
+              <span>Reject</span>
+            </button>
+
+            ${
+              !req.proofDeleted
+                ? `<button class="action-btn red action-run-btn" data-action="delete-proof" data-key="${escapeHtml(key)}" type="button">
+                    ${ICONS.trash}
+                    <span>Delete Proof</span>
+                  </button>`
+                : ""
+            }
           </div>
         `;
 
         list.appendChild(card);
       });
 
-      list.querySelectorAll("button[data-action]").forEach((btn) => {
+      list.querySelectorAll(".open-proof-btn").forEach(btn => {
+        btn.addEventListener("click", () => openProof(btn.dataset.proof || ""));
+      });
+
+      list.querySelectorAll(".action-run-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const key = btn.getAttribute("data-key");
-          const action = btn.getAttribute("data-action");
+          const key = btn.dataset.key || "";
+          const action = btn.dataset.action || "";
+          const item = allRequests.find(x => String(x.id || x.uid) === String(key));
+          if (!item) return;
+
           const noteInput = list.querySelector(`.admin-note-input[data-key="${CSS.escape(key)}"]`);
           const note = noteInput ? noteInput.value.trim() : "";
-          const item = allRequests.find(x => (x.id || x.uid) === key);
-
-          if (!item) return;
 
           btn.disabled = true;
           setMessage("");
@@ -884,33 +1784,60 @@
           try {
             if (action === "save-note") {
               await saveAdminNote(item, note);
-              item.adminNote = note;
-              setMessage("Admin note saved.", "success");
-            } else if (action === "approve") {
-              await approveRequest(item, note);
-              item.status = "approved";
-              item.adminNote = note;
-              renderList();
-              setMessage("Verification approved.", "success");
-            } else if (action === "reject") {
-              await rejectRequest(item, note);
-              item.status = "rejected";
-              item.adminNote = note;
-              renderList();
-              setMessage("Verification rejected.", "success");
+              setMessage("Admin note saved.", "ok");
             }
-          } catch (error) {
-            console.error(error);
-            setMessage(error?.message || "Action failed.", "error");
-          }
 
-          btn.disabled = false;
+            if (action === "need-info") {
+              await needMoreInfo(item, note);
+              setMessage("Request marked as Need More Info.", "ok");
+            }
+
+            if (action === "approve") {
+              const ok = confirm("Approve this verification? Proof files will be deleted and sensitive fields cleared.");
+              if (!ok) {
+                btn.disabled = false;
+                return;
+              }
+
+              await approveRequest(item, note);
+              setMessage("Verification approved. Proof files deleted where possible.", "ok");
+            }
+
+            if (action === "reject") {
+              const ok = confirm("Reject this verification? Proof files will be deleted and sensitive fields cleared.");
+              if (!ok) {
+                btn.disabled = false;
+                return;
+              }
+
+              await rejectRequest(item, note);
+              setMessage("Verification rejected. Proof files deleted where possible.", "ok");
+            }
+
+            if (action === "delete-proof") {
+              const ok = confirm("Delete proof files now? Use this only after you no longer need the proof.");
+              if (!ok) {
+                btn.disabled = false;
+                return;
+              }
+
+              await deleteProofOnly(item);
+              setMessage("Proof files deleted where possible.", "ok");
+            }
+
+            await loadVerificationRequests(false);
+          } catch (err) {
+            console.error(err);
+            setMessage(err?.message || "Action failed.", "err");
+            btn.disabled = false;
+          }
         });
       });
     }
 
     searchInput.addEventListener("input", renderList);
     statusFilter.addEventListener("change", renderList);
+    badgeFilter.addEventListener("change", renderList);
 
     async function loadVerificationRequests(showLoading = true) {
       if (showLoading) {
@@ -993,14 +1920,141 @@
         } catch {}
       }
 
-      verificationChannel = supabase
-        .channel(`verification-admin-live-${currentUser.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "verification_requests" },
-          () => scheduleRefresh()
-        )
-        .subscribe();
+      try {
+        verificationChannel = supabase
+          .channel(`verification-admin-live-${currentUser.id}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "verification_requests" },
+            () => scheduleRefresh()
+          )
+          .subscribe();
+      } catch {}
+    }
+
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase
+          .from(table)
+          .select("id", { count: "exact", head: true });
+
+        const { count, error } = await buildQuery(query);
+
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
+
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
+
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
+
+          if (threadIds.length) {
+            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+            for (const field of seenFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .is(field, null);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+
+            for (const field of ["is_read", "read"]) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .eq(field, false);
+
+                if (!error) return count || 0;
+              } catch {}
+            }
+          }
+        }
+      } catch {}
+
+      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
+      const seenColumns = ["seen_at", "read_at", "seenAt", "readAt"];
+
+      for (const receiverColumn of receiverColumns) {
+        for (const seenColumn of seenColumns) {
+          const count = await countRows("chat_messages", q =>
+            q.eq(receiverColumn, uid).neq("sender_id", uid).is(seenColumn, null)
+          );
+
+          if (count !== null) return count;
+        }
+
+        for (const boolField of ["is_read", "read"]) {
+          const count = await countRows("chat_messages", q =>
+            q.eq(receiverColumn, uid).neq("sender_id", uid).eq(boolField, false)
+          );
+
+          if (count !== null) return count;
+        }
+      }
+
+      return 0;
+    }
+
+    async function loadInboxBadge() {
+      if (!currentUser || !inboxBadge) return;
+
+      try {
+        const [requests, unreadChats] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(unreadChats || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
     }
 
     async function initPage() {
@@ -1015,12 +2069,21 @@
 
       const isAdmin = await checkAdminAccess(currentUser.id);
 
+      accessLoading.classList.add("hidden");
+
       if (!isAdmin) {
-        loading.textContent = "Access denied. Admin only.";
+        accessDenied.classList.remove("hidden");
         return;
       }
 
-      await loadVerificationRequests(true);
+      accessPanel.classList.add("hidden");
+      mainWrap.classList.remove("hidden");
+
+      await Promise.all([
+        loadVerificationRequests(true),
+        loadInboxBadge()
+      ]);
+
       setupRealtime();
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -1040,60 +2103,45 @@
 
     initPage().catch((error) => {
       console.error(error);
-      loading.textContent = "Could not load verification requests.";
+      accessLoading.classList.add("hidden");
+      accessDenied.classList.remove("hidden");
     });
 
     /*
-      SUPABASE NEEDS FOR THIS PAGE:
+      OWNSPACE VERIFICATION ADMIN PAGE
 
-      TABLES:
+      FILE:
+      - verification-admin.html
+
+      UPDATED:
+      - BareWorld renamed to OwnSpace.
+      - Light theme default.
+      - Clean SVG icons.
+      - Admin-only access through admins table.
+      - Supports 3 badge types:
+        1) Verified Account
+        2) Verified Creator
+        3) Verified Business
+      - Opens verification proof with Supabase signed URL when saved as Storage path.
+      - Approve / Reject deletes proof files where possible.
+      - Approve / Reject clears sensitive request fields where supported:
+        legal name, DOB, daily code, ID proof path/url, selfie path/url, business proof path/url.
+      - Updates users + public_profiles verification fields.
+      - Need More Info keeps proof because the request is not final.
+      - Inbox badge counts only pending message_requests + unread chat_messages.
+
+      TABLES USED:
       - admins: select
-      - verification_requests: select, update, realtime optional
-      - users: update, upsert
-      - public_profiles: update, upsert
+      - verification_requests: select/update/realtime
+      - users: update/insert fallback
+      - public_profiles: update/insert fallback
+      - notifications: insert fallback
+      - moderation_history: insert fallback
+      - message_requests: inbox badge count
+      - chat_threads/chat_messages: inbox badge count
 
-      AUTH:
-      - logged-in user required
-      - admin user required
-
-      IMPORTANT COLUMNS:
-      verification_requests:
-      - id
-      - uid / user_id
-      - full_name
-      - email
-      - account_type
-      - social_link
-      - id_photo_url
-      - selfie_with_id_url
-      - reason
-      - admin_note
-      - status
-      - reviewed_at
-      - reviewed_by
-      - created_at
-      - updated_at
-
-      users:
-      - uid
-      - is_verified
-      - verification_status
-      - updated_at
-
-      public_profiles:
-      - uid
-      - is_verified
-      - verification_status
-      - updated_at
-
-      RLS IDEA:
-      - Only admins can select/update all verification_requests
-      - Only admins can update is_verified on users/public_profiles
-      - Users can select their own verification request on verification.html
-      - Users can insert/update their own pending request only before review
-
-      SHARE BUTTON:
-      - Not needed on verification admin page because it does not display post cards.
+      STORAGE:
+      - Bucket: verification
     */
   </script>
 </body>
