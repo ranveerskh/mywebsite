@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,25 +9,6 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -47,11 +28,30 @@
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
     body{
       background:
         radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
         radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:8px 8px 108px;
@@ -194,6 +194,8 @@
       color:var(--text);
       min-height:32px;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
@@ -266,8 +268,8 @@
 
     .person-avatar,
     .person-avatar-placeholder{
-      width:50px;
-      height:50px;
+      width:52px;
+      height:52px;
       border-radius:50%;
       flex-shrink:0;
       border:1px solid var(--line);
@@ -313,6 +315,7 @@
     .person-name a{
       color:var(--text);
       text-decoration:none;
+      word-break:break-word;
     }
 
     .person-name a:hover{text-decoration:underline}
@@ -392,6 +395,7 @@
       font-weight:950;
       line-height:1.4;
       margin-bottom:9px;
+      word-break:break-word;
     }
 
     .meta-grid{
@@ -469,7 +473,7 @@
       border:1px solid rgba(61,220,132,.22);
     }
 
-    .share-post-btn{
+    .share-btn{
       margin-left:auto;
     }
 
@@ -572,7 +576,17 @@
         padding:8px 1px;
       }
 
-      .share-post-btn{
+      .person-card{
+        align-items:flex-start;
+      }
+
+      .person-meta-line{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+      }
+
+      .share-btn{
         margin-left:0;
       }
 
@@ -588,13 +602,8 @@
     }
 
     @media(max-width:390px){
-      .tab-btn{
-        font-size:8.8px;
-      }
-
-      .chip{
-        font-size:8.8px;
-      }
+      .tab-btn{font-size:8.8px}
+      .chip{font-size:8.8px}
 
       .action-btn{
         font-size:11.5px;
@@ -772,15 +781,20 @@
       `
     };
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
@@ -793,7 +807,8 @@
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     if (themeMediaQuery.addEventListener) {
       themeMediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -840,9 +855,21 @@
     function getField(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
+
+        if (value != null && String(value).trim()) {
+          return String(value).trim();
+        }
       }
+
       return "";
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleText(value) {
+      return String(value || "").trim();
     }
 
     function normalizeHref(url) {
@@ -853,14 +880,93 @@
     }
 
     function getCreatedMs(obj) {
-      const value = obj?.created_at || obj?.createdAt || obj?.timestamp || null;
+      const value = obj?.created_at || obj?.createdAt || obj?.timestamp || obj?.created || null;
+
       if (!value) return 0;
+
+      try {
+        if (typeof value === "object" && typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+      } catch {}
+
+      try {
+        if (typeof value === "object" && typeof value.seconds === "number") {
+          return value.seconds * 1000;
+        }
+      } catch {}
+
       const ms = new Date(value).getTime();
       return Number.isNaN(ms) ? 0 : ms;
     }
 
+    function countryAliases(country) {
+      const c = normalizeText(country);
+      if (!c) return "";
+
+      const aliases = [c];
+
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
+      if (c === "canada") aliases.push("ca");
+      if (c === "india") aliases.push("bharat", "hindustan");
+
+      return aliases.join(" ");
+    }
+
+    function provinceAliases(province) {
+      const p = normalizeText(province);
+      if (!p) return "";
+
+      const aliases = [p];
+
+      if (p === "ontario") aliases.push("on", "ont");
+      if (p === "british columbia") aliases.push("bc", "b.c.");
+      if (p === "alberta") aliases.push("ab");
+      if (p === "quebec") aliases.push("qc");
+      if (p === "manitoba") aliases.push("mb");
+      if (p === "saskatchewan") aliases.push("sk");
+      if (p === "nova scotia") aliases.push("ns");
+      if (p === "new brunswick") aliases.push("nb");
+      if (p === "newfoundland and labrador") aliases.push("nl");
+      if (p === "prince edward island") aliases.push("pei", "pe");
+      if (p === "yukon") aliases.push("yt");
+
+      return aliases.join(" ");
+    }
+
+    function buildLocationSearch(d) {
+      const existing = titleText(d.location_search || d.locationSearch);
+      const city = titleText(d.city || d.location_city || d.locationCity || d.current_city || d.currentCity || "");
+      const province = titleText(d.province || d.state || d.region || d.location_province || d.locationProvince || d.current_province || d.currentProvince || "");
+      const country = titleText(d.country || d.location_country || d.locationCountry || d.current_country || d.currentCountry || "");
+
+      return [
+        existing,
+        city,
+        province,
+        country,
+        provinceAliases(province),
+        countryAliases(country)
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
+      const city = getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]);
+      const province = getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]);
+      const country = getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]);
+
+      const blockedUsers = Array.isArray(d.blocked_users)
+        ? d.blocked_users
+        : Array.isArray(d.blockedUsers)
+        ? d.blockedUsers
+        : [];
 
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
@@ -868,19 +974,20 @@
         username: getField(d, ["username", "handle", "userName", "user_name"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "avatar_url", "user_photo_url", "userPhotoURL"]),
         bio: getField(d, ["bio", "about", "description"]),
+        gender: getField(d, ["gender_custom", "genderCustom", "gender"]),
+        keywords: getField(d, ["keywords", "interests", "tags", "search_keywords", "searchKeywords"]),
         isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
         verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
-        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
-        softDeleted: !!(d.soft_deleted ?? d.softDeleted),
+        moderationStatus: normalizeText(getField(d, ["moderation_status", "moderationStatus", "status"])),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin ?? d.hidden_by_admin ?? d.hiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted ?? d.deactivated),
         showInNearby: (d.show_in_nearby ?? d.showInNearby) !== false,
         locationVisibility: getField(d, ["location_visibility", "locationVisibility"]) || "hidden",
-        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
-        blockedUsers: Array.isArray(d.blocked_users)
-          ? d.blocked_users
-          : Array.isArray(d.blockedUsers)
-          ? d.blockedUsers
-          : [],
+        city,
+        province,
+        country,
+        locationSearch: buildLocationSearch(d),
+        blockedUsers,
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -892,9 +999,10 @@
       return {
         id: d.id || fallbackId || "",
         userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
-        caption: getField(d, ["caption", "text", "content"]),
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        caption: getField(d, ["caption", "text", "content", "body", "description"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "file_url", "fileUrl"]),
+        postType: getField(d, ["post_type", "postType", "type"]),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted),
         createdAtMs: getCreatedMs(d)
       };
     }
@@ -905,14 +1013,18 @@
       return {
         id: d.id || fallbackId || "",
         title: getField(d, ["title", "name"]) || "Untitled Event",
-        description: getField(d, ["description", "desc"]),
+        description: getField(d, ["description", "desc", "about"]),
         city: getField(d, ["city", "location_city", "locationCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
+        venue: getField(d, ["venue", "spot"]),
+        address: getField(d, ["address"]),
         date: getField(d, ["date"]),
         time: getField(d, ["time"]),
-        visibility: getField(d, ["visibility", "event_visibility", "eventVisibility"]) || "public",
+        visibility: normalizeText(getField(d, ["visibility", "event_visibility", "eventVisibility"]) || "public"),
         creatorId: getField(d, ["creator_id", "creatorId", "user_id", "userId", "created_by", "createdBy", "uid"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted),
         lat: readLat(d),
         lng: readLng(d),
         createdAtMs: getCreatedMs(d)
@@ -921,36 +1033,55 @@
 
     function normalizePlace(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
+      const status = normalizeText(d.status || "");
+
+      const approved =
+        d.approved === true ||
+        d.verified === true ||
+        d.is_verified === true ||
+        d.isVerified === true ||
+        ["approved", "active", "verified"].includes(status);
+
+      const rejected =
+        d.rejected === true ||
+        status === "rejected";
 
       return {
         id: d.id || fallbackId || "",
         source: sourceName,
         name: getField(d, ["name", "title", "place_name", "placeName"]) || "Unnamed Place",
+        category: getField(d, ["category", "topic"]) || "General",
         description: getField(d, ["description", "desc", "notes"]),
         city: getField(d, ["city", "location_city", "locationCity"]),
+        province: getField(d, ["province", "state", "region"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
         address: getField(d, ["address", "full_address", "fullAddress"]),
         website: getField(d, ["website", "url", "link"]),
         createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
-        approved: d.approved === true || d.verified === true || d.isVerified === true || ["approved","active","verified"].includes(status),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        approved,
+        rejected,
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted),
         lat: readLat(d),
         lng: readLng(d),
         createdAtMs: getCreatedMs(d)
       };
     }
 
-    function normalizeCommunity(raw, fallbackId = "") {
+    function normalizeCommunity(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
+      const privacy = getField(d, ["privacy", "visibility", "type"]) || "Public";
 
       return {
         id: d.id || fallbackId || "",
+        source: sourceName,
         name: getField(d, ["name", "title", "community_name", "communityName"]) || "Untitled Community",
         description: getField(d, ["description", "desc", "about"]),
-        privacy: getField(d, ["privacy", "visibility", "type"]) || "Public",
+        privacy,
         creatorId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "owner_id", "ownerId", "user_id", "userId", "uid"]),
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        country: getField(d, ["country", "location_country", "locationCountry"]),
         memberCount: Number(d.member_count ?? d.memberCount ?? d.members_count ?? d.membersCount ?? 0) || 0,
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted),
         createdAtMs: getCreatedMs(d)
       };
     }
@@ -990,7 +1121,7 @@
         "Community";
 
       searchInput.placeholder =
-        tab === "people" ? "Type name, username, bio or city..." :
+        tab === "people" ? "Type name, username, bio, city, province or country..." :
         tab === "posts" ? "Search posts..." :
         tab === "events" ? "Search events..." :
         tab === "places" ? "Search places..." :
@@ -1005,18 +1136,41 @@
 
     function matchesSearch(values, q) {
       if (!q) return true;
-      const joined = values.filter(Boolean).join(" ").toLowerCase();
+
+      const joined = values
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
       return joined.includes(q.toLowerCase());
+    }
+
+    function isBlockedByViewer(uid) {
+      if (!uid) return false;
+
+      return viewerBlockedUsers.some(item => {
+        if (typeof item === "string") return item === uid;
+
+        if (item && typeof item === "object") {
+          return item.uid === uid || item.user_id === uid || item.userId === uid || item.blocked_id === uid || item.blockedId === uid;
+        }
+
+        return false;
+      });
     }
 
     function canViewProfile(profile) {
       if (!profile) return false;
-      if (profile.softDeleted || profile.isHiddenByAdmin || profile.moderationStatus === "banned") return false;
-      if (viewerBlockedUsers.includes(profile.uid)) return false;
+      if (!profile.uid) return false;
+      if (profile.softDeleted || profile.isHiddenByAdmin) return false;
+      if (["banned", "deleted", "removed"].includes(profile.moderationStatus)) return false;
+      if (isBlockedByViewer(profile.uid)) return false;
+
       return true;
     }
 
     function getAuthorProfile(uid) {
+      if (!uid) return null;
       if (uid === currentUser?.id && viewerProfile) return viewerProfile;
       return profilesMap.get(uid) || null;
     }
@@ -1025,6 +1179,7 @@
       if (!post || post.hidden) return false;
 
       const owner = getAuthorProfile(post.userId);
+
       if (!owner) return post.userId === currentUser.id;
       if (!canViewProfile(owner)) return false;
       if (owner.uid === currentUser.id) return true;
@@ -1041,12 +1196,25 @@
       return peopleData
         .filter(p => p.uid !== currentUser.id)
         .filter(canViewProfile)
-        .filter(p => matchesSearch([p.displayName, p.username, p.bio, p.city], q))
+        .filter(p => matchesSearch([
+          p.displayName,
+          p.username,
+          p.bio,
+          p.gender,
+          p.keywords,
+          p.city,
+          p.province,
+          p.country,
+          provinceAliases(p.province),
+          countryAliases(p.country),
+          p.locationSearch
+        ], q))
         .sort((a, b) => {
           if (a.verified && !b.verified) return -1;
           if (b.verified && !a.verified) return 1;
           if (followingIds.has(a.uid) && !followingIds.has(b.uid)) return -1;
           if (followingIds.has(b.uid) && !followingIds.has(a.uid)) return 1;
+
           return a.displayName.localeCompare(b.displayName);
         });
     }
@@ -1058,11 +1226,16 @@
         .filter(canViewPost)
         .filter(post => {
           const owner = getAuthorProfile(post.userId);
+
           return matchesSearch([
             post.caption,
+            post.postType,
             owner?.displayName,
             owner?.username,
-            owner?.bio
+            owner?.bio,
+            owner?.city,
+            owner?.province,
+            owner?.country
           ], q);
         })
         .sort((a, b) => b.createdAtMs - a.createdAtMs);
@@ -1076,19 +1249,47 @@
         .filter(e => {
           const creator = getAuthorProfile(e.creatorId);
           if (creator && !canViewProfile(creator)) return false;
+
           return e.visibility !== "private" || e.creatorId === currentUser.id;
         })
-        .filter(e => matchesSearch([e.title, e.description, e.city, e.creatorName], q))
-        .sort((a, b) => a.title.localeCompare(b.title));
+        .filter(e => matchesSearch([
+          e.title,
+          e.description,
+          e.city,
+          e.province,
+          e.country,
+          e.venue,
+          e.address,
+          e.creatorName,
+          getAuthorProfile(e.creatorId)?.displayName,
+          getAuthorProfile(e.creatorId)?.username
+        ], q))
+        .sort((a, b) => {
+          if (b.createdAtMs !== a.createdAtMs) return b.createdAtMs - a.createdAtMs;
+          return a.title.localeCompare(b.title);
+        });
     }
 
     function getFilteredPlaces() {
       const q = searchInput.value.trim();
 
       return placesData
-        .filter(p => !p.hidden && p.approved)
-        .filter(p => matchesSearch([p.name, p.description, p.city, p.address, p.website], q))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(p => !p.hidden && !p.rejected)
+        .filter(p => p.approved || p.createdBy === currentUser.id)
+        .filter(p => matchesSearch([
+          p.name,
+          p.category,
+          p.description,
+          p.city,
+          p.province,
+          p.country,
+          p.address,
+          p.website
+        ], q))
+        .sort((a, b) => {
+          if (b.createdAtMs !== a.createdAtMs) return b.createdAtMs - a.createdAtMs;
+          return a.name.localeCompare(b.name);
+        });
     }
 
     function getFilteredCommunities() {
@@ -1099,9 +1300,21 @@
         .filter(c => {
           const creator = getAuthorProfile(c.creatorId);
           if (creator && !canViewProfile(creator)) return false;
-          return matchesSearch([c.name, c.description, c.privacy, creator?.displayName, creator?.username], q);
+
+          return matchesSearch([
+            c.name,
+            c.description,
+            c.privacy,
+            c.city,
+            c.country,
+            creator?.displayName,
+            creator?.username
+          ], q);
         })
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .sort((a, b) => {
+          if (b.createdAtMs !== a.createdAtMs) return b.createdAtMs - a.createdAtMs;
+          return a.name.localeCompare(b.name);
+        });
     }
 
     function renderCounts() {
@@ -1114,6 +1327,12 @@
 
     function buildShareUrl(type, item) {
       const url = new URL(window.location.href);
+
+      if (type === "profile") {
+        url.pathname = url.pathname.replace(/[^/]*$/, "member.html");
+        url.search = "";
+        url.searchParams.set("uid", item.uid);
+      }
 
       if (type === "post") {
         url.pathname = url.pathname.replace(/[^/]*$/, "post.html");
@@ -1138,6 +1357,7 @@
         url.pathname = url.pathname.replace(/[^/]*$/, "community.html");
         url.search = "";
         url.searchParams.set("communityId", item.id);
+        url.searchParams.set("id", item.id);
       }
 
       return url.toString();
@@ -1147,6 +1367,7 @@
       const url = buildShareUrl(type, item);
 
       const title =
+        type === "profile" ? `${label || "Member"} on OwnSpace` :
         type === "post" ? "Check this post on OwnSpace" :
         type === "event" ? "Check this event on OwnSpace" :
         type === "place" ? "Check this place on OwnSpace" :
@@ -1167,7 +1388,9 @@
           prompt("Copy this link:", url);
         }
       } catch (err) {
-        console.error("Share failed:", err);
+        if (err?.name !== "AbortError") {
+          console.error("Share failed:", err);
+        }
       }
     }
 
@@ -1194,7 +1417,11 @@
           : `<div class="person-avatar-placeholder">No photo</div>`;
 
         const metaParts = [];
-        if (profile.city) metaParts.push(profile.city);
+
+        if (profile.city || profile.province || profile.country) {
+          metaParts.push([profile.city, profile.province, profile.country].filter(Boolean).join(", "));
+        }
+
         metaParts.push(profile.isPrivate ? "Private" : "Public");
         if (followingIds.has(profile.uid)) metaParts.push("Following");
 
@@ -1228,15 +1455,25 @@
 
               <div class="card-actions">
                 <a href="member.html?uid=${encodeURIComponent(profile.uid)}" class="action-btn btn-primary">${ICONS.open}<span>Open</span></a>
+                <button class="action-btn btn-green share-btn profile-share-btn" type="button">${ICONS.share}<span>Share</span></button>
               </div>
             </div>
           </div>
         `;
 
         const img = card.querySelector(".person-avatar");
+
         if (img) {
           img.addEventListener("error", () => {
             img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+          });
+        }
+
+        const shareBtn = card.querySelector(".profile-share-btn");
+
+        if (shareBtn) {
+          shareBtn.addEventListener("click", async () => {
+            await shareItem("profile", profile, profile.displayName);
           });
         }
 
@@ -1269,6 +1506,7 @@
         if (owner.displayName) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(owner.displayName)}</span>`);
         if (owner.username) badges.push(`<span class="mini-badge mini-purple">@${escapeHtml(owner.username)}</span>`);
         if (owner.verified) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
+        if (post.postType) badges.push(`<span class="mini-badge mini-yellow">${escapeHtml(post.postType)}</span>`);
 
         card.innerHTML = `
           <div class="card-title">${escapeHtml((post.caption || "Post").slice(0, 120) || "Post")}</div>
@@ -1278,19 +1516,21 @@
 
           <div class="card-actions">
             <a href="post.html?postId=${encodeURIComponent(post.id)}" class="action-btn btn-primary">${ICONS.open}<span>Open Post</span></a>
-            <a href="member.html?uid=${encodeURIComponent(post.userId)}" class="action-btn btn-soft">Owner</a>
-            <button class="action-btn btn-green share-post-btn" type="button">${ICONS.share}<span>Share</span></button>
+            ${post.userId ? `<a href="member.html?uid=${encodeURIComponent(post.userId)}" class="action-btn btn-soft">Owner</a>` : ""}
+            <button class="action-btn btn-green share-btn post-share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
 
         const img = card.querySelector(".post-preview");
+
         if (img) {
           img.addEventListener("error", () => {
             img.style.display = "none";
           });
         }
 
-        const shareBtn = card.querySelector(".share-post-btn");
+        const shareBtn = card.querySelector(".post-share-btn");
+
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
             await shareItem("post", post, "post");
@@ -1316,8 +1556,12 @@
       rows.forEach(event => {
         const creator = getAuthorProfile(event.creatorId) || {};
         const badges = [];
+
         badges.push(`<span class="mini-badge ${event.visibility === "private" ? "mini-yellow" : "mini-blue"}">${event.visibility === "private" ? "Private" : "Public"}</span>`);
         if (event.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(event.city)}</span>`);
+        if (event.country) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(event.country)}</span>`);
+
+        const venueText = [event.venue, event.address].filter(Boolean).join(" • ") || "Not added";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -1327,9 +1571,10 @@
           <div class="badge-row">${badges.join("")}</div>
 
           <div class="meta-grid">
-            <div><strong>City:</strong> ${escapeHtml(event.city || "Not added")}</div>
+            <div><strong>Location:</strong> ${escapeHtml([event.city, event.province, event.country].filter(Boolean).join(", ") || "Not added")}</div>
             <div><strong>Date:</strong> ${escapeHtml(event.date || "-")}</div>
             <div><strong>Time:</strong> ${escapeHtml(event.time || "-")}</div>
+            <div><strong>Venue:</strong> ${escapeHtml(venueText)}</div>
             <div><strong>Host:</strong> ${escapeHtml(creator.displayName || event.creatorName || "Member")}</div>
           </div>
 
@@ -1338,11 +1583,12 @@
           <div class="card-actions">
             <a href="event.html?eventId=${encodeURIComponent(event.id)}" class="action-btn btn-primary">${ICONS.open}<span>Open Event</span></a>
             ${event.creatorId ? `<a href="member.html?uid=${encodeURIComponent(event.creatorId)}" class="action-btn btn-soft">Host</a>` : ""}
-            <button class="action-btn btn-green share-post-btn" type="button">${ICONS.share}<span>Share</span></button>
+            <button class="action-btn btn-green share-btn event-share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
 
-        const shareBtn = card.querySelector(".share-post-btn");
+        const shareBtn = card.querySelector(".event-share-btn");
+
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
             await shareItem("event", event, event.title);
@@ -1367,7 +1613,9 @@
 
       rows.forEach(place => {
         const badges = [];
-        badges.push(`<span class="mini-badge mini-green">Approved</span>`);
+
+        badges.push(`<span class="mini-badge ${place.approved ? "mini-green" : "mini-yellow"}">${place.approved ? "Approved" : "Pending"}</span>`);
+        if (place.category) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(place.category)}</span>`);
         if (place.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(place.city)}</span>`);
 
         const websiteHref = normalizeHref(place.website);
@@ -1385,7 +1633,7 @@
           <div class="badge-row">${badges.join("")}</div>
 
           <div class="meta-grid">
-            <div><strong>City:</strong> ${escapeHtml(place.city || "Not added")}</div>
+            <div><strong>Location:</strong> ${escapeHtml([place.city, place.province, place.country].filter(Boolean).join(", ") || "Not added")}</div>
             ${place.address ? `<div><strong>Address:</strong> ${escapeHtml(place.address)}</div>` : ""}
           </div>
 
@@ -1394,11 +1642,12 @@
           <div class="card-actions">
             <a href="${openDetail}" class="action-btn btn-primary">${ICONS.open}<span>Open Place</span></a>
             ${websiteHtml}
-            <button class="action-btn btn-green share-post-btn" type="button">${ICONS.share}<span>Share</span></button>
+            <button class="action-btn btn-green share-btn place-share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
 
-        const shareBtn = card.querySelector(".share-post-btn");
+        const shareBtn = card.querySelector(".place-share-btn");
+
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
             await shareItem("place", place, place.name);
@@ -1427,6 +1676,7 @@
         const badges = [];
         badges.push(`<span class="mini-badge mini-purple">${escapeHtml(community.privacy || "Public")}</span>`);
         badges.push(`<span class="mini-badge mini-green">${escapeHtml(String(community.memberCount || 0))} members</span>`);
+        if (community.city) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(community.city)}</span>`);
 
         const card = document.createElement("div");
         card.className = "card";
@@ -1437,18 +1687,20 @@
 
           <div class="meta-grid">
             <div><strong>Creator:</strong> ${escapeHtml(creator.displayName || "Member")}</div>
+            ${community.city || community.country ? `<div><strong>Location:</strong> ${escapeHtml([community.city, community.country].filter(Boolean).join(", "))}</div>` : ""}
           </div>
 
           <div class="desc">${escapeHtml(community.description || "No description added.")}</div>
 
           <div class="card-actions">
-            <a href="community.html?communityId=${encodeURIComponent(community.id)}" class="action-btn btn-primary">${ICONS.open}<span>Open Community</span></a>
+            <a href="community.html?communityId=${encodeURIComponent(community.id)}&id=${encodeURIComponent(community.id)}" class="action-btn btn-primary">${ICONS.open}<span>Open Community</span></a>
             ${community.creatorId ? `<a href="member.html?uid=${encodeURIComponent(community.creatorId)}" class="action-btn btn-soft">Creator</a>` : ""}
-            <button class="action-btn btn-green share-post-btn" type="button">${ICONS.share}<span>Share</span></button>
+            <button class="action-btn btn-green share-btn community-share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
 
-        const shareBtn = card.querySelector(".share-post-btn");
+        const shareBtn = card.querySelector(".community-share-btn");
+
         if (shareBtn) {
           shareBtn.addEventListener("click", async () => {
             await shareItem("community", community, community.name);
@@ -1474,18 +1726,33 @@
       });
     }
 
+    async function selectProfileRow(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        } catch {}
+      }
+
+      return null;
+    }
+
     async function loadViewer(uid) {
-      const [userRes, publicRes] = await Promise.all([
-        supabase.from("users").select("*").eq("uid", uid).maybeSingle(),
-        supabase.from("public_profiles").select("*").eq("uid", uid).maybeSingle()
+      const [userRow, publicRow] = await Promise.all([
+        selectProfileRow("users", uid),
+        selectProfileRow("public_profiles", uid)
       ]);
 
-      if (userRes.error) throw userRes.error;
-      if (publicRes.error) throw publicRes.error;
-
       viewerProfile = normalizeProfile({
-        ...(publicRes.data || {}),
-        ...(userRes.data || {}),
+        ...(publicRow || {}),
+        ...(userRow || {}),
         uid
       }, uid);
 
@@ -1493,46 +1760,124 @@
     }
 
     async function loadProfiles() {
-      const { data, error } = await supabase.from("public_profiles").select("*");
-      if (error) throw error;
+      let publicRows = [];
+      let userRows = [];
 
-      peopleData = (data || []).map(d => normalizeProfile(d, d.uid || d.id || d.user_id));
+      try {
+        const { data, error } = await supabase
+          .from("public_profiles")
+          .select("*");
+
+        if (!error && Array.isArray(data)) {
+          publicRows = data;
+        }
+      } catch {}
+
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*");
+
+        if (!error && Array.isArray(data)) {
+          userRows = data;
+        }
+      } catch {}
+
+      const byUid = new Map();
+
+      publicRows.forEach(row => {
+        const uid = row.uid || row.id || row.user_id || row.userId || "";
+        if (!uid) return;
+
+        byUid.set(uid, {
+          ...(byUid.get(uid) || {}),
+          ...row,
+          uid
+        });
+      });
+
+      userRows.forEach(row => {
+        const uid = row.uid || row.id || row.user_id || row.userId || "";
+        if (!uid) return;
+
+        byUid.set(uid, {
+          ...(byUid.get(uid) || {}),
+          ...row,
+          uid
+        });
+      });
+
+      peopleData = Array.from(byUid.values()).map(row => normalizeProfile(row, row.uid || row.id || row.user_id || row.userId));
+
       profilesMap = new Map();
-      peopleData.forEach(p => profilesMap.set(p.uid, p));
+      peopleData.forEach(p => {
+        if (p.uid) profilesMap.set(p.uid, p);
+      });
+    }
+
+    async function selectRowsWithFallback(table, variants) {
+      for (const variant of variants) {
+        try {
+          let query = supabase.from(table).select("*");
+
+          Object.entries(variant).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+
+          const { data, error } = await query;
+
+          if (!error) return data || [];
+        } catch {}
+      }
+
+      return [];
     }
 
     async function loadFollows() {
-      const { data, error } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", currentUser.id);
+      const rows = await selectRowsWithFallback("follows", [
+        { follower_id: currentUser.id },
+        { followerId: currentUser.id },
+        { from_user_id: currentUser.id }
+      ]);
 
-      if (error) throw error;
+      followingIds = new Set();
 
-      followingIds = new Set((data || []).map(row => row.following_id).filter(Boolean));
+      rows.forEach(row => {
+        const uid = row.following_id || row.followingId || row.to_user_id || row.toUserId;
+
+        if (uid) followingIds.add(uid);
+      });
     }
 
     async function loadPosts() {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      postsData = (data || []).map(d => normalizePost(d, d.id));
+        if (error) throw error;
+
+        postsData = (data || []).map(d => normalizePost(d, d.id));
+      } catch (err) {
+        console.error("Posts load error:", err);
+        postsData = [];
+      }
     }
 
     async function loadEvents() {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*");
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*");
 
-      if (error) {
+        if (error) throw error;
+
+        eventsData = (data || []).map(d => normalizeEvent(d, d.id));
+      } catch (err) {
+        console.error("Events load error:", err);
         eventsData = [];
-        return;
       }
-
-      eventsData = (data || []).map(d => normalizeEvent(d, d.id));
     }
 
     async function loadPlaces() {
@@ -1541,12 +1886,15 @@
 
       for (const source of sources) {
         try {
-          const { data, error } = await supabase.from(source).select("*");
+          const { data, error } = await supabase
+            .from(source)
+            .select("*");
+
           if (error) continue;
 
           (data || []).forEach(d => {
             const place = normalizePlace(d, d.id, source);
-            map.set(`${source}:${place.id}`, place);
+            if (place.id) map.set(`${source}:${place.id}`, place);
           });
         } catch {}
       }
@@ -1560,12 +1908,15 @@
 
       for (const source of sources) {
         try {
-          const { data, error } = await supabase.from(source).select("*");
+          const { data, error } = await supabase
+            .from(source)
+            .select("*");
+
           if (error) continue;
 
           (data || []).forEach(d => {
-            const community = normalizeCommunity(d, d.id);
-            map.set(`${source}:${community.id}`, community);
+            const community = normalizeCommunity(d, d.id, source);
+            if (community.id) map.set(`${source}:${community.id}`, community);
           });
         } catch {}
       }
@@ -1573,19 +1924,35 @@
       communitiesData = Array.from(map.values());
     }
 
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase.from(table).select("id", { count: "exact", head: true });
+        const { count, error } = await buildQuery(query);
+
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
     async function countPendingMessageRequests(uid) {
       const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
-        try {
-          const { count, error } = await supabase
-            .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
 
-          if (!error) return count || 0;
-        } catch {}
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
       }
 
       return 0;
@@ -1598,46 +1965,79 @@
           .select("id")
           .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
 
-        if (!Array.isArray(threads) || !threads.length) return 0;
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
 
-        const threadIds = threads.map(t => t.id).filter(Boolean);
-        if (!threadIds.length) return 0;
+          if (threadIds.length) {
+            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
 
-        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+            for (const field of seenFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .is(field, null);
 
-        for (const field of seenFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .is(field, null);
+                if (!error) return count || 0;
+              } catch {}
+            }
 
-            if (!error) return count || 0;
-          } catch {}
-        }
+            const boolFields = ["is_read", "read"];
 
-        const boolFields = ["is_read", "read"];
+            for (const field of boolFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .eq(field, false);
 
-        for (const field of boolFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .eq(field, false);
-
-            if (!error) return count || 0;
-          } catch {}
+                if (!error) return count || 0;
+              } catch {}
+            }
+          }
         }
       } catch {}
+
+      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
+
+      for (const receiverColumn of receiverColumns) {
+        for (const seenColumn of ["seen_at", "read_at", "seenAt", "readAt"]) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .eq(receiverColumn, uid)
+              .neq("sender_id", uid)
+              .is(seenColumn, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        for (const boolColumn of ["is_read", "read"]) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .eq(receiverColumn, uid)
+              .neq("sender_id", uid)
+              .eq(boolColumn, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      }
 
       return 0;
     }
 
     async function loadInboxBadgeCount() {
+      if (!currentUser) return;
+
       try {
         const [requests, unreadMessages] = await Promise.all([
           countPendingMessageRequests(currentUser.id),
@@ -1660,18 +2060,27 @@
     async function refreshAll() {
       openLoading();
 
-      await Promise.all([
-        loadProfiles(),
-        loadFollows(),
-        loadPosts(),
-        loadEvents(),
-        loadPlaces(),
-        loadCommunities(),
-        loadInboxBadgeCount()
-      ]);
+      refreshBtn.disabled = true;
 
-      renderCounts();
-      renderResults();
+      try {
+        await Promise.all([
+          loadProfiles(),
+          loadFollows(),
+          loadPosts(),
+          loadEvents(),
+          loadPlaces(),
+          loadCommunities(),
+          loadInboxBadgeCount()
+        ]);
+
+        renderCounts();
+        renderResults();
+      } catch (err) {
+        console.error(err);
+        showEmpty("Could not refresh search data.");
+      }
+
+      refreshBtn.disabled = false;
     }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -1718,23 +2127,6 @@
     }
 
     initPage();
-
-    /*
-      OWNSPACE SEARCH PAGE UPDATE:
-
-      FIXED / ADDED:
-      - BareWorld renamed to OwnSpace.
-      - Tabs are now in one row:
-        People / Posts / Events / Places / Community.
-      - Added Community search.
-      - People are NOT shown by default anymore.
-        People appear only after user types matching keywords.
-      - Counts update based on search text.
-      - Green verified badge is bright and visible.
-      - Share button added to posts, events, places and communities.
-      - Bottom Inbox badge counts only:
-        pending message_requests + unread chat_messages.
-    */
   </script>
 </body>
 </html>
