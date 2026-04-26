@@ -191,6 +191,7 @@
     .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
     .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
     .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-soft{background:var(--surface-3);border-color:var(--line)}
 
     .action-btn:disabled{
       opacity:.65;
@@ -207,7 +208,6 @@
 
     .status-ok{color:#22b36c}
     .status-err{color:#e74c66}
-
     html[data-theme="dark"] .status-ok{color:#9cf0bf}
     html[data-theme="dark"] .status-err{color:#ffb3bd}
 
@@ -408,6 +408,18 @@
       text-overflow:ellipsis;
     }
 
+    .person-bio{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+      word-break:break-word;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+
     .small-pill{
       display:inline-flex;
       align-items:center;
@@ -427,6 +439,7 @@
     .pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .pill-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .pill-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
     .card-actions{
       display:flex;
@@ -537,6 +550,10 @@
         padding:8px 3px;
       }
 
+      .person-card{
+        align-items:flex-start;
+      }
+
       .person-meta{
         white-space:normal;
         overflow:visible;
@@ -589,10 +606,10 @@
         <div class="brand-sub">Nearby people</div>
       </div>
 
-      <a href="settings.html" class="top-icon-btn" aria-label="Nearby settings">
+      <a href="edit-profile.html#location" class="top-icon-btn" aria-label="Location settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
-          <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04A1.8 1.8 0 0 0 14.8 19.6a1.8 1.8 0 0 0-1.1 1.65V21.4a2.1 2.1 0 0 1-4.2 0v-.06A1.8 1.8 0 0 0 8.4 19.7a1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.8 15.1a1.8 1.8 0 0 0-1.65-1.1H2.1a2.1 2.1 0 0 1 0-4.2h.06A1.8 1.8 0 0 0 3.8 8.7a1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 0 1 6.37 3.7l.04.04A1.8 1.8 0 0 0 8.4 4.1a1.8 1.8 0 0 0 1.1-1.65V2.4a2.1 2.1 0 0 1 4.2 0v.06a1.8 1.8 0 0 0 1.1 1.64 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04A1.8 1.8 0 0 0 19.4 8.7c.28.6.9 1.1 1.65 1.1h.06a2.1 2.1 0 0 1 0 4.2h-.06A1.8 1.8 0 0 0 19.4 15z"></path>
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
         </svg>
       </a>
     </div>
@@ -752,14 +769,19 @@
       `
     };
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || "light";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
+
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -770,10 +792,11 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "osTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -807,13 +830,13 @@
     function getField(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
-      }
-      return "";
-    }
 
-    function nowIso() {
-      return new Date().toISOString();
+        if (value != null && String(value).trim()) {
+          return String(value).trim();
+        }
+      }
+
+      return "";
     }
 
     function readLat(obj) {
@@ -842,26 +865,29 @@
       );
     }
 
-    function normalizeNearbyMode(value, fallbackLocationVisibility = "") {
-      const v = normalizeText(value);
-      const oldVisibility = normalizeText(fallbackLocationVisibility);
-
-      if (["city", "gps", "everywhere"].includes(v)) return v;
-      if (oldVisibility === "gps") return "gps";
-      return "city";
-    }
-
     function normalizeLocationVisibility(value) {
       const v = normalizeText(value);
 
-      if (v === "gps") return "approximate";
-      if (["hidden", "approximate", "city"].includes(v)) return v;
+      if (v === "gps") return "gps";
+      if (v === "hidden") return "hidden";
+      if (v === "approximate") return "gps";
+      return "city";
+    }
+
+    function normalizeNearbyMode(rawMode, rawLocationVisibility) {
+      const mode = normalizeText(rawMode);
+      const visibility = normalizeLocationVisibility(rawLocationVisibility);
+
+      if (["city", "gps", "everywhere"].includes(mode)) return mode;
+      if (visibility === "gps") return "gps";
+
       return "city";
     }
 
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
+
       const aliases = [c];
 
       if (c === "united states") aliases.push("usa", "us", "america");
@@ -875,6 +901,7 @@
     function provinceAliases(province) {
       const p = normalizeText(province);
       if (!p) return "";
+
       const aliases = [p];
 
       if (p === "ontario") aliases.push("on", "ont");
@@ -905,7 +932,11 @@
         country,
         provinceAliases(province),
         countryAliases(country)
-      ].filter(Boolean).join(" ").trim().toLowerCase();
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -923,6 +954,7 @@
         Math.sin(dLng / 2);
 
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
       return R * c;
     }
 
@@ -935,12 +967,19 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
-      const locationVisibilityRaw = getField(d, ["location_visibility", "locationVisibility"]) || "city";
+
+      const locationVisibilityRaw = getField(d, ["location_visibility", "locationVisibility"]);
       const nearbyModeRaw = getField(d, ["nearby_discovery_mode", "nearbyDiscoveryMode", "nearby_mode", "nearbyMode"]);
 
       const city = getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]);
       const province = getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]);
       const country = getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]);
+
+      const blockedUsers = Array.isArray(d.blocked_users)
+        ? d.blocked_users
+        : Array.isArray(d.blockedUsers)
+        ? d.blockedUsers
+        : [];
 
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
@@ -948,12 +987,12 @@
         username: getField(d, ["username", "handle", "userName", "user_name"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "avatar_url", "user_photo_url", "userPhotoURL"]),
         bio: getField(d, ["bio", "about", "description"]),
-        gender: getField(d, ["gender", "gender_custom", "genderCustom"]),
+        gender: getField(d, ["gender_custom", "genderCustom", "gender"]),
         keywords: getField(d, ["keywords", "interests", "tags", "search_keywords", "searchKeywords"]),
         isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
         verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
-        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        moderationStatus: normalizeText(getField(d, ["moderation_status", "moderationStatus", "status"])),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin ?? d.hidden_by_admin ?? d.hiddenByAdmin),
         softDeleted: !!(d.soft_deleted ?? d.softDeleted ?? d.deactivated),
         showInNearby: (d.show_in_nearby ?? d.showInNearby) !== false,
         nearbyDiscoveryMode: normalizeNearbyMode(nearbyModeRaw, locationVisibilityRaw),
@@ -962,11 +1001,7 @@
         province,
         country,
         locationSearch: buildLocationSearch(d),
-        blockedUsers: Array.isArray(d.blocked_users)
-          ? d.blocked_users
-          : Array.isArray(d.blockedUsers)
-          ? d.blockedUsers
-          : [],
+        blockedUsers,
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -989,7 +1024,6 @@
       };
 
       modeChip.textContent = modeMap[viewerProfile.nearbyDiscoveryMode] || "City mode";
-      countChip.textContent = "People 0";
 
       if (!browserCoords) {
         browserChip.textContent = "GPS off";
@@ -1001,6 +1035,7 @@
       try {
         const query = supabase.from(table).select("id", { count: "exact", head: true });
         const { count, error } = await buildQuery(query);
+
         if (!error) return count || 0;
       } catch {}
 
@@ -1016,6 +1051,7 @@
           const count = await countRows("message_requests", q =>
             q.eq(targetColumn, uid).eq(statusColumn, "pending")
           );
+
           if (count !== null) return count;
         }
 
@@ -1036,39 +1072,40 @@
           .select("id")
           .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
 
-        if (!Array.isArray(threads) || !threads.length) return 0;
+        if (Array.isArray(threads) && threads.length) {
+          const threadIds = threads.map(t => t.id).filter(Boolean);
 
-        const threadIds = threads.map(t => t.id).filter(Boolean);
-        if (!threadIds.length) return 0;
+          if (threadIds.length) {
+            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
 
-        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+            for (const field of seenFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .is(field, null);
 
-        for (const field of seenFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .is(field, null);
+                if (!error) return count || 0;
+              } catch {}
+            }
 
-            if (!error) return count || 0;
-          } catch {}
-        }
+            const boolFields = ["is_read", "read"];
 
-        const boolFields = ["is_read", "read"];
+            for (const field of boolFields) {
+              try {
+                const { count, error } = await supabase
+                  .from("chat_messages")
+                  .select("id", { count: "exact", head: true })
+                  .in("thread_id", threadIds)
+                  .neq("sender_id", uid)
+                  .eq(field, false);
 
-        for (const field of boolFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .eq(field, false);
-
-            if (!error) return count || 0;
-          } catch {}
+                if (!error) return count || 0;
+              } catch {}
+            }
+          }
         }
       } catch {}
 
@@ -1151,11 +1188,13 @@
 
               viewerProfile.lat = browserCoords.lat;
               viewerProfile.lng = browserCoords.lng;
+              viewerProfile.nearbyDiscoveryMode = "gps";
 
               renderViewerLocation();
+
               browserChip.textContent = "GPS on";
               browserChip.className = "chip chip-green";
-              setPageStatus("GPS enabled. People with distance data are sorted closer first.", "status-ok");
+              setPageStatus("GPS enabled. Nearby people are sorted by distance when coordinates are available.", "status-ok");
             } catch (err) {
               console.error(err);
               setPageStatus("GPS worked, but saved location could not be updated.", "status-err");
@@ -1167,7 +1206,7 @@
             browserCoords = null;
             browserChip.textContent = "GPS off";
             browserChip.className = "chip chip-yellow";
-            setPageStatus("Could not use browser GPS. Using saved profile location and search.", "status-err");
+            setPageStatus("Could not use browser GPS. Using saved city and search instead.", "status-err");
             resolve();
           },
           {
@@ -1203,12 +1242,27 @@
       countChip.textContent = `People ${count}`;
     }
 
+    function isBlockedByViewer(profile) {
+      if (!profile?.uid) return false;
+
+      return viewerBlockedUsers.some(item => {
+        if (typeof item === "string") return item === profile.uid;
+        if (item && typeof item === "object") {
+          return item.uid === profile.uid || item.user_id === profile.uid || item.userId === profile.uid;
+        }
+        return false;
+      });
+    }
+
     function canUseProfile(profile) {
       if (!profile) return false;
+      if (!profile.uid) return false;
       if (profile.uid === currentUser.id) return false;
       if (!profile.showInNearby) return false;
-      if (profile.softDeleted || profile.isHiddenByAdmin || profile.moderationStatus === "banned") return false;
-      if (viewerBlockedUsers.includes(profile.uid)) return false;
+      if (profile.softDeleted || profile.isHiddenByAdmin) return false;
+      if (["banned", "deleted", "removed"].includes(profile.moderationStatus)) return false;
+      if (isBlockedByViewer(profile)) return false;
+
       return true;
     }
 
@@ -1229,6 +1283,25 @@
       };
     }
 
+    function flexibleSameCity(viewerCity, viewerProvince, viewerCountry, city, province, country) {
+      if (!viewerCity || !city) return false;
+      if (viewerCity !== city) return false;
+
+      if (viewerCountry && country && viewerCountry !== country) return false;
+      if (viewerProvince && province && viewerProvince !== province) return false;
+
+      return true;
+    }
+
+    function flexibleSameProvince(viewerProvince, viewerCountry, province, country) {
+      if (!viewerProvince || !province) return false;
+      if (viewerProvince !== province) return false;
+
+      if (viewerCountry && country && viewerCountry !== country) return false;
+
+      return true;
+    }
+
     function buildBaseRows() {
       const viewerCity = normalizeText(viewerProfile?.city);
       const viewerProvince = normalizeText(viewerProfile?.province);
@@ -1243,8 +1316,8 @@
           const country = normalizeText(profile.country);
 
           const sameCountry = !!viewerCountry && !!country && viewerCountry === country;
-          const sameProvince = sameCountry && !!viewerProvince && !!province && viewerProvince === province;
-          const sameCity = sameProvince && !!viewerCity && !!city && viewerCity === city;
+          const sameProvince = flexibleSameProvince(viewerProvince, viewerCountry, province, country);
+          const sameCity = flexibleSameCity(viewerCity, viewerProvince, viewerCountry, city, province, country);
 
           let distanceKm = null;
 
@@ -1266,8 +1339,13 @@
             profile.city,
             profile.province,
             profile.country,
+            provinceAliases(profile.province),
+            countryAliases(profile.country),
             profile.locationSearch
-          ].filter(Boolean).join(" ").toLowerCase();
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
 
           const placeLabel = [titleText(profile.city), titleText(profile.province), titleText(profile.country)]
             .filter(Boolean)
@@ -1295,9 +1373,10 @@
     function buildPeopleRows() {
       const q = normalizeText(searchInput.value);
       const mode = viewerProfile?.nearbyDiscoveryMode || "city";
+
       const viewerHasSavedLocation =
-        !!normalizeText(viewerProfile?.city) &&
-        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.city) ||
+        !!normalizeText(viewerProfile?.province) ||
         !!normalizeText(viewerProfile?.country);
 
       let rows = buildBaseRows();
@@ -1310,7 +1389,7 @@
         if (hasGps) {
           rows = rows.filter(row => row.withinGpsRange || row.sameCity || row.sameProvince);
         } else if (viewerHasSavedLocation) {
-          rows = rows.filter(row => row.sameCity || row.sameProvince);
+          rows = rows.filter(row => row.sameCity || row.sameProvince || row.sameCountry);
         } else {
           rows = [];
         }
@@ -1318,7 +1397,7 @@
         rows = rows;
       } else {
         if (viewerHasSavedLocation) {
-          rows = rows.filter(row => row.sameCity || row.sameProvince);
+          rows = rows.filter(row => row.sameCity || row.sameProvince || row.sameCountry);
         } else {
           rows = [];
         }
@@ -1330,6 +1409,9 @@
 
         if (a.sameProvince && !b.sameProvince) return -1;
         if (b.sameProvince && !a.sameProvince) return 1;
+
+        if (a.sameCountry && !b.sameCountry) return -1;
+        if (b.sameCountry && !a.sameCountry) return 1;
 
         const aHasDistance = a.distanceKm !== null;
         const bHasDistance = b.distanceKm !== null;
@@ -1366,6 +1448,28 @@
       return `<button class="action-btn btn-green relation-btn" data-action="follow" data-uid="${escapeHtml(row.uid)}" type="button">Follow</button>`;
     }
 
+    async function insertWithFallback(table, payloadVariants) {
+      let lastError = null;
+
+      for (const payload of payloadVariants) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select("id")
+            .maybeSingle();
+
+          if (!error) return data || null;
+
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.id) return;
 
@@ -1380,6 +1484,14 @@
           createdAt: nowIso(),
           isRead: false,
           read: false
+        },
+        {
+          type: payload.type || "notification",
+          text: payload.text || "",
+          to_user_id: targetUid,
+          from_user_id: currentUser.id,
+          created_at: nowIso(),
+          is_read: false
         }
       ];
 
@@ -1392,13 +1504,23 @@
     }
 
     async function followPerson(row) {
-      const { error } = await supabase.from("follows").insert({
-        follower_id: currentUser.id,
-        following_id: row.uid,
-        created_at: nowIso()
-      });
-
-      if (error) throw error;
+      await insertWithFallback("follows", [
+        {
+          follower_id: currentUser.id,
+          following_id: row.uid,
+          created_at: nowIso()
+        },
+        {
+          followerId: currentUser.id,
+          followingId: row.uid,
+          createdAt: nowIso()
+        },
+        {
+          from_user_id: currentUser.id,
+          to_user_id: row.uid,
+          created_at: nowIso()
+        }
+      ]);
 
       await createNotificationSafe(row.uid, {
         type: "follow",
@@ -1411,40 +1533,74 @@
       });
     }
 
+    async function deleteMatchingRows(table, variants) {
+      let worked = false;
+      let lastError = null;
+
+      for (const item of variants) {
+        try {
+          let query = supabase.from(table).delete();
+
+          Object.entries(item).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+
+          const { error } = await query;
+
+          if (!error) worked = true;
+          else lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (!worked && lastError) throw lastError;
+    }
+
     async function unfollowPerson(row) {
       const rowId = followMap.get(row.uid);
 
       if (rowId) {
-        const { error } = await supabase
-          .from("follows")
-          .delete()
-          .eq("id", rowId);
-
-        if (error) throw error;
-        return;
+        try {
+          const { error } = await supabase.from("follows").delete().eq("id", rowId);
+          if (!error) return;
+        } catch {}
       }
 
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", currentUser.id)
-        .eq("following_id", row.uid);
-
-      if (error) throw error;
+      await deleteMatchingRows("follows", [
+        { follower_id: currentUser.id, following_id: row.uid },
+        { followerId: currentUser.id, followingId: row.uid },
+        { from_user_id: currentUser.id, to_user_id: row.uid }
+      ]);
     }
 
     async function requestFollow(row) {
-      const { error } = await supabase.from("follow_requests").insert({
-        requester_id: currentUser.id,
-        target_id: row.uid,
-        from_user_id: currentUser.id,
-        to_user_id: row.uid,
-        status: "pending",
-        created_at: nowIso(),
-        updated_at: nowIso()
-      });
-
-      if (error) throw error;
+      await insertWithFallback("follow_requests", [
+        {
+          requester_id: currentUser.id,
+          target_id: row.uid,
+          from_user_id: currentUser.id,
+          to_user_id: row.uid,
+          status: "pending",
+          created_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          requesterId: currentUser.id,
+          targetId: row.uid,
+          fromUserId: currentUser.id,
+          toUserId: row.uid,
+          status: "pending",
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        },
+        {
+          from_user_id: currentUser.id,
+          to_user_id: row.uid,
+          status: "pending",
+          created_at: nowIso()
+        }
+      ]);
 
       await createNotificationSafe(row.uid, {
         type: "follow_request",
@@ -1461,22 +1617,17 @@
       const rowId = requestMap.get(row.uid);
 
       if (rowId) {
-        const { error } = await supabase
-          .from("follow_requests")
-          .delete()
-          .eq("id", rowId);
-
-        if (error) throw error;
-        return;
+        try {
+          const { error } = await supabase.from("follow_requests").delete().eq("id", rowId);
+          if (!error) return;
+        } catch {}
       }
 
-      const { error } = await supabase
-        .from("follow_requests")
-        .delete()
-        .eq("requester_id", currentUser.id)
-        .eq("target_id", row.uid);
-
-      if (error) throw error;
+      await deleteMatchingRows("follow_requests", [
+        { requester_id: currentUser.id, target_id: row.uid },
+        { requesterId: currentUser.id, targetId: row.uid },
+        { from_user_id: currentUser.id, to_user_id: row.uid }
+      ]);
     }
 
     function buildProfileShareUrl(uid) {
@@ -1509,9 +1660,10 @@
 
       const q = normalizeText(searchInput.value);
       const mode = viewerProfile?.nearbyDiscoveryMode || "city";
+
       const viewerHasLocation =
-        !!normalizeText(viewerProfile?.city) &&
-        !!normalizeText(viewerProfile?.province) &&
+        !!normalizeText(viewerProfile?.city) ||
+        !!normalizeText(viewerProfile?.province) ||
         !!normalizeText(viewerProfile?.country);
 
       const rows = buildPeopleRows();
@@ -1525,12 +1677,13 @@
         if (q) {
           showEmpty("No matching people found. Try another city, province, country, name or keyword.");
         } else if (mode === "gps") {
-          showEmpty("No nearby people found in GPS mode. Try Search Everywhere in Settings or search a city/country.");
+          showEmpty("No nearby people found in GPS mode. Try searching a city, province, country or name.");
         } else if (mode === "everywhere") {
           showEmpty("No people are visible in Nearby yet.");
         } else {
-          showEmpty("No people found near your saved city. Try search or change Nearby mode in Settings.");
+          showEmpty("No people found near your saved location. Try search or update your location.");
         }
+
         return;
       }
 
@@ -1553,6 +1706,8 @@
 
         if (followMap.has(row.uid)) {
           topPill = `<span class="small-pill pill-blue">Following</span>`;
+        } else if (requestMap.has(row.uid)) {
+          topPill = `<span class="small-pill pill-yellow">Requested</span>`;
         } else if (row.verified) {
           topPill = `<span class="small-pill pill-green">Verified</span>`;
         } else if (row.isPrivate) {
@@ -1560,6 +1715,8 @@
         } else if (row.distanceLabel) {
           topPill = `<span class="small-pill pill-purple">${escapeHtml(row.distanceLabel)}</span>`;
         }
+
+        const bioHtml = row.bio ? `<div class="person-bio">${escapeHtml(row.bio)}</div>` : "";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -1578,6 +1735,7 @@
 
                   ${row.username ? `<div class="person-username">@${escapeHtml(row.username)}</div>` : ""}
                   <div class="person-meta">${escapeHtml(metaParts.join(" • ") || "OwnSpace member")}</div>
+                  ${bioHtml}
                 </div>
 
                 ${topPill}
@@ -1593,6 +1751,7 @@
         `;
 
         const img = card.querySelector(".person-avatar");
+
         if (img) {
           img.addEventListener("error", () => {
             img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
@@ -1642,6 +1801,7 @@
         btn.addEventListener("click", async () => {
           const uid = btn.getAttribute("data-share-uid");
           const row = rows.find(r => r.uid === uid);
+
           if (row) await shareProfile(row);
         });
       });
@@ -1684,35 +1844,108 @@
     }
 
     async function loadPeople() {
-      const { data, error } = await supabase
-        .from("public_profiles")
-        .select("*");
+      let publicRows = [];
+      let userRows = [];
 
-      if (error) throw error;
+      try {
+        const { data, error } = await supabase
+          .from("public_profiles")
+          .select("*");
 
-      peopleData = (data || []).map(row => normalizeProfile(row, row.uid || row.id || row.user_id));
+        if (error) throw error;
+        publicRows = data || [];
+      } catch (err) {
+        console.error("public_profiles load error:", err);
+        publicRows = [];
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*");
+
+        if (!error && Array.isArray(data)) {
+          userRows = data;
+        }
+      } catch {}
+
+      const byUid = new Map();
+
+      publicRows.forEach(row => {
+        const uid = row.uid || row.id || row.user_id || row.userId || "";
+        if (!uid) return;
+
+        byUid.set(uid, {
+          ...(byUid.get(uid) || {}),
+          ...row,
+          uid
+        });
+      });
+
+      userRows.forEach(row => {
+        const uid = row.uid || row.id || row.user_id || row.userId || "";
+        if (!uid) return;
+
+        byUid.set(uid, {
+          ...(byUid.get(uid) || {}),
+          ...row,
+          uid
+        });
+      });
+
+      peopleData = Array.from(byUid.values()).map(row => normalizeProfile(row, row.uid || row.id || row.user_id || row.userId));
+    }
+
+    async function selectRowsWithFallback(table, variants) {
+      for (const variant of variants) {
+        try {
+          let query = supabase.from(table).select("*");
+
+          Object.entries(variant).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+
+          const { data, error } = await query;
+
+          if (!error) return data || [];
+        } catch {}
+      }
+
+      return [];
     }
 
     async function loadRelations() {
       followMap = new Map();
       requestMap = new Map();
 
-      const [followsRes, requestsRes] = await Promise.all([
-        supabase.from("follows").select("*").eq("follower_id", currentUser.id),
-        supabase.from("follow_requests").select("*").eq("requester_id", currentUser.id).eq("status", "pending")
+      const followsRows = await selectRowsWithFallback("follows", [
+        { follower_id: currentUser.id },
+        { followerId: currentUser.id },
+        { from_user_id: currentUser.id }
       ]);
 
-      if (followsRes.error) throw followsRes.error;
-      if (requestsRes.error) throw requestsRes.error;
+      followsRows.forEach(row => {
+        const uid = row.following_id || row.followingId || row.to_user_id || row.toUserId;
 
-      (followsRes.data || []).forEach(row => {
-        const uid = row.following_id || row.followingId;
-        if (uid) followMap.set(uid, row.id);
+        if (uid) followMap.set(uid, row.id || "");
       });
 
-      (requestsRes.data || []).forEach(row => {
+      const requestRows = await selectRowsWithFallback("follow_requests", [
+        { requester_id: currentUser.id, status: "pending" },
+        { requesterId: currentUser.id, status: "pending" },
+        { from_user_id: currentUser.id, status: "pending" },
+        { requester_id: currentUser.id },
+        { requesterId: currentUser.id },
+        { from_user_id: currentUser.id }
+      ]);
+
+      requestRows.forEach(row => {
+        const status = normalizeText(row.status || row.request_status || row.requestStatus || "pending");
+        if (status && status !== "pending") return;
+
         const uid = row.target_id || row.targetId || row.to_user_id || row.toUserId;
-        if (uid) requestMap.set(uid, row.id);
+
+        if (uid) requestMap.set(uid, row.id || "");
       });
     }
 
