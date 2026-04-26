@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,25 +9,6 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -47,11 +28,30 @@
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+    }
+
     body{
       background:
         radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
         radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 90%, #000 10%));
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:8px 8px 108px;
@@ -480,8 +480,10 @@
       color:var(--muted);
     }
 
-    .message.ok{color:#9cf0bf}
-    .message.err{color:#ffb3bd}
+    .message.ok{color:#22b36c}
+    .message.err{color:#e74c66}
+    html[data-theme="dark"] .message.ok{color:#9cf0bf}
+    html[data-theme="dark"] .message.err{color:#ffb3bd}
 
     .members-list,
     .comments-list{
@@ -1132,14 +1134,15 @@
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
@@ -1152,7 +1155,7 @@
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
@@ -1196,6 +1199,7 @@
         const value = raw?.[name];
         if (value != null && String(value).trim()) return String(value).trim();
       }
+
       return "";
     }
 
@@ -1254,7 +1258,7 @@
       return String(value || "").trim();
     }
 
-    function normalizeImageUrl(url) {
+    function normalizeUrl(url) {
       const value = String(url || "").trim();
       if (!value) return "";
       if (/^https?:\/\//i.test(value)) return value;
@@ -1268,8 +1272,25 @@
       const aliases = [c];
 
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
       if (c === "canada") aliases.push("ca");
+      if (c === "india") aliases.push("bharat", "hindustan");
+
+      return aliases.join(" ");
+    }
+
+    function provinceAliases(province) {
+      const p = normalizeText(province);
+      if (!p) return "";
+
+      const aliases = [p];
+
+      if (p === "ontario") aliases.push("on", "ont");
+      if (p === "british columbia") aliases.push("bc", "b.c.");
+      if (p === "alberta") aliases.push("ab");
+      if (p === "quebec") aliases.push("qc");
+      if (p === "manitoba") aliases.push("mb");
+      if (p === "saskatchewan") aliases.push("sk");
 
       return aliases.join(" ");
     }
@@ -1279,12 +1300,42 @@
         titleText(city),
         titleText(province),
         titleText(country),
+        provinceAliases(province),
         countryAliases(country)
       ]
-      .filter(Boolean)
-      .join(" ")
-      .trim()
-      .toLowerCase();
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function buildSearchText(model) {
+      return [
+        model.title,
+        model.description,
+        model.city,
+        model.province,
+        model.country,
+        model.venue,
+        model.address,
+        model.creatorName,
+        buildLocationSearch(model.city, model.province, model.country)
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("column") ||
+        msg.includes("does not exist")
+      );
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -1324,7 +1375,7 @@
         creatorUsername: getField(d, ["creator_username", "creatorUsername"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
         lat: num(d.lat ?? d.latitude),
-        lng: num(d.lng ?? d.longitude),
+        lng: num(d.lng ?? d.lon ?? d.longitude),
         hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted)
       };
     }
@@ -1482,7 +1533,6 @@
             .maybeSingle();
 
           if (!error) return data || null;
-
           lastError = error || lastError;
         } catch (err) {
           lastError = err;
@@ -1506,6 +1556,10 @@
           if (!error) return data || [];
 
           lastError = error || lastError;
+
+          if (!isMissingSchemaError(error)) {
+            console.warn(`${table} update attempt failed:`, error?.message || error);
+          }
         } catch (err) {
           lastError = err;
         }
@@ -1523,6 +1577,34 @@
       if (error) throw error;
     }
 
+    async function hideOrDeleteEvent() {
+      try {
+        await updateByIdWithFallback("events", currentEventId, [
+          {
+            hidden: true,
+            soft_deleted: true,
+            deleted_at: nowIso(),
+            updated_at: nowIso()
+          },
+          {
+            hidden: true,
+            softDeleted: true,
+            deletedAt: nowIso(),
+            updatedAt: nowIso()
+          },
+          {
+            hidden: true
+          }
+        ]);
+
+        return;
+      } catch (softError) {
+        console.warn("Soft delete failed, trying hard delete:", softError?.message || softError);
+      }
+
+      await deleteById("events", currentEventId);
+    }
+
     async function selectRowsByEvent(table, eventId) {
       const eventColumns = ["event_id", "eventId"];
       let lastError = null;
@@ -1535,7 +1617,6 @@
             .eq(column, eventId);
 
           if (!error) return data || [];
-
           lastError = error || lastError;
         } catch (err) {
           lastError = err;
@@ -1589,19 +1670,38 @@
       }
     }
 
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase
+          .from(table)
+          .select("id", { count: "exact", head: true });
+
+        const { count, error } = await buildQuery(query);
+
+        if (!error) return count || 0;
+      } catch {}
+
+      return null;
+    }
+
     async function countPendingMessageRequests(uid) {
       const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
-        try {
-          const { count, error } = await supabase
-            .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
 
-          if (!error) return count || 0;
-        } catch {}
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
       }
 
       return 0;
@@ -1679,6 +1779,8 @@
     async function createNotificationSafe(targetUid, payload = {}) {
       if (!targetUid || targetUid === currentUser?.id) return;
 
+      const createdAt = nowIso();
+
       const snakePayload = {
         type: payload.type || "notification",
         title: payload.title || "",
@@ -1686,7 +1788,7 @@
         from_user_id: payload.from_user_id || payload.fromUserId || currentUser?.id || "",
         to_user_id: targetUid,
         event_id: payload.event_id || payload.eventId || currentEventId || "",
-        created_at: nowIso(),
+        created_at: createdAt,
         is_read: false
       };
 
@@ -1694,10 +1796,10 @@
         type: payload.type || "notification",
         title: payload.title || "",
         text: payload.text || "",
-        fromUserId: payload.from_user_id || payload.fromUserId || currentUser?.id || "",
+        fromUserId: snakePayload.from_user_id,
         toUserId: targetUid,
-        eventId: payload.event_id || payload.eventId || currentEventId || "",
-        createdAt: nowIso(),
+        eventId: snakePayload.event_id,
+        createdAt: createdAt,
         isRead: false
       };
 
@@ -1709,7 +1811,7 @@
             type: snakePayload.type,
             text: snakePayload.text,
             to_user_id: targetUid,
-            created_at: nowIso()
+            created_at: createdAt
           }
         ]);
       } catch (err) {
@@ -1744,45 +1846,44 @@
     async function addEventMember(eventId, uid, isHost = false) {
       const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || currentUser?.email || "Member";
       const username = currentUserProfile?.username || "";
-
-      const snakePayload = {
-        event_id: eventId,
-        user_id: uid,
-        display_name: displayName,
-        username,
-        role: isHost ? "host" : "member",
-        creator_host: !!isHost,
-        joined_at: nowIso(),
-        created_at: nowIso(),
-        updated_at: nowIso()
-      };
-
-      const camelPayload = {
-        eventId,
-        userId: uid,
-        displayName,
-        username,
-        role: isHost ? "host" : "member",
-        creatorHost: !!isHost,
-        joinedAt: nowIso(),
-        createdAt: nowIso(),
-        updatedAt: nowIso()
-      };
-
-      const minimalPayload = {
-        event_id: eventId,
-        user_id: uid,
-        role: isHost ? "host" : "member",
-        joined_at: nowIso()
-      };
+      const createdAt = nowIso();
 
       const already = await memberExists(eventId, uid);
       if (already) return;
 
       await insertWithFallback("event_members", [
-        snakePayload,
-        camelPayload,
-        minimalPayload
+        {
+          event_id: eventId,
+          user_id: uid,
+          display_name: displayName,
+          username,
+          role: isHost ? "host" : "member",
+          creator_host: !!isHost,
+          joined_at: createdAt,
+          created_at: createdAt,
+          updated_at: createdAt
+        },
+        {
+          eventId,
+          userId: uid,
+          displayName,
+          username,
+          role: isHost ? "host" : "member",
+          creatorHost: !!isHost,
+          joinedAt: createdAt,
+          createdAt: createdAt,
+          updatedAt: createdAt
+        },
+        {
+          event_id: eventId,
+          user_id: uid,
+          role: isHost ? "host" : "member",
+          joined_at: createdAt
+        },
+        {
+          event_id: eventId,
+          user_id: uid
+        }
       ]);
     }
 
@@ -1805,7 +1906,6 @@
             .eq(v.userCol, uid);
 
           if (!error) return;
-
           lastError = error;
         } catch (err) {
           lastError = err;
@@ -1821,7 +1921,7 @@
       try {
         await addEventMember(currentEventId, currentUser.id, true);
       } catch (err) {
-        console.warn("Could not ensure creator member:", err?.message || err);
+        console.warn("Could not ensure host member row:", err?.message || err);
       }
     }
 
@@ -1850,13 +1950,28 @@
           })
         );
 
-        membersRows = finalRows
-          .filter(row => row.uid)
-          .sort((a, b) => {
-            if (a.creatorHost && !b.creatorHost) return -1;
-            if (b.creatorHost && !a.creatorHost) return 1;
-            return b.joinedAtMs - a.joinedAtMs;
-          });
+        const uniqueMap = new Map();
+
+        finalRows.forEach(row => {
+          if (!row.uid) return;
+
+          if (!uniqueMap.has(row.uid)) {
+            uniqueMap.set(row.uid, row);
+          } else {
+            const existing = uniqueMap.get(row.uid);
+            uniqueMap.set(row.uid, {
+              ...existing,
+              ...row,
+              creatorHost: existing.creatorHost || row.creatorHost
+            });
+          }
+        });
+
+        membersRows = [...uniqueMap.values()].sort((a, b) => {
+          if (a.creatorHost && !b.creatorHost) return -1;
+          if (b.creatorHost && !a.creatorHost) return 1;
+          return b.joinedAtMs - a.joinedAtMs;
+        });
       } catch (err) {
         console.error(err);
       }
@@ -2080,7 +2195,7 @@
 
       if (mapsLink) {
         links.push(`
-          <a class="quick-link" href="${mapsLink}" target="_blank" rel="noopener noreferrer">
+          <a class="quick-link" href="${escapeHtml(mapsLink)}" target="_blank" rel="noopener noreferrer">
             ${ICONS.map}
             <span>Open Maps</span>
           </a>
@@ -2279,24 +2394,7 @@
           setTopMessage("");
 
           try {
-            await updateByIdWithFallback("events", currentEventId, [
-              {
-                hidden: true,
-                soft_deleted: true,
-                deleted_at: nowIso(),
-                updated_at: nowIso()
-              },
-              {
-                hidden: true,
-                softDeleted: true,
-                deletedAt: nowIso(),
-                updatedAt: nowIso()
-              },
-              {
-                hidden: true
-              }
-            ]);
-
+            await hideOrDeleteEvent();
             window.location.href = "nearby-events.html";
           } catch (err) {
             console.error(err);
@@ -2379,7 +2477,7 @@
       const date = editDate.value.trim();
       const time = editTime.value.trim();
       const address = editAddress.value.trim();
-      const imageURL = normalizeImageUrl(editImageURL.value.trim());
+      const imageURL = normalizeUrl(editImageURL.value.trim());
       const description = editDescription.value.trim();
       const latText = editLat.value.trim();
       const lngText = editLng.value.trim();
@@ -2389,18 +2487,8 @@
         return;
       }
 
-      if (!city) {
-        setEditMessage("City is required.", "err");
-        return;
-      }
-
-      if (!province) {
-        setEditMessage("Province / State is required.", "err");
-        return;
-      }
-
-      if (!country) {
-        setEditMessage("Country is required.", "err");
+      if (!city || !province || !country) {
+        setEditMessage("City, province/state and country are required.", "err");
         return;
       }
 
@@ -2439,6 +2527,16 @@
         return;
       }
 
+      if (lat !== null && (lat < -90 || lat > 90)) {
+        setEditMessage("Latitude must be between -90 and 90.", "err");
+        return;
+      }
+
+      if (lng !== null && (lng < -180 || lng > 180)) {
+        setEditMessage("Longitude must be between -180 and 180.", "err");
+        return;
+      }
+
       const saveEditBtn = document.getElementById("saveEditBtn");
       saveEditBtn.disabled = true;
       setEditMessage("");
@@ -2448,88 +2546,7 @@
         const locationSearch = buildLocationSearch(city, province, country);
         const updatedAt = nowIso();
 
-        const snakePayload = {
-          title,
-          visibility,
-          event_visibility: visibility,
-
-          city,
-          location_city: city,
-          province,
-          state: province,
-          region: province,
-          location_province: province,
-          country,
-          location_country: country,
-          location_search: locationSearch,
-
-          venue,
-          spot: venue,
-          date,
-          time,
-          event_at: eventDateTimeIso,
-          event_datetime: eventDateTimeIso,
-          address,
-          image_url: imageURL,
-          description,
-          lat,
-          lng,
-          updated_at: updatedAt
-        };
-
-        const camelPayload = {
-          title,
-          visibility,
-          eventVisibility: visibility,
-
-          city,
-          locationCity: city,
-          province,
-          state: province,
-          region: province,
-          locationProvince: province,
-          country,
-          locationCountry: country,
-          locationSearch,
-
-          venue,
-          spot: venue,
-          date,
-          time,
-          eventAt: eventDateTimeIso,
-          eventDatetime: eventDateTimeIso,
-          address,
-          imageURL,
-          description,
-          lat,
-          lng,
-          updatedAt
-        };
-
-        const minimalPayload = {
-          title,
-          visibility,
-          city,
-          province,
-          country,
-          venue,
-          date,
-          time,
-          address,
-          image_url: imageURL,
-          description,
-          lat,
-          lng,
-          updated_at: updatedAt
-        };
-
-        await updateByIdWithFallback("events", currentEventId, [
-          snakePayload,
-          camelPayload,
-          minimalPayload
-        ]);
-
-        currentEvent = {
+        const previewEvent = {
           ...currentEvent,
           title,
           visibility,
@@ -2545,6 +2562,123 @@
           lat,
           lng
         };
+
+        const searchText = buildSearchText(previewEvent);
+
+        const fullSnakePayload = {
+          title,
+          name: title,
+          visibility,
+          event_visibility: visibility,
+
+          city,
+          province,
+          state: province,
+          region: province,
+          country,
+          location_search: locationSearch,
+          search_text: searchText,
+          keywords: searchText,
+
+          venue,
+          spot: venue,
+          date,
+          time,
+          event_at: eventDateTimeIso,
+          event_datetime: eventDateTimeIso,
+          address,
+          image_url: imageURL,
+          photo_url: imageURL,
+          description,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const commonSnakePayload = {
+          title,
+          visibility,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          search_text: searchText,
+          venue,
+          date,
+          time,
+          address,
+          image_url: imageURL,
+          description,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const minimalSnakePayload = {
+          title,
+          visibility,
+          city,
+          province,
+          country,
+          venue,
+          date,
+          time,
+          address,
+          image_url: imageURL,
+          description,
+          lat,
+          lng,
+          updated_at: updatedAt
+        };
+
+        const camelPayload = {
+          title,
+          visibility,
+          eventVisibility: visibility,
+
+          city,
+          province,
+          country,
+          locationSearch,
+          searchText,
+
+          venue,
+          date,
+          time,
+          eventAt: eventDateTimeIso,
+          eventDatetime: eventDateTimeIso,
+          address,
+          imageURL,
+          description,
+          lat,
+          lng,
+          updatedAt
+        };
+
+        const ultraMinimalPayload = {
+          title,
+          visibility,
+          city,
+          province,
+          country,
+          venue,
+          date,
+          time,
+          address,
+          description,
+          lat,
+          lng
+        };
+
+        await updateByIdWithFallback("events", currentEventId, [
+          fullSnakePayload,
+          commonSnakePayload,
+          minimalSnakePayload,
+          camelPayload,
+          ultraMinimalPayload
+        ]);
+
+        currentEvent = previewEvent;
 
         const eventDateTime = parseEventDateTime(currentEvent.date, currentEvent.time);
         isExpired = eventDateTime ? Date.now() > eventDateTime.getTime() : false;
@@ -2578,6 +2712,7 @@
       try {
         const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || currentUser?.email || "Member";
         const username = currentUserProfile?.username || "";
+        const createdAt = nowIso();
 
         await insertWithFallback("event_comments", [
           {
@@ -2586,7 +2721,7 @@
             display_name: displayName,
             username,
             text,
-            created_at: nowIso()
+            created_at: createdAt
           },
           {
             eventId: currentEventId,
@@ -2594,13 +2729,17 @@
             displayName,
             username,
             text,
-            createdAt: nowIso()
+            createdAt: createdAt
           },
           {
             event_id: currentEventId,
             user_id: currentUser.id,
             text,
-            created_at: nowIso()
+            created_at: createdAt
+          },
+          {
+            event_id: currentEventId,
+            text
           }
         ]);
 
@@ -2660,6 +2799,7 @@
         if (!eventRow) {
           loadingPanel.classList.add("hidden");
           notFoundPanel.classList.remove("hidden");
+          notFoundText.textContent = "Event not found.";
           return;
         }
 
@@ -2712,25 +2852,6 @@
     }
 
     initPage();
-
-    /*
-      OWNSPACE EVENT DETAIL UPDATE:
-
-      FIXED / ADDED:
-      - BareWorld renamed to OwnSpace.
-      - UI matched event/place/add-place pages.
-      - Bad bottom nav icons replaced with clean SVG icons.
-      - Bottom nav changed to consistent 5 buttons.
-      - Inbox badge added.
-      - Inbox badge counts only:
-        pending message_requests + unread chat_messages.
-      - Green verified badge made clearly visible.
-      - Share button added to event page.
-      - Report button kept for non-creators.
-      - Join / Leave / Edit / Delete kept.
-      - Comments and People Going kept.
-      - Theme supports osTheme and old bwTheme.
-    */
   </script>
 </body>
 </html>
