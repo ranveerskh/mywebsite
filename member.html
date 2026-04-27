@@ -94,7 +94,6 @@
     }
 
     .top-icon-btn svg{width:19px;height:19px;display:block}
-
     .top-center{text-align:center;min-width:0}
 
     .brand{
@@ -138,11 +137,7 @@
       align-items:start;
     }
 
-    .avatar-wrap{
-      display:grid;
-      gap:8px;
-      justify-items:center;
-    }
+    .avatar-wrap{display:grid;gap:8px;justify-items:center}
 
     .avatar,
     .avatar-placeholder{
@@ -241,11 +236,7 @@
       letter-spacing:.06em;
     }
 
-    .link-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:7px;
-    }
+    .link-row{display:flex;flex-wrap:wrap;gap:7px}
 
     .bio-link{
       color:var(--text);
@@ -425,10 +416,7 @@
     .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
-    .action-btn:disabled{
-      opacity:.65;
-      cursor:not-allowed;
-    }
+    .action-btn:disabled{opacity:.65;cursor:not-allowed}
 
     .tabs{
       display:grid;
@@ -455,10 +443,7 @@
       border-color:rgba(76,201,255,.22);
     }
 
-    .list{
-      display:grid;
-      gap:10px;
-    }
+    .list{display:grid;gap:10px}
 
     .photo-grid{
       display:grid;
@@ -663,64 +648,22 @@
     }
 
     @media(max-width:700px){
-      .panel{
-        padding:10px;
-        border-radius:20px;
-      }
-
+      .panel{padding:10px;border-radius:20px}
       .brand{font-size:17px}
-
-      .profile-head{
-        grid-template-columns:70px 1fr;
-        gap:10px;
-      }
-
-      .avatar,
-      .avatar-placeholder{
-        width:70px;
-        height:70px;
-      }
-
+      .profile-head{grid-template-columns:70px 1fr;gap:10px}
+      .avatar,.avatar-placeholder{width:70px;height:70px}
       .display-name{font-size:20px}
       .verified-badge{width:23px;height:23px}
       .bio{font-size:13px}
-
       .stats{gap:6px}
-
-      .action-row{
-        grid-template-columns:repeat(2,1fr);
-        gap:6px;
-      }
-
-      .action-btn{
-        font-size:11.5px;
-        padding:8px 4px;
-        gap:4px;
-      }
-
-      .action-btn svg{
-        width:14px;
-        height:14px;
-      }
-
+      .action-row{grid-template-columns:repeat(2,1fr);gap:6px}
+      .action-btn{font-size:11.5px;padding:8px 4px;gap:4px}
+      .action-btn svg{width:14px;height:14px}
       .tabs{gap:5px}
-
-      .tab-btn{
-        font-size:10.5px;
-        padding:8px 2px;
-      }
-
+      .tab-btn{font-size:10.5px;padding:8px 2px}
       .share-btn{margin-left:0}
-
-      .bottom-nav{
-        padding:7px;
-        gap:5px;
-      }
-
-      .nav-link{
-        font-size:10px;
-        padding:8px 3px;
-      }
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
     }
 
     @media(max-width:390px){
@@ -1064,10 +1007,18 @@
       else window.location.href = "feed.html";
     });
 
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
     }
 
     function setMessage(text, type = "") {
@@ -1148,18 +1099,6 @@
       );
     }
 
-    async function selectMaybe(table, buildQuery) {
-      try {
-        let q = supabase.from(table).select("*");
-        if (buildQuery) q = buildQuery(q);
-        const { data, error } = await q;
-        if (error) return { data: [], error };
-        return { data: Array.isArray(data) ? data : data ? [data] : [], error: null };
-      } catch (err) {
-        return { data: [], error: err };
-      }
-    }
-
     async function selectProfileByColumn(table, column, uid) {
       try {
         const { data, error } = await supabase
@@ -1196,17 +1135,24 @@
       };
     }
 
-    function normalizePost(raw = {}) {
+    function getDateMs(value) {
+      if (!value) return 0;
+      const ms = new Date(value).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    }
+
+    function normalizePost(raw = {}, sourceTable = "") {
       const d = raw || {};
 
       return {
         id: String(getField(d, ["id"], "") || ""),
-        userId: String(getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"], "") || ""),
-        caption: String(getField(d, ["caption", "text", "content"], "") || ""),
+        sourceTable: sourceTable || d.__table || "",
+        userId: String(getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"], "") || ""),
+        caption: String(getField(d, ["caption", "text", "content", "body", "description"], "") || ""),
         imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || ""),
         hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted",
-        createdAt: d.created_at || d.createdAt || null,
-        createdAtMs: getDateMs(d.created_at || d.createdAt)
+        createdAt: d.created_at || d.createdAt || d.timestamp || null,
+        createdAtMs: getDateMs(d.created_at || d.createdAt || d.timestamp)
       };
     }
 
@@ -1219,8 +1165,8 @@
         title: String(getField(d, ["title", "name"], "Untitled Event") || "Untitled Event"),
         description: String(getField(d, ["description", "desc"], "") || ""),
         city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
-        date: String(getField(d, ["date"], "") || ""),
-        time: String(getField(d, ["time"], "") || ""),
+        date: String(getField(d, ["date", "event_date", "eventDate"], "") || ""),
+        time: String(getField(d, ["time", "event_time", "eventTime"], "") || ""),
         visibility: String(getField(d, ["visibility", "event_visibility", "eventVisibility"], "public") || "public"),
         hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted"
       };
@@ -1237,7 +1183,6 @@
         city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
         category: String(getField(d, ["category", "topic"], "Place") || "Place"),
         description: String(getField(d, ["description", "desc", "notes"], "") || ""),
-        approved: d.approved === true || d.verified === true || ["approved","active","verified"].includes(String(d.status || "").toLowerCase()),
         hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted"
       };
     }
@@ -1256,12 +1201,6 @@
       };
     }
 
-    function getDateMs(value) {
-      if (!value) return 0;
-      const ms = new Date(value).getTime();
-      return Number.isFinite(ms) ? ms : 0;
-    }
-
     function formatDate(value) {
       if (!value) return "";
       const d = new Date(value);
@@ -1272,23 +1211,25 @@
     function canViewFullProfile() {
       if (!targetProfile) return false;
       if (targetProfile.uid === currentUser.id) return true;
-      if (targetProfile.isHiddenByAdmin || targetProfile.softDeleted || targetProfile.moderationStatus === "banned") return false;
+      if (targetProfile.isHiddenByAdmin || targetProfile.softDeleted || normalizeText(targetProfile.moderationStatus) === "banned") return false;
       if (!targetProfile.isPrivate) return true;
       return isFollowing;
     }
 
     async function selectProfile(uid) {
-      const profileLookups = await Promise.all([
+      const lookups = await Promise.all([
         selectProfileByColumn("public_profiles", "uid", uid),
         selectProfileByColumn("public_profiles", "id", uid),
         selectProfileByColumn("public_profiles", "user_id", uid),
+        selectProfileByColumn("public_profiles", "userId", uid),
         selectProfileByColumn("users", "uid", uid),
         selectProfileByColumn("users", "id", uid),
-        selectProfileByColumn("users", "user_id", uid)
+        selectProfileByColumn("users", "user_id", uid),
+        selectProfileByColumn("users", "userId", uid)
       ]);
 
-      const publicRow = profileLookups[0] || profileLookups[1] || profileLookups[2] || {};
-      const userRow = profileLookups[3] || profileLookups[4] || profileLookups[5] || {};
+      const publicRow = lookups[0] || lookups[1] || lookups[2] || lookups[3] || {};
+      const userRow = lookups[4] || lookups[5] || lookups[6] || lookups[7] || {};
 
       return normalizeProfile({
         ...publicRow,
@@ -1297,86 +1238,61 @@
       }, uid);
     }
 
-    async function loadProfile() {
-      targetUid = getParamUid();
-
-      if (!isValidUuid(targetUid)) {
-        loadingPanel.innerHTML = `<div class="empty-box">Invalid or missing member ID.</div>`;
-        return;
-      }
-
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data?.user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      currentUser = data.user;
-
-      if (targetUid === currentUser.id) {
-        window.location.href = "profile.html";
-        return;
-      }
-
-      viewerProfile = await selectProfile(currentUser.id);
-      targetProfile = await selectProfile(targetUid);
-
-      if (!targetProfile || !targetProfile.uid) {
-        loadingPanel.innerHTML = `<div class="empty-box">Member not found.</div>`;
-        return;
-      }
-
-      await Promise.all([
-        checkFollowState(),
-        loadCounts(),
-        loadContent(),
-        loadInboxBadgeCount()
-      ]);
-
-      renderProfile();
-      renderCurrentTab();
-
-      loadingPanel.classList.add("hidden");
-      profilePanel.classList.remove("hidden");
-
-      if (canViewFullProfile()) {
-        privatePanel.classList.add("hidden");
-        tabsPanel.classList.remove("hidden");
-        contentPanel.classList.remove("hidden");
-      } else {
-        privatePanel.classList.remove("hidden");
-        tabsPanel.classList.add("hidden");
-        contentPanel.classList.add("hidden");
-      }
-    }
-
     async function checkFollowState() {
-      try {
-        const followRes = await supabase
-          .from("follows")
-          .select("id")
-          .eq("follower_id", currentUser.id)
-          .eq("following_id", targetUid)
-          .limit(1);
+      isFollowing = false;
+      hasPendingRequest = false;
 
-        isFollowing = Array.isArray(followRes.data) && followRes.data.length > 0;
-      } catch {
-        isFollowing = false;
+      const followAttempts = [
+        ["follower_id", "following_id"],
+        ["followerId", "followingId"],
+        ["from_user_id", "to_user_id"],
+        ["fromUserId", "toUserId"]
+      ];
+
+      for (const [fromCol, toCol] of followAttempts) {
+        try {
+          const { data, error } = await supabase
+            .from("follows")
+            .select("id")
+            .eq(fromCol, currentUser.id)
+            .eq(toCol, targetUid)
+            .limit(1);
+
+          if (!error) {
+            isFollowing = Array.isArray(data) && data.length > 0;
+            break;
+          }
+
+          if (isSchemaColumnError(error)) continue;
+        } catch {}
       }
 
-      try {
-        const requestRes = await supabase
-          .from("follow_requests")
-          .select("id,status")
-          .eq("requester_id", currentUser.id)
-          .eq("target_id", targetUid)
-          .eq("status", "pending")
-          .limit(1);
+      const requestAttempts = [
+        ["requester_id", "target_id"],
+        ["requesterId", "targetId"],
+        ["from_user_id", "to_user_id"],
+        ["fromUserId", "toUserId"]
+      ];
 
-        hasPendingRequest = Array.isArray(requestRes.data) && requestRes.data.length > 0;
-      } catch {
-        hasPendingRequest = false;
+      for (const [fromCol, toCol] of requestAttempts) {
+        try {
+          const { data, error } = await supabase
+            .from("follow_requests")
+            .select("*")
+            .eq(fromCol, currentUser.id)
+            .eq(toCol, targetUid)
+            .limit(10);
+
+          if (!error) {
+            hasPendingRequest = (data || []).some(row => {
+              const status = normalizeText(getField(row, ["status", "request_status", "requestStatus"], "pending") || "pending");
+              return status === "pending";
+            });
+            break;
+          }
+
+          if (isSchemaColumnError(error)) continue;
+        } catch {}
       }
     }
 
@@ -1385,7 +1301,7 @@
         try {
           let q = supabase
             .from(table)
-            .select("*")
+            .select("id")
             .eq(column, value);
 
           if (filterFn) q = filterFn(q);
@@ -1402,15 +1318,16 @@
     }
 
     async function loadCounts() {
-      const [followers, following, posts] = await Promise.all([
-        countRowsByAnyColumn("follows", ["following_id", "followingId"], targetUid),
-        countRowsByAnyColumn("follows", ["follower_id", "followerId"], targetUid),
-        countRowsByAnyColumn("posts", ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"], targetUid)
+      const [followers, following, normalPosts, communityPosts] = await Promise.all([
+        countRowsByAnyColumn("follows", ["following_id", "followingId", "to_user_id", "toUserId"], targetUid),
+        countRowsByAnyColumn("follows", ["follower_id", "followerId", "from_user_id", "fromUserId"], targetUid),
+        countRowsByAnyColumn("posts", ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"], targetUid),
+        countRowsByAnyColumn("community_posts", ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"], targetUid)
       ]);
 
       followersCount.textContent = String(followers);
       followingCount.textContent = String(following);
-      postsCount.textContent = String(posts);
+      postsCount.textContent = String(Number(normalPosts || 0) + Number(communityPosts || 0));
 
       followersStat.href = `network.html?uid=${encodeURIComponent(targetUid)}&tab=followers`;
       followingStat.href = `network.html?uid=${encodeURIComponent(targetUid)}&tab=following`;
@@ -1446,15 +1363,17 @@
     }
 
     async function loadContent() {
-      const postRows = await queryRowsAnyColumn(
-        "posts",
-        ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"],
-        targetUid,
-        "created_at"
-      );
+      const postOwnerColumns = ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"];
 
-      postsData = (postRows || [])
-        .map(normalizePost)
+      const [postRows, communityPostRows] = await Promise.all([
+        queryRowsAnyColumn("posts", postOwnerColumns, targetUid, "created_at"),
+        queryRowsAnyColumn("community_posts", postOwnerColumns, targetUid, "created_at")
+      ]);
+
+      postsData = [
+        ...(postRows || []).map(row => normalizePost(row, "posts")),
+        ...(communityPostRows || []).map(row => normalizePost(row, "community_posts"))
+      ]
         .filter(p => !p.hidden)
         .sort((a,b) => b.createdAtMs - a.createdAtMs);
 
@@ -1567,7 +1486,8 @@
         followStateBadge.classList.add("hidden");
       }
 
-      if (targetProfile.moderationStatus && !["active", "ok"].includes(String(targetProfile.moderationStatus).toLowerCase())) {
+      const moderationStatus = normalizeText(targetProfile.moderationStatus);
+      if (moderationStatus && !["active", "ok", "public"].includes(moderationStatus)) {
         moderationBadge.textContent = targetProfile.moderationStatus;
         moderationBadge.classList.remove("hidden");
       } else {
@@ -1615,8 +1535,10 @@
           text: payload.text || "",
           fromUserId: payload.from_user_id || currentUser.id,
           toUserId: payload.to_user_id,
-          createdAt: payload.created_at || new Date().toISOString(),
-          isRead: false
+          userId: payload.to_user_id,
+          createdAt: payload.created_at || nowIso(),
+          isRead: false,
+          read: false
         }
       ];
 
@@ -1626,6 +1548,51 @@
           if (!error) return;
         } catch {}
       }
+    }
+
+    async function deleteWithFallback(table, variants) {
+      let worked = false;
+      let lastError = null;
+
+      for (const item of variants) {
+        try {
+          let q = supabase.from(table).delete();
+
+          Object.entries(item).forEach(([key, value]) => {
+            q = q.eq(key, value);
+          });
+
+          const { error } = await q;
+          if (!error) worked = true;
+          else lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (!worked && lastError) throw lastError;
+      return worked;
+    }
+
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select("*")
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
     }
 
     async function handleFollowClick() {
@@ -1639,32 +1606,30 @@
 
       try {
         if (isFollowing) {
-          await supabase
-            .from("follows")
-            .delete()
-            .eq("follower_id", currentUser.id)
-            .eq("following_id", targetUid);
+          await deleteWithFallback("follows", [
+            { follower_id: currentUser.id, following_id: targetUid },
+            { followerId: currentUser.id, followingId: targetUid },
+            { from_user_id: currentUser.id, to_user_id: targetUid },
+            { fromUserId: currentUser.id, toUserId: targetUid }
+          ]);
 
           isFollowing = false;
           setMessage("Unfollowed.", "success");
         } else if (hasPendingRequest) {
-          const { error } = await supabase
-            .from("follow_requests")
-            .delete()
-            .eq("requester_id", currentUser.id)
-            .eq("target_id", targetUid)
-            .eq("status", "pending");
-
-          if (error) throw error;
+          await deleteWithFallback("follow_requests", [
+            { requester_id: currentUser.id, target_id: targetUid, status: "pending" },
+            { requesterId: currentUser.id, targetId: targetUid, status: "pending" },
+            { from_user_id: currentUser.id, to_user_id: targetUid, status: "pending" },
+            { fromUserId: currentUser.id, toUserId: targetUid, status: "pending" }
+          ]);
 
           hasPendingRequest = false;
           setMessage("Follow request cancelled.", "success");
         } else if (targetProfile.isPrivate) {
-          const now = new Date().toISOString();
+          const now = nowIso();
 
-          const { error } = await supabase
-            .from("follow_requests")
-            .insert({
+          await insertWithFallback("follow_requests", [
+            {
               requester_id: currentUser.id,
               target_id: targetUid,
               from_user_id: currentUser.id,
@@ -1672,9 +1637,23 @@
               status: "pending",
               created_at: now,
               updated_at: now
-            });
-
-          if (error) throw error;
+            },
+            {
+              requesterId: currentUser.id,
+              targetId: targetUid,
+              fromUserId: currentUser.id,
+              toUserId: targetUid,
+              status: "pending",
+              createdAt: now,
+              updatedAt: now
+            },
+            {
+              from_user_id: currentUser.id,
+              to_user_id: targetUid,
+              status: "pending",
+              created_at: now
+            }
+          ]);
 
           await createNotificationSafe({
             type: "follow_request",
@@ -1683,23 +1662,32 @@
             from_user_id: currentUser.id,
             to_user_id: targetUid,
             created_at: now,
-            is_read: false
+            is_read: false,
+            read: false
           });
 
           hasPendingRequest = true;
           setMessage("Follow request sent.", "success");
         } else {
-          const now = new Date().toISOString();
+          const now = nowIso();
 
-          const { error } = await supabase
-            .from("follows")
-            .insert({
+          await insertWithFallback("follows", [
+            {
               follower_id: currentUser.id,
               following_id: targetUid,
               created_at: now
-            });
-
-          if (error) throw error;
+            },
+            {
+              followerId: currentUser.id,
+              followingId: targetUid,
+              createdAt: now
+            },
+            {
+              from_user_id: currentUser.id,
+              to_user_id: targetUid,
+              created_at: now
+            }
+          ]);
 
           await createNotificationSafe({
             type: "follow",
@@ -1708,7 +1696,8 @@
             from_user_id: currentUser.id,
             to_user_id: targetUid,
             created_at: now,
-            is_read: false
+            is_read: false,
+            read: false
           });
 
           isFollowing = true;
@@ -1772,12 +1761,18 @@
 
       const url = new URL(file, window.location.href);
 
-      if (type === "post") url.searchParams.set("postId", id);
+      if (type === "post") {
+        url.searchParams.set("postId", id);
+        if (extra.source) url.searchParams.set("source", extra.source);
+      }
+
       if (type === "event") url.searchParams.set("eventId", id);
+
       if (type === "place") {
         url.searchParams.set("placeId", id);
         if (extra.source) url.searchParams.set("source", extra.source);
       }
+
       if (type === "community") url.searchParams.set("communityId", id);
       if (type === "profile") url.searchParams.set("uid", id);
 
@@ -1808,11 +1803,11 @@
       });
     }
 
-    async function sharePost(postId) {
+    async function sharePost(post) {
       await shareUrl({
         title: "Check this post on OwnSpace",
         text: "Check this post on OwnSpace.",
-        url: buildItemUrl("post", postId),
+        url: buildItemUrl("post", post.id, { source: post.sourceTable || "" }),
         copiedText: "Post link copied."
       });
     }
@@ -1897,7 +1892,7 @@
     function renderPhotoTile(post) {
       const a = document.createElement("a");
       a.className = "photo-tile";
-      a.href = `post.html?postId=${encodeURIComponent(post.id)}`;
+      a.href = buildItemUrl("post", post.id, { source: post.sourceTable || "" });
       a.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Photo">`;
 
       const img = a.querySelector("img");
@@ -1912,13 +1907,15 @@
       const card = document.createElement("div");
       card.className = "post-card";
 
+      const postUrl = buildItemUrl("post", post.id, { source: post.sourceTable || "" });
+
       card.innerHTML = `
         ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Post image">` : ""}
         <div class="post-caption">${escapeHtml(post.caption || "No caption.")}</div>
         <div class="mini-meta">${post.createdAt ? escapeHtml(formatDate(post.createdAt)) : ""}</div>
 
         <div class="card-actions">
-          <a href="post.html?postId=${encodeURIComponent(post.id)}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
+          <a href="${postUrl}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
           <button class="mini-btn share-btn btn-green" type="button">${ICONS.share}<span>Share</span></button>
           <a href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.userId)}" class="mini-btn btn-red">${ICONS.report}<span>Report</span></a>
         </div>
@@ -1932,7 +1929,7 @@
       }
 
       card.querySelector(".share-btn").addEventListener("click", () => {
-        sharePost(post.id);
+        sharePost(post);
       });
 
       contentList.appendChild(card);
@@ -1948,7 +1945,7 @@
           <span class="badge ${event.creatorId === targetUid ? "badge-green" : "badge-purple"}">${event.creatorId === targetUid ? "Created" : "Joined"}</span>
           <span class="badge ${event.visibility === "private" ? "badge-yellow" : "badge-blue"}">${event.visibility === "private" ? "Private" : "Public"}</span>
         </div>
-        <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" • ") || "Event")}</div>
+        <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" â¢ ") || "Event")}</div>
         <div class="desc">${escapeHtml(event.description || "No description.")}</div>
 
         <div class="card-actions">
@@ -1975,7 +1972,7 @@
           <span class="badge badge-green">Added</span>
           ${place.category ? `<span class="badge badge-purple">${escapeHtml(place.category)}</span>` : ""}
         </div>
-        <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" • ") || "Place")}</div>
+        <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" â¢ ") || "Place")}</div>
         <div class="desc">${escapeHtml(place.description || "No description.")}</div>
 
         <div class="card-actions">
@@ -2019,99 +2016,218 @@
       contentList.appendChild(card);
     }
 
+    /*
+      Correct OwnSpace inbox red-dot rule:
+      Inbox badge = pending message_requests + unread incoming chat_messages only.
+      General notifications table is NOT counted here.
+      Old incoming messages before my latest reply do NOT keep the red dot alive.
+    */
+
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function readThreadForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: String(getFirstFilled(d, ["id"], fallbackId) || fallbackId || ""),
+        status: normalizeText(getFirstFilled(d, ["status"], "accepted") || "accepted"),
+        participantA: String(getFirstFilled(d, ["participant_a", "participantA"], "") || ""),
+        participantB: String(getFirstFilled(d, ["participant_b", "participantB"], "") || ""),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.updated_at ?? d.updatedAt ?? d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function readMessageForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: String(getFirstFilled(d, ["id"], fallbackId) || fallbackId || ""),
+        threadId: String(getFirstFilled(d, ["thread_id", "threadId"], "") || ""),
+        senderId: String(getFirstFilled(d, ["sender_id", "senderId", "from_user_id", "fromUserId"], "") || ""),
+        createdAt: d.created_at ?? d.createdAt ?? d.timestamp ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function badgeTimeMs(value) {
+      if (!value) return 0;
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function isInboxMessageUnreadForBadge(msg, uid) {
+      if (!msg || msg.senderId === uid) return false;
+
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          try {
+            const { count, error } = await supabase
+              .from("message_requests")
+              .select("id", { count: "exact", head: true })
+              .eq(targetColumn, uid)
+              .eq(statusColumn, "pending");
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
         try {
-          const { count, error } = await supabase
+          const { data, error } = await supabase
             .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+            .select("*")
+            .eq(targetColumn, uid);
 
-          if (!error) return count || 0;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = normalizeText(getFirstFilled(row, statusColumns, "pending") || "pending");
+              return status === "pending";
+            }).length;
+          }
         } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
-      try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+    async function loadInboxThreadsForBadge(uid) {
+      const attempts = [
+        ["participant_a", "participant_b"],
+        ["participantA", "participantB"]
+      ];
 
-        if (Array.isArray(threads) && threads.length) {
-          const threadIds = threads.map(t => t.id).filter(Boolean);
+      for (const [colA, colB] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${colA}.eq.${uid},${colB}.eq.${uid}`);
 
-          if (threadIds.length) {
-            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-            for (const field of seenFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .is(field, null);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-
-            const boolFields = ["is_read", "read"];
-
-            for (const field of boolFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .eq(field, false);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
+          if (!error) {
+            return (data || [])
+              .map(row => readThreadForBadge(row, row.id || ""))
+              .filter(thread => thread.id)
+              .filter(thread => !thread.status || thread.status === "accepted");
           }
-        }
-      } catch {}
-
-      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
-
-      for (const receiverColumn of receiverColumns) {
-        for (const seenColumn of ["seen_at", "read_at", "seenAt", "readAt"]) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .eq(receiverColumn, uid)
-              .neq("sender_id", uid)
-              .is(seenColumn, null);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        for (const boolField of ["is_read", "read"]) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .eq(receiverColumn, uid)
-              .neq("sender_id", uid)
-              .eq(boolField, false);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
+        } catch {}
       }
 
-      return 0;
+      return [];
+    }
+
+    async function fetchInboxMessagesForBadge(threadIds) {
+      if (!threadIds.length) return [];
+
+      const attempts = [
+        { threadColumn: "thread_id", orderColumn: "created_at" },
+        { threadColumn: "threadId", orderColumn: "createdAt" }
+      ];
+
+      for (const attempt of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds)
+            .order(attempt.orderColumn, { ascending: true });
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds);
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+      }
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      const threads = await loadInboxThreadsForBadge(uid);
+      const threadIds = threads.map(thread => thread.id).filter(Boolean);
+
+      if (!threadIds.length) return 0;
+
+      const messages = await fetchInboxMessagesForBadge(threadIds);
+      const byThread = new Map();
+
+      messages.forEach(msg => {
+        if (!msg.threadId) return;
+        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+        byThread.get(msg.threadId).push(msg);
+      });
+
+      let total = 0;
+
+      threads.forEach(thread => {
+        const list = (byThread.get(thread.id) || [])
+          .sort((a, b) => badgeTimeMs(a.createdAt) - badgeTimeMs(b.createdAt));
+
+        if (!list.length) return;
+
+        const newest = [...list].sort((a, b) => badgeTimeMs(b.createdAt) - badgeTimeMs(a.createdAt))[0];
+
+        if (newest?.senderId === uid) return;
+
+        const lastOutgoingMs = list
+          .filter(msg => msg.senderId === uid)
+          .reduce((max, msg) => Math.max(max, badgeTimeMs(msg.createdAt)), 0);
+
+        const unreadCount = list.filter(msg => {
+          if (msg.senderId === uid) return false;
+          if (badgeTimeMs(msg.createdAt) <= lastOutgoingMs) return false;
+          return isInboxMessageUnreadForBadge(msg, uid);
+        }).length;
+
+        total += unreadCount;
+      });
+
+      return total;
     }
 
     async function loadInboxBadgeCount() {
@@ -2131,7 +2247,8 @@
           inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
           inboxBadge.classList.remove("hidden");
         }
-      } catch {
+      } catch (err) {
+        console.warn("Inbox badge count skipped:", err?.message || err);
         inboxBadge.classList.add("hidden");
       }
     }
@@ -2159,6 +2276,60 @@
     shareProfileBtn.addEventListener("click", shareProfile);
     reportBtn.addEventListener("click", handleReportClick);
 
+    async function loadProfile() {
+      targetUid = getParamUid();
+
+      if (!isValidUuid(targetUid)) {
+        loadingPanel.innerHTML = `<div class="empty-box">Invalid or missing member ID.</div>`;
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+
+      if (targetUid === currentUser.id) {
+        window.location.href = "profile.html";
+        return;
+      }
+
+      viewerProfile = await selectProfile(currentUser.id);
+      targetProfile = await selectProfile(targetUid);
+
+      if (!targetProfile || !targetProfile.uid) {
+        loadingPanel.innerHTML = `<div class="empty-box">Member not found.</div>`;
+        return;
+      }
+
+      await Promise.all([
+        checkFollowState(),
+        loadCounts(),
+        loadContent(),
+        loadInboxBadgeCount()
+      ]);
+
+      renderProfile();
+      renderCurrentTab();
+
+      loadingPanel.classList.add("hidden");
+      profilePanel.classList.remove("hidden");
+
+      if (canViewFullProfile()) {
+        privatePanel.classList.add("hidden");
+        tabsPanel.classList.remove("hidden");
+        contentPanel.classList.remove("hidden");
+      } else {
+        privatePanel.classList.remove("hidden");
+        tabsPanel.classList.add("hidden");
+        contentPanel.classList.add("hidden");
+      }
+    }
+
     supabase.auth.onAuthStateChange((event, session) => {
       if (!session?.user) {
         window.location.href = "login.html";
@@ -2174,19 +2345,23 @@
       OWNSPACE MEMBER PAGE UPDATE:
 
       FIXED / ADDED:
-      - Light theme is now default.
+      - Light theme is default.
       - Member profile reads from users + public_profiles.
       - Clean verified badge.
       - Added Share Profile button.
       - Follow / Message / Share / Report controls are compact.
       - Private profiles only show public profile header and request/follow state.
       - Dashboard / Photos / Events / Places / Community tabs remain in one row.
+      - Dashboard includes posts + community_posts.
       - Photos tab shows clean photo grid.
-      - Events now open event.html?eventId=...
-      - Events can include created + joined events if event_members table exists.
-      - Communities can include created + joined communities if community_members table exists.
+      - Events open event.html?eventId=...
+      - Events include created + joined events if event_members table exists.
+      - Communities include created + joined communities if community_members table exists.
       - Share buttons added to posts, events, places, communities, and profile.
-      - Inbox badge counts only pending message_requests + unread chat_messages.
+      - Inbox badge rule updated:
+        pending message_requests + unread incoming chat_messages only.
+      - General notifications are not counted in the Inbox badge.
+      - Old incoming chat messages before your latest reply no longer keep red dot alive.
     */
   </script>
 </body>
