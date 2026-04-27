@@ -671,7 +671,7 @@
       };
     }
 
-    function normalizePost(row = {}, sourceTable = "community_posts") {
+    function normalizePost(row = {}, sourceTable = "posts") {
       const createdAt = row.created_at ?? row.createdAt ?? row.timestamp ?? null;
       return {
         id: getField(row, ["id"]),
@@ -761,11 +761,28 @@
       return null;
     }
 
+    async function countPostsByCommunity(extraBuilder = null) {
+      const attempts = [
+        { table:"posts", col:"community_id" },
+        { table:"posts", col:"communityId" },
+        { table:"posts", col:"group_id" },
+        { table:"posts", col:"groupId" }
+      ];
+
+      for (const a of attempts) {
+        const count = await countByCommunity(a.table, a.col, extraBuilder);
+        if (count !== null) return count;
+      }
+
+      return null;
+    }
+
     async function loadCounts() {
-      const postCount = await countByCommunity("community_posts", "community_id");
+      const postCount = await countPostsByCommunity();
       totalPostCount = postCount !== null ? postCount : posts.length;
 
-      const photoCount = await countByCommunity("community_posts", "community_id", q => q.not("image_url", "is", null));
+      let photoCount = await countPostsByCommunity(q => q.not("image_url", "is", null));
+      if (photoCount === null) photoCount = await countPostsByCommunity(q => q.not("imageURL", "is", null));
       totalPhotoCount = photoCount !== null ? photoCount : posts.filter(p => p.imageURL).length;
 
       const memberCount = await countByCommunity("community_members", "community_id");
@@ -872,16 +889,25 @@
       if (reset) { posts = []; postOffset = 0; }
 
       const attempts = [
-        { table:"community_posts", col:"community_id" },
-        { table:"posts", col:"community_id" },
-        { table:"posts", col:"communityId" }
+        { table:"posts", col:"community_id", order:"created_at" },
+        { table:"posts", col:"communityId", order:"created_at" },
+        { table:"posts", col:"group_id", order:"created_at" },
+        { table:"posts", col:"groupId", order:"created_at" },
+        { table:"posts", col:"community_id", order:"createdAt" },
+        { table:"posts", col:"communityId", order:"createdAt" }
       ];
 
       let loaded = [];
-      let sourceTable = "community_posts";
+      let sourceTable = "posts";
       for (const a of attempts) {
         try {
-          let query = supabase.from(a.table).select("*").eq(a.col, communityId).order("created_at", { ascending:false }).range(postOffset, postOffset + POSTS_PAGE_SIZE - 1);
+          const query = supabase
+            .from(a.table)
+            .select("*")
+            .eq(a.col, communityId)
+            .order(a.order, { ascending:false })
+            .range(postOffset, postOffset + POSTS_PAGE_SIZE - 1);
+
           const { data, error } = await query;
           if (!error && Array.isArray(data)) {
             loaded = data.map(row => normalizePost(row, a.table)).filter(p => p.id && !p.hidden);
@@ -921,15 +947,24 @@
       els.photoGrid.classList.remove("hidden");
 
       const attempts = [
-        { table:"community_posts", col:"community_id", img:"image_url" },
-        { table:"posts", col:"community_id", img:"image_url" },
-        { table:"posts", col:"communityId", img:"imageURL" }
+        { table:"posts", col:"community_id", img:"image_url", order:"created_at" },
+        { table:"posts", col:"communityId", img:"imageURL", order:"created_at" },
+        { table:"posts", col:"group_id", img:"image_url", order:"created_at" },
+        { table:"posts", col:"groupId", img:"imageURL", order:"created_at" },
+        { table:"posts", col:"community_id", img:"image_url", order:"createdAt" },
+        { table:"posts", col:"communityId", img:"imageURL", order:"createdAt" }
       ];
 
       let rows = [];
       for (const a of attempts) {
         try {
-          const { data, error } = await supabase.from(a.table).select("*").eq(a.col, communityId).not(a.img, "is", null).order("created_at", { ascending:false }).limit(PHOTOS_LIMIT);
+          const { data, error } = await supabase
+            .from(a.table)
+            .select("*")
+            .eq(a.col, communityId)
+            .not(a.img, "is", null)
+            .order(a.order, { ascending:false })
+            .limit(PHOTOS_LIMIT);
           if (!error && Array.isArray(data)) { rows = data.map(row => normalizePost(row, a.table)).filter(p => p.imageURL && !p.hidden); break; }
         } catch {}
       }
@@ -1380,7 +1415,7 @@
       button.disabled = true;
       try {
         const next = !post.pinned;
-        await updateWithFallback(post.sourceTable || "community_posts", post.id, [
+        await updateWithFallback(post.sourceTable || "posts", post.id, [
           { pinned:next, is_pinned:next, updated_at:nowIso() },
           { pinned:next, isPinned:next, updatedAt:nowIso() },
           { pinned:next }
@@ -1397,7 +1432,7 @@
       if (!confirm("Hide this post?")) return;
       button.disabled = true;
       try {
-        await updateWithFallback(post.sourceTable || "community_posts", post.id, [
+        await updateWithFallback(post.sourceTable || "posts", post.id, [
           { hidden:true, soft_deleted:true, deleted_at:nowIso(), updated_at:nowIso() },
           { hidden:true, softDeleted:true, deletedAt:nowIso(), updatedAt:nowIso() },
           { hidden:true }
@@ -1436,16 +1471,16 @@
 
     async function insertPost(payloads) {
       let lastError = null;
-      for (const table of ["community_posts", "posts"]) {
-        for (const payload of payloads) {
-          try {
-            const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
-            if (!error) return data || null;
-            lastError = error;
-          } catch (err) { lastError = err; }
-        }
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase.from("posts").insert(payload).select().maybeSingle();
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) { lastError = err; }
       }
-      throw lastError || new Error("Could not create post.");
+
+      throw lastError || new Error("Could not create post in posts table.");
     }
 
     async function refreshPostsOnly() {
@@ -1479,7 +1514,7 @@
       const watched = [
         { table:"communities", filter:`id=eq.${communityId}` },
         { table:"community_members", filter:`community_id=eq.${communityId}` },
-        { table:"community_posts", filter:`community_id=eq.${communityId}` },
+        { table:"posts", filter:`community_id=eq.${communityId}` },
         { table:"community_join_requests", filter:`community_id=eq.${communityId}` }
       ];
       watched.forEach(w => {
