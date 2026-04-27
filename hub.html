@@ -99,6 +99,7 @@
     }
 
     .top-center{text-align:center;min-width:0}
+
     .brand{
       font-size:18px;
       font-weight:950;
@@ -232,80 +233,6 @@
     .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
     .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
     .btn-soft{background:var(--surface-2);border-color:var(--line)}
-
-    .featured-profile-card{
-      display:grid;
-      grid-template-columns:66px 1fr;
-      gap:12px;
-      align-items:center;
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
-    }
-
-    .profile-avatar,
-    .profile-placeholder{
-      width:66px;
-      height:66px;
-      border-radius:50%;
-      border:1px solid var(--line);
-      background:var(--surface-3);
-      flex-shrink:0;
-    }
-
-    .profile-avatar{object-fit:cover}
-
-    .profile-placeholder{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      text-align:center;
-      font-size:10px;
-      line-height:1.25;
-      padding:7px;
-    }
-
-    .featured-profile-body{min-width:0}
-
-    .featured-profile-label{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:5px 9px;
-      border-radius:999px;
-      background:rgba(167,139,250,.14);
-      border:1px solid rgba(167,139,250,.22);
-      color:var(--text);
-      font-size:11px;
-      font-weight:950;
-      margin-bottom:6px;
-    }
-
-    .featured-profile-name{
-      font-size:17px;
-      font-weight:950;
-      line-height:1.25;
-      word-break:break-word;
-    }
-
-    .featured-profile-user{
-      color:var(--blue);
-      font-size:12px;
-      font-weight:850;
-      margin-top:3px;
-      word-break:break-word;
-    }
-
-    .featured-profile-bio{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.45;
-      margin-top:5px;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
 
     .search-wrap{
       position:relative;
@@ -446,6 +373,8 @@
 
     .input::placeholder,
     .textarea::placeholder{color:var(--muted)}
+
+    .select option{color:#111}
 
     .check-row{
       display:flex;
@@ -767,8 +696,6 @@
       .brand{font-size:17px}
       .panel{padding:11px;border-radius:20px}
       .form-grid{grid-template-columns:1fr}
-      .featured-profile-card{grid-template-columns:58px 1fr}
-      .profile-avatar,.profile-placeholder{width:58px;height:58px}
       .action-row .action-btn,
       .post-actions .mini-btn{flex:1}
       .share-btn{margin-left:0}
@@ -837,25 +764,6 @@
           </svg>
           Settings
         </a>
-      </div>
-    </div>
-
-    <div id="featuredProfilePanel" class="panel hidden">
-      <div class="section-small-title">Featured Profile</div>
-      <div class="featured-profile-card">
-        <img id="featuredProfileAvatar" class="profile-avatar hidden" alt="Featured profile photo" />
-        <div id="featuredProfilePlaceholder" class="profile-placeholder">No photo</div>
-
-        <div class="featured-profile-body">
-          <div id="featuredProfileLabel" class="featured-profile-label">Official Profile</div>
-          <div id="featuredProfileName" class="featured-profile-name">OwnSpace</div>
-          <div id="featuredProfileUsername" class="featured-profile-user hidden">@ownspace</div>
-          <div id="featuredProfileBio" class="featured-profile-bio">Official OwnSpace profile.</div>
-
-          <div class="action-row" style="margin-top:10px;">
-            <a id="featuredProfileLink" href="profile.html" class="action-btn btn-primary">View Profile</a>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1053,15 +961,6 @@
 
     const refreshBtn = document.getElementById("refreshBtn");
     const refreshHeroBtn = document.getElementById("refreshHeroBtn");
-
-    const featuredProfilePanel = document.getElementById("featuredProfilePanel");
-    const featuredProfileAvatar = document.getElementById("featuredProfileAvatar");
-    const featuredProfilePlaceholder = document.getElementById("featuredProfilePlaceholder");
-    const featuredProfileLabel = document.getElementById("featuredProfileLabel");
-    const featuredProfileName = document.getElementById("featuredProfileName");
-    const featuredProfileUsername = document.getElementById("featuredProfileUsername");
-    const featuredProfileBio = document.getElementById("featuredProfileBio");
-    const featuredProfileLink = document.getElementById("featuredProfileLink");
 
     const composerPanel = document.getElementById("composerPanel");
     const hubForm = document.getElementById("hubForm");
@@ -1438,154 +1337,6 @@
 
       return false;
     }
-
-    async function selectRowsSafe(table, limit = 25) {
-      try {
-        const { data, error } = await supabase
-          .from(table)
-          .select("*")
-          .limit(limit);
-
-        if (!error && Array.isArray(data)) return data;
-      } catch {}
-
-      return [];
-    }
-
-    function extractUserIdFromRow(row) {
-      return getField(row, [
-        "featured_profile_id",
-        "featured_profile_uid",
-        "official_profile_id",
-        "official_profile_uid",
-        "founder_user_id",
-        "founder_uid",
-        "profile_user_id",
-        "profile_uid",
-        "user_id",
-        "userId",
-        "uid",
-        "id"
-      ], "");
-    }
-
-    function extractUserIdFromSettingRow(row) {
-      const direct = extractUserIdFromRow(row);
-      if (direct) return direct;
-
-      const key = normalizeText(getField(row, ["key", "name", "setting_key", "settingKey"], ""));
-      const value = getField(row, ["value", "setting_value", "settingValue"], "");
-
-      if (value && (
-        key.includes("founder") ||
-        key.includes("official") ||
-        key.includes("featured_profile") ||
-        key.includes("hub_profile")
-      )) {
-        return String(value).trim();
-      }
-
-      return "";
-    }
-
-    async function findOfficialProfileUid() {
-      const settingTables = ["hub_settings", "app_settings", "settings"];
-
-      for (const table of settingTables) {
-        const rows = await selectRowsSafe(table, 30);
-
-        for (const row of rows) {
-          const uid = extractUserIdFromSettingRow(row);
-          if (uid) return uid;
-        }
-      }
-
-      const authorRows = await selectRowsSafe("hub_authors", 50);
-      const officialAuthor = authorRows.find(row => {
-        const role = normalizeText(getField(row, ["role", "type", "author_type", "authorType"], ""));
-        return (
-          row?.is_founder === true ||
-          row?.isFounder === true ||
-          row?.featured === true ||
-          row?.is_featured === true ||
-          role === "founder" ||
-          role === "owner" ||
-          role === "official"
-        );
-      });
-
-      if (officialAuthor) {
-        const uid = extractUserIdFromRow(officialAuthor);
-        if (uid) return uid;
-      }
-
-      const adminRows = await selectRowsSafe("admins", 50);
-      const officialAdmin = adminRows.find(row => {
-        const role = normalizeText(getField(row, ["role", "type"], ""));
-        return role === "founder" || role === "owner" || role === "official";
-      });
-
-      if (officialAdmin) {
-        const uid = extractUserIdFromRow(officialAdmin);
-        if (uid) return uid;
-      }
-
-      return "";
-    }
-
-    async function loadOfficialProfile() {
-      const uid = await findOfficialProfileUid();
-
-      if (!uid) {
-        featuredProfilePanel.classList.add("hidden");
-        return;
-      }
-
-      const profile = await loadMergedProfile(uid);
-
-      if (!profile?.uid) {
-        featuredProfilePanel.classList.add("hidden");
-        return;
-      }
-
-      featuredProfileName.textContent = profile.displayName || "OwnSpace";
-
-      if (profile.username) {
-        featuredProfileUsername.textContent = "@" + profile.username;
-        featuredProfileUsername.classList.remove("hidden");
-      } else {
-        featuredProfileUsername.classList.add("hidden");
-      }
-
-      featuredProfileBio.textContent = profile.bio?.trim()
-        ? profile.bio
-        : "Official OwnSpace profile.";
-
-      const role = normalizeText(profile.role);
-      featuredProfileLabel.textContent = role === "founder" || role === "owner"
-        ? "Founder / Official Profile"
-        : "Official Profile";
-
-      featuredProfileLink.href = profile.uid === currentUser?.id
-        ? "profile.html"
-        : `member.html?uid=${encodeURIComponent(profile.uid)}`;
-
-      if (profile.photoURL) {
-        featuredProfileAvatar.src = profile.photoURL;
-        featuredProfileAvatar.classList.remove("hidden");
-        featuredProfilePlaceholder.classList.add("hidden");
-      } else {
-        featuredProfileAvatar.classList.add("hidden");
-        featuredProfilePlaceholder.classList.remove("hidden");
-      }
-
-      featuredProfilePanel.classList.remove("hidden");
-    }
-
-    featuredProfileAvatar.addEventListener("error", () => {
-      featuredProfileAvatar.classList.add("hidden");
-      featuredProfilePlaceholder.classList.remove("hidden");
-    });
 
     function setComposerMessage(text = "", type = "") {
       composerMessage.textContent = text;
@@ -2442,7 +2193,6 @@
       updateAuthorUI();
 
       await Promise.all([
-        loadOfficialProfile(),
         refreshAll(),
         loadInboxBadge()
       ]);
