@@ -582,15 +582,15 @@
           <div>
             <div class="head-title">Add New Place</div>
             <div class="head-sub">
-              Add a real place with clear location details. After review, it can appear in Nearby and search.
+              Add a real place with clear location details. Places are saved as public so people can open them from Nearby and Search.
             </div>
           </div>
         </div>
 
         <div class="chip-row">
           <span class="chip chip-blue">Location required</span>
-          <span class="chip chip-green">Photo optional</span>
-          <span class="chip chip-purple">Review needed</span>
+          <span class="chip chip-green">Public place</span>
+          <span class="chip chip-purple">Photo optional</span>
           <span class="chip chip-yellow">GPS optional</span>
         </div>
 
@@ -745,7 +745,7 @@
         </form>
 
         <div class="note">
-          After submission, your place may show as pending while it is reviewed.
+          Your place will be saved as public and can be opened by other users.
         </div>
       </div>
     </div>
@@ -1013,7 +1013,8 @@
         msg.includes("schema cache") ||
         msg.includes("could not find") ||
         msg.includes("column") ||
-        msg.includes("does not exist")
+        msg.includes("does not exist") ||
+        msg.includes("relation")
       );
     }
 
@@ -1038,7 +1039,7 @@
       profileCountryText.textContent = currentProfile?.country || "-";
     }
 
-    function useProfileLocation() {
+    function useProfileLocation(showFilledMessage = true) {
       if (!currentProfile) return;
 
       cityInput.value = currentProfile.city || "";
@@ -1053,7 +1054,7 @@
         lngInput.value = String(currentProfile.lng);
       }
 
-      showMessage("Profile location filled.", "success");
+      if (showFilledMessage) showMessage("Profile location filled.", "success");
     }
 
     async function useBrowserGps() {
@@ -1131,7 +1132,7 @@
       showMessage("Photo selected.", "success");
     });
 
-    useProfileLocationBtn.addEventListener("click", useProfileLocation);
+    useProfileLocationBtn.addEventListener("click", () => useProfileLocation(true));
     useGpsBtn.addEventListener("click", useBrowserGps);
 
     async function fetchProfileRowByUidOrId(table, uid) {
@@ -1280,7 +1281,7 @@
       }, currentUser.id);
 
       applyProfileInfo();
-      useProfileLocation();
+      useProfileLocation(false);
       await loadInboxBadge();
 
       loading.classList.add("hidden");
@@ -1317,7 +1318,8 @@
         .from(STORAGE_BUCKET)
         .upload(path, file, {
           cacheControl: "3600",
-          upsert: false
+          upsert: false,
+          contentType: file.type || "image/jpeg"
         });
 
       if (uploadError) throw uploadError;
@@ -1334,16 +1336,14 @@
 
     async function insertOnePlace(payload) {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("nearby_places")
-          .insert(payload)
-          .select("id")
-          .maybeSingle();
+          .insert(payload);
 
         if (!error) {
           return {
             ok: true,
-            id: data?.id || payload.id || ""
+            id: payload.id || ""
           };
         }
 
@@ -1476,6 +1476,13 @@
           creatorName
         });
 
+        /*
+          IMPORTANT:
+          New places are saved as public/active/approved from the start.
+          This prevents place.html from showing "This place is not public yet"
+          when another user opens the place.
+        */
+
         const fullSnakePayload = {
           id: generatedId,
           name,
@@ -1500,17 +1507,57 @@
           lng,
           created_by: currentUser.id,
           user_id: currentUser.id,
+          creator_id: currentUser.id,
           creator_name: creatorName,
           creator_username: creatorUsername,
-          status: "pending",
-          approved: false,
+          status: "active",
+          visibility: "public",
+          approval_status: "approved",
+          review_status: "approved",
+          approved: true,
+          is_approved: true,
+          public: true,
+          is_public: true,
           verified: false,
           is_verified: false,
+          pending: false,
           rejected: false,
           hidden: false,
           hidden_by_admin: false,
           soft_deleted: false,
           source: "nearby_places",
+          created_at: createdAt,
+          updated_at: createdAt
+        };
+
+        const publicSnakePayload = {
+          id: generatedId,
+          name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          search_text: searchText,
+          address,
+          website,
+          image_url: uploadedImageUrl,
+          image_path: uploadedImagePath,
+          lat,
+          lng,
+          created_by: currentUser.id,
+          user_id: currentUser.id,
+          creator_name: creatorName,
+          creator_username: creatorUsername,
+          status: "active",
+          visibility: "public",
+          approved: true,
+          is_public: true,
+          rejected: false,
+          hidden: false,
+          hidden_by_admin: false,
+          soft_deleted: false,
           created_at: createdAt,
           updated_at: createdAt
         };
@@ -1533,33 +1580,11 @@
           created_by: currentUser.id,
           creator_name: creatorName,
           creator_username: creatorUsername,
-          status: "pending",
-          approved: false,
-          rejected: false,
+          status: "active",
+          approved: true,
           hidden: false,
           created_at: createdAt,
           updated_at: createdAt
-        };
-
-        const noLocationSearchPayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          address,
-          website,
-          image_url: uploadedImageUrl,
-          lat,
-          lng,
-          created_by: currentUser.id,
-          creator_name: creatorName,
-          status: "pending",
-          approved: false,
-          hidden: false,
-          created_at: createdAt
         };
 
         const userIdPayload = {
@@ -1578,7 +1603,9 @@
           lng,
           user_id: currentUser.id,
           creator_name: creatorName,
-          status: "pending",
+          status: "active",
+          approved: true,
+          hidden: false,
           created_at: createdAt
         };
 
@@ -1603,18 +1630,28 @@
           lng,
           createdBy: currentUser.id,
           userId: currentUser.id,
+          creatorId: currentUser.id,
           creatorName,
           creatorUsername,
-          status: "pending",
-          approved: false,
+          status: "active",
+          visibility: "public",
+          approvalStatus: "approved",
+          reviewStatus: "approved",
+          approved: true,
+          isApproved: true,
+          public: true,
+          isPublic: true,
+          pending: false,
           rejected: false,
           hidden: false,
+          hiddenByAdmin: false,
+          softDeleted: false,
           source: "nearby_places",
           createdAt,
           updatedAt: createdAt
         };
 
-        const minimalCreatedByPayload = {
+        const minimalCreatedByPublicPayload = {
           id: generatedId,
           name,
           category,
@@ -1627,10 +1664,12 @@
           lat,
           lng,
           created_by: currentUser.id,
-          status: "pending"
+          status: "active",
+          approved: true,
+          created_at: createdAt
         };
 
-        const minimalUserIdPayload = {
+        const minimalUserIdPublicPayload = {
           id: generatedId,
           name,
           category,
@@ -1643,20 +1682,38 @@
           lat,
           lng,
           user_id: currentUser.id,
-          status: "pending"
+          status: "active",
+          approved: true,
+          created_at: createdAt
+        };
+
+        const ultraMinimalPayload = {
+          id: generatedId,
+          name,
+          category,
+          description,
+          city,
+          province,
+          country,
+          address,
+          website,
+          lat,
+          lng,
+          created_by: currentUser.id
         };
 
         const inserted = await insertPlaceWithFallback([
           fullSnakePayload,
+          publicSnakePayload,
           commonSnakePayload,
-          noLocationSearchPayload,
           userIdPayload,
           camelPayload,
-          minimalCreatedByPayload,
-          minimalUserIdPayload
+          minimalCreatedByPublicPayload,
+          minimalUserIdPublicPayload,
+          ultraMinimalPayload
         ]);
 
-        showMessage("Place submitted for review.", "success");
+        showMessage("Place added publicly.", "success");
 
         const placeId = inserted.id || generatedId;
 
