@@ -2501,79 +2501,216 @@
       return Array.from(finalMap.values());
     }
 
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function readThreadForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+      return {
+        id: getFirstFilled(d, ["id"], fallbackId) || fallbackId || "",
+        status: normalizeText(getFirstFilled(d, ["status"], "accepted") || "accepted"),
+        participantA: String(getFirstFilled(d, ["participant_a", "participantA"], "") || ""),
+        participantB: String(getFirstFilled(d, ["participant_b", "participantB"], "") || ""),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.updated_at ?? d.updatedAt ?? d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function readMessageForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: getFirstFilled(d, ["id"], fallbackId) || fallbackId || "",
+        threadId: String(getFirstFilled(d, ["thread_id", "threadId"], "") || ""),
+        senderId: String(getFirstFilled(d, ["sender_id", "senderId", "from_user_id", "fromUserId"], "") || ""),
+        createdAt: d.created_at ?? d.createdAt ?? d.timestamp ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function badgeTimeMs(value) {
+      if (!value) return 0;
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function isInboxMessageUnreadForBadge(msg, uid) {
+      if (!msg || msg.senderId === uid) return false;
+
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          try {
+            const { count, error } = await supabase
+              .from("message_requests")
+              .select("id", { count: "exact", head: true })
+              .eq(targetColumn, uid)
+              .eq(statusColumn, "pending");
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
         try {
-          const { count, error } = await supabase
+          const { data, error } = await supabase
             .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+            .select("*")
+            .eq(targetColumn, uid);
 
-          if (!error) return count || 0;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = normalizeText(getFirstFilled(row, statusColumns, "pending") || "pending");
+              return status === "pending";
+            }).length;
+          }
         } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
-      const threadColumnPairs = [
+    async function loadInboxThreadsForBadge(uid) {
+      const attempts = [
         ["participant_a", "participant_b"],
         ["participantA", "participantB"]
       ];
 
-      for (const [colA, colB] of threadColumnPairs) {
+      for (const [colA, colB] of attempts) {
         try {
-          const { data: threads, error } = await supabase
+          const { data, error } = await supabase
             .from("chat_threads")
-            .select("id")
+            .select("*")
             .or(`${colA}.eq.${uid},${colB}.eq.${uid}`);
 
-          if (error || !Array.isArray(threads) || !threads.length) continue;
-
-          const threadIds = threads.map(t => t.id).filter(Boolean);
-          if (!threadIds.length) continue;
-
-          const threadFields = ["thread_id", "threadId"];
-          const senderFields = ["sender_id", "senderId", "from_user_id", "fromUserId"];
-          const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-          for (const threadField of threadFields) {
-            for (const senderField of senderFields) {
-              for (const seenField of seenFields) {
-                try {
-                  const { count, error: msgError } = await supabase
-                    .from("chat_messages")
-                    .select("id", { count: "exact", head: true })
-                    .in(threadField, threadIds)
-                    .neq(senderField, uid)
-                    .is(seenField, null);
-
-                  if (!msgError) return count || 0;
-                } catch {}
-              }
-
-              for (const boolField of ["is_read", "read", "isRead"]) {
-                try {
-                  const { count, error: msgError } = await supabase
-                    .from("chat_messages")
-                    .select("id", { count: "exact", head: true })
-                    .in(threadField, threadIds)
-                    .neq(senderField, uid)
-                    .eq(boolField, false);
-
-                  if (!msgError) return count || 0;
-                } catch {}
-              }
-            }
+          if (!error) {
+            return (data || [])
+              .map(row => readThreadForBadge(row, row.id || ""))
+              .filter(thread => thread.id)
+              .filter(thread => !thread.status || thread.status === "accepted");
           }
         } catch {}
       }
 
-      return 0;
+      return [];
+    }
+
+    async function fetchInboxMessagesForBadge(threadIds) {
+      if (!threadIds.length) return [];
+
+      const attempts = [
+        { threadColumn: "thread_id", orderColumn: "created_at" },
+        { threadColumn: "threadId", orderColumn: "createdAt" }
+      ];
+
+      for (const attempt of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds)
+            .order(attempt.orderColumn, { ascending: true });
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds);
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+      }
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      const threads = await loadInboxThreadsForBadge(uid);
+      const threadIds = threads.map(thread => thread.id).filter(Boolean);
+
+      if (!threadIds.length) return 0;
+
+      const messages = await fetchInboxMessagesForBadge(threadIds);
+      const byThread = new Map();
+
+      messages.forEach(msg => {
+        if (!msg.threadId) return;
+        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+        byThread.get(msg.threadId).push(msg);
+      });
+
+      let total = 0;
+
+      threads.forEach(thread => {
+        const list = (byThread.get(thread.id) || [])
+          .sort((a, b) => badgeTimeMs(a.createdAt) - badgeTimeMs(b.createdAt));
+
+        if (!list.length) return;
+
+        const newest = [...list].sort((a, b) => badgeTimeMs(b.createdAt) - badgeTimeMs(a.createdAt))[0];
+
+        /*
+          New inbox rule:
+          If the newest message is from me, this thread is not unread anymore.
+          Old incoming messages before my latest reply should not keep the red dot alive.
+        */
+        if (newest?.senderId === uid) return;
+
+        const lastOutgoingMs = list
+          .filter(msg => msg.senderId === uid)
+          .reduce((max, msg) => Math.max(max, badgeTimeMs(msg.createdAt)), 0);
+
+        const unreadCount = list.filter(msg => {
+          if (msg.senderId === uid) return false;
+          if (badgeTimeMs(msg.createdAt) <= lastOutgoingMs) return false;
+          return isInboxMessageUnreadForBadge(msg, uid);
+        }).length;
+
+        total += unreadCount;
+      });
+
+      return total;
     }
 
     async function loadInboxBadgeCount(uid) {
@@ -2585,13 +2722,19 @@
 
         const unreadTotal = Number(requests || 0) + Number(messages || 0);
 
+        /*
+          Correct inbox badge rule:
+          badge = pending message_requests + unread incoming chat_messages only.
+          Do not count general notifications table here.
+        */
         if (!unreadTotal) {
           inboxBadge.classList.add("hidden");
         } else {
           inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
           inboxBadge.classList.remove("hidden");
         }
-      } catch {
+      } catch (err) {
+        console.warn("Inbox badge count skipped:", err?.message || err);
         inboxBadge.classList.add("hidden");
       }
     }
@@ -2827,6 +2970,9 @@
       - Photos still show photo-only grid.
       - Network stays hidden until Followers / Following is clicked.
       - Privacy toggle, Edit, Share Profile, Trust Bar, Points, Inbox badge all kept.
+      - Inbox badge rule updated: pending message_requests + unread incoming chat_messages only.
+      - Old incoming messages before your latest reply no longer keep the inbox red dot alive.
+      - General notifications are not counted for Inbox.
       - Safer loading timeout added so the profile does not stay stuck forever.
 
       NEXT PAGE:
