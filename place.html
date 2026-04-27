@@ -824,6 +824,7 @@
     let hasVisited = false;
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+    const VISIT_TABLES = ["place_visits", "visited_places", "user_place_visits", "place_been_there", "been_there_places"];
 
     const ICONS = {
       check: `
@@ -1074,7 +1075,9 @@
         msg.includes("schema cache") ||
         msg.includes("could not find") ||
         msg.includes("column") ||
-        msg.includes("does not exist")
+        msg.includes("does not exist") ||
+        msg.includes("relation") ||
+        msg.includes("not found")
       );
     }
 
@@ -1097,26 +1100,70 @@
 
     function normalizePlace(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
+      const status = normalizeText(d.status || d.place_status || d.placeStatus || "");
+      const visibility = normalizeText(d.visibility || d.place_visibility || d.placeVisibility || "");
+      const approvalStatus = normalizeText(d.approval_status || d.approvalStatus || d.review_status || d.reviewStatus || "");
 
-      const approved =
+      const hidden =
+        !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted) ||
+        ["hidden", "deleted", "removed"].includes(status);
+
+      const rejected =
+        ["rejected", "declined", "denied"].includes(status) ||
+        ["rejected", "declined", "denied"].includes(approvalStatus) ||
+        d.rejected === true ||
+        d.is_rejected === true ||
+        d.isRejected === true;
+
+      const explicitlyPending =
+        ["pending", "review", "under_review", "under review", "needs_review", "needs review"].includes(status) ||
+        ["pending", "review", "under_review", "under review", "needs_review", "needs review"].includes(approvalStatus) ||
+        d.pending === true ||
+        d.is_pending === true ||
+        d.isPending === true;
+
+      const explicitlyApproved =
         d.approved === true ||
+        d.is_approved === true ||
+        d.isApproved === true ||
+        d.public === true ||
+        d.is_public === true ||
+        d.isPublic === true ||
         d.verified === true ||
         d.is_verified === true ||
         d.isVerified === true ||
-        ["approved", "active", "verified", "public"].includes(status);
+        ["approved", "active", "verified", "public", "published"].includes(status) ||
+        ["approved", "active", "verified", "public", "published"].includes(approvalStatus) ||
+        ["public", "published"].includes(visibility);
 
-      const rejected =
-        status === "rejected" ||
-        status === "declined" ||
-        d.rejected === true;
+      /*
+        IMPORTANT FIX:
+        Older create-place pages may not save approved/status columns.
+        The old code treated missing approval columns as pending.
+        This makes old/normal places public unless they are explicitly pending/rejected/hidden.
+      */
+      const hasAnyReviewField =
+        d.approved !== undefined ||
+        d.is_approved !== undefined ||
+        d.isApproved !== undefined ||
+        d.public !== undefined ||
+        d.is_public !== undefined ||
+        d.isPublic !== undefined ||
+        d.verified !== undefined ||
+        d.is_verified !== undefined ||
+        d.isVerified !== undefined ||
+        d.pending !== undefined ||
+        d.is_pending !== undefined ||
+        d.isPending !== undefined ||
+        d.rejected !== undefined ||
+        d.is_rejected !== undefined ||
+        d.isRejected !== undefined ||
+        status ||
+        approvalStatus ||
+        visibility;
 
-      const pending =
-        d.pending === true ||
-        status === "pending" ||
-        status === "review" ||
-        status === "under_review" ||
-        (!approved && !rejected);
+      const approved = explicitlyApproved || (!hasAnyReviewField && !explicitlyPending && !rejected && !hidden);
+      const pending = explicitlyPending && !approved && !rejected;
 
       return {
         id: getField(d, ["id"]) || fallbackId || "",
@@ -1130,13 +1177,13 @@
         address: getField(d, ["address", "full_address", "fullAddress"]),
         website: getField(d, ["website", "url", "link"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
+        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid", "owner_id", "ownerId", "creator_id", "creatorId"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
         creatorUsername: getField(d, ["creator_username", "creatorUsername"]),
         approved,
         pending,
         rejected,
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        hidden,
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -1180,8 +1227,9 @@
     }
 
     async function findPlace(placeId, source) {
-      const sources = source && PLACE_SOURCES.includes(source)
-        ? [source, ...PLACE_SOURCES.filter(item => item !== source)]
+      const cleanSource = String(source || "").trim();
+      const sources = cleanSource && PLACE_SOURCES.includes(cleanSource)
+        ? [cleanSource, ...PLACE_SOURCES.filter(item => item !== cleanSource)]
         : PLACE_SOURCES;
 
       for (const tableName of sources) {
@@ -1370,26 +1418,33 @@
       }
     }
 
+    async function queryVisitRows(tableName, userColumn, placeColumn) {
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("id")
+          .eq(userColumn, currentUser.id)
+          .eq(placeColumn, currentPlaceId)
+          .limit(1);
+
+        if (!error) return { ok: true, exists: Array.isArray(data) && data.length > 0 };
+      } catch {}
+
+      return { ok: false, exists: false };
+    }
+
     async function loadVisitState() {
       if (!currentUser || !currentPlaceId) return false;
 
-      const userColumns = ["user_id", "uid", "userId"];
+      const userColumns = ["user_id", "uid", "userId", "member_id", "memberId"];
       const placeColumns = ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId"];
 
-      for (const userColumn of userColumns) {
-        for (const placeColumn of placeColumns) {
-          try {
-            const { data, error } = await supabase
-              .from("place_visits")
-              .select("id")
-              .eq(userColumn, currentUser.id)
-              .eq(placeColumn, currentPlaceId)
-              .limit(1);
-
-            if (!error) {
-              return Array.isArray(data) && data.length > 0;
-            }
-          } catch {}
+      for (const tableName of VISIT_TABLES) {
+        for (const userColumn of userColumns) {
+          for (const placeColumn of placeColumns) {
+            const result = await queryVisitRows(tableName, userColumn, placeColumn);
+            if (result.ok) return result.exists;
+          }
         }
       }
 
@@ -1397,51 +1452,74 @@
     }
 
     async function insertVisitManually() {
+      const source = currentSource || "nearby_places";
+      const placeName = currentPlace?.name || "";
+      const city = currentPlace?.city || "";
+
       const payloads = [
         {
           user_id: currentUser.id,
           place_id: currentPlaceId,
-          source: currentSource || "nearby_places",
-          place_source: currentSource || "nearby_places",
+          source,
+          place_source: source,
           status: "visited",
           visited: true,
           explored: false,
-          place_name: currentPlace?.name || "",
-          city: currentPlace?.city || "",
+          place_name: placeName,
+          city,
           created_at: nowIso(),
           updated_at: nowIso()
         },
         {
-          userId: currentUser.id,
-          placeId: currentPlaceId,
-          source: currentSource || "nearby_places",
+          user_id: currentUser.id,
+          target_id: currentPlaceId,
+          source,
           status: "visited",
           visited: true,
-          placeName: currentPlace?.name || "",
-          city: currentPlace?.city || "",
+          place_name: placeName,
+          city,
+          created_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          uid: currentUser.id,
+          place_id: currentPlaceId,
+          source,
+          status: "visited",
+          created_at: nowIso()
+        },
+        {
+          userId: currentUser.id,
+          placeId: currentPlaceId,
+          source,
+          status: "visited",
+          visited: true,
+          placeName,
+          city,
           createdAt: nowIso(),
           updatedAt: nowIso()
         },
         {
           user_id: currentUser.id,
           place_id: currentPlaceId,
-          status: "visited",
           created_at: nowIso()
         }
       ];
 
       let lastError = null;
 
-      for (const payload of payloads) {
-        try {
-          const { error } = await supabase
-            .from("place_visits")
-            .insert(payload);
+      for (const tableName of VISIT_TABLES) {
+        for (const payload of payloads) {
+          try {
+            const { error } = await supabase
+              .from(tableName)
+              .insert(payload);
 
-          if (!error) return;
-          lastError = error;
-        } catch (err) {
-          lastError = err;
+            if (!error) return { table: tableName };
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
         }
       }
 
@@ -1449,22 +1527,32 @@
     }
 
     async function removeVisitManually() {
-      const userColumns = ["user_id", "uid", "userId"];
+      const userColumns = ["user_id", "uid", "userId", "member_id", "memberId"];
       const placeColumns = ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId"];
 
-      for (const userColumn of userColumns) {
-        for (const placeColumn of placeColumns) {
-          try {
-            const { error } = await supabase
-              .from("place_visits")
-              .delete()
-              .eq(userColumn, currentUser.id)
-              .eq(placeColumn, currentPlaceId);
+      let anyWorked = false;
+      let lastError = null;
 
-            if (!error) return;
-          } catch {}
+      for (const tableName of VISIT_TABLES) {
+        for (const userColumn of userColumns) {
+          for (const placeColumn of placeColumns) {
+            try {
+              const { error } = await supabase
+                .from(tableName)
+                .delete()
+                .eq(userColumn, currentUser.id)
+                .eq(placeColumn, currentPlaceId);
+
+              if (!error) anyWorked = true;
+              else lastError = error;
+            } catch (err) {
+              lastError = err;
+            }
+          }
         }
       }
+
+      if (!anyWorked && lastError) throw lastError;
     }
 
     function parseVisitRpcResult(data) {
@@ -1501,20 +1589,36 @@
       try {
         let rpcWorked = false;
 
-        try {
-          const { data, error } = await supabase.rpc("toggle_place_visit", {
+        const rpcPayloads = [
+          {
             p_place_id: currentPlaceId,
             p_source: currentSource || "nearby_places",
             p_place_name: currentPlace.name || "Unnamed Place",
             p_city: currentPlace.city || ""
-          });
-
-          if (!error) {
-            const rpcState = parseVisitRpcResult(data);
-            hasVisited = typeof rpcState === "boolean" ? rpcState : await loadVisitState();
-            rpcWorked = true;
+          },
+          {
+            place_id: currentPlaceId,
+            source: currentSource || "nearby_places",
+            place_name: currentPlace.name || "Unnamed Place",
+            city: currentPlace.city || ""
+          },
+          {
+            target_place_id: currentPlaceId
           }
-        } catch {}
+        ];
+
+        for (const payload of rpcPayloads) {
+          try {
+            const { data, error } = await supabase.rpc("toggle_place_visit", payload);
+
+            if (!error) {
+              const rpcState = parseVisitRpcResult(data);
+              hasVisited = typeof rpcState === "boolean" ? rpcState : await loadVisitState();
+              rpcWorked = true;
+              break;
+            }
+          } catch {}
+        }
 
         if (!rpcWorked) {
           if (hasVisited) {
@@ -1531,7 +1635,7 @@
         setTopMessage(hasVisited ? "Marked as visited." : "Removed from visited places.", "ok");
       } catch (err) {
         console.error(err);
-        setTopMessage("Could not update visited state.", "err");
+        setTopMessage("Could not update visited state. Check that a visit table exists and RLS allows insert/delete.", "err");
         button.disabled = false;
       }
     }
@@ -2085,7 +2189,7 @@
       updateInboxBadge();
 
       const params = new URLSearchParams(window.location.search);
-      currentPlaceId = params.get("placeId") || params.get("id") || "";
+      currentPlaceId = params.get("placeId") || params.get("id") || params.get("targetId") || "";
       currentSource = params.get("source") || "";
 
       if (!currentPlaceId) {
