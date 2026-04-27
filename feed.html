@@ -251,9 +251,7 @@
       flex-shrink:0;
     }
 
-    .community-avatar{
-      border-radius:15px;
-    }
+    .community-avatar{border-radius:15px}
 
     .avatar-placeholder,
     .post-avatar-placeholder,
@@ -892,13 +890,8 @@
       .filter-tab{font-size:11px;padding:8px 2px}
       .brand{font-size:17px}
 
-      .post-top{
-        gap:8px;
-      }
-
-      .post-top-actions{
-        max-width:120px;
-      }
+      .post-top{gap:8px}
+      .post-top-actions{max-width:120px}
 
       .community-top-btn{
         min-height:32px;
@@ -915,10 +908,7 @@
         font-size:11px;
         padding:8px 9px;
       }
-
-      .post-top-actions{
-        max-width:105px;
-      }
+      .post-top-actions{max-width:105px}
     }
   </style>
 </head>
@@ -988,7 +978,7 @@
 
         <form id="postForm">
           <div class="field">
-            <textarea id="caption" placeholder="Whatâs happening?"></textarea>
+            <textarea id="caption" placeholder="What's happening?"></textarea>
           </div>
 
           <div class="field">
@@ -1338,6 +1328,17 @@
       return merged;
     }
 
+    async function tryUpdate(table, payload, buildQuery) {
+      try {
+        let q = supabase.from(table).update(payload);
+        q = buildQuery(q);
+        const { error } = await q;
+        return !error;
+      } catch {
+        return false;
+      }
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
 
@@ -1436,6 +1437,46 @@
         createdAt: d.created_at ?? d.createdAt ?? null,
         createdAtMs: getCreatedMs(d.created_at ?? d.createdAt)
       };
+    }
+
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getField(d, ["thread_id", "threadId"]),
+        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
+        text: getField(d, ["text", "message", "body"]),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function isMessageUnread(msg) {
+      if (!msg || msg.senderId === currentUser.id) return false;
+
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
     }
 
     function getCommunityIdFromMember(row) {
@@ -1605,67 +1646,135 @@
     }
 
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
 
-      for (const col of targetColumns) {
+      for (const targetCol of targetColumns) {
+        for (const statusCol of statusColumns) {
+          try {
+            const { count, error } = await supabase
+              .from("message_requests")
+              .select("id", { count: "exact", head: true })
+              .eq(targetCol, uid)
+              .eq(statusCol, "pending");
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
         try {
-          const { count, error } = await supabase
+          const { data, error } = await supabase
             .from("message_requests")
-            .select("id", { count: "exact", head: true })
-            .eq(col, uid)
-            .eq("status", "pending");
+            .select("*")
+            .eq(targetCol, uid);
 
-          if (!error) return count || 0;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = getField(row, ["status", "request_status", "requestStatus"], "pending");
+              return String(status || "pending").toLowerCase() === "pending";
+            }).length;
+          }
         } catch {}
       }
 
       return 0;
     }
 
+    async function fetchChatThreadsForUser(uid) {
+      const maps = new Map();
+
+      const attempts = [
+        { a: "participant_a", b: "participant_b" },
+        { a: "participantA", b: "participantB" }
+      ];
+
+      for (const fields of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${fields.a}.eq.${uid},${fields.b}.eq.${uid}`);
+
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              if (row.id) maps.set(row.id, row);
+            });
+          }
+        } catch {}
+      }
+
+      return Array.from(maps.values());
+    }
+
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("thread_id", threadIds)
+          .order("created_at", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("threadId", threadIds)
+          .order("createdAt", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      return [];
+    }
+
     async function countUnreadChatMessages(uid) {
       try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
-
-        if (!Array.isArray(threads) || !threads.length) return 0;
-
+        const threads = await fetchChatThreadsForUser(uid);
         const threadIds = threads.map(t => t.id).filter(Boolean);
         if (!threadIds.length) return 0;
 
-        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+        const messages = await fetchMessagesForThreads(threadIds);
+        const byThread = new Map();
 
-        for (const field of seenFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .is(field, null);
+        messages.forEach(msg => {
+          if (!msg.threadId) return;
+          if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+          byThread.get(msg.threadId).push(msg);
+        });
 
-            if (!error) return count || 0;
-          } catch {}
-        }
+        let total = 0;
 
-        const boolFields = ["is_read", "read"];
+        threads.forEach(thread => {
+          const list = byThread.get(thread.id) || [];
+          if (!list.length) return;
 
-        for (const field of boolFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .eq(field, false);
+          const newest = [...list].sort((a, b) => getCreatedMs(b.createdAt) - getCreatedMs(a.createdAt))[0];
 
-            if (!error) return count || 0;
-          } catch {}
-        }
-      } catch {}
+          if (newest?.senderId === uid) return;
 
-      return 0;
+          const lastOutgoingMs = list
+            .filter(msg => msg.senderId === uid)
+            .reduce((max, msg) => Math.max(max, getCreatedMs(msg.createdAt)), 0);
+
+          const unreadInThread = list.filter(msg => {
+            if (msg.senderId === uid) return false;
+            if (getCreatedMs(msg.createdAt) <= lastOutgoingMs) return false;
+            return isMessageUnread(msg);
+          }).length;
+
+          total += unreadInThread;
+        });
+
+        return total;
+      } catch (err) {
+        console.warn("Unread chat count failed:", err?.message || err);
+        return 0;
+      }
     }
 
     async function loadInboxBadgeCount() {
@@ -1996,6 +2105,22 @@
             .order("createdAt", { ascending: false })
             .limit(200);
 
+          if (!error) {
+            rows = data || [];
+            loaded = true;
+          }
+        } catch {}
+      }
+
+      if (!loaded) {
+        try {
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", currentUser.id)
+            .order("created_at", { ascending: false })
+            .limit(200);
+
           if (!error) rows = data || [];
         } catch {}
       }
@@ -2133,9 +2258,37 @@
     async function createNotificationSafe(payload) {
       if (!payload?.to_user_id || payload.to_user_id === currentUser.id) return;
 
+      const createdAt = payload.created_at || nowIso();
+
       const variants = [
-        payload,
-        { ...payload, user_id: payload.to_user_id }
+        {
+          ...payload,
+          user_id: payload.to_user_id,
+          created_at: createdAt,
+          is_read: false,
+          read: false
+        },
+        {
+          type: payload.type || "notification",
+          title: payload.title || "",
+          text: payload.text || "",
+          fromUserId: payload.from_user_id || currentUser.id,
+          toUserId: payload.to_user_id,
+          userId: payload.to_user_id,
+          postId: payload.post_id || "",
+          communityId: payload.community_id || "",
+          createdAt,
+          isRead: false,
+          read: false
+        },
+        {
+          type: payload.type || "notification",
+          text: payload.text || "",
+          to_user_id: payload.to_user_id,
+          user_id: payload.to_user_id,
+          created_at: createdAt,
+          is_read: false
+        }
       ];
 
       for (const item of variants) {
@@ -2269,9 +2422,7 @@
     }
 
     async function addCommunityMembership(communityId, status) {
-      const community = getCommunityById(communityId);
       const table = await findWritableCommunityMemberTable();
-
       const existing = await findCommunityMembership(table, communityId);
 
       if (existing?.row?.id) {
@@ -2591,7 +2742,7 @@
           prompt("Copy this link:", url);
         }
       } catch (err) {
-        console.error("Share failed:", err);
+        if (err?.name !== "AbortError") console.error("Share failed:", err);
       }
     }
 
@@ -3002,7 +3153,7 @@
     async function uploadPostImage(file) {
       if (!file) return "";
 
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const safeName = (file.name || "image")
         .replace(/\.[^/.]+$/, "")
         .replace(/[^a-zA-Z0-9_-]/g, "-")
@@ -3026,32 +3177,26 @@
     }
 
     async function markNotificationsRead() {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("id")
-        .eq("to_user_id", currentUser.id)
-        .eq("is_read", false);
+      if (!currentUser) return;
 
-      if (error) {
-        console.error("Could not fetch unread notifications:", error);
-        return;
-      }
+      const now = nowIso();
 
-      const ids = (data || []).map(row => row.id).filter(Boolean);
-      if (!ids.length) return;
+      const payloads = [
+        { is_read: true, read: true, read_at: now, updated_at: now },
+        { is_read: true, read_at: now, updated_at: now },
+        { is_read: true, updated_at: now },
+        { read: true, updated_at: now },
+        { isRead: true, readAt: now, updatedAt: now },
+        { is_read: true },
+        { read: true }
+      ];
 
-      const { error: updateError } = await supabase
-        .from("notifications")
-        .update({
-          is_read: true,
-          read: true,
-          read_at: nowIso(),
-          updated_at: nowIso()
-        })
-        .in("id", ids);
+      const toColumns = ["to_user_id", "toUserId", "user_id", "userId"];
 
-      if (updateError) {
-        console.error("Could not mark notifications read:", updateError);
+      for (const payload of payloads) {
+        for (const toCol of toColumns) {
+          await tryUpdate("notifications", payload, q => q.eq(toCol, currentUser.id));
+        }
       }
     }
 
@@ -3172,10 +3317,12 @@
       const tables = [
         "posts",
         "public_profiles",
+        "users",
         "follows",
         "follow_requests",
         "notifications",
         "message_requests",
+        "chat_threads",
         "chat_messages",
         "communities",
         "community_members"
@@ -3201,6 +3348,10 @@
       }
     });
 
+    window.addEventListener("ownspace:badges-refresh", () => {
+      loadInboxBadgeCount().catch(() => {});
+    });
+
     async function initFeed() {
       const { data: userRes, error: userError } = await supabase.auth.getUser();
 
@@ -3219,7 +3370,7 @@
         showComposer();
       }
 
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         if (!session?.user) {
           window.location.href = "login.html";
         }
@@ -3239,14 +3390,22 @@
       OWNSPACE FEED UPDATE:
 
       COMMUNITY POST CHANGES:
-      - Community posts now show community name first.
+      - Community posts show community name first.
       - Poster/member username shows on second line.
       - Community name and community avatar open community.html?communityId=...
-      - Community post top-right now has Open and Join/Request/Joined state.
+      - Community post top-right has Open and Join/Request/Joined state.
       - Public community posts can appear in All feed so users can discover and join.
       - Private/request communities stay protected unless joined/owned.
       - Community posts are detected from posts.community_id and source/post_type fallback fields.
       - Removed dependency on community_posts table for feed loading.
+
+      INBOX BADGE FIX ON FEED:
+      - Feed bottom Inbox badge does not count general notifications.
+      - Inbox badge = pending message_requests + unread incoming chat_messages.
+      - It no longer counts old incoming chat history forever after you replied.
+      - If the newest message in a thread is yours, that thread counts 0 unread.
+      - Incoming messages before your latest outgoing message are ignored.
+      - Realtime refresh now also listens to chat_threads and users.
     */
   </script>
 </body>
