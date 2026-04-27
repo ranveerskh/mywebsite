@@ -38,7 +38,7 @@
       --text:#ffffff;
       --muted:#9aa7c7;
       --blue:#4cc9ff;
-      --green:#3ddc84;
+      --green:#22b36c;
       --yellow:#f5b942;
       --purple:#a78bfa;
       --red:#ff5d73;
@@ -275,6 +275,15 @@
       overflow:hidden;
     }
 
+    .place-card{
+      cursor:pointer;
+      transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .place-card:active{
+      transform:scale(.995);
+    }
+
     .cover{
       width:100%;
       max-height:260px;
@@ -337,6 +346,10 @@
       white-space:pre-wrap;
       word-break:break-word;
       margin-bottom:12px;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
     }
 
     .card-actions{
@@ -542,7 +555,7 @@
 
       <div class="search-wrap">
         <input id="searchInput" class="search-box" type="text" placeholder="Search place, city, province, country, address..." />
-        <button id="clearBtn" class="clear-btn hidden" type="button">×</button>
+        <button id="clearBtn" class="clear-btn hidden" type="button">Ã</button>
       </div>
 
       <div id="listLoading" class="loading-box">Loading places...</div>
@@ -723,8 +736,26 @@
       return "";
     }
 
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
     function nowIso() {
       return new Date().toISOString();
+    }
+
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || error || "").toLowerCase();
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("does not exist") ||
+        msg.includes("relation") ||
+        msg.includes("column")
+      );
     }
 
     function readLat(obj) {
@@ -837,8 +868,21 @@
     }
 
     function isVisitRecord(raw) {
-      const status = String(raw?.status || raw?.type || "").toLowerCase();
-      return raw?.visited === true || raw?.explored === true || status.includes("visited") || status.includes("explored");
+      if (!raw) return false;
+
+      const status = String(raw.status || raw.type || "").toLowerCase();
+
+      if (["removed", "deleted", "left", "false", "unvisited"].includes(status)) return false;
+      if (raw.visited === false || raw.explored === false && status === "unvisited") return false;
+
+      const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
+      const userId = raw.user_id || raw.userId || raw.uid || raw.member_id || raw.memberId || "";
+
+      if (placeId && userId) return true;
+      if (raw.visited === true || raw.explored === true) return true;
+      if (status.includes("visited") || status.includes("explored") || status === "active") return true;
+
+      return false;
     }
 
     function kmDistance(lat1, lng1, lat2, lng2) {
@@ -904,24 +948,38 @@
 
     function normalizePlace(raw, fallbackId = "", sourceName = "") {
       const d = raw || {};
-      const status = String(d.status || "").toLowerCase();
+      const status = String(d.status || d.place_status || d.placeStatus || "").toLowerCase();
+      const visibility = String(d.visibility || d.place_visibility || d.placeVisibility || "").toLowerCase();
+      const approvalStatus = String(d.approval_status || d.approvalStatus || d.review_status || d.reviewStatus || "").toLowerCase();
 
       const approved =
         d.approved === true ||
-        d.verified === true ||
-        d.isVerified === true ||
         d.is_approved === true ||
-        ["approved", "active", "verified", "published"].includes(status);
+        d.isApproved === true ||
+        d.public === true ||
+        d.is_public === true ||
+        d.isPublic === true ||
+        visibility === "public" ||
+        approvalStatus === "approved" ||
+        ["approved", "active", "verified", "published", "public"].includes(status);
 
       const rejected =
         status === "rejected" ||
         status === "declined" ||
+        approvalStatus === "rejected" ||
+        approvalStatus === "declined" ||
         d.rejected === true;
 
-      const pending =
+      const explicitlyPending =
         d.pending === true ||
         status === "pending" ||
-        (!approved && !rejected);
+        status === "review" ||
+        status === "under_review" ||
+        approvalStatus === "pending" ||
+        approvalStatus === "review" ||
+        approvalStatus === "under_review";
+
+      const pending = explicitlyPending && !approved && !rejected;
 
       return {
         id: d.id || fallbackId || "",
@@ -936,13 +994,13 @@
         address: getField(d, ["address", "full_address", "fullAddress"]),
         website: getField(d, ["website", "url", "link"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid"]),
+        createdBy: getField(d, ["created_by", "createdBy", "creator_id", "creatorId", "user_id", "userId", "uid"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
         keywords: getField(d, ["keywords", "tags", "search_keywords", "searchKeywords"]),
         approved,
         pending,
         rejected,
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted),
+        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || status === "deleted",
         lat: readLat(d),
         lng: readLng(d)
       };
@@ -1188,7 +1246,7 @@
 
       return allPlaces
         .filter(model => !model.hidden && !model.rejected)
-        .filter(model => model.approved || (model.createdBy === currentUser.id && model.pending))
+        .filter(model => model.approved || model.createdBy === currentUser.id)
         .map(model => {
           const city = normalizeText(model.city);
           const province = normalizeText(model.province);
@@ -1300,9 +1358,6 @@
         if (aHasDistance && !bHasDistance) return -1;
         if (bHasDistance && !aHasDistance) return 1;
 
-        if (a.pending && !b.pending) return -1;
-        if (b.pending && !a.pending) return 1;
-
         if (b.visitCount !== a.visitCount) return b.visitCount - a.visitCount;
 
         return a.name.localeCompare(b.name);
@@ -1371,65 +1426,236 @@
       allPlaces = merged;
     }
 
+    function readVisitPlaceId(raw) {
+      return raw?.place_id || raw?.placeId || raw?.target_id || raw?.targetId || raw?.nearby_place_id || raw?.nearbyPlaceId || "";
+    }
+
+    function readVisitUserId(raw) {
+      return raw?.user_id || raw?.userId || raw?.uid || raw?.member_id || raw?.memberId || "";
+    }
+
+    function readVisitSource(raw) {
+      return raw?.source || raw?.place_source || raw?.placeSource || raw?.target_source || raw?.targetSource || "";
+    }
+
+    async function loadAllVisitRows() {
+      try {
+        const { data, error } = await supabase
+          .from("place_visits")
+          .select("*");
+
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.warn("Place visits count skipped:", err?.message || err);
+        return [];
+      }
+    }
+
+    async function loadMyVisitRows() {
+      const userColumns = ["user_id", "userId", "uid", "member_id", "memberId"];
+
+      for (const col of userColumns) {
+        try {
+          const { data, error } = await supabase
+            .from("place_visits")
+            .select("*")
+            .eq(col, currentUser.id);
+
+          if (!error) return data || [];
+          if (!isMissingSchemaError(error)) console.warn("My visits query failed:", error.message);
+        } catch {}
+      }
+
+      return [];
+    }
+
     async function loadVisits() {
       visitCountMap = new Map();
       visitCountLooseMap = new Map();
       userVisitExactMap = new Map();
       userVisitLooseMap = new Map();
 
-      try {
-        const { data: allData, error: allError } = await supabase
-          .from("place_visits")
-          .select("*");
+      const allRows = await loadAllVisitRows();
 
-        if (allError) throw allError;
+      (allRows || []).forEach(raw => {
+        if (!isVisitRecord(raw)) return;
 
-        (allData || []).forEach(raw => {
-          if (!isVisitRecord(raw)) return;
+        const placeId = readVisitPlaceId(raw);
+        const source = readVisitSource(raw);
 
-          const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
-          const source = raw.source || raw.place_source || raw.placeSource || "";
+        if (placeId) {
+          visitCountLooseMap.set(placeId, (visitCountLooseMap.get(placeId) || 0) + 1);
+        }
 
-          if (placeId) {
-            visitCountLooseMap.set(placeId, (visitCountLooseMap.get(placeId) || 0) + 1);
-          }
+        if (placeId && source) {
+          const exactKey = buildPlaceKey(source, placeId);
+          visitCountMap.set(exactKey, (visitCountMap.get(exactKey) || 0) + 1);
+        }
+      });
 
-          if (placeId && source) {
-            const exactKey = buildPlaceKey(source, placeId);
-            visitCountMap.set(exactKey, (visitCountMap.get(exactKey) || 0) + 1);
-          }
-        });
-      } catch (err) {
-        console.warn("Place visits count skipped:", err?.message || err);
+      const myRows = await loadMyVisitRows();
+
+      (myRows || []).forEach(raw => {
+        if (!isVisitRecord(raw)) return;
+
+        const placeId = readVisitPlaceId(raw);
+        const source = readVisitSource(raw);
+        const record = { ...raw, docId: raw.id };
+
+        if (placeId) {
+          userVisitLooseMap.set(placeId, record);
+        }
+
+        if (placeId && source) {
+          const exactKey = buildPlaceKey(source, placeId);
+          userVisitExactMap.set(exactKey, record);
+        }
+      });
+    }
+
+    async function insertVisitWithFallback(model) {
+      const payloads = [
+        {
+          user_id: currentUser.id,
+          place_id: model.id,
+          source: model.source || "nearby_places",
+          place_source: model.source || "nearby_places",
+          status: "visited",
+          visited: true,
+          explored: false,
+          place_name: model.name || "",
+          city: model.city || "",
+          created_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          userId: currentUser.id,
+          placeId: model.id,
+          source: model.source || "nearby_places",
+          placeSource: model.source || "nearby_places",
+          status: "visited",
+          visited: true,
+          placeName: model.name || "",
+          city: model.city || "",
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        },
+        {
+          uid: currentUser.id,
+          place_id: model.id,
+          source: model.source || "nearby_places",
+          status: "visited",
+          created_at: nowIso()
+        },
+        {
+          user_id: currentUser.id,
+          place_id: model.id,
+          status: "visited",
+          created_at: nowIso()
+        },
+        {
+          user_id: currentUser.id,
+          target_id: model.id,
+          status: "visited",
+          created_at: nowIso()
+        }
+      ];
+
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase
+            .from("place_visits")
+            .insert(payload);
+
+          if (!error) return true;
+          lastError = error;
+          if (!isMissingSchemaError(error)) console.warn("Visit insert failed:", error.message);
+        } catch (err) {
+          lastError = err;
+        }
       }
 
-      try {
-        const { data: myData, error: myError } = await supabase
-          .from("place_visits")
-          .select("*")
-          .eq("user_id", currentUser.id);
+      throw lastError || new Error("Could not mark place as visited.");
+    }
 
-        if (myError) throw myError;
+    async function deleteVisitWithFallback(model, existing) {
+      if (existing?.docId) {
+        try {
+          const { error } = await supabase
+            .from("place_visits")
+            .delete()
+            .eq("id", existing.docId);
 
-        (myData || []).forEach(raw => {
-          if (!isVisitRecord(raw)) return;
-
-          const placeId = raw.place_id || raw.placeId || raw.target_id || raw.targetId || raw.nearby_place_id || raw.nearbyPlaceId || "";
-          const source = raw.source || raw.place_source || raw.placeSource || "";
-          const record = { ...raw, docId: raw.id };
-
-          if (placeId) {
-            userVisitLooseMap.set(placeId, record);
-          }
-
-          if (placeId && source) {
-            const exactKey = buildPlaceKey(source, placeId);
-            userVisitExactMap.set(exactKey, record);
-          }
-        });
-      } catch (err) {
-        console.warn("My place visits skipped:", err?.message || err);
+          if (!error) return true;
+        } catch {}
       }
+
+      const variants = [
+        { userCol: "user_id", placeCol: "place_id", sourceCol: "source" },
+        { userCol: "userId", placeCol: "placeId", sourceCol: "source" },
+        { userCol: "uid", placeCol: "place_id", sourceCol: "source" },
+        { userCol: "user_id", placeCol: "target_id", sourceCol: "source" },
+        { userCol: "user_id", placeCol: "nearby_place_id", sourceCol: "place_source" },
+        { userCol: "user_id", placeCol: "place_id", sourceCol: "" },
+        { userCol: "userId", placeCol: "placeId", sourceCol: "" },
+        { userCol: "uid", placeCol: "place_id", sourceCol: "" }
+      ];
+
+      let deleted = false;
+      let lastError = null;
+
+      for (const v of variants) {
+        try {
+          let q = supabase
+            .from("place_visits")
+            .delete()
+            .eq(v.userCol, currentUser.id)
+            .eq(v.placeCol, model.id);
+
+          if (v.sourceCol && model.source) q = q.eq(v.sourceCol, model.source);
+
+          const { error } = await q;
+
+          if (!error) {
+            deleted = true;
+          } else if (!isMissingSchemaError(error)) {
+            lastError = error;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (deleted) return true;
+      throw lastError || new Error("Could not remove visited place.");
+    }
+
+    function parseVisitRpcResult(data) {
+      const item = Array.isArray(data) ? data[0] : data;
+
+      if (typeof item === "boolean") return item;
+
+      if (item && typeof item === "object") {
+        const possibleBoolean =
+          item.visited ??
+          item.is_visited ??
+          item.has_visited ??
+          item.active ??
+          item.is_active ??
+          item.exists;
+
+        if (typeof possibleBoolean === "boolean") return possibleBoolean;
+
+        const action = String(item.action || item.status || item.result || "").toLowerCase();
+
+        if (["added", "created", "visited", "true", "on"].includes(action)) return true;
+        if (["removed", "deleted", "unvisited", "false", "off"].includes(action)) return false;
+      }
+
+      return null;
     }
 
     async function toggleVisited(model, btn) {
@@ -1437,54 +1663,41 @@
       setPageStatus("");
 
       try {
-        const existing = getUserVisitRecord(model);
+        let rpcWorked = false;
 
-        if (existing) {
-          if (existing.docId) {
-            const { error } = await supabase
-              .from("place_visits")
-              .delete()
-              .eq("id", existing.docId);
+        try {
+          const { data, error } = await supabase.rpc("toggle_place_visit", {
+            p_place_id: model.id,
+            p_source: model.source || "nearby_places",
+            p_place_name: model.name || "",
+            p_city: model.city || ""
+          });
 
-            if (error) throw error;
-          } else {
-            const { error } = await supabase
-              .from("place_visits")
-              .delete()
-              .eq("user_id", currentUser.id)
-              .eq("place_id", model.id)
-              .eq("source", model.source);
-
-            if (error) throw error;
+          if (!error) {
+            parseVisitRpcResult(data);
+            rpcWorked = true;
           }
+        } catch {}
 
-          setPageStatus("Removed from visited places.", "status-ok");
+        if (!rpcWorked) {
+          const existing = getUserVisitRecord(model);
+
+          if (existing) {
+            await deleteVisitWithFallback(model, existing);
+            setPageStatus("Removed from visited places.", "status-ok");
+          } else {
+            await insertVisitWithFallback(model);
+            setPageStatus("Marked as visited.", "status-ok");
+          }
         } else {
-          const { error } = await supabase
-            .from("place_visits")
-            .insert({
-              user_id: currentUser.id,
-              place_id: model.id,
-              source: model.source,
-              place_source: model.source,
-              status: "visited",
-              visited: true,
-              explored: false,
-              place_name: model.name || "",
-              city: model.city || "",
-              created_at: nowIso(),
-              updated_at: nowIso()
-            });
-
-          if (error) throw error;
-          setPageStatus("Marked as visited.", "status-ok");
+          setPageStatus("Visited state updated.", "status-ok");
         }
 
         await loadVisits();
         renderPlaces();
       } catch (err) {
         console.error(err);
-        setPageStatus("Could not update visited state.", "status-err");
+        setPageStatus(err?.message || "Could not update visited state.", "status-err");
         btn.disabled = false;
       }
     }
@@ -1555,7 +1768,7 @@
 
         if (model.mine) badges.push(`<span class="mini-badge mini-purple">Mine</span>`);
         badges.push(`<span class="mini-badge mini-blue">${escapeHtml(model.category || "General")}</span>`);
-        badges.push(`<span class="mini-badge ${model.approved ? "mini-green" : "mini-yellow"}">${model.approved ? "Approved" : "Pending"}</span>`);
+        badges.push(`<span class="mini-badge ${model.approved ? "mini-green" : "mini-yellow"}">${model.approved ? "Public" : "Draft"}</span>`);
 
         if (model.sameCity) {
           badges.push(`<span class="mini-badge mini-purple">Same city</span>`);
@@ -1575,7 +1788,9 @@
         const openUrl = buildPlaceOpenUrl(model);
 
         const card = document.createElement("div");
-        card.className = "card";
+        card.className = "card place-card";
+        card.setAttribute("role", "link");
+        card.setAttribute("tabindex", "0");
 
         card.innerHTML = `
           ${imageHtml}
@@ -1606,6 +1821,22 @@
             <button class="action-btn btn-green share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
         `;
+
+        const openPlace = () => {
+          window.location.href = openUrl;
+        };
+
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("a,button")) return;
+          openPlace();
+        });
+
+        card.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openPlace();
+          }
+        });
 
         const cover = card.querySelector(".cover");
         if (cover) {
