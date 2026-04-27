@@ -643,7 +643,7 @@
 
       <div class="search-wrap">
         <input id="searchInput" class="search-box" type="text" placeholder="Type to search people, posts, events..." />
-        <button id="clearBtn" class="clear-btn hidden" type="button">×</button>
+        <button id="clearBtn" class="clear-btn hidden" type="button">Ã</button>
       </div>
 
       <div class="chip-row">
@@ -864,6 +864,14 @@
       return "";
     }
 
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
     function normalizeText(value) {
       return String(value || "").trim().toLowerCase();
     }
@@ -993,12 +1001,13 @@
       };
     }
 
-    function normalizePost(raw, fallbackId = "") {
+    function normalizePost(raw, fallbackId = "", sourceName = "posts") {
       const d = raw || {};
 
       return {
         id: d.id || fallbackId || "",
-        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
+        source: sourceName,
+        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"]),
         caption: getField(d, ["caption", "text", "content", "body", "description"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "file_url", "fileUrl"]),
         postType: getField(d, ["post_type", "postType", "type"]),
@@ -1040,11 +1049,12 @@
         d.verified === true ||
         d.is_verified === true ||
         d.isVerified === true ||
-        ["approved", "active", "verified"].includes(status);
+        ["approved", "active", "verified", "public", "published"].includes(status);
 
       const rejected =
         d.rejected === true ||
-        status === "rejected";
+        status === "rejected" ||
+        status === "declined";
 
       return {
         id: d.id || fallbackId || "",
@@ -1338,6 +1348,7 @@
         url.pathname = url.pathname.replace(/[^/]*$/, "post.html");
         url.search = "";
         url.searchParams.set("postId", item.id);
+        if (item.source) url.searchParams.set("source", item.source);
       }
 
       if (type === "event") {
@@ -1441,7 +1452,7 @@
                   </div>
 
                   ${profile.username ? `<div class="person-username">@${escapeHtml(profile.username)}</div>` : ""}
-                  <div class="person-meta-line">${escapeHtml(metaParts.join(" • ") || "Member")}</div>
+                  <div class="person-meta-line">${escapeHtml(metaParts.join(" â¢ ") || "Member")}</div>
                 </div>
 
                 ${followingIds.has(profile.uid)
@@ -1507,6 +1518,9 @@
         if (owner.username) badges.push(`<span class="mini-badge mini-purple">@${escapeHtml(owner.username)}</span>`);
         if (owner.verified) badges.push(`<span class="mini-badge mini-green">Verified</span>`);
         if (post.postType) badges.push(`<span class="mini-badge mini-yellow">${escapeHtml(post.postType)}</span>`);
+        if (post.source === "community_posts") badges.push(`<span class="mini-badge mini-purple">Community Post</span>`);
+
+        const postUrl = `post.html?postId=${encodeURIComponent(post.id)}${post.source ? `&source=${encodeURIComponent(post.source)}` : ""}`;
 
         card.innerHTML = `
           <div class="card-title">${escapeHtml((post.caption || "Post").slice(0, 120) || "Post")}</div>
@@ -1515,7 +1529,7 @@
           <div class="desc">${escapeHtml(post.caption || "No caption added.")}</div>
 
           <div class="card-actions">
-            <a href="post.html?postId=${encodeURIComponent(post.id)}" class="action-btn btn-primary">${ICONS.open}<span>Open Post</span></a>
+            <a href="${postUrl}" class="action-btn btn-primary">${ICONS.open}<span>Open Post</span></a>
             ${post.userId ? `<a href="member.html?uid=${encodeURIComponent(post.userId)}" class="action-btn btn-soft">Owner</a>` : ""}
             <button class="action-btn btn-green share-btn post-share-btn" type="button">${ICONS.share}<span>Share</span></button>
           </div>
@@ -1561,7 +1575,7 @@
         if (event.city) badges.push(`<span class="mini-badge mini-purple">${escapeHtml(event.city)}</span>`);
         if (event.country) badges.push(`<span class="mini-badge mini-blue">${escapeHtml(event.country)}</span>`);
 
-        const venueText = [event.venue, event.address].filter(Boolean).join(" • ") || "Not added";
+        const venueText = [event.venue, event.address].filter(Boolean).join(" â¢ ") || "Not added";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -1837,7 +1851,8 @@
       const rows = await selectRowsWithFallback("follows", [
         { follower_id: currentUser.id },
         { followerId: currentUser.id },
-        { from_user_id: currentUser.id }
+        { from_user_id: currentUser.id },
+        { fromUserId: currentUser.id }
       ]);
 
       followingIds = new Set();
@@ -1849,16 +1864,42 @@
       });
     }
 
-    async function loadPosts() {
+    async function loadPostsFromTable(tableName) {
+      const orderColumns = ["created_at", "createdAt", "timestamp"];
+
+      for (const orderColumn of orderColumns) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select("*")
+            .order(orderColumn, { ascending: false });
+
+          if (!error) return data || [];
+        } catch {}
+      }
+
       try {
         const { data, error } = await supabase
-          .from("posts")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .from(tableName)
+          .select("*");
 
-        if (error) throw error;
+        if (!error) return data || [];
+      } catch {}
 
-        postsData = (data || []).map(d => normalizePost(d, d.id));
+      return [];
+    }
+
+    async function loadPosts() {
+      try {
+        const [normalPosts, communityPosts] = await Promise.all([
+          loadPostsFromTable("posts"),
+          loadPostsFromTable("community_posts")
+        ]);
+
+        postsData = [
+          ...(normalPosts || []).map(d => normalizePost(d, d.id, "posts")),
+          ...(communityPosts || []).map(d => normalizePost(d, d.id, "community_posts"))
+        ].sort((a, b) => b.createdAtMs - a.createdAtMs);
       } catch (err) {
         console.error("Posts load error:", err);
         postsData = [];
@@ -1924,115 +1965,214 @@
       communitiesData = Array.from(map.values());
     }
 
-    async function countRows(table, buildQuery) {
-      try {
-        const query = supabase.from(table).select("id", { count: "exact", head: true });
-        const { count, error } = await buildQuery(query);
-
-        if (!error) return count || 0;
-      } catch {}
-
-      return null;
-    }
+    /*
+      Correct OwnSpace Inbox badge rule:
+      - Count pending message_requests sent to the logged-in user.
+      - Count unread incoming chat_messages only.
+      - Do NOT count the general notifications table.
+      - If the newest message in a thread is from me, that thread does not keep the red dot alive.
+      - Old incoming messages before my latest outgoing reply are ignored.
+    */
 
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
       const statusColumns = ["status", "request_status", "requestStatus"];
 
       for (const targetColumn of targetColumns) {
         for (const statusColumn of statusColumns) {
-          const count = await countRows("message_requests", q =>
-            q.eq(targetColumn, uid).eq(statusColumn, "pending")
-          );
+          try {
+            const { count, error } = await supabase
+              .from("message_requests")
+              .select("id", { count: "exact", head: true })
+              .eq(targetColumn, uid)
+              .eq(statusColumn, "pending");
 
-          if (count !== null) return count;
+            if (!error) return count || 0;
+          } catch {}
         }
 
-        const countWithoutStatus = await countRows("message_requests", q =>
-          q.eq(targetColumn, uid)
-        );
+        try {
+          const { data, error } = await supabase
+            .from("message_requests")
+            .select("*")
+            .eq(targetColumn, uid);
 
-        if (countWithoutStatus !== null) return countWithoutStatus;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = normalizeText(getFirstFilled(row, statusColumns, "pending") || "pending");
+              return status === "pending";
+            }).length;
+          }
+        } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
+    function readThreadForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+
+      return {
+        id: String(getFirstFilled(d, ["id"], fallbackId) || fallbackId || ""),
+        status: normalizeText(getFirstFilled(d, ["status"], "accepted") || "accepted"),
+        participantA: String(getFirstFilled(d, ["participant_a", "participantA"], "") || ""),
+        participantB: String(getFirstFilled(d, ["participant_b", "participantB"], "") || ""),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.updated_at ?? d.updatedAt ?? d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function readMessageForBadge(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: String(getFirstFilled(d, ["id"], fallbackId) || fallbackId || ""),
+        threadId: String(getFirstFilled(d, ["thread_id", "threadId"], "") || ""),
+        senderId: String(getFirstFilled(d, ["sender_id", "senderId", "from_user_id", "fromUserId"], "") || ""),
+        createdAt: d.created_at ?? d.createdAt ?? d.timestamp ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function badgeTimeMs(value) {
+      if (!value) return 0;
+
       try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
 
-        if (Array.isArray(threads) && threads.length) {
-          const threadIds = threads.map(t => t.id).filter(Boolean);
+    function isInboxMessageUnreadForBadge(msg, uid) {
+      if (!msg || msg.senderId === uid) return false;
 
-          if (threadIds.length) {
-            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-            for (const field of seenFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .is(field, null);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-
-            const boolFields = ["is_read", "read"];
-
-            for (const field of boolFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .eq(field, false);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-          }
-        }
-      } catch {}
-
-      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
-
-      for (const receiverColumn of receiverColumns) {
-        for (const seenColumn of ["seen_at", "read_at", "seenAt", "readAt"]) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .eq(receiverColumn, uid)
-              .neq("sender_id", uid)
-              .is(seenColumn, null);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        for (const boolColumn of ["is_read", "read"]) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .eq(receiverColumn, uid)
-              .neq("sender_id", uid)
-              .eq(boolColumn, false);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
       }
 
-      return 0;
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
+    async function loadInboxThreadsForBadge(uid) {
+      const attempts = [
+        ["participant_a", "participant_b"],
+        ["participantA", "participantB"]
+      ];
+
+      for (const [colA, colB] of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${colA}.eq.${uid},${colB}.eq.${uid}`);
+
+          if (!error) {
+            return (data || [])
+              .map(row => readThreadForBadge(row, row.id || ""))
+              .filter(thread => thread.id)
+              .filter(thread => !thread.status || thread.status === "accepted");
+          }
+        } catch {}
+      }
+
+      return [];
+    }
+
+    async function fetchInboxMessagesForBadge(threadIds) {
+      if (!threadIds.length) return [];
+
+      const attempts = [
+        { threadColumn: "thread_id", orderColumn: "created_at" },
+        { threadColumn: "threadId", orderColumn: "createdAt" }
+      ];
+
+      for (const attempt of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds)
+            .order(attempt.orderColumn, { ascending: true });
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+
+        try {
+          const { data, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .in(attempt.threadColumn, threadIds);
+
+          if (!error) {
+            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
+          }
+        } catch {}
+      }
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      const threads = await loadInboxThreadsForBadge(uid);
+      const threadIds = threads.map(thread => thread.id).filter(Boolean);
+
+      if (!threadIds.length) return 0;
+
+      const messages = await fetchInboxMessagesForBadge(threadIds);
+      const byThread = new Map();
+
+      messages.forEach(msg => {
+        if (!msg.threadId) return;
+        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+        byThread.get(msg.threadId).push(msg);
+      });
+
+      let total = 0;
+
+      threads.forEach(thread => {
+        const list = (byThread.get(thread.id) || [])
+          .sort((a, b) => badgeTimeMs(a.createdAt) - badgeTimeMs(b.createdAt));
+
+        if (!list.length) return;
+
+        const newest = [...list].sort((a, b) => badgeTimeMs(b.createdAt) - badgeTimeMs(a.createdAt))[0];
+
+        if (newest?.senderId === uid) return;
+
+        const lastOutgoingMs = list
+          .filter(msg => msg.senderId === uid)
+          .reduce((max, msg) => Math.max(max, badgeTimeMs(msg.createdAt)), 0);
+
+        const unreadCount = list.filter(msg => {
+          if (msg.senderId === uid) return false;
+          if (badgeTimeMs(msg.createdAt) <= lastOutgoingMs) return false;
+          return isInboxMessageUnreadForBadge(msg, uid);
+        }).length;
+
+        total += unreadCount;
+      });
+
+      return total;
     }
 
     async function loadInboxBadgeCount() {
@@ -2052,7 +2192,8 @@
           inboxBadge.textContent = total > 99 ? "99+" : String(total);
           inboxBadge.classList.remove("hidden");
         }
-      } catch {
+      } catch (err) {
+        console.warn("Inbox badge count skipped:", err?.message || err);
         inboxBadge.classList.add("hidden");
       }
     }
@@ -2127,6 +2268,17 @@
     }
 
     initPage();
+
+    /*
+      OWNSPACE SEARCH PAGE UPDATE:
+
+      FIXED:
+      - Search page light theme remains default.
+      - Inbox badge no longer uses old direct count logic.
+      - Inbox badge = pending message_requests + unread incoming chat_messages only.
+      - General notifications table is ignored.
+      - If newest message in a thread is from you, that thread does not keep the red dot alive.
+      - Old incoming messages before your latest outgoing reply are ignored.
+      - Posts search now also includes community_posts and passes source to post.html.
+    */
   </script>
-</body>
-</html>
