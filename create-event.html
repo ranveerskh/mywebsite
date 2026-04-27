@@ -323,6 +323,60 @@
       color:var(--muted);
     }
 
+    .file-box{
+      background:var(--surface-3);
+      border:1px dashed var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .file-input{
+      width:100%;
+      color:var(--text);
+      font-size:13px;
+    }
+
+    .file-input::file-selector-button{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.22);
+      border-radius:12px;
+      padding:9px 11px;
+      margin-right:10px;
+      cursor:pointer;
+      font-weight:950;
+    }
+
+    .image-preview-wrap{
+      display:none;
+      margin-top:8px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .image-preview-wrap.show{
+      display:block;
+    }
+
+    .image-preview{
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      display:block;
+      background:var(--surface-2);
+    }
+
+    .image-preview-caption{
+      padding:9px 10px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.4;
+      border-top:1px solid var(--line);
+    }
+
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -544,7 +598,7 @@
           <div>
             <div class="head-title">Create New Event</div>
             <div class="head-sub">
-              Add the event details, location, date, and optional image so people can find it in Nearby Events.
+              Add the event details, location, date, and optional image upload so people can find it in Nearby Events.
             </div>
           </div>
         </div>
@@ -553,7 +607,7 @@
           <span class="chip chip-blue">Location required</span>
           <span class="chip chip-green">Nearby ready</span>
           <span class="chip chip-purple">Host included</span>
-          <span class="chip chip-yellow">GPS optional</span>
+          <span class="chip chip-yellow">Image upload optional</span>
         </div>
 
         <div class="quick-actions">
@@ -676,8 +730,8 @@
           </div>
 
           <div class="section">
-            <div class="section-title">Date & Media</div>
-            <div class="section-sub">Add date and time so events sort properly. Image link is optional.</div>
+            <div class="section-title">Date & Image</div>
+            <div class="section-sub">Add date and time so events sort properly. Image upload is optional.</div>
 
             <div class="grid">
               <div class="field">
@@ -692,8 +746,16 @@
             </div>
 
             <div class="field">
-              <label class="label" for="imageURL">Image Link</label>
-              <input type="text" id="imageURL" class="input" placeholder="https://example.com/photo.jpg" />
+              <label class="label" for="eventImageFile">Event Image</label>
+              <div class="file-box">
+                <input type="file" id="eventImageFile" class="file-input" accept="image/*" />
+                <div class="small-note">Optional. Upload JPG, PNG, WEBP, or any image file. Max 5 MB recommended.</div>
+              </div>
+
+              <div id="imagePreviewWrap" class="image-preview-wrap">
+                <img id="imagePreview" class="image-preview" alt="Event image preview" />
+                <div id="imagePreviewCaption" class="image-preview-caption">Image preview from uploaded file.</div>
+              </div>
             </div>
           </div>
 
@@ -796,11 +858,17 @@
     const lngInput = document.getElementById("lng");
     const dateInput = document.getElementById("date");
     const timeInput = document.getElementById("time");
-    const imageURLInput = document.getElementById("imageURL");
+    const eventImageFile = document.getElementById("eventImageFile");
+    const imagePreviewWrap = document.getElementById("imagePreviewWrap");
+    const imagePreview = document.getElementById("imagePreview");
+    const imagePreviewCaption = document.getElementById("imagePreviewCaption");
     const inboxBadge = document.getElementById("inboxBadge");
+
+    const STORAGE_BUCKET = "media";
 
     let currentUser = null;
     let currentProfile = null;
+    let previewObjectUrl = "";
 
     function nowIso() {
       return new Date().toISOString();
@@ -872,11 +940,74 @@
       return String(value || "").trim().toLowerCase();
     }
 
-    function normalizeImageUrl(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
+    function clearImagePreview() {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = "";
+      }
+
+      imagePreviewWrap.classList.remove("show");
+      imagePreview.removeAttribute("src");
+      imagePreviewCaption.textContent = "Image preview from uploaded file.";
+    }
+
+    function showImageFilePreview(file) {
+      clearImagePreview();
+
+      if (!file) return;
+
+      if (!file.type || !file.type.startsWith("image/")) {
+        eventImageFile.value = "";
+        showMessage("Please choose an image file.", "error");
+        return;
+      }
+
+      const maxBytes = 5 * 1024 * 1024;
+
+      if (file.size > maxBytes) {
+        eventImageFile.value = "";
+        showMessage("Image is too large. Please upload an image under 5 MB.", "error");
+        return;
+      }
+
+      previewObjectUrl = URL.createObjectURL(file);
+      imagePreview.src = previewObjectUrl;
+      imagePreviewCaption.textContent = `${file.name} â¢ ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      imagePreviewWrap.classList.add("show");
+      showMessage("");
+    }
+
+    eventImageFile.addEventListener("change", () => {
+      const file = eventImageFile.files?.[0] || null;
+      showImageFilePreview(file);
+    });
+
+    imagePreview.addEventListener("error", () => {
+      clearImagePreview();
+      showMessage("Could not preview this image file.", "error");
+    });
+
+    async function uploadEventImage(file, eventId) {
+      if (!file) return "";
+
+      const extension = (file.name.split(".").pop() || "jpg")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "") || "jpg";
+
+      const path = `event-images/${currentUser.id}/${eventId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "image/jpeg"
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      return data?.publicUrl || "";
     }
 
     function countryAliases(country) {
@@ -1276,7 +1407,7 @@
       const address = addressInput.value.trim();
       const date = dateInput.value.trim();
       const time = timeInput.value.trim();
-      const imageURL = normalizeImageUrl(imageURLInput.value.trim());
+      const imageFile = eventImageFile.files?.[0] || null;
       const latText = latInput.value.trim();
       const lngText = lngInput.value.trim();
 
@@ -1303,6 +1434,20 @@
       if (!time) {
         showMessage("Time is required.", "error");
         return;
+      }
+
+      if (imageFile) {
+        if (!imageFile.type || !imageFile.type.startsWith("image/")) {
+          showMessage("Please choose a valid image file.", "error");
+          return;
+        }
+
+        const maxBytes = 5 * 1024 * 1024;
+
+        if (imageFile.size > maxBytes) {
+          showMessage("Image is too large. Please upload an image under 5 MB.", "error");
+          return;
+        }
       }
 
       const dt = new Date(`${date}T${time}`);
@@ -1341,6 +1486,13 @@
 
       try {
         const eventId = generateId();
+        let imageURL = "";
+
+        if (imageFile) {
+          showMessage("Uploading event image...", "success");
+          imageURL = await uploadEventImage(imageFile, eventId);
+        }
+
         const locationSearch = buildLocationSearch(city, province, country);
         const eventDateTimeIso = dt.toISOString();
         const createdAt = nowIso();
@@ -1386,6 +1538,8 @@
 
           image_url: imageURL,
           photo_url: imageURL,
+          media_url: imageURL,
+          cover_url: imageURL,
 
           lat,
           lng,
@@ -1428,6 +1582,9 @@
           event_at: eventDateTimeIso,
 
           image_url: imageURL,
+          photo_url: imageURL,
+          media_url: imageURL,
+          cover_url: imageURL,
 
           lat,
           lng,
@@ -1490,6 +1647,9 @@
           eventDatetime: eventDateTimeIso,
 
           imageURL,
+          photoURL: imageURL,
+          mediaURL: imageURL,
+          coverURL: imageURL,
 
           lat,
           lng,
@@ -1603,6 +1763,12 @@
           </svg>
           <span>Create Event</span>
         `;
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
       }
     });
 
