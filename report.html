@@ -1,55 +1,62 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BareWorld - Report</title>
+  <title>OwnSpace - Report</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#0b1020;
-      --card:#121931;
-      --soft:#161f3d;
-      --soft2:#0f1630;
-      --line:rgba(255,255,255,.08);
-      --text:#fff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --red:#ff5d73;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --nav-bg:rgba(12,18,35,.92);
-      --topbar-bg:rgba(11,16,32,.82);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
-      --card:#ffffff;
-      --soft:#eef3fb;
-      --soft2:#f7f9fd;
-      --line:rgba(15,23,42,.08);
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
       --text:#14213d;
       --muted:#6b7893;
       --blue:#1f8fff;
       --green:#22b36c;
-      --red:#e74c66;
       --yellow:#d59617;
       --purple:#7f63ff;
-      --nav-bg:rgba(255,255,255,.96);
-      --topbar-bg:rgba(255,255,255,.88);
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --soft-shadow:0 10px 24px rgba(20,33,61,.06);
+    }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 20px 40px rgba(0,0,0,.18);
+      --soft-shadow:0 10px 24px rgba(0,0,0,.16);
     }
 
     body{
-      background:linear-gradient(180deg,#070b16 0%,#0d1326 100%);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(255,93,115,.08), transparent 24%),
+        var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:14px 14px 92px;
-    }
-    html[data-theme="light"] body{
-      background:linear-gradient(180deg,#eef4ff 0%,#f8fbff 100%);
+      padding:8px 8px 108px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -61,349 +68,509 @@
       z-index:30;
       backdrop-filter:blur(14px);
       background:var(--topbar-bg);
-      border:1px solid var(--line);
+      border:1px solid var(--line-soft);
       border-radius:18px;
-      padding:12px 14px;
-      margin-bottom:14px;
-      display:flex;
-      justify-content:space-between;
+      padding:7px 9px;
+      margin-bottom:10px;
+      display:grid;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:8px;
+      box-shadow:var(--shadow);
     }
 
-    .left-wrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-
-    .back-btn,.chip-btn{
+    .top-icon-btn{
+      width:42px;
+      height:42px;
       border:none;
-      background:var(--soft);
+      background:var(--surface-2);
       color:var(--text);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:800;
+      border-radius:13px;
       cursor:pointer;
       border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-decoration:none;
+      flex-shrink:0;
+      position:relative;
+    }
+
+    .top-icon-btn svg{width:19px;height:19px;display:block}
+
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:12px;
+      margin-bottom:10px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-panel{
+      background:
+        linear-gradient(135deg, rgba(231,76,102,.10), rgba(127,99,255,.08)),
+        var(--surface);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero-panel::after{
+      content:"";
+      position:absolute;
+      width:120px;
+      height:120px;
+      right:-38px;
+      top:-44px;
+      border-radius:999px;
+      background:rgba(231,76,102,.11);
+      pointer-events:none;
+    }
+
+    .hero-title{
+      font-size:22px;
+      font-weight:950;
+      line-height:1.15;
+      letter-spacing:-.03em;
+      position:relative;
+      z-index:1;
+    }
+
+    .hero-sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-top:6px;
+      position:relative;
+      z-index:1;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:11px;
+      position:relative;
+      z-index:1;
+    }
+
+    .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:40px;
-    }
-
-    .brand{font-size:22px;font-weight:800}
-    .brand-sub{font-size:12px;color:var(--muted)}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
-
-    .panel{
-      background:rgba(18,25,49,.88);
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:11.5px;
+      font-weight:950;
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:14px;
-      box-shadow:0 20px 40px rgba(0,0,0,.18);
-    }
-    html[data-theme="light"] .panel{
-      background:rgba(255,255,255,.92);
-      box-shadow:0 16px 30px rgba(20,33,61,.08);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+      white-space:nowrap;
     }
 
-    .section-title{
-      font-size:20px;
-      font-weight:800;
-      margin-bottom:8px;
-    }
-    .section-note{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      margin-bottom:6px;
+    .badge svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
     }
 
-    .loading{
+    .badge-post{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-profile{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-place{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-event{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-community{background:rgba(127,99,255,.14);border-color:rgba(127,99,255,.20)}
+    .badge-warning{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .loading,
+    .empty-box{
       text-align:center;
       color:var(--muted);
-      padding:28px 10px;
+      padding:24px 12px;
+      background:var(--surface-2);
+      border-radius:17px;
+      border:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.55;
     }
 
-    .preview-card{
-      display:flex;
+    .target-card{
+      display:grid;
+      grid-template-columns:76px 1fr;
       gap:12px;
-      align-items:flex-start;
-      background:var(--soft2);
+      align-items:start;
+      background:var(--surface-2);
       border:1px solid var(--line);
       border-radius:18px;
-      padding:14px;
+      padding:11px;
+      box-shadow:var(--soft-shadow);
     }
 
-    .preview-thumb,.preview-thumb-empty{
-      width:82px;
-      height:82px;
-      border-radius:16px;
+    .target-thumb,
+    .target-thumb-empty{
+      width:76px;
+      height:76px;
+      border-radius:17px;
       flex-shrink:0;
       border:1px solid var(--line);
-      background:#1b2445;
+      background:var(--surface-3);
+      overflow:hidden;
     }
-    html[data-theme="light"] .preview-thumb,
-    html[data-theme="light"] .preview-thumb-empty{
-      background:#edf3ff;
+
+    .target-thumb{
+      object-fit:cover;
+      display:block;
     }
-    .preview-thumb{object-fit:cover}
-    .preview-thumb-empty{
+
+    .target-thumb-empty{
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
       padding:8px;
       color:var(--muted);
-      font-size:11px;
+      font-size:10.5px;
+      line-height:1.25;
+      font-weight:800;
+    }
+
+    .target-body{min-width:0}
+
+    .target-title{
+      font-size:16px;
+      font-weight:950;
       line-height:1.3;
-    }
-
-    .preview-body{min-width:0;flex:1}
-    .preview-title{
-      font-size:17px;
-      font-weight:800;
-      line-height:1.35;
+      letter-spacing:-.02em;
       margin-bottom:4px;
+      word-break:break-word;
     }
-    .preview-sub{
-      font-size:13px;
+
+    .target-sub{
       color:var(--blue);
-      font-weight:700;
-      margin-bottom:8px;
-      word-break:break-word;
-    }
-    .preview-text{
-      font-size:14px;
-      color:#d7def5;
-      line-height:1.6;
-      word-break:break-word;
-      white-space:pre-wrap;
-    }
-    html[data-theme="light"] .preview-text{
-      color:#33415c;
-    }
-
-    .badge-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
       font-size:12px;
-      font-weight:800;
-    }
-    .badge-post{
-      background:rgba(76,201,255,.14);
-      color:#d8f7ff;
-      border:1px solid rgba(76,201,255,.20);
-    }
-    .badge-profile{
-      background:rgba(167,139,250,.14);
-      color:#e8defd;
-      border:1px solid rgba(167,139,250,.20);
-    }
-    .badge-place{
-      background:rgba(61,220,132,.14);
-      color:#d9ffe8;
-      border:1px solid rgba(61,220,132,.20);
-    }
-    .badge-event{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
-    }
-    .badge-warning{
-      background:rgba(245,185,66,.14);
-      color:#ffe7b0;
-      border:1px solid rgba(245,185,66,.20);
+      font-weight:900;
+      line-height:1.45;
+      margin-bottom:7px;
+      word-break:break-word;
     }
 
-    .field{margin-bottom:14px}
-    label{
-      display:block;
-      font-size:13px;
-      font-weight:700;
-      margin-bottom:8px;
-      color:#dfe7ff;
-    }
-    html[data-theme="light"] label{
-      color:#33415c;
+    .target-text{
+      color:var(--text);
+      font-size:13.5px;
+      line-height:1.58;
+      white-space:pre-wrap;
+      word-break:break-word;
+      display:-webkit-box;
+      -webkit-line-clamp:5;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
     }
 
-    select,textarea{
+    .section-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      line-height:1.2;
+    }
+
+    .section-note{
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.55;
+      margin-top:4px;
+    }
+
+    .form{
+      display:grid;
+      gap:12px;
+    }
+
+    .field{
+      display:grid;
+      gap:7px;
+    }
+
+    .label{
+      color:var(--text);
+      font-size:12.5px;
+      font-weight:950;
+    }
+
+    .select,
+    .textarea{
       width:100%;
       border:none;
       outline:none;
-      border-radius:16px;
-      background:var(--soft2);
+      padding:12px 13px;
+      border-radius:15px;
+      background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      padding:14px;
       font-size:14px;
     }
-    textarea{
-      min-height:130px;
+
+    .select option{color:#111;background:#fff}
+
+    .textarea{
+      min-height:125px;
       resize:vertical;
       line-height:1.55;
     }
-    select option{color:#000}
+
+    .textarea::placeholder{color:var(--muted)}
+
     .helper{
-      font-size:12px;
       color:var(--muted);
-      line-height:1.6;
-      margin-top:6px;
+      font-size:11.5px;
+      line-height:1.5;
     }
 
     .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
       align-items:center;
     }
-    .submit-btn,.cancel-btn{
+
+    .btn{
       border:none;
-      border-radius:12px;
-      padding:12px 16px;
-      font-size:14px;
-      font-weight:800;
+      border-radius:14px;
+      padding:11px 12px;
+      font-size:13px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
       cursor:pointer;
       min-height:44px;
-    }
-    .submit-btn{
-      background:rgba(255,93,115,.14);
-      color:#ffd3d9;
-      border:1px solid rgba(255,93,115,.22);
-    }
-    .cancel-btn{
-      background:var(--soft);
       color:var(--text);
       border:1px solid var(--line);
+      background:var(--surface-3);
+      white-space:nowrap;
     }
-    .submit-btn:disabled,.cancel-btn:disabled{
-      opacity:.65;
+
+    .btn svg{
+      width:16px;
+      height:16px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-soft{background:var(--surface-2);border-color:var(--line)}
+    .btn:disabled{
+      opacity:.62;
       cursor:not-allowed;
     }
 
     .message{
-      min-height:20px;
-      font-size:14px;
-      margin-top:10px;
-    }
-    .success{color:#9cf0bf}
-    .error{color:#ffb3bd}
-
-    .empty-box{
-      text-align:center;
-      padding:28px 10px;
+      min-height:18px;
+      font-size:13px;
+      line-height:1.45;
       color:var(--muted);
-      background:var(--soft2);
+    }
+
+    .success{color:#22b36c}
+    .error{color:#e74c66}
+    html[data-theme="dark"] .success{color:#9cf0bf}
+    html[data-theme="dark"] .error{color:#ffb3bd}
+
+    .policy-box{
+      background:var(--surface-2);
+      border:1px solid var(--line);
       border-radius:18px;
-      border:1px dashed var(--line);
-      line-height:1.6;
+      padding:12px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.58;
+    }
+
+    .policy-box strong{
+      color:var(--text);
+      display:block;
+      margin-bottom:5px;
+      font-size:13px;
     }
 
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:12px;
-      width:min(760px, calc(100% - 20px));
+      bottom:10px;
+      width:min(760px, calc(100% - 16px));
       background:var(--nav-bg);
       border:1px solid var(--line);
-      backdrop-filter:blur(18px);
       border-radius:20px;
       padding:8px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:8px;
+      gap:6px;
       z-index:50;
-      box-shadow:0 20px 40px rgba(0,0,0,.25);
+      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      overflow:hidden;
     }
 
     .nav-link{
       text-decoration:none;
-      color:#b9c4e3;
+      color:var(--muted);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       gap:4px;
-      padding:10px 6px;
+      padding:9px 5px;
       border-radius:14px;
-      font-size:11px;
-      font-weight:700;
-      min-height:58px;
+      font-size:10.5px;
+      font-weight:800;
+      min-height:56px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
     }
-    html[data-theme="light"] .nav-link{
-      color:#6b7893;
+
+    .nav-link.active{
+      background:rgba(76,201,255,.14);
+      color:var(--text);
     }
-    .nav-link .icon{font-size:18px;line-height:1}
+
+    .nav-link svg{
+      width:20px;
+      height:20px;
+      display:block;
+    }
+
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:10px;
+      min-width:17px;
+      height:17px;
+      padding:0 4px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      border:2px solid var(--nav-bg);
+    }
 
     @media(max-width:700px){
-      body{padding:12px 12px 92px}
-      .topbar{align-items:flex-start}
-      .top-actions{width:100%}
-      .top-actions .chip-btn{flex:1}
-      .brand{font-size:20px}
-      .preview-card{align-items:flex-start}
-      .preview-thumb,.preview-thumb-empty{
-        width:70px;
-        height:70px;
-        border-radius:14px;
+      .brand{font-size:17px}
+      .hero-title{font-size:20px}
+      .target-card{
+        grid-template-columns:66px 1fr;
+        gap:10px;
       }
-      .submit-btn,.cancel-btn{flex:1}
+      .target-thumb,
+      .target-thumb-empty{
+        width:66px;
+        height:66px;
+        border-radius:15px;
+      }
+      .actions{grid-template-columns:1fr}
+      .bottom-nav{padding:7px;gap:5px}
+      .nav-link{font-size:10px;padding:8px 3px}
+    }
+
+    @media(max-width:390px){
+      body{padding-left:7px;padding-right:7px}
+      .btn{font-size:12px;padding:10px 9px}
+      .badge{font-size:10.8px;padding:7px 8px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="left-wrap">
-        <button id="backBtn" class="back-btn" type="button">Back</button>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Report content</div>
+      </div>
+
+      <a href="settings.html" class="top-icon-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2.05 2.05 0 0 1-2.9 2.9l-.04-.04A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .56 1.7 1.7 0 0 0-.4 1.04V21a2.05 2.05 0 0 1-4.1 0v-.06a1.7 1.7 0 0 0-.4-1.04 1.7 1.7 0 0 0-1-.56 1.7 1.7 0 0 0-1.84.38l-.04.04a2.05 2.05 0 0 1-2.9-2.9l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.56-1 1.7 1.7 0 0 0-1.04-.4H3a2.05 2.05 0 0 1 0-4.1h.06a1.7 1.7 0 0 0 1.04-.4 1.7 1.7 0 0 0 .56-1 1.7 1.7 0 0 0-.38-1.84l-.04-.04a2.05 2.05 0 0 1 2.9-2.9l.04.04A1.7 1.7 0 0 0 9 4.6c.38-.08.74-.27 1-.56.26-.29.4-.66.4-1.04V3a2.05 2.05 0 0 1 4.1 0v.06c0 .38.14.75.4 1.04.26.29.62.48 1 .56a1.7 1.7 0 0 0 1.84-.38l.04-.04a2.05 2.05 0 0 1 2.9 2.9l-.04.04A1.7 1.7 0 0 0 19.4 9c.08.38.27.74.56 1 .29.26.66.4 1.04.4H21a2.05 2.05 0 0 1 0 4.1h-.06c-.38 0-.75.14-1.04.4-.29.26-.48.62-.5 1.1z"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div class="panel hero-panel">
+      <div class="hero-title">Submit a safety report</div>
+      <div class="hero-sub">Reports go to admin for review. Use this for content, profiles, places, events, or communities that break OwnSpace rules.</div>
+
+      <div class="badge-row">
+        <span id="targetTypeBadge" class="badge badge-warning">Target report</span>
+        <span class="badge badge-warning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 9v4"></path>
+            <path d="M12 17h.01"></path>
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+          </svg>
+          Manual review
+        </span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-head">
         <div>
-          <div class="brand">BareWorld</div>
-          <div class="brand-sub">Report content</div>
+          <div class="section-title">Reported target</div>
+          <div class="section-note">Check the preview before submitting.</div>
         </div>
       </div>
 
-      <div class="top-actions">
-        <a href="feed.html" class="chip-btn">Feed</a>
-        <a href="profile.html" class="chip-btn">Profile</a>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="section-title">Submit report</div>
-      <div class="section-note">This report will be reviewed by admin.</div>
-      <div class="badge-row">
-        <span id="targetTypeBadge" class="badge badge-post">Target</span>
-        <span class="badge badge-warning">Non-sexual nudity may be allowed • sexual nudity / porn are not allowed</span>
-      </div>
-    </div>
-
-    <div class="panel">
       <div id="loading" class="loading">Loading report target...</div>
 
       <div id="content" class="hidden">
-        <div class="preview-card">
-          <img id="previewImg" class="preview-thumb hidden" alt="Preview" />
-          <div id="previewImgEmpty" class="preview-thumb-empty">No preview</div>
+        <div class="target-card">
+          <img id="previewImg" class="target-thumb hidden" alt="Report target preview" />
+          <div id="previewImgEmpty" class="target-thumb-empty">No preview</div>
 
-          <div class="preview-body">
-            <div id="previewTitle" class="preview-title">Target</div>
-            <div id="previewSub" class="preview-sub"></div>
-            <div id="previewText" class="preview-text">Loading...</div>
+          <div class="target-body">
+            <div id="previewTitle" class="target-title">Target</div>
+            <div id="previewSub" class="target-sub"></div>
+            <div id="previewText" class="target-text">Loading...</div>
           </div>
         </div>
       </div>
@@ -412,60 +579,100 @@
     </div>
 
     <div id="formPanel" class="panel hidden">
-      <form id="reportForm">
+      <form id="reportForm" class="form">
         <div class="field">
-          <label for="reason">Reason</label>
-          <select id="reason" required>
+          <label class="label" for="reason">Reason</label>
+          <select id="reason" class="select" required>
             <option value="">Select reason</option>
-            <option value="sexual_nudity">Sexual nudity</option>
-            <option value="pornography">Pornography / explicit sexual content</option>
+            <option value="minor_safety">Minor safety concern</option>
+            <option value="non_consensual_content">Non-consensual or stolen content</option>
+            <option value="sexual_content">Porn / explicit sexual content</option>
             <option value="harassment">Harassment / abuse</option>
             <option value="hate_speech">Hate speech</option>
-            <option value="violence">Violence / threat</option>
-            <option value="minor_safety">Minor safety concern</option>
+            <option value="threats_violence">Threats or violence</option>
+            <option value="doxxing_private_info">Doxxing / private information</option>
             <option value="impersonation">Impersonation / fake account</option>
-            <option value="spam">Spam / scam</option>
+            <option value="spam_scam">Spam / scam</option>
+            <option value="illegal_activity">Illegal activity</option>
             <option value="graphic_content">Graphic / disturbing content</option>
+            <option value="wrong_category">Wrong category / misleading</option>
             <option value="other">Other</option>
           </select>
-          <div class="helper">Choose the closest reason. Admin will review manually.</div>
+          <div class="helper">Choose the closest reason. Admin will review it manually.</div>
         </div>
 
         <div class="field">
-          <label for="note">Details</label>
-          <textarea id="note" placeholder="Explain what is wrong with this content..."></textarea>
-          <div class="helper">Add extra detail if needed. Keep it clear and short.</div>
+          <label class="label" for="note">Details</label>
+          <textarea id="note" class="textarea" placeholder="Explain what is wrong with this content..."></textarea>
+          <div class="helper">Add only useful details. Do not include private info unless needed for the report.</div>
         </div>
 
         <div class="actions">
-          <button id="submitBtn" type="submit" class="submit-btn">Submit Report</button>
-          <button id="cancelBtn" type="button" class="cancel-btn">Cancel</button>
+          <button id="submitBtn" type="submit" class="btn btn-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 9v4"></path>
+              <path d="M12 17h.01"></path>
+              <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+            </svg>
+            Submit Report
+          </button>
+
+          <button id="cancelBtn" type="button" class="btn btn-soft">
+            Cancel
+          </button>
         </div>
 
         <div id="message" class="message"></div>
       </form>
     </div>
+
+    <div class="panel">
+      <div class="policy-box">
+        <strong>OwnSpace safety note</strong>
+        Reports help keep the platform safer. Admin may hide content, warn, suspend, or ban accounts depending on the issue.
+      </div>
+    </div>
   </div>
 
   <nav class="bottom-nav">
     <a href="feed.html" class="nav-link">
-      <span class="icon">⌂</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5"></path>
+        <path d="M5 10v10h14V10"></path>
+        <path d="M9 20v-6h6v6"></path>
+      </svg>
       <span>Feed</span>
     </a>
+
     <a href="nearby.html" class="nav-link">
-      <span class="icon">◎</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+        <circle cx="12" cy="9" r="2.5"></circle>
+      </svg>
       <span>Nearby</span>
     </a>
-    <a href="feed.html#composerPanel" class="nav-link">
-      <span class="icon">＋</span>
-      <span>Create</span>
+
+    <a href="search.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="M20 20l-4.2-4.2"></path>
+      </svg>
+      <span>Search</span>
     </a>
-    <a href="nearby-events.html" class="nav-link">
-      <span class="icon">◈</span>
-      <span>Events</span>
+
+    <a href="inbox.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+      </svg>
+      <span>Inbox</span>
+      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
+
     <a href="profile.html" class="nav-link">
-      <span class="icon">◉</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
       <span>Profile</span>
     </a>
   </nav>
@@ -492,8 +699,10 @@
     const noteInput = document.getElementById("note");
     const submitBtn = document.getElementById("submitBtn");
     const message = document.getElementById("message");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
+    const COMMUNITY_SOURCES = ["communities", "community"];
 
     let currentUser = null;
     let currentUserProfile = null;
@@ -506,19 +715,57 @@
     let targetPreviewText = "";
     let targetImageUrl = "";
 
+    const ICONS = {
+      post: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5h16"></path>
+          <path d="M4 12h16"></path>
+          <path d="M4 19h10"></path>
+        </svg>
+      `,
+      profile: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      `,
+      place: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+        </svg>
+      `,
+      event: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+          <path d="M16 3v4"></path>
+          <path d="M8 3v4"></path>
+          <path d="M3 11h18"></path>
+        </svg>
+      `,
+      community: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      `
+    };
+
     function nowIso() {
       return new Date().toISOString();
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
@@ -528,10 +775,10 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "bwTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -548,7 +795,7 @@
       else window.location.href = "feed.html";
     });
 
-    function setMessage(text, type = "") {
+    function setMessage(text = "", type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
     }
@@ -576,8 +823,8 @@
       const p = new URLSearchParams(window.location.search);
       return {
         type: (p.get("type") || "").trim().toLowerCase(),
-        targetId: (p.get("targetId") || "").trim(),
-        targetUserId: (p.get("targetUserId") || "").trim(),
+        targetId: (p.get("targetId") || p.get("id") || "").trim(),
+        targetUserId: (p.get("targetUserId") || p.get("uid") || "").trim(),
         source: (p.get("source") || "").trim()
       };
     }
@@ -598,15 +845,16 @@
         msg.includes("does not exist") ||
         msg.includes("not found in the schema cache") ||
         msg.includes("could not find the table") ||
-        msg.includes("could not find")
+        msg.includes("could not find") ||
+        (msg.includes("relation") && msg.includes("does not exist"))
       );
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
       return {
-        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        uid: getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
         username: getField(d, ["username", "handle", "user_name", "userName"]),
         bio: getField(d, ["bio", "about", "description"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"])
@@ -614,7 +862,7 @@
     }
 
     function getPostOwnerId(postData) {
-      return getField(postData, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]);
+      return getField(postData, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid", "created_by", "createdBy"]);
     }
 
     function normalizePost(row) {
@@ -622,9 +870,10 @@
       return {
         id: getField(d, ["id"]),
         ownerId: getPostOwnerId(d),
-        displayName: getField(d, ["display_name", "displayName", "name"]) || "Member",
-        caption: getField(d, ["caption", "text", "content"]) || "No caption",
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"])
+        displayName: getField(d, ["author_name", "authorName", "display_name", "displayName", "name"]) || "Member",
+        title: getField(d, ["title", "heading"]),
+        caption: getField(d, ["caption", "text", "body", "content", "description"]) || "No text added.",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"])
       };
     }
 
@@ -637,8 +886,8 @@
         name: getField(d, ["name", "title", "place_name", "placeName"]) || "Reported place",
         category: getField(d, ["category", "topic"]) || "Place",
         city: getField(d, ["city", "location_city", "locationCity"]),
-        description: getField(d, ["description", "desc", "notes"]) || "No description",
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"])
+        description: getField(d, ["description", "desc", "notes", "about"]) || "No description",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"])
       };
     }
 
@@ -649,10 +898,24 @@
         ownerId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "owner_id", "ownerId", "uid"]),
         title: getField(d, ["title", "name"]) || "Reported event",
         city: getField(d, ["city", "location_city", "locationCity"]),
-        date: getField(d, ["date"]),
-        description: getField(d, ["description", "desc"]) || "No description",
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        date: getField(d, ["date", "event_date", "eventDate"]),
+        description: getField(d, ["description", "desc", "about"]) || "No description",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member"
+      };
+    }
+
+    function normalizeCommunity(row, source = "") {
+      const d = row || {};
+      return {
+        id: getField(d, ["id"]),
+        source,
+        ownerId: getField(d, ["owner_id", "ownerId", "creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"]),
+        name: getField(d, ["name", "title", "community_name", "communityName"]) || "Reported community",
+        category: getField(d, ["category", "topic"]) || "Community",
+        city: getField(d, ["city", "location_city", "locationCity"]),
+        description: getField(d, ["description", "desc", "about"]) || "No description",
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"])
       };
     }
 
@@ -693,8 +956,10 @@
       const attempts = [
         () => selectByColumn("public_profiles", "uid", uid),
         () => selectByColumn("public_profiles", "id", uid),
+        () => selectByColumn("public_profiles", "user_id", uid),
         () => selectByColumn("users", "uid", uid),
-        () => selectByColumn("users", "id", uid)
+        () => selectByColumn("users", "id", uid),
+        () => selectByColumn("users", "user_id", uid)
       ];
 
       for (const fn of attempts) {
@@ -712,7 +977,7 @@
       const post = normalizePost({ id: row.id, ...row });
 
       targetOwnerId = targetOwnerId || post.ownerId;
-      targetTitleText = "Reported post";
+      targetTitleText = post.title || "Reported post";
       targetPreviewText = post.caption;
       targetImageUrl = post.imageURL;
 
@@ -760,7 +1025,7 @@
         targetImageUrl = place.imageURL || "";
 
         previewTitle.textContent = targetTitleText;
-        previewSub.textContent = [place.category, place.city].filter(Boolean).join(" • ") || "Place";
+        previewSub.textContent = [place.category, place.city].filter(Boolean).join(" â¢ ") || "Place";
         previewText.textContent = targetPreviewText;
         showImage(targetImageUrl);
 
@@ -782,11 +1047,39 @@
       targetImageUrl = event.imageURL || "";
 
       previewTitle.textContent = targetTitleText;
-      previewSub.textContent = [event.creatorName, event.city, event.date].filter(Boolean).join(" • ") || "Event";
+      previewSub.textContent = [event.creatorName, event.city, event.date].filter(Boolean).join(" â¢ ") || "Event";
       previewText.textContent = targetPreviewText;
       showImage(targetImageUrl);
 
       return event;
+    }
+
+    async function loadCommunityTarget(id, source = "") {
+      const sources = source && COMMUNITY_SOURCES.includes(source)
+        ? [source, ...COMMUNITY_SOURCES.filter(s => s !== source)]
+        : COMMUNITY_SOURCES;
+
+      for (const table of sources) {
+        const row = await selectByColumn(table, "id", id);
+        if (!row) continue;
+
+        const community = normalizeCommunity({ id: row.id, ...row }, table);
+
+        targetOwnerId = targetOwnerId || community.ownerId;
+        targetSource = table;
+        targetTitleText = community.name || "Reported community";
+        targetPreviewText = community.description || "No description";
+        targetImageUrl = community.imageURL || "";
+
+        previewTitle.textContent = targetTitleText;
+        previewSub.textContent = [community.category, community.city].filter(Boolean).join(" â¢ ") || "Community";
+        previewText.textContent = targetPreviewText;
+        showImage(targetImageUrl);
+
+        return community;
+      }
+
+      return null;
     }
 
     function updateTargetBadge(type) {
@@ -794,18 +1087,20 @@
         post: "Post report",
         profile: "Profile report",
         place: "Place report",
-        event: "Event report"
+        event: "Event report",
+        community: "Community report"
       };
 
       const classMap = {
         post: "badge-post",
         profile: "badge-profile",
         place: "badge-place",
-        event: "badge-event"
+        event: "badge-event",
+        community: "badge-community"
       };
 
-      targetTypeBadge.textContent = labelMap[type] || "Target report";
-      targetTypeBadge.className = `badge ${classMap[type] || "badge-post"}`;
+      targetTypeBadge.innerHTML = `${ICONS[type] || ""}${labelMap[type] || "Target report"}`;
+      targetTypeBadge.className = `badge ${classMap[type] || "badge-warning"}`;
     }
 
     async function loadTarget() {
@@ -816,7 +1111,7 @@
       targetOwnerId = params.targetUserId || "";
       targetSource = params.source || "";
 
-      const allowedTypes = ["post", "profile", "place", "event"];
+      const allowedTypes = ["post", "profile", "place", "event", "community"];
 
       if (!targetType || !targetId || !allowedTypes.includes(targetType)) {
         loading.classList.add("hidden");
@@ -836,6 +1131,8 @@
         target = await loadPlaceTarget(targetId, targetSource);
       } else if (targetType === "event") {
         target = await loadEventTarget(targetId);
+      } else if (targetType === "community") {
+        target = await loadCommunityTarget(targetId, targetSource);
       }
 
       if (!target) {
@@ -923,6 +1220,106 @@
       );
     }
 
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase.from(table).select("id", { count: "exact", head: true });
+        const { count, error } = await buildQuery(query);
+        if (!error) return count || 0;
+      } catch {}
+      return null;
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
+
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q =>
+            q.eq(targetColumn, uid).eq(statusColumn, "pending")
+          );
+
+          if (count !== null) return count;
+        }
+
+        const countWithoutStatus = await countRows("message_requests", q =>
+          q.eq(targetColumn, uid)
+        );
+
+        if (countWithoutStatus !== null) return countWithoutStatus;
+      }
+
+      return 0;
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+
+        if (!Array.isArray(threads) || !threads.length) return 0;
+
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+
+        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+
+        for (const field of seenFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .is(field, null);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+
+        const boolFields = ["is_read", "read"];
+
+        for (const field of boolFields) {
+          try {
+            const { count, error } = await supabase
+              .from("chat_messages")
+              .select("id", { count: "exact", head: true })
+              .in("thread_id", threadIds)
+              .neq("sender_id", uid)
+              .eq(field, false);
+
+            if (!error) return count || 0;
+          } catch {}
+        }
+      } catch {}
+
+      return 0;
+    }
+
+    async function updateInboxBadge() {
+      if (!currentUser || !inboxBadge) return;
+
+      try {
+        const [requests, unreadMessages] = await Promise.all([
+          countPendingMessageRequests(currentUser.id),
+          countUnreadChatMessages(currentUser.id)
+        ]);
+
+        const total = Number(requests || 0) + Number(unreadMessages || 0);
+
+        if (!total) {
+          inboxBadge.classList.add("hidden");
+        } else {
+          inboxBadge.textContent = total > 99 ? "99+" : String(total);
+          inboxBadge.classList.remove("hidden");
+        }
+      } catch {
+        inboxBadge.classList.add("hidden");
+      }
+    }
+
     async function initPage() {
       const { data, error } = await supabase.auth.getUser();
 
@@ -933,6 +1330,8 @@
 
       currentUser = data.user;
       currentUserProfile = await loadProfile(currentUser.id);
+
+      updateInboxBadge().catch(() => {});
 
       try {
         const ok = await loadTarget();
@@ -987,6 +1386,7 @@
 
       try {
         const reporterName = getReporterName();
+        const createdAt = nowIso();
 
         const snakePayload = {
           reporter_id: currentUser.id,
@@ -1001,8 +1401,8 @@
           reason,
           note,
           status: "pending",
-          created_at: nowIso(),
-          updated_at: nowIso()
+          created_at: createdAt,
+          updated_at: createdAt
         };
 
         const camelPayload = {
@@ -1018,8 +1418,8 @@
           reason,
           note,
           status: "pending",
-          createdAt: nowIso(),
-          updatedAt: nowIso()
+          createdAt: createdAt,
+          updatedAt: createdAt
         };
 
         const minimalSnakePayload = {
@@ -1030,7 +1430,7 @@
           reason,
           note,
           status: "pending",
-          created_at: nowIso()
+          created_at: createdAt
         };
 
         const minimalCamelPayload = {
@@ -1041,7 +1441,7 @@
           reason,
           note,
           status: "pending",
-          createdAt: nowIso()
+          createdAt: createdAt
         };
 
         await insertReportWithFallback([
@@ -1064,51 +1464,6 @@
     });
 
     initPage();
-
-    /*
-      SUPABASE NEEDS FOR THIS PAGE:
-
-      TABLES:
-      - reports: select, insert
-      - posts: select
-      - public_profiles: select
-      - users: select
-      - nearby_places: select
-      - places: select
-      - nudist_places: select
-      - events: select
-
-      AUTH:
-      - logged-in user required
-
-      IMPORTANT COLUMNS:
-      reports:
-      - id
-      - reporter_id
-      - reporter_name
-      - target_type
-      - target_id
-      - target_owner_id
-      - target_source
-      - target_title
-      - target_preview
-      - target_image_url
-      - reason
-      - note
-      - status
-      - created_at
-      - updated_at
-
-      RLS IDEA:
-      - Authenticated users can insert reports where reporter_id = auth.uid()
-      - Users can select their own reports where reporter_id = auth.uid()
-      - Admin can select/update all reports
-      - Users cannot report their own content in UI
-      - Admin panel should review reports and write moderation_history
-
-      SHARE BUTTON:
-      - Not needed on report page because it does not display post cards.
-    */
   </script>
 </body>
 </html>
