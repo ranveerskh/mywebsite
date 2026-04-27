@@ -1,32 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OwnSpace - Inbox</title>
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 
     :root,
-    html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --red:#ff5d73;
-      --purple:#a78bfa;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 18px 36px rgba(0,0,0,.18);
-    }
-
     html[data-theme="light"]{
       --bg:#f3f6fb;
       --surface:#ffffff;
@@ -44,6 +26,25 @@
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
       --shadow:0 16px 28px rgba(20,33,61,.08);
+    }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --red:#ff5d73;
+      --purple:#a78bfa;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 18px 36px rgba(0,0,0,.18);
     }
 
     body{
@@ -228,10 +229,10 @@
       color:var(--muted);
     }
 
-    .message.ok{color:#9cf0bf}
-    .message.err{color:#ffb3bd}
-    html[data-theme="light"] .message.ok{color:#16a34a}
-    html[data-theme="light"] .message.err{color:#e11d48}
+    .message.ok{color:#16a34a}
+    .message.err{color:#e11d48}
+    html[data-theme="dark"] .message.ok{color:#9cf0bf}
+    html[data-theme="dark"] .message.err{color:#ffb3bd}
 
     .list{display:block}
 
@@ -331,9 +332,13 @@
       height:18px;
       border-radius:999px;
       background:rgba(61,220,132,.14);
-      color:#8cffb4;
+      color:#22b36c;
       border:1px solid rgba(61,220,132,.24);
       flex-shrink:0;
+    }
+
+    html[data-theme="dark"] .verified-badge{
+      color:#8cffb4;
     }
 
     .verified-badge svg{
@@ -602,6 +607,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="topbar">
@@ -684,7 +690,7 @@
       <div class="modal-body">
         <div class="info-card">
           <div class="info-title">Chats</div>
-          <div class="info-text">Accepted conversations show here. Tap any chat row to open it. Opening a chat marks that thread as read.</div>
+          <div class="info-text">Accepted conversations show here. Tap any chat row to open it.</div>
         </div>
 
         <div class="info-card">
@@ -778,13 +784,11 @@
     let currentTab = "chats";
 
     let publicProfilesMap = new Map();
-    let threadMapA = new Map();
-    let threadMapB = new Map();
+    let threadMap = new Map();
     let requestDocsMap = new Map();
     let unreadByThreadMap = new Map();
 
     let realtimeChannels = [];
-    let isBootstrapping = false;
     let refreshTimer = null;
 
     const ICONS = {
@@ -802,14 +806,14 @@
     };
 
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "dark";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
-      return themeValue === "light" ? "light" : "dark";
+      return themeValue === "dark" ? "dark" : "light";
     }
 
     function applyTheme(themeValue = getStoredTheme()) {
@@ -822,7 +826,7 @@
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -842,6 +846,7 @@
 
     function formatDate(ts) {
       if (!ts) return "Just now";
+
       try {
         const d = new Date(ts);
         if (Number.isNaN(d.getTime())) return "Just now";
@@ -864,6 +869,7 @@
 
     function tsMs(ts) {
       if (!ts) return 0;
+
       try {
         const ms = new Date(ts).getTime();
         return Number.isFinite(ms) ? ms : 0;
@@ -875,8 +881,12 @@
     function getField(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
-        if (value != null && String(value).trim()) return String(value).trim();
+
+        if (value !== undefined && value !== null && String(value).trim()) {
+          return String(value).trim();
+        }
       }
+
       return "";
     }
 
@@ -884,35 +894,18 @@
       return new Date().toISOString();
     }
 
-    async function tryUpdate(table, payload, buildQuery) {
-      try {
-        let q = supabase.from(table).update(payload);
-        q = buildQuery(q);
-        const { error } = await q;
-        return !error;
-      } catch {
-        return false;
-      }
-    }
-
-    async function insertWithFallback(table, payloads) {
-      let lastError = null;
-
-      for (const payload of payloads) {
-        try {
-          const { data, error } = await supabase.from(table).insert(payload).select("*").maybeSingle();
-          if (!error) return data || null;
-          lastError = error;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-
-      throw lastError || new Error(`Could not insert into ${table}.`);
+    function withTimeout(promise, ms = 10000, label = "Request timed out") {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(label)), ms);
+        })
+      ]);
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "fullName", "full_name", "username"]) || "Member",
@@ -926,6 +919,7 @@
 
     function normalizeThread(raw, fallbackId = "") {
       const d = raw || {};
+
       return {
         id: d.id || fallbackId || "",
         type: getField(d, ["type"]) || "direct",
@@ -945,6 +939,7 @@
 
     function normalizeRequest(raw, fallbackId = "") {
       const d = raw || {};
+
       return {
         id: d.id || fallbackId || "",
         requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "sender_id", "senderId"]),
@@ -988,29 +983,15 @@
         if (msg.readValue === false) return true;
       }
 
-      if (msg.hasSeenColumn) {
-        return !msg.seenValue;
-      }
+      if (msg.hasSeenColumn) return !msg.seenValue;
 
       return false;
     }
 
-    function rowsToMap(rows, normalizer) {
-      const map = new Map();
-      (rows || []).forEach(row => {
-        const model = normalizer(row, row.id);
-        if (model.id) map.set(model.id, model);
-      });
-      return map;
-    }
-
-    function getMergedThreadsMap() {
-      return new Map([...threadMapA.entries(), ...threadMapB.entries()]);
-    }
-
     function getAcceptedThreads() {
-      return Array.from(getMergedThreadsMap().values())
-        .filter(thread => (thread.status || "accepted") === "accepted");
+      return Array.from(threadMap.values())
+        .filter(thread => (thread.status || "accepted") === "accepted")
+        .filter(thread => thread.participantA === currentUser.id || thread.participantB === currentUser.id);
     }
 
     function getPendingRequests() {
@@ -1035,14 +1016,19 @@
       currentTab = tab;
       chatsTabBtn.classList.toggle("active", tab === "chats");
       requestsTabBtn.classList.toggle("active", tab === "requests");
-      renderCurrentTab();
+      renderCurrentTab().catch(err => {
+        console.error(err);
+        showEmpty("Could not render inbox.");
+      });
     }
 
     function getTotalUnreadChats() {
       let total = 0;
+
       unreadByThreadMap.forEach(count => {
         total += Number(count || 0);
       });
+
       return total;
     }
 
@@ -1088,11 +1074,13 @@
       if (profile.photoURL) {
         return `<img class="avatar" src="${escapeHtml(profile.photoURL)}" alt="User photo">`;
       }
+
       return `<div class="avatar-placeholder">No photo</div>`;
     }
 
     function buildVerifiedHtml(profile) {
       if (!profile.verified) return "";
+
       return `
         <span class="verified-badge" title="${escapeHtml(profile.verificationType || "Verified")}">
           ${ICONS.check}
@@ -1105,11 +1093,121 @@
         const prefix = thread.lastSenderId === currentUser.id ? "You: " : "";
         return prefix + thread.lastMessageText;
       }
+
       if (thread.starterText) return thread.starterText;
+
       return "Open chat";
     }
 
+    async function safeSelect(table, buildQuery) {
+      try {
+        let q = supabase.from(table).select("*");
+        q = buildQuery ? buildQuery(q) : q;
+
+        const { data, error } = await q;
+
+        if (error) {
+          console.warn(`Skipped ${table}:`, error.message || error);
+          return [];
+        }
+
+        return data || [];
+      } catch (err) {
+        console.warn(`Skipped ${table}:`, err?.message || err);
+        return [];
+      }
+    }
+
+    async function safeUpdate(table, payload, buildQuery) {
+      try {
+        let q = supabase.from(table).update(payload);
+        q = buildQuery(q);
+
+        const { error } = await q;
+
+        return !error;
+      } catch {
+        return false;
+      }
+    }
+
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select("*")
+            .maybeSingle();
+
+          if (!error) return data || null;
+
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function loadThreadsForCurrentUser() {
+      const map = new Map();
+
+      const attempts = [
+        { a: "participant_a", b: "participant_b" },
+        { a: "participantA", b: "participantB" }
+      ];
+
+      for (const fields of attempts) {
+        const aRows = await safeSelect("chat_threads", q => q.eq(fields.a, currentUser.id));
+        const bRows = await safeSelect("chat_threads", q => q.eq(fields.b, currentUser.id));
+
+        [...aRows, ...bRows].forEach(row => {
+          const thread = normalizeThread(row, row.id);
+
+          if (thread.id) map.set(thread.id, thread);
+        });
+      }
+
+      threadMap = map;
+    }
+
+    async function loadPendingRequestsForCurrentUser() {
+      const map = new Map();
+
+      const targetColumns = [
+        "target_id",
+        "to_user_id",
+        "receiver_id",
+        "recipient_id",
+        "targetId",
+        "toUserId",
+        "receiverId",
+        "recipientId"
+      ];
+
+      for (const col of targetColumns) {
+        const rows = await safeSelect("message_requests", q => q.eq(col, currentUser.id));
+
+        rows.forEach(row => {
+          const request = normalizeRequest(row, row.id);
+          const status = (request.status || "pending").toLowerCase();
+
+          if (request.id && status === "pending") {
+            map.set(request.id, request);
+          }
+        });
+      }
+
+      requestDocsMap = map;
+    }
+
     async function selectProfilesByColumn(table, column, ids) {
+      if (!ids.length) return [];
+
       try {
         const { data, error } = await supabase
           .from(table)
@@ -1118,7 +1216,8 @@
 
         if (!error) return data || [];
       } catch {}
-      return null;
+
+      return [];
     }
 
     async function ensureProfilesForRows() {
@@ -1140,102 +1239,90 @@
 
       const tables = ["public_profiles", "users"];
       const columns = ["uid", "id", "user_id", "userId"];
-      const chunkSize = 100;
 
-      for (let i = 0; i < missing.length; i += chunkSize) {
-        const chunk = missing.slice(i, i + chunkSize);
-        const found = new Set();
+      for (const table of tables) {
+        for (const column of columns) {
+          const stillMissing = missing.filter(uid => !publicProfilesMap.has(uid));
+          if (!stillMissing.length) break;
 
-        for (const table of tables) {
-          for (const column of columns) {
-            const stillMissing = chunk.filter(uid => !publicProfilesMap.has(uid));
-            if (!stillMissing.length) break;
+          const rows = await selectProfilesByColumn(table, column, stillMissing);
 
-            const data = await selectProfilesByColumn(table, column, stillMissing);
+          rows.forEach(row => {
+            const profile = normalizeProfile(row, row.uid || row.id || row.user_id || row.userId);
 
-            if (!data) continue;
-
-            data.forEach(row => {
-              const profile = normalizeProfile(row, row.uid || row.id || row.user_id || row.userId);
-              if (profile.uid) {
-                publicProfilesMap.set(profile.uid, profile);
-                found.add(profile.uid);
-              }
-            });
-          }
+            if (profile.uid) {
+              publicProfilesMap.set(profile.uid, profile);
+            }
+          });
         }
-
-        chunk.forEach(uid => {
-          if (!found.has(uid) && !publicProfilesMap.has(uid)) {
-            publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
-          }
-        });
       }
+
+      missing.forEach(uid => {
+        if (!publicProfilesMap.has(uid)) {
+          publicProfilesMap.set(uid, normalizeProfile({ uid }, uid));
+        }
+      });
     }
 
-    async function markThreadNotificationsRead(threadId) {
-      if (!currentUser || !threadId) return;
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
 
-      const now = nowIso();
+      const rowsA = await safeSelect("chat_messages", q =>
+        q.in("thread_id", threadIds).order("created_at", { ascending: true })
+      );
 
-      const payloads = [
-        { is_read: true, read: true, read_at: now, updated_at: now },
-        { is_read: true, read_at: now, updated_at: now },
-        { is_read: true, updated_at: now },
-        { read: true, updated_at: now },
-        { isRead: true, readAt: now, updatedAt: now },
-        { readAt: now, updatedAt: now },
-        { is_read: true },
-        { read: true }
-      ];
+      if (rowsA.length) return rowsA.map(row => normalizeMessage(row, row.id));
 
-      const toColumns = ["to_user_id", "user_id", "toUserId", "userId"];
-      const threadColumns = ["thread_id", "threadId"];
-      const messageTypes = ["message", "chat_message", "new_message", "message_request_accepted"];
+      const rowsB = await safeSelect("chat_messages", q =>
+        q.in("threadId", threadIds).order("createdAt", { ascending: true })
+      );
 
-      for (const payload of payloads) {
-        for (const toCol of toColumns) {
-          for (const threadCol of threadColumns) {
-            await tryUpdate("notifications", payload, q =>
-              q.eq(toCol, currentUser.id).eq(threadCol, threadId).in("type", messageTypes)
-            );
-
-            await tryUpdate("notifications", payload, q =>
-              q.eq(toCol, currentUser.id).eq(threadCol, threadId)
-            );
-          }
-        }
-      }
+      return rowsB.map(row => normalizeMessage(row, row.id));
     }
 
-    async function markRequestNotificationsRead(requestId) {
-      if (!currentUser || !requestId) return;
+    async function loadUnreadCounts() {
+      unreadByThreadMap = new Map();
 
-      const now = nowIso();
+      const threads = getAcceptedThreads();
+      const threadIds = threads.map(t => t.id).filter(Boolean);
 
-      const payloads = [
-        { is_read: true, read: true, read_at: now, updated_at: now },
-        { is_read: true, read_at: now, updated_at: now },
-        { is_read: true, updated_at: now },
-        { read: true, updated_at: now },
-        { isRead: true, readAt: now, updatedAt: now },
-        { readAt: now, updatedAt: now },
-        { is_read: true },
-        { read: true }
-      ];
+      if (!threadIds.length) return;
 
-      const toColumns = ["to_user_id", "user_id", "toUserId", "userId"];
-      const requestColumns = ["request_id", "requestId", "message_request_id", "messageRequestId"];
+      const messages = await fetchMessagesForThreads(threadIds);
+      const byThread = new Map();
 
-      for (const payload of payloads) {
-        for (const toCol of toColumns) {
-          for (const requestCol of requestColumns) {
-            await tryUpdate("notifications", payload, q =>
-              q.eq(toCol, currentUser.id).eq(requestCol, requestId)
-            );
-          }
+      messages.forEach(msg => {
+        if (!msg.threadId) return;
+
+        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+        byThread.get(msg.threadId).push(msg);
+      });
+
+      threads.forEach(thread => {
+        const list = byThread.get(thread.id) || [];
+
+        if (!list.length) return;
+
+        const lastOutgoingMs = list
+          .filter(msg => msg.senderId === currentUser.id)
+          .reduce((max, msg) => Math.max(max, tsMs(msg.createdAt)), 0);
+
+        const newest = [...list].sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))[0];
+
+        if (newest?.senderId === currentUser.id) {
+          unreadByThreadMap.set(thread.id, 0);
+          return;
         }
-      }
+
+        const count = list.filter(msg => {
+          if (msg.senderId === currentUser.id) return false;
+          if (tsMs(msg.createdAt) <= lastOutgoingMs) return false;
+
+          return isMessageUnread(msg);
+        }).length;
+
+        if (count > 0) unreadByThreadMap.set(thread.id, count);
+      });
     }
 
     async function markThreadReadBeforeOpen(threadId) {
@@ -1264,26 +1351,21 @@
 
       for (const filter of filterSets) {
         for (const payload of payloads) {
-          await tryUpdate("chat_messages", payload, q =>
+          await safeUpdate("chat_messages", payload, q =>
             q.eq(filter.thread, threadId).neq(filter.sender, currentUser.id)
           );
         }
       }
 
-      await markThreadNotificationsRead(threadId);
       unreadByThreadMap.set(threadId, 0);
       updateCounts();
-
-      try {
-        window.dispatchEvent(new CustomEvent("ownspace:badges-refresh"));
-      } catch {}
     }
 
     function renderChats() {
       listWrap.innerHTML = "";
 
       const rows = getAcceptedThreads()
-        .sort((a, b) => tsMs(b.lastMessageAt) - tsMs(a.lastMessageAt));
+        .sort((a, b) => tsMs(b.lastMessageAt || b.createdAt) - tsMs(a.lastMessageAt || a.createdAt));
 
       if (!rows.length) {
         showEmpty("No chats yet.");
@@ -1321,21 +1403,20 @@
           </div>
         `;
 
-        item.addEventListener("click", async (e) => {
-          e.preventDefault();
+        item.addEventListener("click", async (event) => {
+          event.preventDefault();
           const href = item.href;
           item.style.opacity = ".72";
 
           try {
             await markThreadReadBeforeOpen(thread.id);
-          } catch (err) {
-            console.warn("Could not pre-mark thread as read:", err);
-          }
+          } catch {}
 
           window.location.href = href;
         });
 
         const img = item.querySelector(".avatar");
+
         if (img) {
           img.addEventListener("error", () => {
             img.outerHTML = `<div class="avatar-placeholder">No photo</div>`;
@@ -1346,353 +1427,6 @@
       });
 
       showList();
-    }
-
-    async function findExistingThreadBetween(uidA, uidB) {
-      const attempts = [
-        ["participant_a", uidA, "participant_b", uidB],
-        ["participant_a", uidB, "participant_b", uidA],
-        ["participantA", uidA, "participantB", uidB],
-        ["participantA", uidB, "participantB", uidA]
-      ];
-
-      for (const [colA, valA, colB, valB] of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from("chat_threads")
-            .select("*")
-            .eq(colA, valA)
-            .eq(colB, valB)
-            .limit(1);
-
-          if (!error && data && data.length) return normalizeThread(data[0], data[0].id);
-        } catch {}
-      }
-
-      return null;
-    }
-
-    async function createNotificationSafe(payload) {
-      if (!payload?.to_user_id || payload.to_user_id === currentUser.id) return;
-
-      const now = payload.created_at || nowIso();
-
-      const payloads = [
-        {
-          ...payload,
-          user_id: payload.to_user_id,
-          created_at: now,
-          is_read: false,
-          read: false
-        },
-        {
-          type: payload.type || "notification",
-          title: payload.title || "",
-          text: payload.text || "",
-          fromUserId: payload.from_user_id || currentUser.id,
-          toUserId: payload.to_user_id,
-          userId: payload.to_user_id,
-          threadId: payload.thread_id || "",
-          requestId: payload.request_id || "",
-          createdAt: now,
-          isRead: false,
-          read: false
-        },
-        {
-          type: payload.type || "notification",
-          text: payload.text || "",
-          to_user_id: payload.to_user_id,
-          user_id: payload.to_user_id,
-          created_at: now,
-          is_read: false
-        }
-      ];
-
-      for (const p of payloads) {
-        try {
-          const { error } = await supabase.from("notifications").insert(p);
-          if (!error) return;
-        } catch {}
-      }
-    }
-
-    async function insertStarterMessageIfNeeded(threadId, requestModel) {
-      if (!threadId || !requestModel?.text) return;
-
-      try {
-        const existingRows = await fetchMessagesForThreads([threadId]);
-        const alreadyExists = existingRows.some(msg =>
-          msg.threadId === threadId &&
-          msg.senderId === requestModel.requesterId &&
-          String(msg.text || "").trim() === String(requestModel.text || "").trim()
-        );
-
-        if (alreadyExists) return;
-      } catch {}
-
-      const createdAt = requestModel.createdAt || nowIso();
-
-      try {
-        await insertWithFallback("chat_messages", [
-          {
-            thread_id: threadId,
-            sender_id: requestModel.requesterId,
-            text: requestModel.text,
-            created_at: createdAt,
-            seen_at: null,
-            read_at: null,
-            is_read: false,
-            read: false
-          },
-          {
-            thread_id: threadId,
-            sender_id: requestModel.requesterId,
-            text: requestModel.text,
-            created_at: createdAt,
-            seen_at: null
-          },
-          {
-            thread_id: threadId,
-            sender_id: requestModel.requesterId,
-            text: requestModel.text,
-            created_at: createdAt
-          },
-          {
-            threadId: threadId,
-            senderId: requestModel.requesterId,
-            text: requestModel.text,
-            createdAt: createdAt,
-            seenAt: null,
-            readAt: null,
-            isRead: false
-          },
-          {
-            threadId: threadId,
-            senderId: requestModel.requesterId,
-            text: requestModel.text,
-            createdAt: createdAt
-          }
-        ]);
-      } catch (err) {
-        console.warn("Starter message insert skipped:", err?.message || err);
-      }
-    }
-
-    async function acceptMessageRequest(requestModel, acceptBtn, declineBtn) {
-      if (!currentUser) return;
-
-      acceptBtn.disabled = true;
-      declineBtn.disabled = true;
-      setPageMessage("");
-
-      try {
-        const updatedAt = nowIso();
-
-        const updatePayloads = [
-          {
-            status: "accepted",
-            accepted_at: updatedAt,
-            accepted_by: currentUser.id,
-            updated_at: updatedAt
-          },
-          {
-            status: "accepted",
-            acceptedAt: updatedAt,
-            acceptedBy: currentUser.id,
-            updatedAt: updatedAt
-          },
-          {
-            status: "accepted"
-          }
-        ];
-
-        let updated = false;
-        let lastError = null;
-
-        for (const payload of updatePayloads) {
-          try {
-            const { error } = await supabase
-              .from("message_requests")
-              .update(payload)
-              .eq("id", requestModel.id);
-
-            if (!error) {
-              updated = true;
-              break;
-            }
-
-            lastError = error;
-          } catch (err) {
-            lastError = err;
-          }
-        }
-
-        if (!updated) throw lastError || new Error("Could not update request.");
-
-        await markRequestNotificationsRead(requestModel.id);
-
-        const pair = getSortedPair(requestModel.requesterId, requestModel.targetId || currentUser.id);
-        let thread = await findExistingThreadBetween(pair[0], pair[1]);
-
-        if (thread) {
-          const updatePayloadsForThread = [
-            {
-              status: "accepted",
-              accepted_from_request_id: requestModel.id,
-              starter_text: thread.starterText || requestModel.text || "",
-              starter_from: thread.starterFrom || requestModel.requesterId || "",
-              last_message_text: thread.lastMessageText || requestModel.text || "",
-              last_sender_id: thread.lastSenderId || requestModel.requesterId || "",
-              last_message_at: thread.lastMessageAt || requestModel.createdAt || updatedAt,
-              updated_at: updatedAt
-            },
-            {
-              status: "accepted",
-              acceptedFromRequestId: requestModel.id,
-              starterText: thread.starterText || requestModel.text || "",
-              starterFrom: thread.starterFrom || requestModel.requesterId || "",
-              lastMessageText: thread.lastMessageText || requestModel.text || "",
-              lastSenderId: thread.lastSenderId || requestModel.requesterId || "",
-              lastMessageAt: thread.lastMessageAt || requestModel.createdAt || updatedAt,
-              updatedAt: updatedAt
-            },
-            {
-              status: "accepted"
-            }
-          ];
-
-          for (const payload of updatePayloadsForThread) {
-            const ok = await tryUpdate("chat_threads", payload, q => q.eq("id", thread.id));
-            if (ok) break;
-          }
-        } else {
-          const newThread = await insertWithFallback("chat_threads", [
-            {
-              type: "direct",
-              status: "accepted",
-              participant_a: pair[0],
-              participant_b: pair[1],
-              created_by: currentUser.id,
-              accepted_from_request_id: requestModel.id,
-              starter_text: requestModel.text || "",
-              starter_from: requestModel.requesterId || "",
-              last_message_text: requestModel.text || "",
-              last_sender_id: requestModel.requesterId || "",
-              created_at: updatedAt,
-              updated_at: updatedAt,
-              last_message_at: requestModel.createdAt || updatedAt
-            },
-            {
-              type: "direct",
-              status: "accepted",
-              participantA: pair[0],
-              participantB: pair[1],
-              createdBy: currentUser.id,
-              acceptedFromRequestId: requestModel.id,
-              starterText: requestModel.text || "",
-              starterFrom: requestModel.requesterId || "",
-              lastMessageText: requestModel.text || "",
-              lastSenderId: requestModel.requesterId || "",
-              createdAt: updatedAt,
-              updatedAt: updatedAt,
-              lastMessageAt: requestModel.createdAt || updatedAt
-            },
-            {
-              participant_a: pair[0],
-              participant_b: pair[1],
-              status: "accepted",
-              created_at: updatedAt
-            }
-          ]);
-
-          thread = normalizeThread(newThread, newThread?.id || "");
-        }
-
-        await insertStarterMessageIfNeeded(thread.id, requestModel);
-
-        if (requestModel.requesterId !== currentUser.id) {
-          await createNotificationSafe({
-            type: "message_request_accepted",
-            title: "Message request accepted",
-            text: "Your message request was accepted.",
-            from_user_id: currentUser.id,
-            to_user_id: requestModel.requesterId,
-            thread_id: thread.id,
-            request_id: requestModel.id,
-            created_at: updatedAt,
-            is_read: false
-          });
-        }
-
-        setPageMessage("Request accepted. Opening chat...", "ok");
-        window.location.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
-      } catch (err) {
-        console.error(err);
-        setPageMessage(err?.message || "Could not accept request.", "err");
-        acceptBtn.disabled = false;
-        declineBtn.disabled = false;
-      }
-    }
-
-    async function declineMessageRequest(requestModel, acceptBtn, declineBtn) {
-      declineBtn.disabled = true;
-      acceptBtn.disabled = true;
-      setPageMessage("");
-
-      try {
-        const updatedAt = nowIso();
-
-        const updatePayloads = [
-          {
-            status: "declined",
-            declined_at: updatedAt,
-            declined_by: currentUser.id,
-            updated_at: updatedAt
-          },
-          {
-            status: "declined",
-            declinedAt: updatedAt,
-            declinedBy: currentUser.id,
-            updatedAt: updatedAt
-          },
-          {
-            status: "declined"
-          }
-        ];
-
-        let updated = false;
-        let lastError = null;
-
-        for (const payload of updatePayloads) {
-          try {
-            const { error } = await supabase
-              .from("message_requests")
-              .update(payload)
-              .eq("id", requestModel.id);
-
-            if (!error) {
-              updated = true;
-              break;
-            }
-
-            lastError = error;
-          } catch (err) {
-            lastError = err;
-          }
-        }
-
-        if (!updated) throw lastError || new Error("Could not decline request.");
-
-        await markRequestNotificationsRead(requestModel.id);
-
-        setPageMessage("Request declined.", "ok");
-        await fetchInboxData(false);
-      } catch (err) {
-        console.error(err);
-        setPageMessage(err?.message || "Could not decline request.", "err");
-        acceptBtn.disabled = false;
-        declineBtn.disabled = false;
-      }
     }
 
     function renderRequests() {
@@ -1742,6 +1476,7 @@
         `;
 
         const img = item.querySelector(".avatar");
+
         if (img) {
           img.addEventListener("error", () => {
             img.outerHTML = `<div class="avatar-placeholder">No photo</div>`;
@@ -1769,155 +1504,256 @@
       await ensureProfilesForRows();
       updateCounts();
 
-      if (currentTab === "requests") {
-        renderRequests();
-      } else {
-        renderChats();
+      if (currentTab === "requests") renderRequests();
+      else renderChats();
+    }
+
+    async function findExistingThreadBetween(uidA, uidB) {
+      const attempts = [
+        ["participant_a", uidA, "participant_b", uidB],
+        ["participant_a", uidB, "participant_b", uidA],
+        ["participantA", uidA, "participantB", uidB],
+        ["participantA", uidB, "participantB", uidA]
+      ];
+
+      for (const [colA, valA, colB, valB] of attempts) {
+        const rows = await safeSelect("chat_threads", q =>
+          q.eq(colA, valA).eq(colB, valB).limit(1)
+        );
+
+        if (rows.length) return normalizeThread(rows[0], rows[0].id);
+      }
+
+      return null;
+    }
+
+    async function createNotificationSafe(payload) {
+      if (!payload?.to_user_id || payload.to_user_id === currentUser.id) return;
+
+      const now = payload.created_at || nowIso();
+
+      const payloads = [
+        {
+          ...payload,
+          user_id: payload.to_user_id,
+          created_at: now,
+          is_read: false,
+          read: false
+        },
+        {
+          type: payload.type || "notification",
+          title: payload.title || "",
+          text: payload.text || "",
+          fromUserId: payload.from_user_id || currentUser.id,
+          toUserId: payload.to_user_id,
+          userId: payload.to_user_id,
+          threadId: payload.thread_id || "",
+          requestId: payload.request_id || "",
+          createdAt: now,
+          isRead: false,
+          read: false
+        },
+        {
+          type: payload.type || "notification",
+          text: payload.text || "",
+          to_user_id: payload.to_user_id,
+          user_id: payload.to_user_id,
+          created_at: now,
+          is_read: false
+        }
+      ];
+
+      for (const p of payloads) {
+        try {
+          const { error } = await supabase.from("notifications").insert(p);
+          if (!error) return;
+        } catch {}
       }
     }
 
-    async function queryThreadsByColumn(column, uid) {
+    async function acceptMessageRequest(requestModel, acceptBtn, declineBtn) {
+      if (!currentUser) return;
+
+      acceptBtn.disabled = true;
+      declineBtn.disabled = true;
+      setPageMessage("");
+
       try {
-        const { data, error } = await supabase
-          .from("chat_threads")
-          .select("*")
-          .eq(column, uid);
+        const updatedAt = nowIso();
 
-        if (!error) return data || [];
-      } catch {}
-      return null;
-    }
+        const updatePayloads = [
+          {
+            status: "accepted",
+            accepted_at: updatedAt,
+            accepted_by: currentUser.id,
+            updated_at: updatedAt
+          },
+          {
+            status: "accepted",
+            acceptedAt: updatedAt,
+            acceptedBy: currentUser.id,
+            updatedAt: updatedAt
+          },
+          { status: "accepted" }
+        ];
 
-    async function loadThreadsForCurrentUser() {
-      let aRows = await queryThreadsByColumn("participant_a", currentUser.id);
-      let bRows = await queryThreadsByColumn("participant_b", currentUser.id);
+        let updated = false;
 
-      if (aRows === null) aRows = await queryThreadsByColumn("participantA", currentUser.id);
-      if (bRows === null) bRows = await queryThreadsByColumn("participantB", currentUser.id);
+        for (const payload of updatePayloads) {
+          const ok = await safeUpdate("message_requests", payload, q => q.eq("id", requestModel.id));
 
-      threadMapA = rowsToMap(aRows || [], normalizeThread);
-      threadMapB = rowsToMap(bRows || [], normalizeThread);
-    }
-
-    async function queryPendingRequestsByTargetColumn(targetColumn, statusColumn = "status") {
-      try {
-        const { data, error } = await supabase
-          .from("message_requests")
-          .select("*")
-          .eq(targetColumn, currentUser.id)
-          .eq(statusColumn, "pending");
-
-        if (!error) return data || [];
-      } catch {}
-      return null;
-    }
-
-    async function queryRequestsByTargetColumnNoStatus(targetColumn) {
-      try {
-        const { data, error } = await supabase
-          .from("message_requests")
-          .select("*")
-          .eq(targetColumn, currentUser.id);
-
-        if (!error) {
-          return (data || []).filter(row => {
-            const status = getField(row, ["status", "request_status", "requestStatus"]) || "pending";
-            return status === "pending";
-          });
-        }
-      } catch {}
-      return null;
-    }
-
-    async function loadPendingRequestsForCurrentUser() {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
-      const statusColumns = ["status", "request_status", "requestStatus"];
-
-      for (const targetColumn of targetColumns) {
-        for (const statusColumn of statusColumns) {
-          const rows = await queryPendingRequestsByTargetColumn(targetColumn, statusColumn);
-          if (rows !== null) {
-            requestDocsMap = rowsToMap(rows, normalizeRequest);
-            return;
+          if (ok) {
+            updated = true;
+            break;
           }
         }
 
-        const rowsNoStatus = await queryRequestsByTargetColumnNoStatus(targetColumn);
-        if (rowsNoStatus !== null) {
-          requestDocsMap = rowsToMap(rowsNoStatus, normalizeRequest);
-          return;
+        if (!updated) throw new Error("Could not update request.");
+
+        const pair = getSortedPair(requestModel.requesterId, requestModel.targetId || currentUser.id);
+        let thread = await findExistingThreadBetween(pair[0], pair[1]);
+
+        if (thread) {
+          const threadPayloads = [
+            {
+              status: "accepted",
+              accepted_from_request_id: requestModel.id,
+              starter_text: thread.starterText || requestModel.text || "",
+              starter_from: thread.starterFrom || requestModel.requesterId || "",
+              last_message_text: thread.lastMessageText || requestModel.text || "",
+              last_sender_id: thread.lastSenderId || requestModel.requesterId || "",
+              last_message_at: thread.lastMessageAt || requestModel.createdAt || updatedAt,
+              updated_at: updatedAt
+            },
+            {
+              status: "accepted",
+              acceptedFromRequestId: requestModel.id,
+              starterText: thread.starterText || requestModel.text || "",
+              starterFrom: thread.starterFrom || requestModel.requesterId || "",
+              lastMessageText: thread.lastMessageText || requestModel.text || "",
+              lastSenderId: thread.lastSenderId || requestModel.requesterId || "",
+              lastMessageAt: thread.lastMessageAt || requestModel.createdAt || updatedAt,
+              updatedAt: updatedAt
+            },
+            { status: "accepted" }
+          ];
+
+          for (const payload of threadPayloads) {
+            const ok = await safeUpdate("chat_threads", payload, q => q.eq("id", thread.id));
+            if (ok) break;
+          }
+        } else {
+          const newThread = await insertWithFallback("chat_threads", [
+            {
+              type: "direct",
+              status: "accepted",
+              participant_a: pair[0],
+              participant_b: pair[1],
+              created_by: currentUser.id,
+              accepted_from_request_id: requestModel.id,
+              starter_text: requestModel.text || "",
+              starter_from: requestModel.requesterId || "",
+              last_message_text: requestModel.text || "",
+              last_sender_id: requestModel.requesterId || "",
+              created_at: updatedAt,
+              updated_at: updatedAt,
+              last_message_at: requestModel.createdAt || updatedAt
+            },
+            {
+              type: "direct",
+              status: "accepted",
+              participantA: pair[0],
+              participantB: pair[1],
+              createdBy: currentUser.id,
+              acceptedFromRequestId: requestModel.id,
+              starterText: requestModel.text || "",
+              starterFrom: requestModel.requesterId || "",
+              lastMessageText: requestModel.text || "",
+              lastSenderId: requestModel.requesterId || "",
+              createdAt: updatedAt,
+              updatedAt: updatedAt,
+              lastMessageAt: requestModel.createdAt || updatedAt
+            },
+            {
+              participant_a: pair[0],
+              participant_b: pair[1],
+              status: "accepted",
+              created_at: updatedAt
+            }
+          ]);
+
+          thread = normalizeThread(newThread, newThread?.id || "");
         }
+
+        if (requestModel.requesterId !== currentUser.id) {
+          await createNotificationSafe({
+            type: "message_request_accepted",
+            title: "Message request accepted",
+            text: "Your message request was accepted.",
+            from_user_id: currentUser.id,
+            to_user_id: requestModel.requesterId,
+            thread_id: thread.id,
+            request_id: requestModel.id,
+            created_at: updatedAt,
+            is_read: false
+          });
+        }
+
+        setPageMessage("Request accepted. Opening chat...", "ok");
+        window.location.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not accept request.", "err");
+        acceptBtn.disabled = false;
+        declineBtn.disabled = false;
       }
-
-      requestDocsMap = new Map();
     }
 
-    async function fetchMessagesForThreads(threadIds) {
-      if (!threadIds.length) return [];
+    async function declineMessageRequest(requestModel, acceptBtn, declineBtn) {
+      declineBtn.disabled = true;
+      acceptBtn.disabled = true;
+      setPageMessage("");
 
       try {
-        const { data, error } = await supabase
-          .from("chat_messages")
-          .select("*")
-          .in("thread_id", threadIds)
-          .order("created_at", { ascending: true });
+        const updatedAt = nowIso();
 
-        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
-      } catch {}
+        const updatePayloads = [
+          {
+            status: "declined",
+            declined_at: updatedAt,
+            declined_by: currentUser.id,
+            updated_at: updatedAt
+          },
+          {
+            status: "declined",
+            declinedAt: updatedAt,
+            declinedBy: currentUser.id,
+            updatedAt: updatedAt
+          },
+          { status: "declined" }
+        ];
 
-      try {
-        const { data, error } = await supabase
-          .from("chat_messages")
-          .select("*")
-          .in("threadId", threadIds)
-          .order("createdAt", { ascending: true });
+        let updated = false;
 
-        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
-      } catch {}
+        for (const payload of updatePayloads) {
+          const ok = await safeUpdate("message_requests", payload, q => q.eq("id", requestModel.id));
 
-      return [];
-    }
-
-    async function loadUnreadCounts() {
-      unreadByThreadMap = new Map();
-
-      const threads = getAcceptedThreads();
-      const threadIds = threads.map(t => t.id).filter(Boolean);
-
-      if (!threadIds.length) return;
-
-      const messages = await fetchMessagesForThreads(threadIds);
-      const byThread = new Map();
-
-      messages.forEach(msg => {
-        if (!msg.threadId) return;
-        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
-        byThread.get(msg.threadId).push(msg);
-      });
-
-      threads.forEach(thread => {
-        const list = byThread.get(thread.id) || [];
-        if (!list.length) return;
-
-        const lastOutgoingMs = list
-          .filter(msg => msg.senderId === currentUser.id)
-          .reduce((max, msg) => Math.max(max, tsMs(msg.createdAt)), 0);
-
-        const newest = [...list].sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))[0];
-
-        if (newest?.senderId === currentUser.id) {
-          unreadByThreadMap.set(thread.id, 0);
-          return;
+          if (ok) {
+            updated = true;
+            break;
+          }
         }
 
-        const count = list.filter(msg => {
-          if (msg.senderId === currentUser.id) return false;
-          if (tsMs(msg.createdAt) <= lastOutgoingMs) return false;
-          return isMessageUnread(msg);
-        }).length;
+        if (!updated) throw new Error("Could not decline request.");
 
-        if (count > 0) unreadByThreadMap.set(thread.id, count);
-      });
+        setPageMessage("Request declined.", "ok");
+        await fetchInboxData(false);
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not decline request.", "err");
+        acceptBtn.disabled = false;
+        declineBtn.disabled = false;
+      }
     }
 
     async function fetchInboxData(showSpinner = true) {
@@ -1928,64 +1764,70 @@
         showLoading("Loading inbox...");
       }
 
-      await loadThreadsForCurrentUser();
-      await loadPendingRequestsForCurrentUser();
-      await loadUnreadCounts();
-      await renderCurrentTab();
+      try {
+        await withTimeout(
+          (async () => {
+            await loadThreadsForCurrentUser();
+            await loadPendingRequestsForCurrentUser();
+            await loadUnreadCounts();
+            await renderCurrentTab();
+          })(),
+          12000,
+          "Inbox took too long to load."
+        );
+      } catch (err) {
+        console.error("Inbox load error:", err);
+        setPageMessage(err?.message || "Could not load inbox.", "err");
+        showEmpty("Could not load inbox. Press refresh or check Supabase table/column names.");
+        updateCounts();
+      }
     }
 
     function clearLiveListeners() {
       realtimeChannels.forEach(ch => {
         try { supabase.removeChannel(ch); } catch {}
       });
+
       realtimeChannels = [];
     }
 
     function scheduleRefresh() {
       clearTimeout(refreshTimer);
+
       refreshTimer = setTimeout(() => {
         fetchInboxData(false).catch(err => {
           console.error("Inbox live refresh error:", err);
         });
-      }, 250);
+      }, 350);
     }
 
     function startLiveListeners() {
       clearLiveListeners();
+
       if (!currentUser) return;
 
-      const tables = ["chat_threads", "chat_messages", "message_requests", "public_profiles", "users", "notifications"];
+      const tables = [
+        "chat_threads",
+        "chat_messages",
+        "message_requests",
+        "public_profiles",
+        "users"
+      ];
 
       tables.forEach(table => {
-        const channel = supabase
-          .channel(`ownspace-inbox-live-${table}-${Math.random().toString(36).slice(2)}`)
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table },
-            () => scheduleRefresh()
-          )
-          .subscribe();
+        try {
+          const channel = supabase
+            .channel(`ownspace-inbox-live-${table}-${Math.random().toString(36).slice(2)}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table },
+              () => scheduleRefresh()
+            )
+            .subscribe();
 
-        realtimeChannels.push(channel);
+          realtimeChannels.push(channel);
+        } catch {}
       });
-    }
-
-    async function bootstrapInbox() {
-      if (!currentUser || isBootstrapping) return;
-      isBootstrapping = true;
-
-      setPageMessage("");
-
-      try {
-        await fetchInboxData(true);
-        startLiveListeners();
-      } catch (err) {
-        console.error(err);
-        showEmpty("Could not load inbox.");
-        setPageMessage("Could not load inbox.", "err");
-      }
-
-      isBootstrapping = false;
     }
 
     function openInfoModal() {
@@ -2012,8 +1854,7 @@
       try {
         await fetchInboxData(true);
         setPageMessage("Inbox refreshed.", "ok");
-      } catch (err) {
-        console.error(err);
+      } catch {
         setPageMessage("Could not refresh inbox.", "err");
       }
     });
@@ -2021,28 +1862,38 @@
     chatsTabBtn.addEventListener("click", () => setTab("chats"));
     requestsTabBtn.addEventListener("click", () => setTab("requests"));
 
-    window.addEventListener("ownspace:badges-refresh", () => {
-      fetchInboxData(false).catch(() => {});
-    });
-
     async function initPage() {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      showLoading("Checking login...");
 
-      if (authError || !authData?.user) {
-        clearLiveListeners();
-        window.location.href = "login.html";
-        return;
-      }
+      try {
+        const { data: authData, error: authError } = await withTimeout(
+          supabase.auth.getUser(),
+          10000,
+          "Login check timed out."
+        );
 
-      currentUser = authData.user;
-      await bootstrapInbox();
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session?.user) {
+        if (authError || !authData?.user) {
           clearLiveListeners();
           window.location.href = "login.html";
+          return;
         }
-      });
+
+        currentUser = authData.user;
+
+        await fetchInboxData(true);
+        startLiveListeners();
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+          if (!session?.user) {
+            clearLiveListeners();
+            window.location.href = "login.html";
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not start inbox.", "err");
+        showEmpty("Could not start inbox. Check supabase.js and your Supabase connection.");
+      }
     }
 
     window.addEventListener("beforeunload", clearLiveListeners);
@@ -2050,27 +1901,25 @@
     initPage();
 
     /*
-      OWNSPACE INBOX UPDATE:
+      OWNSPACE INBOX FIX:
 
-      FIXED / IMPROVED:
-      - Inbox badge still ignores general notifications.
-      - Inbox badge = pending message_requests + unread incoming chat_messages only.
-      - Unread chat count no longer blindly counts every old incoming message forever:
-        if the newest message in a thread is from you, unread count is forced to 0.
-        incoming messages before your latest outgoing message are also not counted.
-      - Opening a chat from Inbox pre-marks that thread as read before navigation.
-      - It updates chat_messages read fields using flexible column names:
-        seen_at, read_at, is_read, read, seenAt, readAt, isRead.
-      - It also marks matching message notifications as read:
-        thread_id/threadId + to_user_id/user_id/toUserId/userId.
-      - Accepting/declining requests marks matching request notifications as read.
-      - Accepting a request now creates/updates the chat thread and tries to insert the original request text into chat_messages.
-      - Live refresh listens to chat_threads, chat_messages, message_requests, public_profiles, users, notifications.
+      FIXED:
+      - Default theme is now LIGHT.
+      - html data-theme is now light.
+      - If loading fails, page no longer stays stuck on "Loading inbox...".
+      - Inbox queries now use safe fallbacks and skip bad/missing columns instead of breaking the whole page.
+      - Added timeout protection for login check and inbox load.
+      - Inbox badge still counts only:
+        1) pending message_requests
+        2) unread incoming chat_messages
+      - General notifications are not counted.
+      - Opening a chat tries to mark incoming messages as read before opening chat.html.
 
       IMPORTANT:
-      - Use this together with the updated chat.html file.
-      - Later SQL/RLS pass should add consistent columns:
-        chat_messages: thread_id, sender_id, text, created_at, seen_at, read_at, is_read
-        notifications: to_user_id, from_user_id, type, thread_id, request_id, is_read, created_at
+      - If you still see "Could not load inbox", the issue is likely Supabase schema/RLS:
+        chat_threads, chat_messages, message_requests, public_profiles/users permissions.
+      - Next page to check after this is chat.html, because inbox opens chat and chat.html should also mark thread messages read.
     */
-  </script
+  </script>
+</body>
+</html>
