@@ -26,6 +26,7 @@
       --nav-bg:rgba(255,255,255,.98);
       --topbar-bg:rgba(255,255,255,.94);
       --shadow:0 16px 30px rgba(20,33,61,.08);
+      --soft-shadow:0 10px 24px rgba(20,33,61,.06);
     }
 
     html[data-theme="dark"]{
@@ -45,6 +46,7 @@
       --nav-bg:rgba(9,15,31,.98);
       --topbar-bg:rgba(9,15,31,.92);
       --shadow:0 20px 40px rgba(0,0,0,.18);
+      --soft-shadow:0 10px 24px rgba(0,0,0,.16);
     }
 
     body{
@@ -238,7 +240,8 @@
     }
 
     .avatar,
-    .post-avatar{
+    .post-avatar,
+    .community-avatar{
       width:46px;
       height:46px;
       border-radius:50%;
@@ -248,8 +251,13 @@
       flex-shrink:0;
     }
 
+    .community-avatar{
+      border-radius:15px;
+    }
+
     .avatar-placeholder,
-    .post-avatar-placeholder{
+    .post-avatar-placeholder,
+    .community-avatar-placeholder{
       width:46px;
       height:46px;
       border-radius:50%;
@@ -263,6 +271,17 @@
       color:var(--muted);
       font-size:10px;
       flex-shrink:0;
+      font-weight:950;
+    }
+
+    .community-avatar-placeholder{
+      border-radius:15px;
+      color:var(--text);
+      font-size:18px;
+      background:
+        radial-gradient(circle at 26% 20%, rgba(76,201,255,.24), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.17), rgba(61,220,132,.12)),
+        var(--surface-3);
     }
 
     .composer-head h3{
@@ -379,6 +398,12 @@
 
     .feed-item:last-child{border-bottom:none}
 
+    .feed-item.community-feed-item{
+      background:
+        linear-gradient(135deg, rgba(167,139,250,.055), rgba(76,201,255,.025)),
+        transparent;
+    }
+
     .post-top{
       display:flex;
       justify-content:space-between;
@@ -413,6 +438,26 @@
 
     .post-name a:hover{text-decoration:underline}
 
+    .community-name-link{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:var(--text)!important;
+      text-decoration:none;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .community-name-link:hover{text-decoration:underline}
+
+    .community-name-link svg{
+      width:14px;
+      height:14px;
+      flex-shrink:0;
+    }
+
     .verified-badge{
       width:20px;
       height:20px;
@@ -436,13 +481,21 @@
       stroke-width:3;
     }
 
-    .post-username{
+    .post-username,
+    .community-poster-line{
       color:var(--blue);
       font-size:12px;
       font-weight:850;
       margin-top:2px;
       word-break:break-word;
     }
+
+    .community-poster-line a{
+      color:var(--blue);
+      text-decoration:none;
+    }
+
+    .community-poster-line a:hover{text-decoration:underline}
 
     .post-date{
       color:var(--muted);
@@ -454,6 +507,7 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:5px;
       margin-top:5px;
       padding:5px 8px;
       border-radius:999px;
@@ -463,6 +517,12 @@
       border:1px solid rgba(167,139,250,.20);
       color:var(--text);
       max-width:100%;
+    }
+
+    .post-community-pill svg{
+      width:12px;
+      height:12px;
+      flex-shrink:0;
     }
 
     .post-top-actions{
@@ -475,45 +535,67 @@
     }
 
     .follow-top-btn,
-    .delete-post-btn{
-      width:34px;
-      height:34px;
+    .delete-post-btn,
+    .community-top-btn{
       min-width:34px;
+      min-height:34px;
       border:none;
       border-radius:10px;
-      padding:0;
-      font-size:0;
+      padding:0 10px;
+      font-size:11px;
       font-weight:950;
       cursor:pointer;
       flex-shrink:0;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:5px;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+
+    .follow-top-btn,
+    .delete-post-btn{
+      width:34px;
+      padding:0;
+      font-size:0;
     }
 
     .follow-top-btn svg,
-    .delete-post-btn svg{
-      width:16px;
-      height:16px;
+    .delete-post-btn svg,
+    .community-top-btn svg{
+      width:15px;
+      height:15px;
       display:block;
+      flex-shrink:0;
     }
 
-    .follow-top-btn.follow{
+    .follow-top-btn.follow,
+    .community-top-btn.open{
       background:rgba(76,201,255,.14);
       color:var(--text);
       border:1px solid rgba(76,201,255,.20);
     }
 
-    .follow-top-btn.request{
+    .follow-top-btn.request,
+    .community-top-btn.request{
       background:rgba(167,139,250,.14);
       color:var(--text);
       border:1px solid rgba(167,139,250,.20);
     }
 
-    .follow-top-btn.requested{
+    .follow-top-btn.requested,
+    .community-top-btn.requested,
+    .community-top-btn.joined{
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
+    }
+
+    .community-top-btn.join{
+      background:rgba(61,220,132,.14);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.20);
     }
 
     .delete-post-btn{
@@ -809,6 +891,20 @@
       .share-btn{margin-left:0}
       .filter-tab{font-size:11px;padding:8px 2px}
       .brand{font-size:17px}
+
+      .post-top{
+        gap:8px;
+      }
+
+      .post-top-actions{
+        max-width:120px;
+      }
+
+      .community-top-btn{
+        min-height:32px;
+        padding:0 8px;
+        font-size:10.5px;
+      }
     }
 
     @media(max-width:390px){
@@ -818,6 +914,10 @@
       .mini-btn{
         font-size:11px;
         padding:8px 9px;
+      }
+
+      .post-top-actions{
+        max-width:105px;
       }
     }
   </style>
@@ -888,7 +988,7 @@
 
         <form id="postForm">
           <div class="field">
-            <textarea id="caption" placeholder="What’s happening?"></textarea>
+            <textarea id="caption" placeholder="Whatâs happening?"></textarea>
           </div>
 
           <div class="field">
@@ -1005,6 +1105,7 @@
     let allPosts = [];
     let allCommunities = [];
     let joinedCommunityIds = new Set();
+    let pendingCommunityIds = new Set();
 
     let publicProfilesMap = new Map();
     let selectedImageFile = null;
@@ -1014,8 +1115,7 @@
 
     const TABLES = {
       communities: ["communities", "community"],
-      communityMembers: ["community_members", "communities_members", "communityMembers"],
-      communityPosts: ["community_posts", "communityPosts"]
+      communityMembers: ["community_members", "communities_members", "communityMembers"]
     };
 
     const ICONS = {
@@ -1033,6 +1133,38 @@
           <circle cx="18" cy="19" r="3"></circle>
           <path d="m8.6 13.5 6.8 4"></path>
           <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `,
+      community: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      `,
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      plusUser: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9.5" cy="7" r="3.5"></circle>
+          <path d="M19 8v6"></path>
+          <path d="M16 11h6"></path>
+        </svg>
+      `,
+      check: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      `,
+      clock: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7v5l3 2"></path>
         </svg>
       `
     };
@@ -1236,18 +1368,18 @@
         "circleId"
       ]);
 
-      const source = getField(d, ["source"]) || (sourceTable.includes("community") ? "community" : "feed");
+      const source = getField(d, ["source", "post_type", "postType"]) || (communityId ? "community" : "feed");
 
       return {
         itemType: "post",
         sourceTable,
         id: d.id || "",
-        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid"]),
-        displayName: getField(d, ["display_name", "displayName", "name"]),
+        userId: getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "uid", "created_by", "createdBy"]),
+        displayName: getField(d, ["author_name", "authorName", "display_name", "displayName", "name"]),
         username: getField(d, ["username"]),
-        userPhotoURL: getField(d, ["user_photo_url", "userPhotoURL", "photo_url", "photoURL"]),
-        caption: getField(d, ["caption", "text", "content", "body"]),
-        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        userPhotoURL: getField(d, ["user_photo_url", "userPhotoURL", "photo_url", "photoURL", "avatar_url", "avatarUrl"]),
+        caption: getField(d, ["caption", "text", "content", "body", "description"]),
+        imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"]),
         source,
         communityId,
         communityName: getField(d, ["community_name", "communityName", "group_name", "groupName"]),
@@ -1285,15 +1417,22 @@
 
     function normalizeCommunity(raw) {
       const d = raw || {};
+      const status = String(d.status || d.community_status || d.communityStatus || "").toLowerCase();
+      const privacy = String(getField(d, ["privacy", "visibility", "type"], "public") || "public").toLowerCase();
 
       return {
         id: d.id || "",
         name: getField(d, ["name", "title", "community_name", "communityName"], "Untitled Community"),
         description: getField(d, ["description", "desc", "about"]),
-        privacy: getField(d, ["privacy", "visibility", "type"], "Public"),
+        privacy,
+        city: getField(d, ["city", "location_city", "locationCity"]),
         creatorId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "owner_id", "ownerId", "user_id", "userId", "uid"]),
         memberCount: Number(d.member_count ?? d.memberCount ?? d.members_count ?? d.membersCount ?? 0) || 0,
-        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(d.status || "").toLowerCase() === "deleted",
+        imageURL: getField(d, ["cover_url", "coverURL", "coverUrl", "image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
+        hidden: getBool(d, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || status === "deleted" || status === "hidden",
+        approved:
+          getBool(d, ["approved", "is_approved", "isApproved"], false) ||
+          ["active", "approved", "published", "public", ""].includes(status),
         createdAt: d.created_at ?? d.createdAt ?? null,
         createdAtMs: getCreatedMs(d.created_at ?? d.createdAt)
       };
@@ -1320,6 +1459,10 @@
       ]);
     }
 
+    function getMemberStatus(row) {
+      return String(getField(row, ["status", "member_status", "memberStatus"], "active") || "active").toLowerCase();
+    }
+
     function authorHidden(author) {
       return author?.isHiddenByAdmin || author?.moderationStatus === "banned" || author?.softDeleted;
     }
@@ -1344,14 +1487,33 @@
       return !!(
         post?.communityId ||
         source === "community" ||
+        source === "community_post" ||
         sourceTable.includes("community")
       );
     }
 
+    function getCommunityById(communityId) {
+      if (!communityId) return null;
+      return allCommunities.find(c => c.id === communityId) || null;
+    }
+
     function getCommunityName(communityId, fallback = "") {
-      if (!communityId) return fallback || "";
-      const community = allCommunities.find(c => c.id === communityId);
+      const community = getCommunityById(communityId);
       return community?.name || fallback || "Community";
+    }
+
+    function isPrivateCommunity(community) {
+      const p = String(community?.privacy || "public").toLowerCase();
+      return ["private", "request", "request_only", "approval", "closed"].includes(p);
+    }
+
+    function isCommunityOwner(communityId) {
+      const community = getCommunityById(communityId);
+      return !!(community?.creatorId && community.creatorId === currentUser?.id);
+    }
+
+    function isCommunityJoined(communityId) {
+      return joinedCommunityIds.has(communityId) || isCommunityOwner(communityId);
     }
 
     function canViewerSeeStandardPost(post) {
@@ -1375,10 +1537,19 @@
       if (post.hidden || post.hiddenByAdmin || post.softDeleted) return false;
       if (!isCommunityPost(post)) return false;
       if (!post.communityId) return false;
-      if (!joinedCommunityIds.has(post.communityId)) return false;
+
+      const community = getCommunityById(post.communityId);
+
+      if (community?.hidden || community?.approved === false) return false;
 
       const author = getAuthorProfile(post.userId);
       if (authorHidden(author)) return false;
+
+      if (isCommunityJoined(post.communityId)) return true;
+
+      if (!community) return true;
+
+      if (isPrivateCommunity(community)) return false;
 
       return true;
     }
@@ -1398,7 +1569,7 @@
       }
 
       return allPosts
-        .filter(post => canViewerSeeStandardPost(post))
+        .filter(post => canViewerSeeStandardPost(post) || canViewerSeeCommunityPost(post))
         .sort((a, b) => b.createdAtMs - a.createdAtMs);
     }
 
@@ -1541,10 +1712,7 @@
       if (relation === "requested") {
         return `
           <button class="follow-top-btn requested" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Requested" aria-label="Requested">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 8v4l2.5 2.5"></path>
-              <circle cx="12" cy="12" r="8"></circle>
-            </svg>
+            ${ICONS.clock}
           </button>
         `;
       }
@@ -1554,25 +1722,69 @@
       if (author?.isPrivate) {
         return `
           <button class="follow-top-btn request" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Request follow" aria-label="Request follow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9.5" cy="7" r="3.5"></circle>
-              <path d="M19 8v6"></path>
-              <path d="M16 11h6"></path>
-            </svg>
+            ${ICONS.plusUser}
           </button>
         `;
       }
 
       return `
         <button class="follow-top-btn follow" data-author-id="${escapeHtml(authorId)}" data-post-id="${escapeHtml(postId)}" title="Follow" aria-label="Follow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9.5" cy="7" r="3.5"></circle>
-            <path d="M19 8v6"></path>
-            <path d="M16 11h6"></path>
-          </svg>
+          ${ICONS.plusUser}
         </button>
+      `;
+    }
+
+    function buildCommunityActions(post) {
+      if (!post?.communityId) return "";
+
+      const community = getCommunityById(post.communityId);
+      const communityId = post.communityId;
+      const communityUrl = `community.html?communityId=${encodeURIComponent(communityId)}`;
+      const joined = isCommunityJoined(communityId);
+      const pending = pendingCommunityIds.has(communityId);
+      const owner = isCommunityOwner(communityId);
+      const privateCommunity = isPrivateCommunity(community);
+
+      let joinButton = "";
+
+      if (owner) {
+        joinButton = "";
+      } else if (joined) {
+        joinButton = `
+          <button class="community-top-btn joined" type="button" disabled title="Joined">
+            ${ICONS.check}
+            Joined
+          </button>
+        `;
+      } else if (pending) {
+        joinButton = `
+          <button class="community-top-btn requested" type="button" disabled title="Requested">
+            ${ICONS.clock}
+            Requested
+          </button>
+        `;
+      } else if (privateCommunity) {
+        joinButton = `
+          <button class="community-top-btn request community-join-btn" type="button" data-community-id="${escapeHtml(communityId)}" title="Request to join">
+            ${ICONS.plusUser}
+            Request
+          </button>
+        `;
+      } else {
+        joinButton = `
+          <button class="community-top-btn join community-join-btn" type="button" data-community-id="${escapeHtml(communityId)}" title="Join community">
+            ${ICONS.plusUser}
+            Join
+          </button>
+        `;
+      }
+
+      return `
+        <a class="community-top-btn open" href="${communityUrl}" title="Open community">
+          ${ICONS.open}
+          Open
+        </a>
+        ${joinButton}
       `;
     }
 
@@ -1791,15 +2003,58 @@
       renderNotifications(rows.map(normalizeNotification));
     }
 
+    async function loadProfilesForAuthors(uniqueAuthorIds) {
+      publicProfilesMap = new Map();
+
+      if (!uniqueAuthorIds.length) {
+        if (currentUserProfile) publicProfilesMap.set(currentUser.id, currentUserProfile);
+        return;
+      }
+
+      try {
+        const { data: profileRows, error: profileError } = await supabase
+          .from("public_profiles")
+          .select("*")
+          .in("uid", uniqueAuthorIds);
+
+        if (!profileError) {
+          (profileRows || []).forEach(row => {
+            const p = normalizeProfile(row, row.uid);
+            publicProfilesMap.set(p.uid, p);
+          });
+        }
+      } catch {}
+
+      try {
+        const missing = uniqueAuthorIds.filter(uid => !publicProfilesMap.has(uid));
+
+        if (missing.length) {
+          const { data: userRows, error: userError } = await supabase
+            .from("users")
+            .select("*")
+            .in("uid", missing);
+
+          if (!userError) {
+            (userRows || []).forEach(row => {
+              const p = normalizeProfile(row, row.uid);
+              publicProfilesMap.set(p.uid, p);
+            });
+          }
+        }
+      } catch {}
+
+      if (currentUserProfile) {
+        publicProfilesMap.set(currentUser.id, currentUserProfile);
+      }
+    }
+
     async function loadPostsCommunitiesAndProfiles() {
       const [
         postRowsRes,
-        communityPostRows,
         communityRows,
         communityMemberRows
       ] = await Promise.all([
         supabase.from("posts").select("*").order("created_at", { ascending: false }),
-        selectAllAvailable(TABLES.communityPosts),
         selectAllAvailable(TABLES.communities),
         selectAllAvailable(TABLES.communityMembers)
       ]);
@@ -1808,18 +2063,25 @@
 
       allCommunities = (communityRows || [])
         .map(normalizeCommunity)
-        .filter(c => !c.hidden);
+        .filter(c => c.id && !c.hidden);
 
       joinedCommunityIds = new Set();
+      pendingCommunityIds = new Set();
 
       (communityMemberRows || []).forEach(row => {
         const uid = getMemberUid(row);
         const communityId = getCommunityIdFromMember(row);
-        const status = String(row.status || row.member_status || "").toLowerCase();
+        const status = getMemberStatus(row);
 
-        if (uid === currentUser.id && communityId && status !== "removed" && status !== "banned") {
-          joinedCommunityIds.add(communityId);
+        if (uid !== currentUser.id || !communityId) return;
+        if (["removed", "banned", "left", "declined", "rejected"].includes(status)) return;
+
+        if (["pending", "requested", "request"].includes(status)) {
+          pendingCommunityIds.add(communityId);
+          return;
         }
+
+        joinedCommunityIds.add(communityId);
       });
 
       allCommunities.forEach(community => {
@@ -1828,34 +2090,14 @@
         }
       });
 
-      const mainPostRows = (postRowsRes.data || []).map(row => ({ ...row, __table: "posts" }));
-      const optionalCommunityRows = (communityPostRows || []).map(row => ({ ...row, source: row.source || "community" }));
-
-      allPosts = [...mainPostRows, ...optionalCommunityRows]
-        .map(normalizePost)
+      allPosts = (postRowsRes.data || [])
+        .map(row => normalizePost({ ...row, __table: "posts" }))
         .filter(post => post.id);
 
       const authorIds = allPosts.map(p => p.userId).filter(Boolean);
       const uniqueAuthorIds = [...new Set(authorIds)];
-      publicProfilesMap = new Map();
 
-      if (uniqueAuthorIds.length) {
-        const { data: profileRows, error: profileError } = await supabase
-          .from("public_profiles")
-          .select("*")
-          .in("uid", uniqueAuthorIds);
-
-        if (profileError) throw profileError;
-
-        (profileRows || []).forEach(row => {
-          const p = normalizeProfile(row, row.uid);
-          publicProfilesMap.set(p.uid, p);
-        });
-      }
-
-      if (currentUserProfile) {
-        publicProfilesMap.set(currentUser.id, currentUserProfile);
-      }
+      await loadProfilesForAuthors(uniqueAuthorIds);
     }
 
     async function findFollowRow(authorId) {
@@ -1985,6 +2227,181 @@
       }
 
       relationBtn.disabled = false;
+    }
+
+    async function findCommunityMembership(table, communityId) {
+      const variants = [
+        { communityCol: "community_id", userCol: "user_id" },
+        { communityCol: "communityId", userCol: "userId" },
+        { communityCol: "community_id", userCol: "uid" },
+        { communityCol: "communityId", userCol: "uid" },
+        { communityCol: "group_id", userCol: "user_id" },
+        { communityCol: "groupId", userCol: "userId" }
+      ];
+
+      for (const v of variants) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(v.communityCol, communityId)
+            .eq(v.userCol, currentUser.id)
+            .limit(1);
+
+          if (!error && data?.length) {
+            return { table, row: data[0], variant: v };
+          }
+        } catch {}
+      }
+
+      return null;
+    }
+
+    async function findWritableCommunityMemberTable() {
+      for (const table of TABLES.communityMembers) {
+        try {
+          const { error } = await supabase.from(table).select("id").limit(1);
+          if (!error) return table;
+        } catch {}
+      }
+
+      return TABLES.communityMembers[0];
+    }
+
+    async function addCommunityMembership(communityId, status) {
+      const community = getCommunityById(communityId);
+      const table = await findWritableCommunityMemberTable();
+
+      const existing = await findCommunityMembership(table, communityId);
+
+      if (existing?.row?.id) {
+        try {
+          const { error } = await supabase
+            .from(existing.table)
+            .update({
+              status,
+              updated_at: nowIso()
+            })
+            .eq("id", existing.row.id);
+
+          if (!error) return;
+        } catch {}
+      }
+
+      const displayName =
+        currentUserProfile?.displayName ||
+        currentUser?.user_metadata?.display_name ||
+        currentUser?.email ||
+        "Member";
+
+      const username = currentUserProfile?.username || "";
+
+      const payloads = [
+        {
+          community_id: communityId,
+          user_id: currentUser.id,
+          display_name: displayName,
+          username,
+          role: "member",
+          status,
+          joined_at: nowIso(),
+          created_at: nowIso(),
+          updated_at: nowIso()
+        },
+        {
+          communityId: communityId,
+          userId: currentUser.id,
+          displayName,
+          username,
+          role: "member",
+          status,
+          joinedAt: nowIso(),
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        },
+        {
+          community_id: communityId,
+          user_id: currentUser.id,
+          status
+        }
+      ];
+
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { error } = await supabase.from(table).insert(payload);
+          if (!error) return;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not join community.");
+    }
+
+    async function handleCommunityJoinAction(communityId, btn) {
+      if (!currentUser || !communityId) return;
+
+      const community = getCommunityById(communityId);
+
+      if (!community) {
+        window.location.href = `community.html?communityId=${encodeURIComponent(communityId)}`;
+        return;
+      }
+
+      if (isCommunityOwner(communityId) || isCommunityJoined(communityId)) {
+        window.location.href = `community.html?communityId=${encodeURIComponent(communityId)}`;
+        return;
+      }
+
+      btn.disabled = true;
+
+      try {
+        const requestOnly = isPrivateCommunity(community);
+        const status = requestOnly ? "pending" : "active";
+
+        await addCommunityMembership(communityId, status);
+
+        if (requestOnly) {
+          pendingCommunityIds.add(communityId);
+
+          if (community.creatorId && community.creatorId !== currentUser.id) {
+            await createNotificationSafe({
+              type: "community_join_request",
+              title: "Community request",
+              text: `${currentUserProfile?.displayName || "Someone"} requested to join ${community.name}.`,
+              from_user_id: currentUser.id,
+              to_user_id: community.creatorId,
+              community_id: communityId,
+              created_at: nowIso(),
+              is_read: false
+            });
+          }
+        } else {
+          joinedCommunityIds.add(communityId);
+
+          if (community.creatorId && community.creatorId !== currentUser.id) {
+            await createNotificationSafe({
+              type: "community_join",
+              title: "New community member",
+              text: `${currentUserProfile?.displayName || "Someone"} joined ${community.name}.`,
+              from_user_id: currentUser.id,
+              to_user_id: community.creatorId,
+              community_id: communityId,
+              created_at: nowIso(),
+              is_read: false
+            });
+          }
+        }
+
+        await refreshFeedData();
+      } catch (error) {
+        console.error("Community join failed:", error);
+        alert(error?.message || "Could not join community.");
+        btn.disabled = false;
+      }
     }
 
     async function loadPostMeta(postId) {
@@ -2146,7 +2563,7 @@
       if (type === "community") {
         url.pathname = url.pathname.replace(/[^/]*$/, "community.html");
         url.search = "";
-        url.searchParams.set("communityId", item.communityId || "");
+        url.searchParams.set("communityId", item.communityId || item.id || "");
         return url.toString();
       }
 
@@ -2193,6 +2610,15 @@
           await handleTopRelationAction(ownerId, relationBtn);
         });
       }
+
+      document.querySelectorAll(`.community-join-btn[data-community-id="${postData.communityId || ""}"]`).forEach(btn => {
+        if (btn.dataset.bound === "yes") return;
+        btn.dataset.bound = "yes";
+
+        btn.addEventListener("click", async () => {
+          await handleCommunityJoinAction(btn.getAttribute("data-community-id"), btn);
+        });
+      });
 
       if (shareBtn) {
         shareBtn.addEventListener("click", async () => {
@@ -2319,6 +2745,87 @@
       }
     }
 
+    function renderStandardPostHeader(post, author, displayName, username, avatarUrl, verifiedHtml, ownerId, postId, deleteButton, relationButton) {
+      const avatarHtml = avatarUrl
+        ? `<a href="member.html?uid=${encodeURIComponent(ownerId)}">
+             <img class="post-avatar" src="${escapeHtml(avatarUrl)}" alt="User Photo">
+           </a>`
+        : `<a href="member.html?uid=${encodeURIComponent(ownerId)}" style="text-decoration:none;">
+             <div class="post-avatar-placeholder">No photo</div>
+           </a>`;
+
+      return `
+        <div class="post-top">
+          <div class="post-left">
+            ${avatarHtml}
+            <div class="post-top-text">
+              <div class="post-name">
+                <a href="member.html?uid=${encodeURIComponent(ownerId)}">${escapeHtml(displayName)}</a>
+                ${verifiedHtml}
+              </div>
+              ${username ? `<div class="post-username">@${escapeHtml(username)}</div>` : ""}
+              <div class="post-date">${formatDate(post.createdAt)}</div>
+            </div>
+          </div>
+
+          <div class="post-top-actions">
+            ${relationButton}
+            ${deleteButton}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCommunityPostHeader(post, author, displayName, username, avatarUrl, verifiedHtml, ownerId, postId, deleteButton) {
+      const community = getCommunityById(post.communityId);
+      const communityName = getCommunityName(post.communityId, post.communityName);
+      const communityUrl = `community.html?communityId=${encodeURIComponent(post.communityId)}`;
+      const firstLetter = (communityName || "C").trim().charAt(0).toUpperCase() || "C";
+      const communityImage = community?.imageURL || "";
+
+      const avatarHtml = communityImage
+        ? `<a href="${communityUrl}" title="Open community">
+             <img class="community-avatar" src="${escapeHtml(communityImage)}" alt="Community Photo">
+           </a>`
+        : `<a href="${communityUrl}" title="Open community" style="text-decoration:none;">
+             <div class="community-avatar-placeholder">${escapeHtml(firstLetter)}</div>
+           </a>`;
+
+      const posterLabel = username
+        ? `by <a href="member.html?uid=${encodeURIComponent(ownerId)}">@${escapeHtml(username)}</a>`
+        : `by <a href="member.html?uid=${encodeURIComponent(ownerId)}">${escapeHtml(displayName)}</a>`;
+
+      return `
+        <div class="post-top">
+          <div class="post-left">
+            ${avatarHtml}
+            <div class="post-top-text">
+              <div class="post-name">
+                <a class="community-name-link" href="${communityUrl}">
+                  ${ICONS.community}
+                  ${escapeHtml(communityName)}
+                </a>
+              </div>
+              <div class="community-poster-line">
+                ${posterLabel}
+                ${verifiedHtml}
+              </div>
+              <div class="post-date">${formatDate(post.createdAt)}</div>
+              <div class="post-community-pill">
+                ${ICONS.community}
+                Community post
+              </div>
+            </div>
+          </div>
+
+          <div class="post-top-actions">
+            ${buildCommunityActions(post)}
+            ${deleteButton}
+          </div>
+        </div>
+      `;
+    }
+
     function renderPostItem(post) {
       const postId = post.id;
       const ownerId = post.userId;
@@ -2331,14 +2838,7 @@
       const avatarUrl = author?.photoURL || post.userPhotoURL || "";
       const caption = post.caption;
       const imageUrl = post.imageURL;
-
-      const avatarHtml = avatarUrl
-        ? `<a href="member.html?uid=${encodeURIComponent(ownerId)}">
-             <img class="post-avatar" src="${escapeHtml(avatarUrl)}" alt="User Photo">
-           </a>`
-        : `<a href="member.html?uid=${encodeURIComponent(ownerId)}" style="text-decoration:none;">
-             <div class="post-avatar-placeholder">No photo</div>
-           </a>`;
+      const communityPost = isCommunityPost(post);
 
       const verifiedHtml = author?.verified ? ICONS.verified : "";
 
@@ -2361,7 +2861,7 @@
         `
         : "";
 
-      const relationButton = buildRelationButton(ownerId, postId);
+      const relationButton = communityPost ? "" : buildRelationButton(ownerId, postId);
 
       const reportButton = currentUser && ownerId !== currentUser.id
         ? `
@@ -2376,33 +2876,15 @@
         `
         : "";
 
-      const communityName = isCommunityPost(post)
-        ? getCommunityName(post.communityId, post.communityName)
-        : "";
+      const headerHtml = communityPost
+        ? renderCommunityPostHeader(post, author, displayName, username, avatarUrl, verifiedHtml, ownerId, postId, deleteButton)
+        : renderStandardPostHeader(post, author, displayName, username, avatarUrl, verifiedHtml, ownerId, postId, deleteButton, relationButton);
 
       const item = document.createElement("div");
-      item.className = "feed-item";
+      item.className = communityPost ? "feed-item community-feed-item" : "feed-item";
 
       item.innerHTML = `
-        <div class="post-top">
-          <div class="post-left">
-            ${avatarHtml}
-            <div class="post-top-text">
-              <div class="post-name">
-                <a href="member.html?uid=${encodeURIComponent(ownerId)}">${escapeHtml(displayName)}</a>
-                ${verifiedHtml}
-              </div>
-              ${username ? `<div class="post-username">@${escapeHtml(username)}</div>` : ""}
-              <div class="post-date">${formatDate(post.createdAt)}</div>
-              ${communityName ? `<div class="post-community-pill">${escapeHtml(communityName)}</div>` : ""}
-            </div>
-          </div>
-
-          <div class="post-top-actions">
-            ${relationButton}
-            ${deleteButton}
-          </div>
-        </div>
+        ${headerHtml}
 
         <a class="post-click" href="post.html?postId=${encodeURIComponent(postId)}">
           ${caption ? `<div class="post-caption">${escapeHtml(caption)}</div>` : ""}
@@ -2449,12 +2931,11 @@
         });
       }
 
-      const avatarImg = item.querySelector(".post-avatar");
-      if (avatarImg) {
-        avatarImg.addEventListener("error", () => {
-          avatarImg.style.display = "none";
+      item.querySelectorAll(".post-avatar, .community-avatar").forEach(imgEl => {
+        imgEl.addEventListener("error", () => {
+          imgEl.style.display = "none";
         });
-      }
+      });
 
       return item;
     }
@@ -2472,7 +2953,7 @@
           currentFeedFilter === "following"
             ? "No posts from people you follow yet."
             : currentFeedFilter === "communities"
-            ? "No posts from your joined communities yet. Join communities from Nearby, then their posts will show here."
+            ? "No community posts yet. Join or create communities from Nearby."
             : "No posts yet.";
 
         return;
@@ -2617,12 +3098,20 @@
           .from("posts")
           .insert({
             user_id: currentUser.id,
+            author_id: currentUser.id,
             display_name: displayName,
+            author_name: displayName,
             username,
             user_photo_url: userPhotoURL,
             caption,
+            text: caption,
+            body: caption,
+            content: caption,
             image_url: uploadedImageUrl,
+            photo_url: uploadedImageUrl,
+            media_url: uploadedImageUrl,
             source: "feed",
+            post_type: "post",
             hidden: false,
             hidden_by_admin: false,
             soft_deleted: false,
@@ -2682,7 +3171,6 @@
 
       const tables = [
         "posts",
-        "community_posts",
         "public_profiles",
         "follows",
         "follow_requests",
@@ -2750,19 +3238,15 @@
     /*
       OWNSPACE FEED UPDATE:
 
-      CHANGED:
-      - Light theme is now default.
-      - Top-left School link replaced with OwnSpace Hub link.
-      - Feed tabs are now:
-        All / Following / Communities.
-      - Removed Events and Places from Feed to avoid duplicate feeling.
-      - Events / Places / Communities should live inside Nearby.
-      - All tab shows normal feed posts only.
-      - Following tab shows normal feed posts from followed users + your own.
-      - Communities tab shows posts only from joined/owned communities.
-      - Inbox badge still counts only:
-        pending message_requests + unread chat_messages.
-      - Top bell still counts general notifications.
+      COMMUNITY POST CHANGES:
+      - Community posts now show community name first.
+      - Poster/member username shows on second line.
+      - Community name and community avatar open community.html?communityId=...
+      - Community post top-right now has Open and Join/Request/Joined state.
+      - Public community posts can appear in All feed so users can discover and join.
+      - Private/request communities stay protected unless joined/owned.
+      - Community posts are detected from posts.community_id and source/post_type fallback fields.
+      - Removed dependency on community_posts table for feed loading.
     */
   </script>
 </body>
