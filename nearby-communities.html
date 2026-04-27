@@ -160,16 +160,7 @@
     }
 
     .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
-    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
     .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
-    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
-    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
-    .btn-soft{background:var(--surface-3);border-color:var(--line)}
-
-    .action-btn:disabled{
-      opacity:.65;
-      cursor:not-allowed;
-    }
 
     .status-text{
       min-height:18px;
@@ -293,7 +284,6 @@
       line-height:1.55;
     }
 
-    /* NEW COMPACT COMMUNITY TILE UI */
     .community-tile{
       width:100%;
       text-decoration:none;
@@ -440,7 +430,6 @@
     .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
     .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
 
     .tile-arrow{
       width:30px;
@@ -817,6 +806,7 @@
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
+
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -852,8 +842,12 @@
     function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
-        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
+        }
       }
+
       return fallback;
     }
 
@@ -866,6 +860,7 @@
       for (const name of names) {
         if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
       }
+
       return fallback;
     }
 
@@ -903,12 +898,14 @@
     }
 
     function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
+      const msg = String(error?.message || error || "").toLowerCase();
+
       return (
         msg.includes("does not exist") ||
         msg.includes("not found in the schema cache") ||
         msg.includes("could not find the table") ||
         msg.includes("could not find") ||
+        msg.includes("column") ||
         (msg.includes("relation") && msg.includes("does not exist"))
       );
     }
@@ -1020,10 +1017,50 @@
       };
     }
 
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getString(d, ["thread_id", "threadId"], ""),
+        senderId: getString(d, ["sender_id", "senderId", "from_user_id", "fromUserId"], ""),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function isMessageUnread(msg) {
+      if (!msg || msg.senderId === currentUser.id) return false;
+
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
     async function countRows(table, buildQuery) {
       try {
         const query = supabase.from(table).select("id", { count: "exact", head: true });
         const { count, error } = await buildQuery(query);
+
         if (!error) return count || 0;
       } catch {}
 
@@ -1031,7 +1068,17 @@
     }
 
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = [
+        "target_id",
+        "to_user_id",
+        "receiver_id",
+        "recipient_id",
+        "targetId",
+        "toUserId",
+        "receiverId",
+        "recipientId"
+      ];
+
       const statusColumns = ["status", "request_status", "requestStatus"];
 
       for (const targetColumn of targetColumns) {
@@ -1043,60 +1090,125 @@
           if (count !== null) return count;
         }
 
-        const countWithoutStatus = await countRows("message_requests", q =>
-          q.eq(targetColumn, uid)
-        );
+        try {
+          const { data, error } = await supabase
+            .from("message_requests")
+            .select("*")
+            .eq(targetColumn, uid);
 
-        if (countWithoutStatus !== null) return countWithoutStatus;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = getString(row, ["status", "request_status", "requestStatus"], "pending");
+              return normalizeText(status || "pending") === "pending";
+            }).length;
+          }
+        } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
+    async function fetchChatThreadsForUser(uid) {
+      const map = new Map();
+
+      const attempts = [
+        { a: "participant_a", b: "participant_b" },
+        { a: "participantA", b: "participantB" }
+      ];
+
+      for (const fields of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${fields.a}.eq.${uid},${fields.b}.eq.${uid}`);
+
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              if (row.id) map.set(row.id, row);
+            });
+          }
+        } catch {}
+      }
+
+      return Array.from(map.values());
+    }
+
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
+
       try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("thread_id", threadIds)
+          .order("created_at", { ascending: true });
 
-        if (!Array.isArray(threads) || !threads.length) return 0;
-
-        const threadIds = threads.map(t => t.id).filter(Boolean);
-        if (!threadIds.length) return 0;
-
-        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-        for (const field of seenFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .is(field, null);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        const boolFields = ["is_read", "read"];
-
-        for (const field of boolFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .eq(field, false);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
       } catch {}
 
-      return 0;
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("threadId", threadIds)
+          .order("createdAt", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const threads = await fetchChatThreadsForUser(uid);
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+
+        if (!threadIds.length) return 0;
+
+        const messages = await fetchMessagesForThreads(threadIds);
+        const byThread = new Map();
+
+        messages.forEach(msg => {
+          if (!msg.threadId) return;
+
+          if (!byThread.has(msg.threadId)) {
+            byThread.set(msg.threadId, []);
+          }
+
+          byThread.get(msg.threadId).push(msg);
+        });
+
+        let total = 0;
+
+        threads.forEach(thread => {
+          const list = byThread.get(thread.id) || [];
+
+          if (!list.length) return;
+
+          const newest = [...list].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))[0];
+
+          if (newest?.senderId === uid) return;
+
+          const lastOutgoingMs = list
+            .filter(msg => msg.senderId === uid)
+            .reduce((max, msg) => Math.max(max, toMillis(msg.createdAt)), 0);
+
+          const unreadInThread = list.filter(msg => {
+            if (msg.senderId === uid) return false;
+            if (toMillis(msg.createdAt) <= lastOutgoingMs) return false;
+            return isMessageUnread(msg);
+          }).length;
+
+          total += unreadInThread;
+        });
+
+        return total;
+      } catch (err) {
+        console.warn("Unread chat count failed:", err?.message || err);
+        return 0;
+      }
     }
 
     async function loadInboxBadge() {
@@ -1192,6 +1304,13 @@
       }
     }
 
+    function getLocationText(model) {
+      if (model.location) return model.location;
+
+      const locationParts = [model.city, model.province, model.country].filter(Boolean);
+      return locationParts.length ? locationParts.join(", ") : "Location not added";
+    }
+
     async function loadCommunities() {
       try {
         const { data, error } = await supabase
@@ -1248,6 +1367,7 @@
 
       membershipsData.forEach(row => {
         const inactive = ["left", "removed", "declined", "rejected", "banned"].includes(row.status);
+
         if (inactive) return;
 
         memberCountMap.set(row.communityId, (memberCountMap.get(row.communityId) || 0) + 1);
@@ -1356,13 +1476,6 @@
       return `community.html?communityId=${encodeURIComponent(model.id)}`;
     }
 
-    function getLocationText(model) {
-      if (model.location) return model.location;
-
-      const locationParts = [model.city, model.province, model.country].filter(Boolean);
-      return locationParts.length ? locationParts.join(", ") : "Location not added";
-    }
-
     function getPrivacyLabel(model) {
       if (model.privacy === "private") return "Private";
       if (["request", "approval", "request_only"].includes(model.privacy)) return "Request";
@@ -1379,6 +1492,7 @@
       if (model.privacy === "private" || ["request", "approval", "request_only"].includes(model.privacy)) {
         return ICONS.lock;
       }
+
       return ICONS.globe;
     }
 
@@ -1474,6 +1588,7 @@
         `;
 
         const photo = tile.querySelector(".tile-photo");
+
         if (photo) {
           photo.addEventListener("error", () => {
             photo.outerHTML = `<div class="tile-placeholder">${escapeHtml(firstLetter)}</div>`;
@@ -1501,10 +1616,19 @@
 
     function scheduleRefresh() {
       clearTimeout(refreshTimer);
+
       refreshTimer = setTimeout(() => {
         refreshAll().catch(err => {
           console.error("Community refresh failed:", err);
         });
+      }, 350);
+    }
+
+    function scheduleBadgeRefresh() {
+      clearTimeout(refreshTimer);
+
+      refreshTimer = setTimeout(() => {
+        loadInboxBadge().catch(() => {});
       }, 350);
     }
 
@@ -1521,31 +1645,30 @@
     function setupRealtime() {
       clearRealtimeChannels();
 
-      try {
-        const communitiesChannel = supabase
-          .channel("communities-live")
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: COMMUNITY_TABLE },
-            () => scheduleRefresh()
-          )
-          .subscribe();
+      const tableGroups = [
+        { table: COMMUNITY_TABLE, handler: scheduleRefresh },
+        { table: "message_requests", handler: scheduleBadgeRefresh },
+        { table: "chat_threads", handler: scheduleBadgeRefresh },
+        { table: "chat_messages", handler: scheduleBadgeRefresh },
+        { table: "notifications", handler: scheduleBadgeRefresh }
+      ];
 
-        realtimeChannels.push(communitiesChannel);
-      } catch {}
+      MEMBER_TABLES.forEach(table => {
+        tableGroups.push({ table, handler: scheduleRefresh });
+      });
 
-      MEMBER_TABLES.forEach(tableName => {
+      tableGroups.forEach(item => {
         try {
-          const memberChannel = supabase
-            .channel(`community-members-live-${tableName}`)
+          const channel = supabase
+            .channel(`ownspace-communities-live-${item.table}-${Math.random().toString(36).slice(2)}`)
             .on(
               "postgres_changes",
-              { event: "*", schema: "public", table: tableName },
-              () => scheduleRefresh()
+              { event: "*", schema: "public", table: item.table },
+              () => item.handler()
             )
             .subscribe();
 
-          realtimeChannels.push(memberChannel);
+          realtimeChannels.push(channel);
         } catch {}
       });
     }
@@ -1581,6 +1704,7 @@
       const { data, error } = await supabase.auth.getUser();
 
       if (error || !data?.user) {
+        clearRealtimeChannels();
         window.location.href = "login.html";
         return;
       }
@@ -1597,8 +1721,9 @@
         setPageStatus("Could not load communities.", "status-err");
       }
 
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         if (!session?.user) {
+          clearRealtimeChannels();
           window.location.href = "login.html";
         }
       });
@@ -1609,6 +1734,26 @@
     });
 
     initPage();
+
+    /*
+      OWNSPACE COMMUNITIES UPDATE:
+
+      COMPACT CLICKABLE TILE UI:
+      - Community list has compact rows only.
+      - No Join/Open/Share/extra action buttons inside each row.
+      - Full community tile opens community.html?communityId=...
+      - Shows photo/initial, community name, location, category, privacy, members, joined/mine/featured/pinned status.
+
+      FIXED:
+      - Broken clear button character fixed to Ã.
+      - Inbox badge now follows the same cleaned logic:
+        pending message_requests + truly unread incoming chat_messages.
+      - It does not count general notifications.
+      - It does not count all old chat history forever.
+      - If newest message in a thread is yours, that thread counts 0 unread.
+      - Incoming messages before your latest outgoing message are ignored.
+      - Added realtime badge refresh for message_requests, chat_threads, chat_messages, notifications.
+    */
   </script>
 </body>
 </html>
