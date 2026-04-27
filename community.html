@@ -256,11 +256,27 @@
     }
     .verified svg{width:11px;height:11px;stroke-width:3}
 
+    .post-click{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:2px 0}
+    .post-click:active{opacity:.82}
     .post-title{font-size:17px;font-weight:950;line-height:1.35;letter-spacing:-.02em;margin:7px 0;word-break:break-word}
     .post-text{font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
     .post-img{width:100%;max-height:430px;object-fit:cover;display:block;border-radius:18px;border:1px solid var(--line);background:var(--surface-3);margin-top:10px}
-    .post-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .post-actions .btn{min-width:86px;min-height:38px;font-size:12px;border-radius:14px;padding:0 10px}
+    .post-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center}
+    .mini-action{
+      border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:999px;
+      min-height:34px;padding:0 10px;font-size:11.5px;font-weight:950;cursor:pointer;text-decoration:none;
+      display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;
+    }
+    .mini-action svg{width:14px;height:14px;display:block;flex-shrink:0}
+    .mini-action.like-post{background:var(--blue-2);border-color:rgba(37,99,235,.16);color:var(--blue)}
+    .mini-action.like-post[data-liked="yes"]{background:var(--red-2);border-color:rgba(225,29,72,.18);color:var(--red)}
+    .mini-action.like-post[data-liked="yes"] svg{fill:currentColor}
+    .mini-action.comment-post{background:var(--purple-2);border-color:rgba(124,58,237,.16);color:var(--purple)}
+    .mini-action.share-post{background:var(--green-2);border-color:rgba(22,163,74,.16);color:var(--green)}
+    .mini-action.report-post{background:var(--yellow-2);border-color:rgba(202,138,4,.16);color:var(--yellow)}
+    .mini-action.pin-post{background:var(--yellow-2);border-color:rgba(202,138,4,.16);color:var(--yellow)}
+    .mini-action.delete-post{background:var(--red-2);border-color:rgba(225,29,72,.16);color:var(--red)}
+    .manage-actions{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
 
     .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
     .photo-tile{aspect-ratio:1/1;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2);display:block}
@@ -306,7 +322,8 @@
       .stats-row{gap:6px}
       .stat b{font-size:19px}
       .btn{font-size:12px;padding:0 9px;gap:5px}
-      .post-actions .btn{min-width:calc(50% - 4px)}
+      .mini-action{min-height:33px;padding:0 9px;font-size:11px}
+      .manage-actions{margin-left:0}
     }
   </style>
 </head>
@@ -546,11 +563,14 @@
     let realtimeChannels = [];
     let refreshTimer = null;
     let previewUrl = "";
+    let hasPostLikesTable = false;
 
     const ICON = {
       check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
       lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
       share:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></svg>`,
+      heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"/></svg>`,
+      comment:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>`,
       edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
       pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 7 7 3h10l-2 4"/><path d="M7 14h10l-2-7H9Z"/></svg>`,
       trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>`,
@@ -1134,13 +1154,18 @@
       }
 
       els.postsEmpty.classList.add("hidden");
-      posts.forEach(post => els.postsList.appendChild(postCard(post)));
+      posts.forEach(post => {
+        els.postsList.appendChild(postCard(post));
+        refreshPostMeta(post.id).catch(() => {});
+      });
       els.loadMorePostsBtn.classList.toggle("hidden", !hasMorePosts);
     }
 
     function postCard(post) {
       const profile = post.profile || normalizeProfile({ uid:post.authorId, display_name:post.authorName }, post.authorId);
       const canManage = isOwner || isAdmin || post.authorId === currentUser.id;
+      const canReport = post.authorId && post.authorId !== currentUser.id;
+      const postUrl = `post.html?postId=${encodeURIComponent(post.id)}`;
       const card = document.createElement("article");
       card.className = "post-card";
       card.innerHTML = `
@@ -1160,17 +1185,26 @@
           ${post.featured ? `<span class="chip purple">Featured</span>` : ""}
           <span class="chip blue">${escapeHtml(pretty(post.type || "Post"))}</span>
         </div>
-        ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ""}
-        ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
-        ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Community post image" loading="lazy">` : ""}
+        <a class="post-click" href="${postUrl}" aria-label="Open post">
+          ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ""}
+          ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
+          ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Community post image" loading="lazy">` : ""}
+        </a>
         <div class="post-actions">
-          <a class="btn primary" href="post.html?postId=${encodeURIComponent(post.id)}">Open</a>
-          <button class="btn purple share-post" type="button">${ICON.share} Share</button>
-          ${canManage ? `<button class="btn yellow pin-post" type="button">${ICON.pin} ${post.pinned ? "Unpin" : "Pin"}</button><button class="btn red delete-post" type="button">${ICON.trash} Hide</button>` : ""}
+          <button class="mini-action like-post" data-post-id="${escapeHtml(post.id)}" data-liked="no" type="button" aria-label="Like post">
+            ${ICON.heart}<span class="like-count" data-post-id="${escapeHtml(post.id)}">0</span>
+          </button>
+          <a class="mini-action comment-post" href="${postUrl}#comments" aria-label="Open comments">
+            ${ICON.comment}<span class="comment-count" data-post-id="${escapeHtml(post.id)}">0</span>
+          </a>
+          <button class="mini-action share-post" type="button" aria-label="Share post">${ICON.share}<span>Share</span></button>
+          ${canReport ? `<a class="mini-action report-post" href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.authorId || "")}" aria-label="Report post">${ICON.report}<span>Report</span></a>` : ""}
+          ${canManage ? `<span class="manage-actions"><button class="mini-action pin-post" type="button">${ICON.pin}<span>${post.pinned ? "Unpin" : "Pin"}</span></button><button class="mini-action delete-post" type="button">${ICON.trash}<span>Hide</span></button></span>` : ""}
         </div>
       `;
       card.querySelectorAll("img.person-pic").forEach(img => img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M")))));
       card.querySelectorAll("img.post-img").forEach(img => img.addEventListener("error", () => img.style.display = "none"));
+      card.querySelector(".like-post")?.addEventListener("click", e => toggleLikePost(post, e.currentTarget));
       card.querySelector(".share-post")?.addEventListener("click", () => sharePost(post));
       card.querySelector(".pin-post")?.addEventListener("click", e => togglePinPost(post, e.currentTarget));
       card.querySelector(".delete-post")?.addEventListener("click", e => hidePost(post, e.currentTarget));
@@ -1298,6 +1332,95 @@
         else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url.toString()); alert("Post link copied."); }
         else prompt("Copy this post link:", url.toString());
       } catch {}
+    }
+
+    async function detectPostLikesTable() {
+      try {
+        const { error } = await supabase.from("post_likes").select("id", { count:"exact", head:true }).limit(1);
+        hasPostLikesTable = !error;
+      } catch {
+        hasPostLikesTable = false;
+      }
+    }
+
+    async function loadPostMeta(postId) {
+      let likeCount = 0;
+      let liked = false;
+      let commentCount = 0;
+
+      if (hasPostLikesTable) {
+        try {
+          const [countRes, myLikeRes] = await Promise.all([
+            supabase.from("post_likes").select("id", { count:"exact", head:true }).eq("post_id", postId),
+            supabase.from("post_likes").select("id").eq("post_id", postId).eq("user_id", currentUser.id).limit(1)
+          ]);
+          if (!countRes.error) likeCount = countRes.count || 0;
+          if (!myLikeRes.error) liked = !!(myLikeRes.data && myLikeRes.data.length);
+        } catch {}
+      }
+
+      try {
+        const { count, error } = await supabase.from("post_comments").select("id", { count:"exact", head:true }).eq("post_id", postId);
+        if (!error) commentCount = count || 0;
+      } catch {}
+
+      return { likeCount, liked, commentCount };
+    }
+
+    function safeCssId(value) {
+      if (window.CSS && typeof CSS.escape === "function") return CSS.escape(value);
+      return String(value).replace(/[^a-zA-Z0-9_-]/g, "\$&");
+    }
+
+    async function refreshPostMeta(postId) {
+      const meta = await loadPostMeta(postId);
+      const safeId = safeCssId(postId);
+      document.querySelectorAll(`.like-post[data-post-id="${safeId}"]`).forEach(btn => {
+        btn.dataset.liked = meta.liked ? "yes" : "no";
+      });
+      document.querySelectorAll(`.like-count[data-post-id="${safeId}"]`).forEach(el => {
+        el.textContent = String(meta.likeCount || 0);
+      });
+      document.querySelectorAll(`.comment-count[data-post-id="${safeId}"]`).forEach(el => {
+        el.textContent = String(meta.commentCount || 0);
+      });
+    }
+
+    async function toggleLikePost(post, button) {
+      if (!currentUser) return;
+      if (!hasPostLikesTable) {
+        alert("Like system is not ready yet.");
+        return;
+      }
+
+      button.disabled = true;
+      try {
+        const { data: existing, error: findError } = await supabase
+          .from("post_likes")
+          .select("id")
+          .eq("post_id", post.id)
+          .eq("user_id", currentUser.id)
+          .limit(1);
+
+        if (findError) throw findError;
+
+        if (existing && existing.length) {
+          const { error } = await supabase.from("post_likes").delete().eq("id", existing[0].id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("post_likes").insert({ post_id:post.id, user_id:currentUser.id, created_at:nowIso() });
+          if (error) throw error;
+          if (post.authorId && post.authorId !== currentUser.id) {
+            await createNotificationSafe(post.authorId, { type:"like", title:"New like", text:`${currentUserProfile?.displayName || "Someone"} liked your community post.` });
+          }
+        }
+
+        await refreshPostMeta(post.id);
+      } catch (err) {
+        console.error("Like failed:", err);
+        alert("Could not update like.");
+      }
+      button.disabled = false;
     }
 
     async function insertWithFallback(table, payloads) {
@@ -1654,6 +1777,7 @@
       if (!communityId) return showNotFound("No community selected.");
 
       try {
+        await detectPostLikesTable();
         community = await findCommunity(communityId);
         if (!community || community.hidden) return showNotFound("Community not found or hidden.");
 
