@@ -528,6 +528,23 @@
       overflow:hidden;
     }
 
+    .post-card-link,
+    .info-card-link{
+      display:block;
+      color:inherit;
+      text-decoration:none;
+      border-radius:12px;
+    }
+
+    .post-card:hover,
+    .info-card:hover{
+      border-color:rgba(76,201,255,.22);
+      background:linear-gradient(135deg, rgba(76,201,255,.045), rgba(61,220,132,.025)), var(--surface-2);
+    }
+
+    .post-card:active,
+    .info-card:active{transform:scale(.996)}
+
     .post-img{
       width:100%;
       max-height:430px;
@@ -564,6 +581,28 @@
       word-break:break-word;
     }
 
+    .compact-card-row{
+      display:grid;
+      grid-template-columns:1fr 26px;
+      gap:8px;
+      align-items:center;
+    }
+
+    .compact-arrow{
+      width:26px;
+      height:26px;
+      border-radius:10px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+
+    .compact-arrow svg{width:14px;height:14px;display:block}
+
     .card-actions{
       display:flex;
       gap:5px;
@@ -593,9 +632,15 @@
       width:13px;
       height:13px;
       display:block;
+      flex-shrink:0;
     }
 
-    .share-btn{margin-left:auto}
+    .like-mini-btn{background:rgba(76,201,255,.12);border-color:rgba(76,201,255,.20)}
+    .like-mini-btn[data-liked="yes"]{background:rgba(255,93,115,.13);border-color:rgba(255,93,115,.22)}
+    .like-mini-btn[data-liked="yes"] svg{fill:currentColor;color:var(--red)}
+    .comment-mini-btn{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.20)}
+    .report-mini-btn{background:rgba(245,185,66,.13);border-color:rgba(245,185,66,.20)}
+    .share-btn{margin-left:auto;background:rgba(61,220,132,.12);border-color:rgba(61,220,132,.20)}
 
     .show-more{
       margin-top:8px;
@@ -1042,7 +1087,7 @@
           <div id="trustCardTitle" class="trust-card-title">Trust Card</div>
           <div class="trust-card-sub">A quick safety snapshot for this OwnSpace member.</div>
         </div>
-        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">×</button>
+        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">Ã</button>
       </div>
 
       <div class="trust-score-box">
@@ -1238,6 +1283,16 @@
           <path d="M12 9v4"></path>
           <path d="M12 17h.01"></path>
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+        </svg>
+      `,
+      like: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"></path>
+        </svg>
+      `,
+      comment: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       `
     };
@@ -2557,47 +2612,178 @@
       contentList.appendChild(a);
     }
 
+    async function loadMemberPostMeta(postId) {
+      let likeCount = 0;
+      let liked = false;
+      let commentCount = 0;
+
+      if (!postId) return { likeCount, liked, commentCount };
+
+      try {
+        const { count, error } = await supabase
+          .from("post_likes")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", postId);
+
+        if (!error) likeCount = count || 0;
+      } catch {}
+
+      try {
+        const { data, error } = await supabase
+          .from("post_likes")
+          .select("id")
+          .eq("post_id", postId)
+          .eq("user_id", currentUser.id)
+          .limit(1);
+
+        if (!error) liked = !!(data && data.length);
+      } catch {}
+
+      try {
+        const { count, error } = await supabase
+          .from("post_comments")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", postId);
+
+        if (!error) commentCount = count || 0;
+      } catch {}
+
+      return { likeCount, liked, commentCount };
+    }
+
+    async function refreshMemberPostMeta(postId) {
+      const meta = await loadMemberPostMeta(postId);
+      const likeBtn = document.querySelector(`.like-mini-btn[data-post-id="${postId}"]`);
+      const commentBtn = document.querySelector(`.comment-mini-btn[data-post-id="${postId}"]`);
+
+      if (likeBtn) {
+        likeBtn.dataset.liked = meta.liked ? "yes" : "no";
+        const countEl = likeBtn.querySelector(".like-count");
+        if (countEl) countEl.textContent = String(meta.likeCount);
+      }
+
+      if (commentBtn) {
+        const countEl = commentBtn.querySelector(".comment-count");
+        if (countEl) countEl.textContent = String(meta.commentCount);
+      }
+    }
+
+    async function toggleMemberPostLike(post, btn) {
+      if (!currentUser?.id || !post?.id || !btn) return;
+      if (post.userId && post.userId === currentUser.id) return;
+
+      btn.disabled = true;
+
+      try {
+        const { data: existing, error: findError } = await supabase
+          .from("post_likes")
+          .select("id")
+          .eq("post_id", post.id)
+          .eq("user_id", currentUser.id)
+          .limit(1);
+
+        if (findError) throw findError;
+
+        if (existing && existing.length) {
+          const { error } = await supabase
+            .from("post_likes")
+            .delete()
+            .eq("id", existing[0].id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("post_likes")
+            .insert({
+              post_id: post.id,
+              user_id: currentUser.id,
+              created_at: nowIso()
+            });
+
+          if (error) throw error;
+
+          if (post.userId && post.userId !== currentUser.id) {
+            await createNotificationSafe({
+              type: "like",
+              title: "New like",
+              text: `${viewerProfile?.displayName || "Someone"} liked your post.`,
+              from_user_id: currentUser.id,
+              to_user_id: post.userId,
+              post_id: post.id,
+              created_at: nowIso(),
+              is_read: false,
+              read: false
+            });
+          }
+        }
+
+        await refreshMemberPostMeta(post.id);
+      } catch (err) {
+        console.error("Like failed:", err);
+        alert(err?.message || "Could not update like.");
+      }
+
+      btn.disabled = false;
+    }
+
     function renderPostCard(post) {
       const card = document.createElement("div");
       card.className = "post-card";
       const postUrl = buildItemUrl("post", post.id, { source: post.sourceTable || "" });
+      const isOwnPost = post.userId === currentUser?.id;
 
       card.innerHTML = `
-        ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Post image">` : ""}
-        <div class="post-caption">${escapeHtml(post.caption || "No caption.")}</div>
-        <div class="mini-meta">${post.createdAt ? escapeHtml(formatDate(post.createdAt)) : ""}</div>
+        <a class="post-card-link" href="${postUrl}">
+          ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Post image">` : ""}
+          <div class="post-caption">${escapeHtml(post.caption || "No caption.")}</div>
+          <div class="mini-meta">${post.createdAt ? escapeHtml(formatDate(post.createdAt)) : ""}</div>
+        </a>
 
         <div class="card-actions">
-          <a href="${postUrl}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
+          <button class="mini-btn like-mini-btn" type="button" data-post-id="${escapeHtml(post.id)}" data-liked="no" ${isOwnPost ? "disabled title='You cannot like your own post'" : ""}>${ICONS.like}<span class="like-count">0</span></button>
+          <a href="${postUrl}#comments" class="mini-btn comment-mini-btn" data-post-id="${escapeHtml(post.id)}">${ICONS.comment}<span class="comment-count">0</span></a>
           <button class="mini-btn share-btn btn-green" type="button">${ICONS.share}<span>Share</span></button>
-          <a href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.userId)}" class="mini-btn btn-red">${ICONS.report}<span>Report</span></a>
+          <a href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.userId)}" class="mini-btn report-mini-btn">${ICONS.report}<span>Report</span></a>
         </div>
       `;
 
       const img = card.querySelector(".post-img");
       if (img) img.addEventListener("error", () => { img.style.display = "none"; });
 
+      const likeBtn = card.querySelector(".like-mini-btn");
+      if (likeBtn && !isOwnPost) {
+        likeBtn.addEventListener("click", () => toggleMemberPostLike(post, likeBtn));
+      }
+
       card.querySelector(".share-btn").addEventListener("click", () => sharePost(post));
       contentList.appendChild(card);
+      refreshMemberPostMeta(post.id).catch(() => {});
     }
 
     function renderEventCard(event) {
       const card = document.createElement("div");
       card.className = "info-card";
+      const eventUrl = `event.html?eventId=${encodeURIComponent(event.id)}`;
 
       card.innerHTML = `
-        <div class="card-title">${escapeHtml(event.title)}</div>
-        <div class="badge-row">
-          <span class="badge ${event.creatorId === targetUid ? "badge-green" : "badge-purple"}">${event.creatorId === targetUid ? "Created" : "Joined"}</span>
-          <span class="badge ${normalizeText(event.visibility) === "private" ? "badge-yellow" : "badge-blue"}">${normalizeText(event.visibility) === "private" ? "Private" : "Public"}</span>
-        </div>
-        <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" • ") || "Event")}</div>
-        <div class="desc">${escapeHtml(event.description || "No description.")}</div>
+        <a class="info-card-link" href="${eventUrl}">
+          <div class="compact-card-row">
+            <div>
+              <div class="card-title">${escapeHtml(event.title)}</div>
+              <div class="badge-row">
+                <span class="badge ${event.creatorId === targetUid ? "badge-green" : "badge-purple"}">${event.creatorId === targetUid ? "Created" : "Joined"}</span>
+                <span class="badge ${normalizeText(event.visibility) === "private" ? "badge-yellow" : "badge-blue"}">${normalizeText(event.visibility) === "private" ? "Private" : "Public"}</span>
+              </div>
+              <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" â¢ ") || "Event")}</div>
+              ${event.description ? `<div class="desc">${escapeHtml(event.description)}</div>` : ""}
+            </div>
+            <span class="compact-arrow">${ICONS.open}</span>
+          </div>
+        </a>
 
         <div class="card-actions">
-          <a href="event.html?eventId=${encodeURIComponent(event.id)}" class="mini-btn btn-blue">${ICONS.open}<span>Open Event</span></a>
           <button class="mini-btn share-btn btn-green" type="button">${ICONS.share}<span>Share</span></button>
-          <a href="report.html?type=event&targetId=${encodeURIComponent(event.id)}&targetUserId=${encodeURIComponent(event.creatorId || targetUid)}" class="mini-btn btn-red">${ICONS.report}<span>Report</span></a>
+          <a href="report.html?type=event&targetId=${encodeURIComponent(event.id)}&targetUserId=${encodeURIComponent(event.creatorId || targetUid)}" class="mini-btn report-mini-btn">${ICONS.report}<span>Report</span></a>
         </div>
       `;
 
@@ -2608,20 +2794,27 @@
     function renderPlaceCard(place) {
       const card = document.createElement("div");
       card.className = "info-card";
+      const placeUrl = `place.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source)}`;
 
       card.innerHTML = `
-        <div class="card-title">${escapeHtml(place.name)}</div>
-        <div class="badge-row">
-          <span class="badge badge-green">Added</span>
-          ${place.category ? `<span class="badge badge-purple">${escapeHtml(place.category)}</span>` : ""}
-        </div>
-        <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" • ") || "Place")}</div>
-        <div class="desc">${escapeHtml(place.description || "No description.")}</div>
+        <a class="info-card-link" href="${placeUrl}">
+          <div class="compact-card-row">
+            <div>
+              <div class="card-title">${escapeHtml(place.name)}</div>
+              <div class="badge-row">
+                <span class="badge badge-green">Added</span>
+                ${place.category ? `<span class="badge badge-purple">${escapeHtml(place.category)}</span>` : ""}
+              </div>
+              <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" â¢ ") || "Place")}</div>
+              ${place.description ? `<div class="desc">${escapeHtml(place.description)}</div>` : ""}
+            </div>
+            <span class="compact-arrow">${ICONS.open}</span>
+          </div>
+        </a>
 
         <div class="card-actions">
-          <a href="place.html?placeId=${encodeURIComponent(place.id)}&source=${encodeURIComponent(place.source)}" class="mini-btn btn-blue">${ICONS.open}<span>Open Place</span></a>
           <button class="mini-btn share-btn btn-green" type="button">${ICONS.share}<span>Share</span></button>
-          <a href="report.html?type=place&targetId=${encodeURIComponent(place.id)}&targetUserId=${encodeURIComponent(place.createdBy || targetUid)}&source=${encodeURIComponent(place.source)}" class="mini-btn btn-red">${ICONS.report}<span>Report</span></a>
+          <a href="report.html?type=place&targetId=${encodeURIComponent(place.id)}&targetUserId=${encodeURIComponent(place.createdBy || targetUid)}&source=${encodeURIComponent(place.source)}" class="mini-btn report-mini-btn">${ICONS.report}<span>Report</span></a>
         </div>
       `;
 
@@ -2632,20 +2825,27 @@
     function renderCommunityCard(community) {
       const card = document.createElement("div");
       card.className = "info-card";
+      const communityUrl = `community.html?communityId=${encodeURIComponent(community.id)}`;
 
       card.innerHTML = `
-        <div class="card-title">${escapeHtml(community.name)}</div>
-        <div class="badge-row">
-          <span class="badge ${community.creatorId === targetUid ? "badge-green" : "badge-purple"}">${community.creatorId === targetUid ? "Created" : "Joined"}</span>
-          <span class="badge badge-blue">${escapeHtml(community.privacy || "Public")}</span>
-          <span class="badge badge-yellow">${escapeHtml(String(community.memberCount || 0))} members</span>
-        </div>
-        <div class="desc">${escapeHtml(community.description || "No description.")}</div>
+        <a class="info-card-link" href="${communityUrl}">
+          <div class="compact-card-row">
+            <div>
+              <div class="card-title">${escapeHtml(community.name)}</div>
+              <div class="badge-row">
+                <span class="badge ${community.creatorId === targetUid ? "badge-green" : "badge-purple"}">${community.creatorId === targetUid ? "Created" : "Joined"}</span>
+                <span class="badge badge-blue">${escapeHtml(community.privacy || "Public")}</span>
+                <span class="badge badge-yellow">${escapeHtml(String(community.memberCount || 0))} members</span>
+              </div>
+              ${community.description ? `<div class="desc">${escapeHtml(community.description)}</div>` : ""}
+            </div>
+            <span class="compact-arrow">${ICONS.open}</span>
+          </div>
+        </a>
 
         <div class="card-actions">
-          <a href="community.html?communityId=${encodeURIComponent(community.id)}" class="mini-btn btn-blue">${ICONS.open}<span>Open Community</span></a>
           <button class="mini-btn share-btn btn-green" type="button">${ICONS.share}<span>Share</span></button>
-          <a href="report.html?type=community&targetId=${encodeURIComponent(community.id)}&targetUserId=${encodeURIComponent(community.creatorId || targetUid)}" class="mini-btn btn-red">${ICONS.report}<span>Report</span></a>
+          <a href="report.html?type=community&targetId=${encodeURIComponent(community.id)}&targetUserId=${encodeURIComponent(community.creatorId || targetUid)}" class="mini-btn report-mini-btn">${ICONS.report}<span>Report</span></a>
         </div>
       `;
 
@@ -2954,6 +3154,8 @@
       - Block system now checks blocked_users / user_blocks / blocks tables plus old blocked_users array fallback.
       - Block/Unblock tries the proper block table first and still updates old profile arrays for compatibility.
       - Existing member profile UI, follow/request, message, report, share, tabs, posts, photos, events, places, communities, and inbox badge are preserved.
+      - Dashboard posts are clickable and use Like + Comments + Share + Report instead of an Open button.
+      - Events, Places, and Communities are now compact clickable cards with Share + Report actions.
     */
 
     /*
@@ -2962,7 +3164,7 @@
       - Made profile header, avatar, display name, username, badges, and action buttons smaller.
       - Converted Trust/Points area into a sleek low-height strip.
       - Tightened tabs, cards, network rows, and empty/loading boxes.
-      - Removed text encoding glitches from × and • symbols.
+      - Removed text encoding glitches from Ã and â¢ symbols.
       - Kept existing Supabase logic and page features intact.
     */
   </script>
