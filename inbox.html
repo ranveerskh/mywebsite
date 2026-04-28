@@ -331,20 +331,18 @@
       width:18px;
       height:18px;
       border-radius:999px;
-      background:rgba(61,220,132,.14);
-      color:#22b36c;
-      border:1px solid rgba(61,220,132,.24);
+      background:#20c76f;
+      color:#ffffff;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:0 0 0 3px rgba(32,199,111,.16);
       flex-shrink:0;
     }
 
-    html[data-theme="dark"] .verified-badge{
-      color:#8cffb4;
-    }
-
     .verified-badge svg{
-      width:13px;
-      height:13px;
+      width:12px;
+      height:12px;
       display:block;
+      stroke-width:3;
     }
 
     .time{
@@ -824,6 +822,14 @@
 
     window.addEventListener("storage", (e) => {
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+
+      if (
+        e.key === "ownspace_badges_refresh" ||
+        e.key === "ownspace_inbox_refresh" ||
+        e.key === "ownspace_chat_read_refresh"
+      ) {
+        scheduleRefresh(80);
+      }
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -903,6 +909,10 @@
       ]);
     }
 
+    function normalizeStatus(value, fallback = "") {
+      return String(value || fallback || "").trim().toLowerCase();
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
 
@@ -923,7 +933,7 @@
       return {
         id: d.id || fallbackId || "",
         type: getField(d, ["type"]) || "direct",
-        status: getField(d, ["status"]) || "accepted",
+        status: normalizeStatus(getField(d, ["status"]), "accepted"),
         participantA: getField(d, ["participant_a", "participantA"]),
         participantB: getField(d, ["participant_b", "participantB"]),
         createdBy: getField(d, ["created_by", "createdBy"]),
@@ -945,7 +955,7 @@
         requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "sender_id", "senderId"]),
         targetId: getField(d, ["target_id", "targetId", "to_user_id", "toUserId", "receiver_id", "receiverId", "recipient_id", "recipientId"]),
         text: getField(d, ["text", "message", "starter_text", "starterText"]),
-        status: getField(d, ["status", "request_status", "requestStatus"]) || "pending",
+        status: normalizeStatus(getField(d, ["status", "request_status", "requestStatus"]), "pending"),
         createdAt: d.created_at ?? d.createdAt ?? null
       };
     }
@@ -1010,6 +1020,21 @@
 
     function getSortedPair(a, b) {
       return [a, b].sort((x, y) => x.localeCompare(y));
+    }
+
+    function announceBadgeRefresh() {
+      try {
+        localStorage.setItem("ownspace_badges_refresh", String(Date.now()));
+        localStorage.setItem("ownspace_inbox_refresh", String(Date.now()));
+      } catch {}
+
+      try {
+        window.dispatchEvent(new CustomEvent("ownspace:badges-refresh"));
+      } catch {}
+
+      try {
+        window.dispatchEvent(new CustomEvent("ownspace:inbox-refresh"));
+      } catch {}
     }
 
     function setTab(tab) {
@@ -1325,9 +1350,167 @@
       });
     }
 
-    async function markThreadReadBeforeOpen(threadId) {
-      if (!currentUser || !threadId) return;
+    async function markThreadNotificationsRead(thread) {
+      if (!currentUser || !thread?.id) return;
 
+      const threadId = thread.id;
+      const otherUid = getOtherUidFromThread(thread);
+      const now = nowIso();
+
+      const payloads = [
+        { is_read: true, read: true, read_at: now, updated_at: now },
+        { is_read: true, read_at: now, updated_at: now },
+        { is_read: true, updated_at: now },
+        { is_read: true },
+        { read: true, updated_at: now },
+        { read: true },
+        { isRead: true, read: true, readAt: now, updatedAt: now },
+        { isRead: true, readAt: now, updatedAt: now },
+        { isRead: true, updatedAt: now },
+        { isRead: true },
+        { readAt: now, updatedAt: now },
+        { readAt: now }
+      ];
+
+      const recipientCols = [
+        "to_user_id",
+        "user_id",
+        "target_id",
+        "receiver_id",
+        "recipient_id",
+        "toUserId",
+        "userId",
+        "targetId",
+        "receiverId",
+        "recipientId"
+      ];
+
+      const threadCols = [
+        "thread_id",
+        "threadId",
+        "chat_thread_id",
+        "chatThreadId"
+      ];
+
+      const senderCols = [
+        "from_user_id",
+        "sender_id",
+        "requester_id",
+        "fromUserId",
+        "senderId",
+        "requesterId"
+      ];
+
+      const messageTypes = [
+        "message",
+        "chat_message",
+        "new_message",
+        "message_request_accepted"
+      ];
+
+      const jobs = [];
+
+      for (const payload of payloads) {
+        for (const recipientCol of recipientCols) {
+          for (const threadCol of threadCols) {
+            jobs.push(safeUpdate("notifications", payload, q =>
+              q.eq(recipientCol, currentUser.id).eq(threadCol, threadId).in("type", messageTypes)
+            ));
+
+            jobs.push(safeUpdate("notifications", payload, q =>
+              q.eq(recipientCol, currentUser.id).eq(threadCol, threadId)
+            ));
+          }
+
+          if (otherUid) {
+            for (const senderCol of senderCols) {
+              jobs.push(safeUpdate("notifications", payload, q =>
+                q.eq(recipientCol, currentUser.id).eq(senderCol, otherUid).in("type", messageTypes)
+              ));
+            }
+          }
+        }
+      }
+
+      await Promise.allSettled(jobs);
+    }
+
+    async function markRequestNotificationsRead(requestModel) {
+      if (!currentUser || !requestModel?.id) return;
+
+      const now = nowIso();
+
+      const payloads = [
+        { is_read: true, read: true, read_at: now, updated_at: now },
+        { is_read: true, read_at: now, updated_at: now },
+        { is_read: true, updated_at: now },
+        { is_read: true },
+        { read: true, updated_at: now },
+        { read: true },
+        { isRead: true, read: true, readAt: now, updatedAt: now },
+        { isRead: true, readAt: now, updatedAt: now },
+        { isRead: true, updatedAt: now },
+        { isRead: true },
+        { readAt: now, updatedAt: now },
+        { readAt: now }
+      ];
+
+      const recipientCols = [
+        "to_user_id",
+        "user_id",
+        "target_id",
+        "receiver_id",
+        "recipient_id",
+        "toUserId",
+        "userId",
+        "targetId",
+        "receiverId",
+        "recipientId"
+      ];
+
+      const requestCols = [
+        "request_id",
+        "requestId",
+        "message_request_id",
+        "messageRequestId"
+      ];
+
+      const senderCols = [
+        "from_user_id",
+        "sender_id",
+        "requester_id",
+        "fromUserId",
+        "senderId",
+        "requesterId"
+      ];
+
+      const jobs = [];
+
+      for (const payload of payloads) {
+        for (const recipientCol of recipientCols) {
+          for (const requestCol of requestCols) {
+            jobs.push(safeUpdate("notifications", payload, q =>
+              q.eq(recipientCol, currentUser.id).eq(requestCol, requestModel.id)
+            ));
+          }
+
+          if (requestModel.requesterId) {
+            for (const senderCol of senderCols) {
+              jobs.push(safeUpdate("notifications", payload, q =>
+                q.eq(recipientCol, currentUser.id).eq(senderCol, requestModel.requesterId).in("type", ["message_request"])
+              ));
+            }
+          }
+        }
+      }
+
+      await Promise.allSettled(jobs);
+    }
+
+    async function markThreadReadBeforeOpen(thread) {
+      if (!currentUser || !thread?.id) return;
+
+      const threadId = thread.id;
       const now = nowIso();
 
       const filterSets = [
@@ -1339,26 +1522,38 @@
 
       const payloads = [
         { seen_at: now, read_at: now, is_read: true, read: true },
+        { seen_at: now, read_at: now, is_read: true },
+        { seen_at: now, is_read: true },
+        { read_at: now, is_read: true },
         { seen_at: now },
         { read_at: now },
         { is_read: true },
         { read: true },
+        { seenAt: now, readAt: now, isRead: true, read: true },
         { seenAt: now, readAt: now, isRead: true },
+        { seenAt: now, isRead: true },
+        { readAt: now, isRead: true },
         { seenAt: now },
         { readAt: now },
         { isRead: true }
       ];
 
+      const jobs = [];
+
       for (const filter of filterSets) {
         for (const payload of payloads) {
-          await safeUpdate("chat_messages", payload, q =>
+          jobs.push(safeUpdate("chat_messages", payload, q =>
             q.eq(filter.thread, threadId).neq(filter.sender, currentUser.id)
-          );
+          ));
         }
       }
 
+      await Promise.allSettled(jobs);
+      await markThreadNotificationsRead(thread);
+
       unreadByThreadMap.set(threadId, 0);
       updateCounts();
+      announceBadgeRefresh();
     }
 
     function renderChats() {
@@ -1409,7 +1604,7 @@
           item.style.opacity = ".72";
 
           try {
-            await markThreadReadBeforeOpen(thread.id);
+            await markThreadReadBeforeOpen(thread);
           } catch {}
 
           window.location.href = href;
@@ -1610,6 +1805,8 @@
 
         if (!updated) throw new Error("Could not update request.");
 
+        await markRequestNotificationsRead(requestModel);
+
         const pair = getSortedPair(requestModel.requesterId, requestModel.targetId || currentUser.id);
         let thread = await findExistingThreadBetween(pair[0], pair[1]);
 
@@ -1699,6 +1896,10 @@
           });
         }
 
+        requestDocsMap.delete(requestModel.id);
+        updateCounts();
+        announceBadgeRefresh();
+
         setPageMessage("Request accepted. Opening chat...", "ok");
         window.location.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
       } catch (err) {
@@ -1746,6 +1947,12 @@
 
         if (!updated) throw new Error("Could not decline request.");
 
+        await markRequestNotificationsRead(requestModel);
+
+        requestDocsMap.delete(requestModel.id);
+        updateCounts();
+        announceBadgeRefresh();
+
         setPageMessage("Request declined.", "ok");
         await fetchInboxData(false);
       } catch (err) {
@@ -1791,14 +1998,16 @@
       realtimeChannels = [];
     }
 
-    function scheduleRefresh() {
+    function scheduleRefresh(delay = 350) {
+      if (!currentUser) return;
+
       clearTimeout(refreshTimer);
 
       refreshTimer = setTimeout(() => {
         fetchInboxData(false).catch(err => {
-          console.error("Inbox live refresh error:", err);
+          console.error("Inbox refresh error:", err);
         });
-      }, 350);
+      }, delay);
     }
 
     function startLiveListeners() {
@@ -1810,6 +2019,7 @@
         "chat_threads",
         "chat_messages",
         "message_requests",
+        "notifications",
         "public_profiles",
         "users"
       ];
@@ -1862,6 +2072,21 @@
     chatsTabBtn.addEventListener("click", () => setTab("chats"));
     requestsTabBtn.addEventListener("click", () => setTab("requests"));
 
+    window.addEventListener("ownspace:badges-refresh", () => scheduleRefresh(80));
+    window.addEventListener("ownspace:inbox-refresh", () => scheduleRefresh(80));
+
+    window.addEventListener("pageshow", () => {
+      scheduleRefresh(80);
+    });
+
+    window.addEventListener("focus", () => {
+      scheduleRefresh(150);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) scheduleRefresh(120);
+    });
+
     async function initPage() {
       showLoading("Checking login...");
 
@@ -1901,24 +2126,25 @@
     initPage();
 
     /*
-      OWNSPACE INBOX FIX:
+      OWNSPACE INBOX FULL FIX:
 
-      FIXED:
-      - Default theme is now LIGHT.
-      - html data-theme is now light.
-      - If loading fails, page no longer stays stuck on "Loading inbox...".
-      - Inbox queries now use safe fallbacks and skip bad/missing columns instead of breaking the whole page.
-      - Added timeout protection for login check and inbox load.
-      - Inbox badge still counts only:
+      ADDED:
+      - Inbox now listens for ownspace_badges_refresh / ownspace_inbox_refresh / ownspace_chat_read_refresh.
+      - Inbox refreshes on focus, pageshow, and visibility return after coming back from chat.
+      - Opening a chat marks incoming chat_messages as read before redirecting.
+      - Opening a chat also marks matching notifications as read.
+      - Accepting/declining message requests marks request notifications as read.
+      - Live listener now includes notifications table too.
+      - Clean green verified badge style.
+      - Inbox badge still counts ONLY:
         1) pending message_requests
         2) unread incoming chat_messages
-      - General notifications are not counted.
-      - Opening a chat tries to mark incoming messages as read before opening chat.html.
+      - General notifications are ignored for the visible inbox badge.
 
       IMPORTANT:
-      - If you still see "Could not load inbox", the issue is likely Supabase schema/RLS:
-        chat_threads, chat_messages, message_requests, public_profiles/users permissions.
-      - Next page to check after this is chat.html, because inbox opens chat and chat.html should also mark thread messages read.
+      - For best result, chat.html should also write:
+        localStorage.setItem("ownspace_badges_refresh", String(Date.now()))
+        after it marks messages read.
     */
   </script>
 </body>
