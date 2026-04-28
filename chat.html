@@ -369,6 +369,13 @@
       line-height:1.6;
     }
 
+    .messages-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      width:100%;
+    }
+
     .day-divider{
       display:flex;
       align-items:center;
@@ -647,7 +654,7 @@
         <div id="messagesBody" class="messages-body">
           <div id="messagesLoading" class="messages-loading hidden">Loading messages...</div>
           <div id="messagesEmpty" class="messages-empty hidden">No messages yet. Say hello.</div>
-          <div id="messagesList" class="hidden"></div>
+          <div id="messagesList" class="messages-list hidden"></div>
         </div>
       </div>
     </div>
@@ -726,6 +733,7 @@
     let requestChannel = null;
     let threadChannel = null;
     let refreshTimer = null;
+    let readRefreshTimer = null;
 
     let iBlockedTarget = false;
     let targetBlockedMe = false;
@@ -845,13 +853,17 @@
     }
 
     function notifyBadgeRefresh() {
-      try {
-        localStorage.setItem("ownspace_badges_refresh", String(Date.now()));
-      } catch {}
+      const stamp = String(Date.now());
 
       try {
-        window.dispatchEvent(new CustomEvent("ownspace:badges-refresh"));
+        localStorage.setItem("ownspace_chat_read_refresh", stamp);
+        localStorage.setItem("ownspace_inbox_refresh", stamp);
+        localStorage.setItem("ownspace_badges_refresh", stamp);
       } catch {}
+
+      try { window.dispatchEvent(new CustomEvent("ownspace:chat-read-refresh")); } catch {}
+      try { window.dispatchEvent(new CustomEvent("ownspace:inbox-refresh")); } catch {}
+      try { window.dispatchEvent(new CustomEvent("ownspace:badges-refresh")); } catch {}
 
       try {
         if (window.OwnSpaceBadges && typeof window.OwnSpaceBadges.refresh === "function") {
@@ -876,12 +888,17 @@
         let q = supabase.from(table).update(payload);
         q = buildQuery(q);
         const { error } = await q;
+
         if (error) {
-          if (!isColumnOrSchemaError(error)) console.warn("Update failed:", table, error.message);
+          if (!isColumnOrSchemaError(error)) {
+            console.warn("Update failed:", table, error.message);
+          }
           return false;
         }
+
         return true;
-      } catch {
+      } catch (err) {
+        console.warn("Update exception:", table, err?.message || err);
         return false;
       }
     }
@@ -921,6 +938,7 @@
         { is_read: true },
         { read: true, updated_at: now },
         { read: true },
+
         { isRead: true, read: true, readAt: now, updatedAt: now },
         { isRead: true, readAt: now, updatedAt: now },
         { isRead: true, updatedAt: now },
@@ -929,10 +947,26 @@
         { readAt: now }
       ];
 
-      const recipientCols = ["to_user_id", "user_id", "target_id", "receiver_id", "recipient_id", "toUserId", "userId", "targetId", "receiverId", "recipientId"];
-      const threadCols = ["thread_id", "threadId", "chat_thread_id", "chatThreadId"];
-      const senderCols = ["from_user_id", "sender_id", "requester_id", "fromUserId", "senderId", "requesterId"];
-      const messageTypes = ["message", "chat_message", "new_message", "message_request_accepted"];
+      const recipientCols = [
+        "to_user_id", "user_id", "target_id", "receiver_id", "recipient_id",
+        "toUserId", "userId", "targetId", "receiverId", "recipientId"
+      ];
+
+      const threadCols = [
+        "thread_id", "threadId", "chat_thread_id", "chatThreadId"
+      ];
+
+      const senderCols = [
+        "from_user_id", "sender_id", "requester_id",
+        "fromUserId", "senderId", "requesterId"
+      ];
+
+      const messageTypes = [
+        "message",
+        "chat_message",
+        "new_message",
+        "message_request_accepted"
+      ];
 
       const jobs = [];
 
@@ -940,20 +974,23 @@
         for (const recipientCol of recipientCols) {
           for (const threadCol of threadCols) {
             jobs.push(tryUpdate("notifications", payload, q =>
-              q.eq(recipientCol, currentUser.id).eq(threadCol, threadId).in("type", messageTypes)
+              q.eq(recipientCol, currentUser.id)
+               .eq(threadCol, threadId)
+               .in("type", messageTypes)
             ));
 
             jobs.push(tryUpdate("notifications", payload, q =>
-              q.eq(recipientCol, currentUser.id).eq(threadCol, threadId)
+              q.eq(recipientCol, currentUser.id)
+               .eq(threadCol, threadId)
             ));
           }
-        }
 
-        if (otherUid) {
-          for (const recipientCol of recipientCols) {
+          if (otherUid) {
             for (const senderCol of senderCols) {
               jobs.push(tryUpdate("notifications", payload, q =>
-                q.eq(recipientCol, currentUser.id).eq(senderCol, otherUid).in("type", messageTypes)
+                q.eq(recipientCol, currentUser.id)
+                 .eq(senderCol, otherUid)
+                 .in("type", messageTypes)
               ));
             }
           }
@@ -961,7 +998,6 @@
       }
 
       await Promise.allSettled(jobs);
-      notifyBadgeRefresh();
     }
 
     async function markRequestNotificationsReadFast(requestId) {
@@ -976,6 +1012,7 @@
         { is_read: true },
         { read: true, updated_at: now },
         { read: true },
+
         { isRead: true, read: true, readAt: now, updatedAt: now },
         { isRead: true, readAt: now, updatedAt: now },
         { isRead: true, updatedAt: now },
@@ -984,22 +1021,29 @@
         { readAt: now }
       ];
 
-      const recipientCols = ["to_user_id", "user_id", "target_id", "receiver_id", "recipient_id", "toUserId", "userId", "targetId", "receiverId", "recipientId"];
-      const requestCols = ["request_id", "requestId", "message_request_id", "messageRequestId"];
+      const recipientCols = [
+        "to_user_id", "user_id", "target_id", "receiver_id", "recipient_id",
+        "toUserId", "userId", "targetId", "receiverId", "recipientId"
+      ];
+
+      const requestCols = [
+        "request_id", "requestId", "message_request_id", "messageRequestId"
+      ];
+
       const jobs = [];
 
       for (const payload of readPayloads) {
         for (const recipientCol of recipientCols) {
           for (const requestCol of requestCols) {
             jobs.push(tryUpdate("notifications", payload, q =>
-              q.eq(recipientCol, currentUser.id).eq(requestCol, requestId)
+              q.eq(recipientCol, currentUser.id)
+               .eq(requestCol, requestId)
             ));
           }
         }
       }
 
       await Promise.allSettled(jobs);
-      notifyBadgeRefresh();
     }
 
     async function markRequestTouchedFast(requestId) {
@@ -1015,6 +1059,7 @@
         { seen_at: now, updated_at: now },
         { is_read: true, updated_at: now },
         { read: true, updated_at: now },
+
         { seenAt: now, readAt: now, isRead: true, read: true, updatedAt: now },
         { seenAt: now, readAt: now, isRead: true, updatedAt: now },
         { readAt: now, updatedAt: now },
@@ -1033,6 +1078,15 @@
       notifyBadgeRefresh();
     }
 
+    function messageLooksRead(msg) {
+      return !!(
+        msg?.seenAt ||
+        msg?.readAt ||
+        msg?.isRead === true ||
+        msg?.read === true
+      );
+    }
+
     async function markMessagesSeenFast(threadId, knownMessages = null) {
       if (!threadId || !currentUser?.id || isMarkingRead) return;
 
@@ -1049,20 +1103,40 @@
         }
 
         const incomingUnreadIds = messages
-          .filter(msg => msg.senderId !== currentUser.id)
-          .filter(msg => !(msg.seenAt || msg.readAt || msg.isRead === true || msg.read === true))
+          .filter(msg => msg.senderId && msg.senderId !== currentUser.id)
+          .filter(msg => !messageLooksRead(msg))
           .map(msg => msg.id)
           .filter(Boolean);
 
         const readPayloads = [
+          { seen_at: now, read_at: now, is_read: true, read: true, updated_at: now },
+          { seen_at: now, read_at: now, is_read: true, updated_at: now },
+          { seen_at: now, is_read: true, updated_at: now },
+          { read_at: now, is_read: true, updated_at: now },
+          { seen_at: now, read_at: now, updated_at: now },
+          { seen_at: now, updated_at: now },
+          { read_at: now, updated_at: now },
+          { is_read: true, updated_at: now },
+          { read: true, updated_at: now },
+
           { seen_at: now, read_at: now, is_read: true, read: true },
           { seen_at: now, read_at: now, is_read: true },
           { seen_at: now, is_read: true },
           { read_at: now, is_read: true },
+          { seen_at: now, read_at: now },
           { seen_at: now },
           { read_at: now },
           { is_read: true },
           { read: true },
+
+          { seenAt: now, readAt: now, isRead: true, read: true, updatedAt: now },
+          { seenAt: now, readAt: now, isRead: true, updatedAt: now },
+          { seenAt: now, isRead: true, updatedAt: now },
+          { readAt: now, isRead: true, updatedAt: now },
+          { seenAt: now, updatedAt: now },
+          { readAt: now, updatedAt: now },
+          { isRead: true, updatedAt: now },
+
           { seenAt: now, readAt: now, isRead: true, read: true },
           { seenAt: now, readAt: now, isRead: true },
           { seenAt: now, isRead: true },
@@ -1090,7 +1164,8 @@
         for (const filter of filterSets) {
           for (const payload of readPayloads) {
             jobs.push(tryUpdate("chat_messages", payload, q =>
-              q.eq(filter.thread, threadId).neq(filter.sender, currentUser.id)
+              q.eq(filter.thread, threadId)
+               .neq(filter.sender, currentUser.id)
             ));
           }
         }
@@ -1101,6 +1176,18 @@
       } finally {
         isMarkingRead = false;
       }
+    }
+
+    function scheduleReadCleanup(delay = 120) {
+      clearTimeout(readRefreshTimer);
+
+      readRefreshTimer = setTimeout(() => {
+        if (currentThreadId && currentUser?.id && currentMode === "chat") {
+          markMessagesSeenFast(currentThreadId).catch(err => {
+            console.warn("Scheduled read cleanup failed:", err);
+          });
+        }
+      }, delay);
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -1258,7 +1345,9 @@
       }
 
       clearTimeout(refreshTimer);
+      clearTimeout(readRefreshTimer);
       refreshTimer = null;
+      readRefreshTimer = null;
     }
 
     function clearRequestListener() {
@@ -1405,7 +1494,7 @@
     function renderMessages(messages) {
       messagesLoading.classList.add("hidden");
       messagesList.innerHTML = "";
-      messagesList.className = "";
+      messagesList.className = "messages-list";
 
       const finalMessages = [...messages].sort((a, b) => tsMs(a.createdAt) - tsMs(b.createdAt));
 
@@ -1479,7 +1568,6 @@
         const messages = await fetchMessages(threadId);
         renderMessages(messages);
 
-        // Fast UI: cleanup runs in background.
         markMessagesSeenFast(threadId, messages).catch(err => {
           console.warn("Read cleanup failed:", err);
         });
@@ -1496,6 +1584,7 @@
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
         refreshMessages(threadId, false).catch(() => {});
+        scheduleReadCleanup(220);
       }, 180);
     }
 
@@ -1508,30 +1597,44 @@
       messagesEmpty.classList.add("hidden");
 
       refreshMessages(threadId, true);
+      scheduleReadCleanup(400);
 
       messageChannel = supabase
-        .channel(`ownspace-chat-messages-${threadId}`)
+        .channel(`ownspace-chat-messages-${threadId}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
-          () => scheduleMessageRefresh(threadId)
+          { event: "*", schema: "public", table: "chat_messages" },
+          (payload) => {
+            const row = payload?.new || payload?.old || {};
+            const msg = normalizeMessage(row, row.id || "");
+
+            if (!msg.threadId || msg.threadId === threadId) {
+              scheduleMessageRefresh(threadId);
+              scheduleReadCleanup(260);
+            }
+          }
         )
         .subscribe();
 
       threadChannel = supabase
-        .channel(`ownspace-chat-thread-${threadId}`)
+        .channel(`ownspace-chat-thread-${threadId}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "chat_threads", filter: `id=eq.${threadId}` },
+          { event: "*", schema: "public", table: "chat_threads" },
           async (payload) => {
+            const row = payload?.new || payload?.old || {};
+            if (row?.id && row.id !== threadId) return;
+
             if (payload?.new) {
               currentThreadData = normalizeThread(payload.new, payload.new.id);
             } else {
-              const { data } = await supabase.from("chat_threads").select("*").eq("id", threadId).maybeSingle();
-              if (data) currentThreadData = normalizeThread(data, data.id);
+              try {
+                const { data } = await supabase.from("chat_threads").select("*").eq("id", threadId).maybeSingle();
+                if (data) currentThreadData = normalizeThread(data, data.id);
+              } catch {}
             }
 
-            markMessagesSeenFast(threadId).catch(() => {});
+            scheduleReadCleanup(180);
           }
         )
         .subscribe();
@@ -1693,9 +1796,9 @@
 
       setModeUI("chat");
 
-      // Start rendering immediately. Read cleanup happens in background.
+      await markMessagesSeenFast(currentThreadId).catch(() => {});
       listenToMessages(currentThreadId);
-      markMessagesSeenFast(currentThreadId).catch(() => {});
+      scheduleReadCleanup(500);
     }
 
     async function listenToPendingRequest(requestId, direction) {
@@ -1706,11 +1809,14 @@
       }
 
       requestChannel = supabase
-        .channel(`ownspace-message-request-${requestId}`)
+        .channel(`ownspace-message-request-${requestId}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "message_requests", filter: `id=eq.${requestId}` },
-          async () => {
+          { event: "*", schema: "public", table: "message_requests" },
+          async (payload) => {
+            const row = payload?.new || payload?.old || {};
+            if (row?.id && row.id !== requestId) return;
+
             try {
               const { data, error } = await supabase
                 .from("message_requests")
@@ -1822,16 +1928,18 @@
 
     async function ensureDirectThread() {
       if (currentThreadId) {
-        const { data, error } = await supabase
-          .from("chat_threads")
-          .select("*")
-          .eq("id", currentThreadId)
-          .maybeSingle();
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", currentThreadId)
+            .maybeSingle();
 
-        if (!error && data) {
-          currentThreadData = normalizeThread(data, data.id);
-          return currentThreadData;
-        }
+          if (!error && data) {
+            currentThreadData = normalizeThread(data, data.id);
+            return currentThreadData;
+          }
+        } catch {}
       }
 
       const existing = await findExistingThreadByUsers(currentUser.id, currentTargetUid);
@@ -2183,7 +2291,7 @@
 
       try {
         await updateMessageRequestStatus(requestDocModel.id, "accepted");
-        markRequestTouchedFast(requestDocModel.id).catch(() => {});
+        await markRequestTouchedFast(requestDocModel.id).catch(() => {});
 
         const thread = await createThreadFromRequest(requestDocModel);
 
@@ -2220,7 +2328,7 @@
 
       try {
         await updateMessageRequestStatus(requestDocModel.id, "declined");
-        markRequestTouchedFast(requestDocModel.id).catch(() => {});
+        await markRequestTouchedFast(requestDocModel.id).catch(() => {});
         setModeUI("request_declined");
         setPageMessage("Request declined.", "ok");
         notifyBadgeRefresh();
@@ -2274,8 +2382,13 @@
     acceptRequestBtn.addEventListener("click", acceptIncomingRequest);
     declineRequestBtn.addEventListener("click", declineIncomingRequest);
 
-    backBtn.addEventListener("click", () => {
+    backBtn.addEventListener("click", async () => {
+      if (currentThreadId) {
+        await markMessagesSeenFast(currentThreadId).catch(() => {});
+      }
+
       notifyBadgeRefresh();
+
       if (document.referrer) history.back();
       else window.location.href = "inbox.html";
     });
@@ -2308,6 +2421,19 @@
         notifyBadgeRefresh();
       }
     });
+
+    window.addEventListener("focus", () => {
+      if (currentThreadId) {
+        markMessagesSeenFast(currentThreadId).catch(() => {});
+        notifyBadgeRefresh();
+      }
+    });
+
+    messagesBody.addEventListener("scroll", () => {
+      if (currentThreadId && currentMode === "chat") {
+        scheduleReadCleanup(350);
+      }
+    }, { passive: true });
 
     async function initPage() {
       const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -2421,15 +2547,19 @@
       OWNSPACE CHAT FULL FIX:
 
       - Light theme default.
-      - Messages render immediately. Read cleanup runs in background.
-      - Fixed broken tick characters by using HTML tick entities.
-      - Opening chat marks incoming chat_messages as seen/read using exact message IDs plus thread fallback.
-      - Opening chat marks matching notifications as read using:
-        thread_id / threadId / chat_thread_id / chatThreadId
-        to_user_id / user_id / target_id / receiver_id / recipient_id
-        from_user_id / sender_id fallback
-      - New message notifications include thread_id, user_id, to_user_id, from_user_id.
-      - Badge refresh is sent through localStorage key ownspace_badges_refresh for inbox/profile/search pages.
+      - Messages render immediately.
+      - Incoming messages are marked read/seen:
+        1) when chat opens
+        2) after messages load
+        3) when realtime message changes
+        4) on focus/pageshow/visibility return
+        5) before back navigation
+      - Badge refresh now triggers:
+        ownspace_chat_read_refresh
+        ownspace_inbox_refresh
+        ownspace_badges_refresh
+      - Message notifications are marked read by thread_id/threadId/chat_thread_id/chatThreadId.
+      - Inbox badge should now disappear after reading chat, as long as Supabase RLS allows updating chat_messages.
     */
   </script>
 </body>
