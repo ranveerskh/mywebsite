@@ -155,6 +155,110 @@
 
     .section-title{font-size:17px;font-weight:950;line-height:1.2}
 
+
+    .feed-stats{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+      margin:0 0 10px;
+    }
+
+    .stat-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 9px;
+      border-radius:999px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-size:11px;
+      font-weight:950;
+      line-height:1;
+    }
+
+    .stat-pill svg{
+      width:14px;
+      height:14px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .stat-pill.trust-good{
+      background:rgba(61,220,132,.12);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .stat-pill.trust-normal{
+      background:rgba(76,201,255,.12);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .stat-pill.trust-low{
+      background:rgba(245,185,66,.14);
+      border-color:rgba(245,185,66,.24);
+    }
+
+    .stat-pill.trust-risk{
+      background:rgba(255,93,115,.13);
+      border-color:rgba(255,93,115,.24);
+    }
+
+    .points-toast{
+      position:fixed;
+      left:50%;
+      bottom:92px;
+      transform:translateX(-50%) translateY(18px);
+      width:min(420px, calc(100% - 28px));
+      z-index:80;
+      padding:12px 14px;
+      border-radius:16px;
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid rgba(61,220,132,.28);
+      box-shadow:0 18px 40px rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .22s ease, transform .22s ease;
+    }
+
+    .points-toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .points-toast-icon{
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(61,220,132,.14);
+      color:var(--green);
+      border:1px solid rgba(61,220,132,.22);
+      flex-shrink:0;
+      font-weight:950;
+    }
+
+    .points-toast strong{
+      display:block;
+      font-size:13px;
+      line-height:1.2;
+    }
+
+    .points-toast span{
+      display:block;
+      color:var(--muted);
+      font-size:11.5px;
+      font-weight:800;
+      margin-top:2px;
+    }
+
     .write-btn{
       border:none;
       background:rgba(76,201,255,.14);
@@ -628,6 +732,8 @@
       .feed-item{padding:11px}
       .feed-head-top{align-items:stretch}
       .write-btn{width:100%;justify-content:center}
+      .feed-stats{justify-content:center}
+      .stat-pill{flex:1;justify-content:center}
       .remove-image-btn{width:100%}
       .share-btn{margin-left:0}
       .filter-tab{font-size:11px;padding:8px 2px}
@@ -687,6 +793,25 @@
           </button>
         </div>
 
+
+
+        <div id="feedStats" class="feed-stats hidden" aria-label="My feed stats">
+          <span id="trustPill" class="stat-pill trust-normal" title="Trust Score">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="M9 12l2 2 4-5"></path>
+            </svg>
+            <span id="trustMiniText">Trust 50%</span>
+          </span>
+
+          <span class="stat-pill" title="Earned Points">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2l2.9 6 6.6.9-4.8 4.7 1.2 6.5L12 17l-5.9 3.1 1.2-6.5-4.8-4.7 6.6-.9L12 2z"></path>
+            </svg>
+            <span id="pointsMiniText">0 Points</span>
+          </span>
+        </div>
+
         <div class="filter-tabs">
           <button class="filter-tab active" data-feed-filter="all" type="button">All</button>
           <button class="filter-tab" data-feed-filter="following" type="button">Following</button>
@@ -734,6 +859,16 @@
 
       <div id="postsList" class="posts-list"></div>
       <div id="emptyBox" class="empty-box hidden">No updates yet.</div>
+    </div>
+  </div>
+
+
+
+  <div id="pointsToast" class="points-toast" role="status" aria-live="polite">
+    <div class="points-toast-icon">+</div>
+    <div>
+      <strong id="pointsToastTitle">Points earned</strong>
+      <span id="pointsToastText">Your post reached a milestone.</span>
     </div>
   </div>
 
@@ -819,6 +954,14 @@
     const composerPanel = document.getElementById("composerPanel");
     const openComposerBtn = document.getElementById("openComposerBtn");
     const closeComposerBtn = document.getElementById("closeComposerBtn");
+
+    const feedStats = document.getElementById("feedStats");
+    const trustPill = document.getElementById("trustPill");
+    const trustMiniText = document.getElementById("trustMiniText");
+    const pointsMiniText = document.getElementById("pointsMiniText");
+    const pointsToast = document.getElementById("pointsToast");
+    const pointsToastTitle = document.getElementById("pointsToastTitle");
+    const pointsToastText = document.getElementById("pointsToastText");
 
     let currentUser = null;
     let currentUserProfile = null;
@@ -1106,6 +1249,10 @@
         suspended: !!(d.suspended ?? d.is_suspended ?? d.isSuspended),
         hidden: !!(d.hidden ?? d.is_hidden ?? d.isHidden),
         blockedUsers: getArray(d, ["blocked_users", "blockedUsers", "blocks", "blocked"]),
+        trustScore: Number(d.trust_score ?? d.trustScore ?? d.trust ?? 50) || 50,
+        pointsBalance: Number(d.points_balance ?? d.pointsBalance ?? d.points ?? 0) || 0,
+        earnedPoints: Number(d.earned_points ?? d.earnedPoints ?? 0) || 0,
+        purchasedPoints: Number(d.purchased_points ?? d.purchasedPoints ?? 0) || 0,
         bio: getField(d, ["bio", "about", "description"]),
         suspensionUntil: d.suspension_until ?? d.suspensionUntil ?? null
       };
@@ -1475,6 +1622,64 @@
       }
     }
 
+
+
+    function clampNumber(value, min, max, fallback = 0) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function getTrustLabel(score) {
+      const s = clampNumber(score, 0, 100, 50);
+      if (s <= 24) return "Risky";
+      if (s <= 49) return "Low Trust";
+      if (s <= 69) return "Normal";
+      if (s <= 84) return "Trusted";
+      return "Highly Trusted";
+    }
+
+    function getTrustClass(score) {
+      const s = clampNumber(score, 0, 100, 50);
+      if (s <= 24) return "trust-risk";
+      if (s <= 49) return "trust-low";
+      if (s <= 69) return "trust-normal";
+      return "trust-good";
+    }
+
+    function updateFeedStatsUI() {
+      if (!currentUserProfile || !feedStats) return;
+
+      const trust = clampNumber(currentUserProfile.trustScore, 0, 100, 50);
+      const points = Math.max(0, Number(currentUserProfile.pointsBalance ?? currentUserProfile.earnedPoints ?? 0) || 0);
+      const trustLabel = getTrustLabel(trust);
+
+      if (trustMiniText) trustMiniText.textContent = `Trust ${trust}% â¢ ${trustLabel}`;
+      if (pointsMiniText) pointsMiniText.textContent = `${points} ${points === 1 ? "Point" : "Points"}`;
+
+      if (trustPill) {
+        trustPill.classList.remove("trust-good", "trust-normal", "trust-low", "trust-risk");
+        trustPill.classList.add(getTrustClass(trust));
+      }
+
+      feedStats.classList.remove("hidden");
+    }
+
+    let pointsToastTimer = null;
+
+    function showPointsToast(points, reason = "Your post reached a like milestone.") {
+      if (!pointsToast || !points) return;
+
+      clearTimeout(pointsToastTimer);
+      if (pointsToastTitle) pointsToastTitle.textContent = `+${points} ${points === 1 ? "point" : "points"} earned`;
+      if (pointsToastText) pointsToastText.textContent = reason;
+
+      pointsToast.classList.add("show");
+      pointsToastTimer = setTimeout(() => {
+        pointsToast.classList.remove("show");
+      }, 3200);
+    }
+
     async function countPendingMessageRequests(uid) {
       const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
       const statusColumns = ["status", "request_status", "requestStatus"];
@@ -1830,6 +2035,8 @@
           moderation_status: "",
           trust_score: 50,
           points_balance: 0,
+          earned_points: 0,
+          purchased_points: 0,
           updated_at: nowIso()
         };
 
@@ -1871,6 +2078,7 @@
       }
 
       showMyAvatar(currentUserProfile.photoURL || "");
+      updateFeedStatsUI();
 
       const status = currentUserProfile?.moderationStatus || "";
       const suspendUntilValue = currentUserProfile?.suspensionUntil || null;
@@ -2614,6 +2822,43 @@
       }
     }
 
+
+    async function awardLikeMilestonePoints(postId) {
+      if (!postId) return null;
+
+      try {
+        const { data, error } = await supabase.rpc("award_like_milestone_points", {
+          p_post_id: postId
+        });
+
+        if (error) {
+          const msg = String(error?.message || "").toLowerCase();
+
+          // Do not break liking if points SQL is not installed yet.
+          if (
+            !msg.includes("function") &&
+            !msg.includes("schema cache") &&
+            !msg.includes("could not find")
+          ) {
+            console.warn("Like points reward failed:", error);
+          }
+
+          return null;
+        }
+
+        const row = Array.isArray(data) ? data[0] : data;
+
+        if (row && Number(row.awarded_points || 0) > 0) {
+          console.log(`OwnSpace points awarded: +${row.awarded_points}`);
+        }
+
+        return row || null;
+      } catch (err) {
+        console.warn("Like points reward skipped:", err?.message || err);
+        return null;
+      }
+    }
+
     function attachPostActions(postId, postData) {
       const ownerId = postData.userId;
       const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
@@ -2679,6 +2924,8 @@
               if (error) throw error;
 
               if (ownerId && ownerId !== currentUser.id) {
+                await awardLikeMilestonePoints(postId);
+
                 await createNotificationSafe({
                   type: "like",
                   title: "New like",
@@ -3195,6 +3442,7 @@
         "chat_messages",
         "communities",
         "community_members",
+        "points_ledger",
         "blocked_users",
         "user_blocks",
         "blocks"
@@ -3207,7 +3455,18 @@
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table },
-              () => scheduleRefresh()
+              (payload) => {
+                if (
+                  table === "points_ledger" &&
+                  payload?.eventType === "INSERT" &&
+                  payload?.new?.user_id === currentUser?.id &&
+                  Number(payload?.new?.points || 0) > 0
+                ) {
+                  showPointsToast(Number(payload.new.points || 0), "Your post reached a like milestone.");
+                }
+
+                scheduleRefresh();
+              }
             )
             .subscribe();
 
@@ -3276,6 +3535,12 @@
       - Community posts from blocked authors are hidden.
       - Communities owned by blocked users are hidden from feed discovery.
       - Realtime now listens to blocked_users / user_blocks / blocks changes.
+
+      Points added:
+      - Feed top shows small Trust + Points chips.
+      - Likes call RPC award_like_milestone_points(postId).
+      - points_ledger realtime can show a small toast when current user earns points.
+      - Trust Score remains separate from Points.
 
       Also preserved:
       - All / Following / Communities feed tabs.
