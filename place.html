@@ -824,7 +824,6 @@
     let hasVisited = false;
 
     const PLACE_SOURCES = ["nearby_places", "places", "nudist_places"];
-    const VISIT_TABLES = ["place_visits", "visited_places", "user_place_visits", "place_been_there", "been_there_places"];
 
     const ICONS = {
       check: `
@@ -912,6 +911,14 @@
 
     window.addEventListener("storage", (e) => {
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+
+      if (
+        e.key === "ownspace_badges_refresh" ||
+        e.key === "ownspace_inbox_refresh" ||
+        e.key === "ownspace_chat_read_refresh"
+      ) {
+        updateInboxBadge().catch(() => {});
+      }
     });
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1136,12 +1143,6 @@
         ["approved", "active", "verified", "public", "published"].includes(approvalStatus) ||
         ["public", "published"].includes(visibility);
 
-      /*
-        IMPORTANT FIX:
-        Older create-place pages may not save approved/status columns.
-        The old code treated missing approval columns as pending.
-        This makes old/normal places public unless they are explicitly pending/rejected/hidden.
-      */
       const hasAnyReviewField =
         d.approved !== undefined ||
         d.is_approved !== undefined ||
@@ -1360,35 +1361,29 @@
           const threadIds = threads.map(t => t.id).filter(Boolean);
 
           if (threadIds.length) {
-            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+            try {
+              const { count, error } = await supabase
+                .from("chat_messages")
+                .select("id", { count: "exact", head: true })
+                .in("thread_id", threadIds)
+                .neq("sender_id", uid)
+                .is("seen_at", null)
+                .is("read_at", null)
+                .eq("is_read", false);
 
-            for (const field of seenFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .is(field, null);
+              if (!error) return count || 0;
+            } catch {}
 
-                if (!error) return count || 0;
-              } catch {}
-            }
+            try {
+              const { count, error } = await supabase
+                .from("chat_messages")
+                .select("id", { count: "exact", head: true })
+                .in("thread_id", threadIds)
+                .neq("sender_id", uid)
+                .eq("read", false);
 
-            const boolFields = ["is_read", "read"];
-
-            for (const field of boolFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .eq(field, false);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
+              if (!error) return count || 0;
+            } catch {}
           }
         }
       } catch {}
@@ -1418,141 +1413,44 @@
       }
     }
 
-    async function queryVisitRows(tableName, userColumn, placeColumn) {
+    async function loadVisitState() {
+      if (!currentUser?.id || !currentPlaceId) return false;
+
+      const source = currentSource || "nearby_places";
+
       try {
         const { data, error } = await supabase
-          .from(tableName)
+          .from("place_visits")
           .select("id")
-          .eq(userColumn, currentUser.id)
-          .eq(placeColumn, currentPlaceId)
-          .limit(1);
+          .eq("uid", currentUser.id)
+          .eq("place_id", String(currentPlaceId))
+          .eq("source", String(source))
+          .maybeSingle();
 
-        if (!error) return { ok: true, exists: Array.isArray(data) && data.length > 0 };
-      } catch {}
+        if (error) throw error;
 
-      return { ok: false, exists: false };
-    }
+        return !!data;
+      } catch (err) {
+        console.warn("Could not check visited state using uid:", err?.message || err);
+      }
 
-    async function loadVisitState() {
-      if (!currentUser || !currentPlaceId) return false;
+      try {
+        const { data, error } = await supabase
+          .from("place_visits")
+          .select("id")
+          .eq("user_id", currentUser.id)
+          .eq("place_id", String(currentPlaceId))
+          .eq("source", String(source))
+          .maybeSingle();
 
-      const userColumns = ["user_id", "uid", "userId", "member_id", "memberId"];
-      const placeColumns = ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId"];
+        if (error) throw error;
 
-      for (const tableName of VISIT_TABLES) {
-        for (const userColumn of userColumns) {
-          for (const placeColumn of placeColumns) {
-            const result = await queryVisitRows(tableName, userColumn, placeColumn);
-            if (result.ok) return result.exists;
-          }
-        }
+        return !!data;
+      } catch (err) {
+        console.warn("Could not check visited state using user_id:", err?.message || err);
       }
 
       return false;
-    }
-
-    async function insertVisitManually() {
-      const source = currentSource || "nearby_places";
-      const placeName = currentPlace?.name || "";
-      const city = currentPlace?.city || "";
-
-      const payloads = [
-        {
-          user_id: currentUser.id,
-          place_id: currentPlaceId,
-          source,
-          place_source: source,
-          status: "visited",
-          visited: true,
-          explored: false,
-          place_name: placeName,
-          city,
-          created_at: nowIso(),
-          updated_at: nowIso()
-        },
-        {
-          user_id: currentUser.id,
-          target_id: currentPlaceId,
-          source,
-          status: "visited",
-          visited: true,
-          place_name: placeName,
-          city,
-          created_at: nowIso(),
-          updated_at: nowIso()
-        },
-        {
-          uid: currentUser.id,
-          place_id: currentPlaceId,
-          source,
-          status: "visited",
-          created_at: nowIso()
-        },
-        {
-          userId: currentUser.id,
-          placeId: currentPlaceId,
-          source,
-          status: "visited",
-          visited: true,
-          placeName,
-          city,
-          createdAt: nowIso(),
-          updatedAt: nowIso()
-        },
-        {
-          user_id: currentUser.id,
-          place_id: currentPlaceId,
-          created_at: nowIso()
-        }
-      ];
-
-      let lastError = null;
-
-      for (const tableName of VISIT_TABLES) {
-        for (const payload of payloads) {
-          try {
-            const { error } = await supabase
-              .from(tableName)
-              .insert(payload);
-
-            if (!error) return { table: tableName };
-            lastError = error;
-          } catch (err) {
-            lastError = err;
-          }
-        }
-      }
-
-      throw lastError || new Error("Could not add visit.");
-    }
-
-    async function removeVisitManually() {
-      const userColumns = ["user_id", "uid", "userId", "member_id", "memberId"];
-      const placeColumns = ["place_id", "placeId", "target_id", "targetId", "nearby_place_id", "nearbyPlaceId"];
-
-      let anyWorked = false;
-      let lastError = null;
-
-      for (const tableName of VISIT_TABLES) {
-        for (const userColumn of userColumns) {
-          for (const placeColumn of placeColumns) {
-            try {
-              const { error } = await supabase
-                .from(tableName)
-                .delete()
-                .eq(userColumn, currentUser.id)
-                .eq(placeColumn, currentPlaceId);
-
-              if (!error) anyWorked = true;
-              else lastError = error;
-            } catch (err) {
-              lastError = err;
-            }
-          }
-        }
-      }
-
-      if (!anyWorked && lastError) throw lastError;
     }
 
     function parseVisitRpcResult(data) {
@@ -1581,61 +1479,44 @@
     }
 
     async function toggleBeenThere(button) {
-      if (!currentUser || !currentPlace) return;
+      if (!currentUser?.id) {
+        setTopMessage("Please login first.", "err");
+        return;
+      }
+
+      if (!currentPlace || !currentPlaceId) {
+        setTopMessage("Missing place details.", "err");
+        return;
+      }
 
       button.disabled = true;
       setTopMessage("");
 
       try {
-        let rpcWorked = false;
+        const source = currentSource || "nearby_places";
 
-        const rpcPayloads = [
-          {
-            p_place_id: currentPlaceId,
-            p_source: currentSource || "nearby_places",
-            p_place_name: currentPlace.name || "Unnamed Place",
-            p_city: currentPlace.city || ""
-          },
-          {
-            place_id: currentPlaceId,
-            source: currentSource || "nearby_places",
-            place_name: currentPlace.name || "Unnamed Place",
-            city: currentPlace.city || ""
-          },
-          {
-            target_place_id: currentPlaceId
-          }
-        ];
+        const { data, error } = await supabase.rpc("toggle_place_visit", {
+          p_place_id: String(currentPlaceId),
+          p_source: String(source),
+          p_place_name: String(currentPlace.name || "Unnamed Place"),
+          p_city: String(currentPlace.city || "")
+        });
 
-        for (const payload of rpcPayloads) {
-          try {
-            const { data, error } = await supabase.rpc("toggle_place_visit", payload);
+        if (error) throw error;
 
-            if (!error) {
-              const rpcState = parseVisitRpcResult(data);
-              hasVisited = typeof rpcState === "boolean" ? rpcState : await loadVisitState();
-              rpcWorked = true;
-              break;
-            }
-          } catch {}
-        }
-
-        if (!rpcWorked) {
-          if (hasVisited) {
-            await removeVisitManually();
-            hasVisited = false;
-          } else {
-            await insertVisitManually();
-            hasVisited = true;
-          }
-        }
+        const rpcState = parseVisitRpcResult(data);
+        hasVisited = typeof rpcState === "boolean" ? rpcState : await loadVisitState();
 
         renderBadges();
         renderTopActions();
-        setTopMessage(hasVisited ? "Marked as visited." : "Removed from visited places.", "ok");
+
+        setTopMessage(
+          hasVisited ? "Added to your visited places." : "Removed from your visited places.",
+          "ok"
+        );
       } catch (err) {
-        console.error(err);
-        setTopMessage("Could not update visited state. Check that a visit table exists and RLS allows insert/delete.", "err");
+        console.error("Visited toggle failed:", err);
+        setTopMessage(err?.message || "Could not update visited state.", "err");
         button.disabled = false;
       }
     }
@@ -2186,7 +2067,7 @@
       }
 
       currentUser = data.user;
-      updateInboxBadge();
+      updateInboxBadge().catch(() => {});
 
       const params = new URLSearchParams(window.location.search);
       currentPlaceId = params.get("placeId") || params.get("id") || params.get("targetId") || "";
@@ -2241,6 +2122,17 @@
     }
 
     initPage();
+
+    /*
+      OWNSPACE PLACE UPDATE:
+
+      - Been There now uses Supabase RPC:
+        public.toggle_place_visit(p_place_id, p_source, p_place_name, p_city)
+      - Removed old direct multi-table insert/delete fallback that was causing:
+        "Could not update visited state"
+      - Visit state checks public.place_visits using uid/user_id + place_id + source.
+      - Existing page UI, edit, delete, report, share, map, submitter card, and inbox badge are preserved.
+    */
   </script>
 </body>
 </html>
