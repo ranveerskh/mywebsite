@@ -783,6 +783,32 @@
       }
     }
 
+    async function getCurrentUserFast() {
+      try {
+        const sessionResult = await withTimeout(
+          supabase.auth.getSession(),
+          2500,
+          null
+        );
+
+        const sessionUser = sessionResult?.data?.session?.user || null;
+        if (sessionUser) return sessionUser;
+      } catch {}
+
+      try {
+        const userResult = await withTimeout(
+          supabase.auth.getUser(),
+          4500,
+          null
+        );
+
+        const authUser = userResult?.data?.user || null;
+        if (authUser) return authUser;
+      } catch {}
+
+      return null;
+    }
+
     function setPageMessage(text = "", type = "") {
       pageMessage.textContent = text;
       pageMessage.className = `page-message ${type}`;
@@ -1305,6 +1331,19 @@
       topSub.textContent = "Unavailable";
     }
 
+    function showOpeningState(text = "Opening chat...") {
+      blockedPanel.classList.add("hidden");
+      requestInfoPanel.classList.add("hidden");
+      composerPanel.classList.add("hidden");
+      messagesPanel.classList.remove("hidden");
+      messagesLoading.classList.remove("hidden");
+      messagesLoading.textContent = text;
+      messagesEmpty.classList.add("hidden");
+      messagesList.classList.add("hidden");
+      toolbarChip.textContent = "Opening";
+      topSub.textContent = text;
+    }
+
     function hideBlocked() {
       blockedPanel.classList.add("hidden");
     }
@@ -1590,7 +1629,7 @@
             .select("*")
             .eq("id", threadId)
             .maybeSingle(),
-          7000,
+          3500,
           { data: null, error: new Error("Chat thread lookup timed out.") }
         );
 
@@ -1849,8 +1888,15 @@
       clearAllListeners();
 
       currentTargetUid = targetUid;
-      currentTargetProfile = await loadFullProfile(targetUid);
+      currentTargetProfile = normalizeProfile({ uid: targetUid, display_name: "Member" }, targetUid);
       setHeader(currentTargetProfile);
+
+      loadFullProfile(targetUid)
+        .then(profile => {
+          currentTargetProfile = profile || currentTargetProfile;
+          setHeader(currentTargetProfile);
+        })
+        .catch(() => {});
 
       if (
         currentTargetProfile.softDeleted ||
@@ -2382,26 +2428,39 @@
     });
 
     async function initPage() {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      setPageMessage("");
+      topSub.textContent = "Checking login...";
 
-      if (authError || !authData?.user) {
+      const params = new URLSearchParams(window.location.search);
+      const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
+      const uidParam = (params.get("uid") || params.get("userId") || params.get("user_id") || "").trim();
+
+      if (threadIdParam) {
+        showOpeningState("Opening chat...");
+      } else if (uidParam) {
+        topSub.textContent = "Opening member...";
+      }
+
+      const authUser = await getCurrentUserFast();
+
+      if (!authUser) {
         clearAllListeners();
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = authData.user;
+      currentUser = authUser;
 
-      currentViewerProfile = normalizeProfile({ uid: currentUser.id, display_name: "Me" }, currentUser.id);
+      currentViewerProfile = normalizeProfile(
+        { uid: currentUser.id, display_name: "Me" },
+        currentUser.id
+      );
+
       loadFullProfile(currentUser.id)
         .then(profile => {
           currentViewerProfile = profile || currentViewerProfile;
         })
         .catch(() => {});
-
-      const params = new URLSearchParams(window.location.search);
-      const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
-      const uidParam = (params.get("uid") || params.get("userId") || params.get("user_id") || "").trim();
 
       if (!threadIdParam && !uidParam) {
         showBlocked("No conversation selected.");
@@ -2410,10 +2469,13 @@
 
       try {
         if (threadIdParam) {
+          showOpeningState("Opening chat...");
+
           const data = await fetchThreadById(threadIdParam);
 
           if (!data) {
-            showBlocked("Chat not found or still loading. Go back to Inbox and open it again.");
+            showBlocked("Chat did not open. This usually means chat_threads SELECT/RLS is not allowing this user to read the thread.");
+            setPageMessage("Thread read failed. Check Supabase RLS for chat_threads select.", "err");
             return;
           }
 
@@ -2432,10 +2494,18 @@
             await openThread(threadModel);
           } else {
             currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
-            currentTargetProfile = await loadFullProfile(currentTargetUid);
+            currentTargetProfile = normalizeProfile({ uid: currentTargetUid, display_name: "Member" }, currentTargetUid);
             setHeader(currentTargetProfile);
 
+            loadFullProfile(currentTargetUid)
+              .then(profile => {
+                currentTargetProfile = profile || currentTargetProfile;
+                setHeader(currentTargetProfile);
+              })
+              .catch(() => {});
+
             const incomingReq = await loadRequestBetween(currentTargetUid, currentUser.id);
+
             if (incomingReq && incomingReq.status === "pending") {
               requestDocModel = incomingReq;
               setModeUI("request_incoming_pending");
@@ -2443,6 +2513,7 @@
               await listenToPendingRequest(incomingReq.id, "incoming");
             } else {
               const outgoingReq = await loadRequestBetween(currentUser.id, currentTargetUid);
+
               if (outgoingReq && outgoingReq.status === "pending") {
                 requestDocModel = outgoingReq;
                 setModeUI("request_outgoing_pending");
@@ -2452,6 +2523,8 @@
               }
             }
           }
+
+          return;
         }
 
         if (uidParam) {
@@ -2460,6 +2533,7 @@
             return;
           }
 
+          showOpeningState("Opening chat...");
           await openByTargetUid(uidParam);
         }
 
@@ -2474,6 +2548,7 @@
       } catch (err) {
         console.error(err);
         showBlocked("Could not load chat.");
+        setPageMessage(err?.message || "Could not load chat.", "err");
       }
     }
 
@@ -2491,13 +2566,11 @@
       - Chat messages render first; read-update runs in the background.
       - Profile loading no longer blocks chat screen from opening.
       - Thread lookup has a timeout so the page never stays blank on Loading... forever.
+      - Login check uses getSession first; this fixes pages stuck at top Loading... on mobile Safari.
       - This removes the 4s + 6s feeling caused by slow fallback read updates.
       - Broken tick text is replaced with clean SVG ticks.
       - Opening a chat marks incoming chat_messages as read/seen using detected schema columns.
       - Read update no longer sends one payload with many possibly-missing columns.
       - It detects actual fields in returned chat_messages and updates only those.
       - If detection fails, fallback updates run in parallel, not before rendering.
-      - Opening a chat marks matching message notifications as read in the background.
-      - Incoming request notification is marked read when the request is opened.
-      - Accepting/declining request clears request notifications.
-      - Re
+      - Opening a chat marks matching message notifications as read in th
