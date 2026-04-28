@@ -498,7 +498,26 @@
 
     .section-split{
       display:grid;
-      gap:16px;
+      gap:9px;
+    }
+
+    .section-split > div{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:9px;
+    }
+
+    .section-heading{
+      font-size:12.5px;
+      font-weight:950;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      color:var(--text);
+      letter-spacing:-.01em;
     }
 
     .dashboard-list,
@@ -506,18 +525,31 @@
     .places-grid,
     .communities-grid{
       display:grid;
-      gap:9px;
+      gap:8px;
     }
 
     .dashboard-card{
       display:block;
       color:inherit;
-      background:var(--surface-2);
+      background:linear-gradient(135deg, rgba(255,255,255,.60), rgba(255,255,255,.20)), var(--surface-2);
       border:1px solid var(--line);
       border-radius:15px;
       padding:9px;
       overflow:hidden;
+      box-shadow:var(--shadow-soft);
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
     }
+
+    html[data-theme="dark"] .dashboard-card{
+      background:linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018)), var(--surface-2);
+    }
+
+    .dashboard-card:hover{
+      border-color:rgba(76,201,255,.28);
+      box-shadow:0 14px 28px rgba(20,33,61,.09);
+    }
+
+    .dashboard-card:active{transform:scale(.992)}
 
     .dashboard-post-link{
       display:block;
@@ -534,17 +566,31 @@
     }
 
     .dashboard-label{
-      font-size:12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px 7px;
+      border-radius:999px;
+      font-size:10px;
+      line-height:1;
       font-weight:950;
       color:var(--blue);
+      background:rgba(76,201,255,.12);
+      border:1px solid rgba(76,201,255,.18);
+      white-space:nowrap;
     }
 
-    .dashboard-label.community{color:var(--purple)}
+    .dashboard-label.community{
+      color:var(--purple);
+      background:rgba(167,139,250,.12);
+      border-color:rgba(167,139,250,.18);
+    }
 
     .dashboard-time{
-      font-size:10.5px;
+      font-size:10px;
       color:var(--muted);
       flex-shrink:0;
+      font-weight:850;
     }
 
     .dashboard-title{
@@ -554,38 +600,332 @@
       font-weight:950;
       word-break:break-word;
       margin-bottom:5px;
+      letter-spacing:-.01em;
     }
 
     .dashboard-text{
       color:var(--text);
       font-size:12.8px;
-      line-height:1.48;
+      line-height:1.46;
       white-space:pre-wrap;
       word-break:break-word;
       margin-bottom:7px;
+      display:-webkit-box;
+      -webkit-line-clamp:4;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
     }
 
     .dashboard-image{
       width:100%;
-      max-height:300px;
+      max-height:290px;
       object-fit:cover;
       border-radius:12px;
       display:block;
       background:var(--surface-3);
       border:1px solid var(--line-soft);
+      margin-top:2px;
+    }
+
+    .post-click-hint{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+      margin-top:7px;
     }
 
     .card-actions{
       display:flex;
       gap:5px;
+      flex-wrap:nowrap;
+      align-items:center;
+      margin-top:8px;
+      border-top:1px solid var(--line-soft);
+      padding-top:7px;
+    }
+
+    .mini-btn{
+      border:none;
+      cursor:pointer;
+      font-weight:950;
+      border-radius:999px;
+      padding:6px 8px;
+      font-size:10.5px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      text-decoration:none;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      min-height:29px;
+      white-space:nowrap;
+      line-height:1;
+    }
+
+    .mini-btn svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .mini-btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .btn-blue{background:rgba(76,201,255,.13);border-color:rgba(76,201,255,.20)}
+    .btn-green{background:rgba(61,220,132,.13);border-color:rgba(61,220,132,.20)}
+    .btn-red{background:rgba(255,93,115,.13);border-color:rgba(255,93,115,.20)}
+    .btn-purple{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.20)}
+
+    .like-dashboard-btn[data-liked="yes"]{
+      background:rgba(255,93,115,.14);
+      border-color:rgba(255,93,115,.24);
+      color:var(--red);
+    }
+
+    .like-dashboard-btn[data-liked="yes"] svg{
+      fill:currentColor;
+    }
+
+    .comment-dashboard-link{
+      min-width:0;
+    }
+
+    .share-btn{margin-left:auto}
+
+    .show-more-wrap{
+      margin-top:8px;
+      display:flex;
+      justify-content:center;
+    }
+
+    .show-more-btn{
+      border:none;
+      background:rgba(76,201,255,.14);
+      color:var(--text);
+      border:1px solid rgba(76,201,255,.22);
+      border-radius:13px;
+      padding:9px 12px;
+      font-size:12px;
+      font-weight:950;
+      cursor:pointer;
+      min-height:36px;
+      width:100%;
+    }
+
+    .photos-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:5px;
+    }
+
+    .photo-tile{
+      aspect-ratio:1/1;
+      border-radius:11px;
+      overflow:hidden;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      display:block;
+      text-decoration:none;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .photo-tile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .compact-tile{
+      width:100%;
+      text-decoration:none;
+      color:var(--text);
+      background:linear-gradient(135deg, rgba(255,255,255,.60), rgba(255,255,255,.20)), var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:9px;
+      display:grid;
+      grid-template-columns:1fr 28px;
+      gap:8px;
+      align-items:center;
+      min-height:66px;
+      box-shadow:var(--shadow-soft);
+      cursor:pointer;
+      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    html[data-theme="dark"] .compact-tile{
+      background:linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018)), var(--surface-2);
+    }
+
+    .compact-tile:hover{
+      border-color:rgba(76,201,255,.28);
+      box-shadow:0 14px 28px rgba(20,33,61,.09);
+    }
+
+    .compact-tile:active{transform:scale(.992)}
+    .compact-main{min-width:0}
+
+    .compact-name{
+      font-size:13.8px;
+      line-height:1.22;
+      font-weight:950;
+      letter-spacing:-.015em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      min-width:0;
+      margin-bottom:4px;
+    }
+
+    .compact-meta{
+      color:var(--muted);
+      font-size:10.8px;
+      line-height:1.25;
+      font-weight:850;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      min-width:0;
+      margin-bottom:5px;
+    }
+
+    .compact-chips{
+      display:flex;
+      align-items:center;
+      gap:4px;
       flex-wrap:wrap;
+    }
+
+    .compact-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      border-radius:999px;
+      padding:4px 6px;
+      font-size:9.5px;
+      font-weight:950;
+      line-height:1;
+      color:var(--text);
+      background:var(--surface);
+      border:1px solid var(--line);
+      white-space:nowrap;
+    }
+
+    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+
+    .compact-arrow{
+      width:28px;
+      height:28px;
+      border-radius:11px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      flex-shrink:0;
+    }
+
+    .compact-arrow svg{
+      width:15px;
+      height:15px;
+      display:block;
+    }
+
+    .network-shell{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      margin-bottom:7px;
+    }
+
+    .network-head{
+      padding:9px;
+      border-bottom:1px solid var(--line-soft);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .network-head-title{
+      font-size:14px;
+      font-weight:950;
+    }
+
+    .network-close{
+      width:31px;
+      height:31px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .network-close svg{
+      width:14px;
+      height:14px;
+      display:block;
+    }
+
+    .network-body{
+      padding:9px;
+      display:grid;
+      gap:10px;
+    }
+
+    .network-section{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:9px;
+    }
+
+    .network-title{
+      font-size:12.5px;
+      font-weight:950;
+      margin-bottom:8px;
+    }
+
+    .network-list{
+      display:grid;
+      gap:7px;
+    }
+
+    .person-card{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:8px;
+      display:flex;
+      gap:8px;
       align-items:center;
     }
 
     .person-avatar,
     .person-avatar-placeholder{
-      width:46px;
-      height:46px;
+      width:40px;
+      height:40px;
       border-radius:50%;
       flex-shrink:0;
       border:1px solid var(--line);
@@ -599,17 +939,17 @@
       align-items:center;
       justify-content:center;
       color:var(--muted);
-      font-size:10px;
+      font-size:9px;
       text-align:center;
-      padding:6px;
+      padding:5px;
     }
 
     .person-body{min-width:0;flex:1}
 
     .person-name{
-      font-size:14px;
+      font-size:13px;
       font-weight:950;
-      line-height:1.3;
+      line-height:1.25;
     }
 
     .person-name a{
@@ -620,17 +960,17 @@
     .person-name a:hover{text-decoration:underline}
 
     .person-username{
-      font-size:12px;
+      font-size:11px;
       color:var(--blue);
       font-weight:850;
-      margin-top:3px;
+      margin-top:2px;
     }
 
     .person-sub{
-      font-size:12px;
+      font-size:11px;
       color:var(--muted);
-      line-height:1.45;
-      margin-top:4px;
+      line-height:1.35;
+      margin-top:3px;
       white-space:pre-wrap;
       word-break:break-word;
       display:-webkit-box;
@@ -1167,7 +1507,7 @@
           <div id="trustCardTitle" class="trust-card-title">Trust Card</div>
           <div class="trust-card-sub">Your quick safety and reputation snapshot.</div>
         </div>
-        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">×</button>
+        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">Ã</button>
       </div>
 
       <div class="trust-score-box">
@@ -1337,6 +1677,7 @@
     let currentProfile = null;
     let dashboardPosts = [];
     let dashboardVisibleCount = 10;
+    let hasPostLikesTable = false;
 
     const PROFILE_TABLES = {
       users: ["users"],
@@ -1363,6 +1704,16 @@
       open: `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      like: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"></path>
+        </svg>
+      `,
+      comment: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       `,
       share: `
@@ -1908,7 +2259,7 @@
 
       if (cleanStatus === "banned") {
         moderationBadge.className = "moderation-badge moderation-ban";
-        moderationBadge.textContent = "×";
+        moderationBadge.textContent = "Ã";
         return;
       }
 
@@ -2103,6 +2454,112 @@
         ["deleted", "removed", "hidden"].includes(normalizeText(row?.status || ""));
     }
 
+    async function detectOptionalPostTables() {
+      try {
+        const { error } = await supabase
+          .from("post_likes")
+          .select("id", { count: "exact", head: true })
+          .limit(1);
+
+        hasPostLikesTable = !error;
+      } catch {
+        hasPostLikesTable = false;
+      }
+    }
+
+    async function loadDashboardPostMeta(postId) {
+      let likeCount = 0;
+      let liked = false;
+      let commentCount = 0;
+
+      if (!postId) return { likeCount, liked, commentCount };
+
+      if (hasPostLikesTable) {
+        try {
+          const [countRes, mineRes] = await Promise.all([
+            supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", postId),
+            supabase.from("post_likes").select("id").eq("post_id", postId).eq("user_id", currentUserId).limit(1)
+          ]);
+
+          if (!countRes.error) likeCount = countRes.count || 0;
+          if (!mineRes.error) liked = !!(mineRes.data && mineRes.data.length);
+        } catch {}
+      }
+
+      try {
+        const { count, error } = await supabase
+          .from("post_comments")
+          .select("id", { count: "exact", head: true })
+          .eq("post_id", postId);
+
+        if (!error) commentCount = count || 0;
+      } catch {}
+
+      return { likeCount, liked, commentCount };
+    }
+
+    async function refreshDashboardPostMeta(postId) {
+      if (!postId) return;
+
+      const likeBtn = document.querySelector(`.like-dashboard-btn[data-post-id="${postId}"]`);
+      const commentLink = document.querySelector(`.comment-dashboard-link[data-post-id="${postId}"]`);
+      const meta = await loadDashboardPostMeta(postId);
+
+      if (likeBtn) {
+        likeBtn.dataset.liked = meta.liked ? "yes" : "no";
+        const likeCount = likeBtn.querySelector(".like-count");
+        if (likeCount) likeCount.textContent = String(meta.likeCount);
+      }
+
+      if (commentLink) {
+        const commentCount = commentLink.querySelector(".comment-count");
+        if (commentCount) commentCount.textContent = String(meta.commentCount);
+      }
+    }
+
+    async function toggleDashboardLike(postId, btn) {
+      if (!currentUserId || !postId || !hasPostLikesTable || !btn) return;
+
+      btn.disabled = true;
+
+      try {
+        const { data: existing, error: findError } = await supabase
+          .from("post_likes")
+          .select("id")
+          .eq("post_id", postId)
+          .eq("user_id", currentUserId)
+          .limit(1);
+
+        if (findError) throw findError;
+
+        if (existing && existing.length) {
+          const { error } = await supabase
+            .from("post_likes")
+            .delete()
+            .eq("id", existing[0].id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("post_likes")
+            .insert({
+              post_id: postId,
+              user_id: currentUserId,
+              created_at: nowIso()
+            });
+
+          if (error) throw error;
+        }
+
+        await refreshDashboardPostMeta(postId);
+      } catch (err) {
+        console.error("Profile like failed:", err);
+        alert("Could not update like.");
+      }
+
+      btn.disabled = false;
+    }
+
     function renderDashboardPosts() {
       dashboardList.innerHTML = "";
 
@@ -2131,24 +2588,44 @@
         card.className = "dashboard-card";
 
         card.innerHTML = `
-          <a class="dashboard-post-link" href="${postUrl}">
+          <a class="dashboard-post-link" href="${postUrl}" aria-label="Open post">
             <div class="dashboard-top">
-              <div class="dashboard-label ${communityPost ? "community" : ""}">${communityPost ? "Community Post" : "Recent Post"}</div>
+              <div class="dashboard-label ${communityPost ? "community" : ""}">${communityPost ? "Community Post" : "Post"}</div>
               <div class="dashboard-time">${escapeHtml(formatDate(post.created_at || post.createdAt))}</div>
             </div>
             ${title ? `<div class="dashboard-title">${escapeHtml(title)}</div>` : ""}
             ${caption ? `<div class="dashboard-text">${escapeHtml(caption)}</div>` : ""}
             ${imageUrl ? `<img class="dashboard-image" src="${escapeHtml(imageUrl)}" alt="Post image">` : ""}
+            <div class="post-click-hint">Tap post to open</div>
           </a>
 
           <div class="card-actions">
-            <a href="${postUrl}" class="mini-btn btn-blue">${ICONS.open}<span>Open</span></a>
-            <button class="mini-btn btn-green share-btn" data-post-id="${escapeHtml(postId)}" type="button">${ICONS.share}<span>Share</span></button>
+            <button class="mini-btn btn-red like-dashboard-btn" data-post-id="${escapeHtml(postId)}" data-liked="no" type="button" ${hasPostLikesTable ? "" : "disabled"} title="${hasPostLikesTable ? "Like post" : "Like table not enabled"}">
+              ${ICONS.like}
+              <span class="like-count">0</span>
+            </button>
+
+            <a href="${postUrl}#comments" class="mini-btn btn-purple comment-dashboard-link" data-post-id="${escapeHtml(postId)}" title="View comments">
+              ${ICONS.comment}
+              <span class="comment-count">0</span>
+            </a>
+
+            <button class="mini-btn btn-green share-btn" data-post-id="${escapeHtml(postId)}" type="button">
+              ${ICONS.share}
+              <span>Share</span>
+            </button>
           </div>
         `;
 
         const img = card.querySelector(".dashboard-image");
         if (img) img.addEventListener("error", () => { img.style.display = "none"; });
+
+        const likeBtn = card.querySelector(".like-dashboard-btn");
+        if (likeBtn && hasPostLikesTable) {
+          likeBtn.addEventListener("click", async () => {
+            await toggleDashboardLike(postId, likeBtn);
+          });
+        }
 
         const shareBtn = card.querySelector(".share-btn");
         if (shareBtn) {
@@ -2158,6 +2635,10 @@
         }
 
         dashboardList.appendChild(card);
+      });
+
+      Promise.all(visiblePosts.map(post => refreshDashboardPostMeta(post.id || ""))).catch(err => {
+        console.warn("Dashboard post meta skipped:", err?.message || err);
       });
 
       showMoreWrap.classList.toggle("hidden", dashboardPosts.length <= dashboardVisibleCount);
@@ -2242,8 +2723,8 @@
 
       list.forEach(event => {
         const locationText = locationTextFrom(event);
-        const dateTime = [event.date, event.time].filter(Boolean).join(" • ");
-        const meta = [locationText, dateTime].filter(Boolean).join(" • ");
+        const dateTime = [event.date, event.time].filter(Boolean).join(" â¢ ");
+        const meta = [locationText, dateTime].filter(Boolean).join(" â¢ ");
 
         const chips = [
           `<span class="compact-chip ${typeLabel === "Created" ? "chip-green" : "chip-purple"}">${escapeHtml(typeLabel)}</span>`,
@@ -2885,6 +3366,7 @@
 
         currentUserId = uid;
 
+        await detectOptionalPostTables();
         await withTimeout(loadEverything(uid), 18000, "Profile took too long to load.");
 
         supabase.auth.onAuthStateChange((event, session) => {
@@ -2911,7 +3393,7 @@
 
       PRESERVED:
       - Light theme default.
-      - Dashboard posts with Open + Share.
+      - Dashboard posts are clickable; action row now shows Like + Comments + Share instead of an extra Open button.
       - Photos grid.
       - Compact Events, Places, and Communities tiles.
       - Network stays hidden until Followers / Following is clicked.
@@ -2919,7 +3401,7 @@
       - Inbox badge = pending message_requests + unread incoming chat_messages only.
 
       FIXED:
-      - Removed text encoding glitches from × and • symbols.
+      - Removed text encoding glitches from Ã and â¢ symbols.
       - Added keyboard support for Trust Card.
       - Escape key closes Trust Card.
     */
@@ -2930,7 +3412,7 @@
       - Made profile header, avatar, display name, username, badges, and action buttons smaller.
       - Converted Trust/Points area into a sleek low-height strip.
       - Tightened tabs, cards, network rows, and empty/loading boxes.
-      - Removed text encoding glitches from × and • symbols.
+      - Removed text encoding glitches from Ã and â¢ symbols.
       - Kept existing Supabase logic and page features intact.
     */
   </script>
