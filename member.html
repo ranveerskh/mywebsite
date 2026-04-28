@@ -25,6 +25,7 @@
       --purple:#7f63ff;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
+      --modal-bg:rgba(15,23,42,.38);
       --shadow:0 16px 30px rgba(20,33,61,.08);
     }
 
@@ -44,6 +45,7 @@
       --purple:#a78bfa;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
+      --modal-bg:rgba(0,0,0,.56);
       --shadow:0 20px 40px rgba(0,0,0,.18);
     }
 
@@ -155,20 +157,9 @@
       flex-shrink:0;
     }
 
-    .menu-item.danger{
-      background:rgba(255,93,115,.13);
-      border-color:rgba(255,93,115,.22);
-    }
-
-    .menu-item.purple{
-      background:rgba(167,139,250,.13);
-      border-color:rgba(167,139,250,.22);
-    }
-
-    .menu-item.green{
-      background:rgba(61,220,132,.13);
-      border-color:rgba(61,220,132,.22);
-    }
+    .menu-item.danger{background:rgba(255,93,115,.13);border-color:rgba(255,93,115,.22)}
+    .menu-item.purple{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.22)}
+    .menu-item.green{background:rgba(61,220,132,.13);border-color:rgba(61,220,132,.22)}
 
     .panel{
       background:var(--surface);
@@ -255,9 +246,7 @@
       background:#20c76f;
       color:#ffffff;
       border:2px solid rgba(255,255,255,.92);
-      box-shadow:
-        0 0 0 3px rgba(32,199,111,.18),
-        0 8px 18px rgba(32,199,111,.22);
+      box-shadow:0 0 0 3px rgba(32,199,111,.18),0 8px 18px rgba(32,199,111,.22);
       flex-shrink:0;
     }
 
@@ -377,16 +366,11 @@
       cursor:not-allowed;
     }
 
-    .badge-blue,
-    .pill-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .badge-green,
-    .pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .badge-yellow,
-    .pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .badge-red,
-    .pill-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
-    .badge-purple,
-    .pill-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
+    .badge-blue,.pill-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
+    .badge-green,.pill-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
+    .badge-yellow,.pill-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
+    .badge-red,.pill-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-purple,.pill-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
 
     .trust-row{
       display:grid;
@@ -398,6 +382,16 @@
       border-radius:16px;
       padding:10px;
       margin-top:10px;
+      cursor:pointer;
+      transition:transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .trust-row:hover,
+    .trust-row:focus-visible{
+      border-color:rgba(76,201,255,.28);
+      background:var(--surface-3);
+      transform:translateY(-1px);
+      outline:none;
     }
 
     .trust-label{
@@ -426,6 +420,7 @@
       width:50%;
       border-radius:999px;
       background:linear-gradient(90deg, var(--yellow), var(--green));
+      transition:width .22s ease;
     }
 
     .points-pill{
@@ -629,6 +624,164 @@
     html[data-theme="dark"] .success{color:#9cf0bf}
     html[data-theme="dark"] .error{color:#ffb3bd}
 
+    .trust-modal{
+      position:fixed;
+      inset:0;
+      z-index:100;
+      background:var(--modal-bg);
+      backdrop-filter:blur(10px);
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding:14px;
+    }
+
+    .trust-card{
+      width:min(760px,100%);
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:0 26px 70px rgba(0,0,0,.30);
+      padding:14px;
+      max-height:86vh;
+      overflow:auto;
+    }
+
+    .trust-card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .trust-card-title{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      line-height:1.2;
+    }
+
+    .trust-card-sub{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:3px;
+    }
+
+    .trust-close{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:13px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      color:var(--text);
+      cursor:pointer;
+      font-size:20px;
+      font-weight:950;
+      line-height:1;
+      flex-shrink:0;
+    }
+
+    .trust-score-box{
+      background:linear-gradient(135deg, rgba(76,201,255,.13), rgba(61,220,132,.10));
+      border:1px solid rgba(76,201,255,.18);
+      border-radius:18px;
+      padding:12px;
+      display:grid;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .trust-score-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .trust-score-number{
+      font-size:28px;
+      font-weight:950;
+      letter-spacing:-.04em;
+    }
+
+    .trust-score-name{
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:950;
+    }
+
+    .trust-mini-track{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:var(--surface-3);
+      border:1px solid var(--line-soft);
+      overflow:hidden;
+    }
+
+    .trust-mini-fill{
+      width:50%;
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--red), var(--yellow), var(--green));
+    }
+
+    .trust-info-grid{
+      display:grid;
+      gap:8px;
+    }
+
+    .trust-info-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:11px;
+    }
+
+    .trust-info-card strong{
+      display:block;
+      font-size:13px;
+      margin-bottom:5px;
+    }
+
+    .trust-info-card p{
+      font-size:12px;
+      line-height:1.48;
+      color:var(--muted);
+    }
+
+    .trust-list{
+      display:grid;
+      gap:7px;
+      margin-top:8px;
+    }
+
+    .trust-list-item{
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .trust-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--green);
+      margin-top:5px;
+      flex-shrink:0;
+    }
+
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -665,24 +818,9 @@
       position:relative;
     }
 
-    .nav-link.active{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-    }
-
-    .icon-svg{
-      width:20px;
-      height:20px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .icon-svg svg{
-      width:20px;
-      height:20px;
-      display:block;
-    }
+    .nav-link.active{background:rgba(76,201,255,.14);color:var(--text)}
+    .icon-svg{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+    .icon-svg svg{width:20px;height:20px;display:block}
 
     .nav-badge{
       position:absolute;
@@ -718,12 +856,15 @@
       .bottom-nav{padding:7px;gap:5px}
       .nav-link{font-size:10px;padding:8px 3px}
       .profile-menu{right:0;width:178px}
+      .trust-row{grid-template-columns:1fr}
+      .points-pill{width:max-content}
+      .trust-modal{align-items:flex-end;padding:10px}
+      .trust-card{border-radius:22px 22px 18px 18px}
     }
 
     @media(max-width:390px){
       .tab-btn{font-size:9.8px}
-      .profile-pill-btn,
-      .badge{font-size:10.4px;padding:6px 8px}
+      .profile-pill-btn,.badge{font-size:10.4px;padding:6px 8px}
     }
   </style>
 </head>
@@ -837,7 +978,7 @@
         </div>
       </div>
 
-      <div class="trust-row">
+      <div id="trustRow" class="trust-row" tabindex="0" role="button" aria-label="Open Trust Card">
         <div>
           <div class="trust-label">
             <span>Trust Bar</span>
@@ -891,6 +1032,54 @@
       <div id="contentList" class="list"></div>
       <button id="showMoreBtn" class="show-more hidden" type="button">Show More</button>
       <div id="contentEmpty" class="empty-box hidden">Nothing to show yet.</div>
+    </div>
+  </div>
+
+  <div id="trustModal" class="trust-modal hidden" aria-hidden="true">
+    <div class="trust-card" role="dialog" aria-modal="true" aria-labelledby="trustCardTitle">
+      <div class="trust-card-head">
+        <div>
+          <div id="trustCardTitle" class="trust-card-title">Trust Card</div>
+          <div class="trust-card-sub">A quick safety snapshot for this OwnSpace member.</div>
+        </div>
+        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">Ã</button>
+      </div>
+
+      <div class="trust-score-box">
+        <div class="trust-score-top">
+          <div id="trustCardScore" class="trust-score-number">50%</div>
+          <div id="trustCardLevel" class="trust-score-name">Normal</div>
+        </div>
+        <div class="trust-mini-track">
+          <div id="trustCardFill" class="trust-mini-fill"></div>
+        </div>
+      </div>
+
+      <div class="trust-info-grid">
+        <div class="trust-info-card">
+          <strong>What this means</strong>
+          <p id="trustCardMeaning">This member has a normal starting trust level. Trust is about safety and rule-following, not popularity.</p>
+        </div>
+
+        <div class="trust-info-card">
+          <strong>Trust can improve with</strong>
+          <div class="trust-list">
+            <div class="trust-list-item"><span class="trust-dot"></span><span>Verification and a real, complete profile.</span></div>
+            <div class="trust-list-item"><span class="trust-dot"></span><span>Safe activity, clean posts, and respectful behavior.</span></div>
+            <div class="trust-list-item"><span class="trust-dot"></span><span>Helpful valid reports and community-safe actions.</span></div>
+          </div>
+        </div>
+
+        <div class="trust-info-card">
+          <strong>Trust can drop after</strong>
+          <p>Warnings, hidden posts, spam, fake verification, harassment, suspensions, or serious policy violations.</p>
+        </div>
+
+        <div class="trust-info-card">
+          <strong>Points are separate</strong>
+          <p>Points reward activity. Trust reflects safety. Buying or earning points does not increase Trust.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -973,9 +1162,17 @@
     const privacyBadge = document.getElementById("privacyBadge");
     const moderationBadge = document.getElementById("moderationBadge");
 
+    const trustRow = document.getElementById("trustRow");
     const trustLabel = document.getElementById("trustLabel");
     const trustFill = document.getElementById("trustFill");
     const pointsPill = document.getElementById("pointsPill");
+
+    const trustModal = document.getElementById("trustModal");
+    const trustCloseBtn = document.getElementById("trustCloseBtn");
+    const trustCardScore = document.getElementById("trustCardScore");
+    const trustCardLevel = document.getElementById("trustCardLevel");
+    const trustCardFill = document.getElementById("trustCardFill");
+    const trustCardMeaning = document.getElementById("trustCardMeaning");
 
     const followersCount = document.getElementById("followersCount");
     const followingCount = document.getElementById("followingCount");
@@ -1011,6 +1208,8 @@
     let eventsData = [];
     let placesData = [];
     let communitiesData = [];
+
+    const BLOCK_TABLES = ["blocked_users", "user_blocks", "blocks"];
 
     const ICONS = {
       external: `
@@ -1097,7 +1296,10 @@
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") profileMenu.classList.add("hidden");
+      if (e.key === "Escape") {
+        profileMenu.classList.add("hidden");
+        closeTrustCard();
+      }
     });
 
     function closeProfileMenu() {
@@ -1129,12 +1331,7 @@
 
     function getParamUid() {
       const params = new URLSearchParams(window.location.search);
-      return (
-        params.get("uid") ||
-        params.get("userId") ||
-        params.get("id") ||
-        ""
-      ).trim();
+      return (params.get("uid") || params.get("userId") || params.get("id") || "").trim();
     }
 
     function normalizeUrl(url) {
@@ -1162,9 +1359,7 @@
     function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-          return value;
-        }
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
       return fallback;
     }
@@ -1215,6 +1410,12 @@
       );
     }
 
+    function getDateMs(value) {
+      if (!value) return 0;
+      const ms = new Date(value).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    }
+
     async function selectProfileByColumn(table, column, uid) {
       try {
         const { data, error } = await supabase
@@ -1245,21 +1446,18 @@
         trustScore: clampNumber(getField(d, ["trust_score", "trustScore"], 50), 0, 100, 50),
         pointsBalance: clampNumber(getField(d, ["points_balance", "pointsBalance", "earned_points", "earnedPoints"], 0), 0, 999999999, 0),
         moderationStatus: String(getField(d, ["moderation_status", "moderationStatus", "status"], "") || ""),
-        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
-        softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated"], false),
+        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin", "hidden_by_admin", "hiddenByAdmin"], false),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated", "deleted"], false),
+        banned: getBool(d, ["banned", "is_banned", "isBanned"], false),
+        suspended: getBool(d, ["suspended", "is_suspended", "isSuspended"], false),
         city: String(getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"], "") || ""),
         blockedUsers: getArray(d, ["blocked_users", "blockedUsers"])
       };
     }
 
-    function getDateMs(value) {
-      if (!value) return 0;
-      const ms = new Date(value).getTime();
-      return Number.isFinite(ms) ? ms : 0;
-    }
-
     function normalizePost(raw = {}, sourceTable = "") {
       const d = raw || {};
+      const status = normalizeText(getField(d, ["status", "post_status", "postStatus"], "") || "");
 
       return {
         id: String(getField(d, ["id"], "") || ""),
@@ -1267,7 +1465,9 @@
         userId: String(getField(d, ["user_id", "userId", "author_id", "authorId", "owner_id", "ownerId", "created_by", "createdBy", "uid"], "") || ""),
         caption: String(getField(d, ["caption", "text", "content", "body", "description"], "") || ""),
         imageURL: String(getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"], "") || ""),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted",
+        hidden:
+          !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted) ||
+          ["deleted", "removed", "hidden"].includes(status),
         createdAt: d.created_at || d.createdAt || d.timestamp || null,
         createdAtMs: getDateMs(d.created_at || d.createdAt || d.timestamp)
       };
@@ -1275,6 +1475,7 @@
 
     function normalizeEvent(raw = {}) {
       const d = raw || {};
+      const status = normalizeText(getField(d, ["status", "event_status", "eventStatus"], "") || "");
 
       return {
         id: String(getField(d, ["id"], "") || ""),
@@ -1282,15 +1483,18 @@
         title: String(getField(d, ["title", "name"], "Untitled Event") || "Untitled Event"),
         description: String(getField(d, ["description", "desc"], "") || ""),
         city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
-        date: String(getField(d, ["date", "event_date", "eventDate"], "") || ""),
+        date: String(getField(d, ["date", "event_date", "eventDate", "event_at", "eventAt"], "") || ""),
         time: String(getField(d, ["time", "event_time", "eventTime"], "") || ""),
         visibility: String(getField(d, ["visibility", "event_visibility", "eventVisibility"], "public") || "public"),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted"
+        hidden:
+          !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted) ||
+          ["deleted", "removed", "hidden"].includes(status)
       };
     }
 
     function normalizePlace(raw = {}, source = "") {
       const d = raw || {};
+      const status = normalizeText(getField(d, ["status", "place_status", "placeStatus"], "") || "");
 
       return {
         id: String(getField(d, ["id"], "") || ""),
@@ -1300,12 +1504,15 @@
         city: String(getField(d, ["city", "location_city", "locationCity"], "") || ""),
         category: String(getField(d, ["category", "topic"], "Place") || "Place"),
         description: String(getField(d, ["description", "desc", "notes"], "") || ""),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted"
+        hidden:
+          !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted) ||
+          ["deleted", "removed", "hidden"].includes(status)
       };
     }
 
     function normalizeCommunity(raw = {}) {
       const d = raw || {};
+      const status = normalizeText(getField(d, ["status", "community_status", "communityStatus"], "") || "");
 
       return {
         id: String(getField(d, ["id"], "") || ""),
@@ -1314,7 +1521,9 @@
         description: String(getField(d, ["description", "desc", "about"], "") || ""),
         privacy: String(getField(d, ["privacy", "type", "visibility"], "Public") || "Public"),
         memberCount: clampNumber(getField(d, ["member_count", "memberCount", "members_count", "membersCount"], 0), 0, 9999999, 0),
-        hidden: !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted) || String(d.status || "").toLowerCase() === "deleted"
+        hidden:
+          !!(d.hidden || d.hidden_by_admin || d.hiddenByAdmin || d.soft_deleted || d.softDeleted || d.deleted) ||
+          ["deleted", "removed", "hidden"].includes(status)
       };
     }
 
@@ -1325,12 +1534,159 @@
       return d.toLocaleDateString();
     }
 
+    function getTrustLevel(score) {
+      const s = clampNumber(score, 0, 100, 50);
+      if (s <= 24) return "Risky";
+      if (s <= 49) return "Low Trust";
+      if (s <= 69) return "Normal";
+      if (s <= 84) return "Trusted";
+      return "Highly Trusted";
+    }
+
+    function getTrustMeaning(score) {
+      const level = getTrustLevel(score);
+
+      if (level === "Risky") {
+        return "This account has a very low Trust level. Be careful and use report/block tools if something feels unsafe.";
+      }
+
+      if (level === "Low Trust") {
+        return "This member has a lower Trust level. It may improve with safe activity, verification, and rule-following.";
+      }
+
+      if (level === "Trusted") {
+        return "This member has a strong Trust level based on safer account behavior and activity.";
+      }
+
+      if (level === "Highly Trusted") {
+        return "This member has a very strong Trust level. Trust can still drop if rules are broken.";
+      }
+
+      return "This member has a normal Trust level. Trust is about safety and rule-following, not popularity.";
+    }
+
+    function updateTrustCard() {
+      const score = clampNumber(targetProfile?.trustScore, 0, 100, 50);
+      const level = getTrustLevel(score);
+
+      trustCardScore.textContent = `${score}%`;
+      trustCardLevel.textContent = level;
+      trustCardFill.style.width = `${score}%`;
+      trustCardMeaning.textContent = getTrustMeaning(score);
+    }
+
+    function openTrustCard() {
+      updateTrustCard();
+      trustModal.classList.remove("hidden");
+      trustModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => trustCloseBtn.focus(), 30);
+    }
+
+    function closeTrustCard() {
+      if (trustModal.classList.contains("hidden")) return;
+      trustModal.classList.add("hidden");
+      trustModal.setAttribute("aria-hidden", "true");
+    }
+
+    trustRow.addEventListener("click", openTrustCard);
+    trustRow.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openTrustCard();
+      }
+    });
+
+    trustCloseBtn.addEventListener("click", closeTrustCard);
+
+    trustModal.addEventListener("click", (e) => {
+      if (e.target === trustModal) closeTrustCard();
+    });
+
+    function getBlockerUid(row) {
+      return String(getField(row, [
+        "blocker_id", "blockerId",
+        "from_user_id", "fromUserId",
+        "user_id", "userId",
+        "owner_id", "ownerId",
+        "uid"
+      ], "") || "");
+    }
+
+    function getBlockedUid(row) {
+      return String(getField(row, [
+        "blocked_id", "blockedId",
+        "blocked_user_id", "blockedUserId",
+        "target_id", "targetId",
+        "to_user_id", "toUserId",
+        "member_id", "memberId"
+      ], "") || "");
+    }
+
+    function isInactiveBlockRow(row) {
+      const status = normalizeText(getField(row, ["status", "block_status", "blockStatus"], "active") || "active");
+      return ["inactive", "removed", "deleted", "unblocked", "cancelled", "canceled"].includes(status);
+    }
+
+    async function loadBlockRowsBetweenUsers() {
+      const rows = [];
+
+      for (const table of BLOCK_TABLES) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .or(`blocker_id.eq.${currentUser.id},blocked_id.eq.${currentUser.id},from_user_id.eq.${currentUser.id},to_user_id.eq.${currentUser.id}`);
+
+          if (!error) {
+            (data || []).forEach(row => rows.push({ ...row, __table: table }));
+            continue;
+          }
+
+          if (isMissingTableError(error) || isSchemaColumnError(error)) {
+            const fallback = await supabase.from(table).select("*");
+            if (!fallback.error) {
+              (fallback.data || []).forEach(row => {
+                const blocker = getBlockerUid(row);
+                const blocked = getBlockedUid(row);
+                if (blocker === currentUser.id || blocked === currentUser.id) rows.push({ ...row, __table: table });
+              });
+            }
+          }
+        } catch {}
+      }
+
+      return rows.filter(row => {
+        if (isInactiveBlockRow(row)) return false;
+        const blocker = getBlockerUid(row);
+        const blocked = getBlockedUid(row);
+        return (
+          (blocker === currentUser.id && blocked === targetUid) ||
+          (blocker === targetUid && blocked === currentUser.id)
+        );
+      });
+    }
+
     function viewerBlockedTarget() {
-      return Array.isArray(viewerProfile?.blockedUsers) && viewerProfile.blockedUsers.includes(targetUid);
+      const arrayBlocked = Array.isArray(viewerProfile?.blockedUsers) && viewerProfile.blockedUsers.includes(targetUid);
+      const tableBlocked = !!window.__viewerBlockedTarget;
+      return arrayBlocked || tableBlocked;
     }
 
     function targetBlockedViewer() {
-      return Array.isArray(targetProfile?.blockedUsers) && targetProfile.blockedUsers.includes(currentUser?.id);
+      const arrayBlocked = Array.isArray(targetProfile?.blockedUsers) && targetProfile.blockedUsers.includes(currentUser?.id);
+      const tableBlocked = !!window.__targetBlockedViewer;
+      return arrayBlocked || tableBlocked;
+    }
+
+    function profileRestricted(profile) {
+      if (!profile) return true;
+      const status = normalizeText(profile.moderationStatus);
+      return !!(
+        profile.isHiddenByAdmin ||
+        profile.softDeleted ||
+        profile.banned ||
+        ["banned", "deleted", "removed", "hidden", "soft_deleted"].includes(status)
+      );
     }
 
     function canViewFullProfile() {
@@ -1338,7 +1694,7 @@
       if (viewerBlockedTarget()) return false;
       if (targetBlockedViewer()) return false;
       if (targetProfile.uid === currentUser.id) return true;
-      if (targetProfile.isHiddenByAdmin || targetProfile.softDeleted || normalizeText(targetProfile.moderationStatus) === "banned") return false;
+      if (profileRestricted(targetProfile)) return false;
       if (!targetProfile.isPrivate) return true;
       return isFollowing;
     }
@@ -1381,11 +1737,22 @@
       const publicRow = lookups[0] || lookups[1] || lookups[2] || lookups[3] || {};
       const userRow = lookups[4] || lookups[5] || lookups[6] || lookups[7] || {};
 
-      return normalizeProfile({
-        ...publicRow,
-        ...userRow,
-        uid
-      }, uid);
+      return normalizeProfile({ ...publicRow, ...userRow, uid }, uid);
+    }
+
+    async function refreshBlockState() {
+      window.__viewerBlockedTarget = false;
+      window.__targetBlockedViewer = false;
+
+      const rows = await loadBlockRowsBetweenUsers();
+
+      rows.forEach(row => {
+        const blocker = getBlockerUid(row);
+        const blocked = getBlockedUid(row);
+
+        if (blocker === currentUser.id && blocked === targetUid) window.__viewerBlockedTarget = true;
+        if (blocker === targetUid && blocked === currentUser.id) window.__targetBlockedViewer = true;
+      });
     }
 
     async function checkFollowState() {
@@ -1449,11 +1816,7 @@
     async function countRowsByAnyColumn(table, columns, value, filterFn = null) {
       for (const column of columns) {
         try {
-          let q = supabase
-            .from(table)
-            .select("id")
-            .eq(column, value);
-
+          let q = supabase.from(table).select("id").eq(column, value);
           if (filterFn) q = filterFn(q);
 
           const { data, error } = await q;
@@ -1486,11 +1849,7 @@
     async function queryRowsAnyColumn(table, columns, uid, orderColumn = "") {
       for (const column of columns) {
         try {
-          let q = supabase
-            .from(table)
-            .select("*")
-            .eq(column, uid);
-
+          let q = supabase.from(table).select("*").eq(column, uid);
           if (orderColumn) q = q.order(orderColumn, { ascending:false });
 
           const { data, error } = await q;
@@ -1531,11 +1890,7 @@
       let events = createdEventRows.map(normalizeEvent).filter(e => !e.hidden);
 
       const eventMemberRows = await queryRowsAnyColumn("event_members", ["user_id", "userId", "uid", "member_id", "memberId"], targetUid);
-      const joinedEventIds = [...new Set(
-        eventMemberRows
-          .map(row => row.event_id || row.eventId)
-          .filter(Boolean)
-      )];
+      const joinedEventIds = [...new Set(eventMemberRows.map(row => row.event_id || row.eventId).filter(Boolean))];
 
       if (joinedEventIds.length) {
         const allEvents = await queryAllRows("events");
@@ -1564,11 +1919,7 @@
       let communities = createdCommunityRows.map(normalizeCommunity).filter(c => !c.hidden);
 
       const communityMemberRows = await queryRowsAnyColumn("community_members", ["user_id", "userId", "uid", "member_id", "memberId"], targetUid);
-      const joinedCommunityIds = [...new Set(
-        communityMemberRows
-          .map(row => row.community_id || row.communityId || row.group_id || row.groupId)
-          .filter(Boolean)
-      )];
+      const joinedCommunityIds = [...new Set(communityMemberRows.map(row => row.community_id || row.communityId || row.group_id || row.groupId).filter(Boolean))];
 
       if (joinedCommunityIds.length) {
         const allCommunities = await queryAllRows("communities");
@@ -1640,9 +1991,11 @@
         moderationBadge.classList.add("hidden");
       }
 
-      trustLabel.textContent = `${targetProfile.trustScore}%`;
-      trustFill.style.width = `${targetProfile.trustScore}%`;
+      const trustScore = clampNumber(targetProfile.trustScore, 0, 100, 50);
+      trustLabel.textContent = `${trustScore}%`;
+      trustFill.style.width = `${trustScore}%`;
       pointsPill.textContent = `${targetProfile.pointsBalance} pts`;
+      updateTrustCard();
 
       const followText = followBtn.querySelector("span");
       followBtn.disabled = false;
@@ -1686,10 +2039,7 @@
 
       const variants = [
         payload,
-        {
-          ...payload,
-          user_id: payload.to_user_id
-        },
+        { ...payload, user_id: payload.to_user_id },
         {
           type: payload.type || "notification",
           title: payload.title || "",
@@ -1838,21 +2188,9 @@
           const now = nowIso();
 
           await insertWithFallback("follows", [
-            {
-              follower_id: currentUser.id,
-              following_id: targetUid,
-              created_at: now
-            },
-            {
-              followerId: currentUser.id,
-              followingId: targetUid,
-              createdAt: now
-            },
-            {
-              from_user_id: currentUser.id,
-              to_user_id: targetUid,
-              created_at: now
-            }
+            { follower_id: currentUser.id, following_id: targetUid, created_at: now },
+            { followerId: currentUser.id, followingId: targetUid, createdAt: now },
+            { from_user_id: currentUser.id, to_user_id: targetUid, created_at: now }
           ]);
 
           await createNotificationSafe({
@@ -1919,20 +2257,10 @@
       const nextList = [...new Set(nextBlockedUsers.map(String).filter(Boolean))];
 
       const payloadVariants = [
-        {
-          blocked_users: nextList,
-          updated_at: nowIso()
-        },
-        {
-          blockedUsers: nextList,
-          updatedAt: nowIso()
-        },
-        {
-          blocked_users: nextList
-        },
-        {
-          blockedUsers: nextList
-        }
+        { blocked_users: nextList, updated_at: nowIso() },
+        { blockedUsers: nextList, updatedAt: nowIso() },
+        { blocked_users: nextList },
+        { blockedUsers: nextList }
       ];
 
       const idColumns = ["uid", "id", "user_id", "userId"];
@@ -1944,16 +2272,12 @@
         for (const idColumn of idColumns) {
           for (const payload of payloadVariants) {
             try {
-              const { error } = await supabase
-                .from(table)
-                .update(payload)
-                .eq(idColumn, currentUser.id);
+              const { error } = await supabase.from(table).update(payload).eq(idColumn, currentUser.id);
 
               if (!error) {
                 worked = true;
               } else {
                 lastError = error;
-                if (!isSchemaColumnError(error)) console.warn("Block update failed:", error.message || error);
               }
             } catch (err) {
               lastError = err;
@@ -1963,10 +2287,78 @@
       }
 
       if (!worked) {
-        throw lastError || new Error("Could not update blocked users.");
+        console.warn("Old blocked_users array update skipped:", lastError?.message || lastError);
       }
 
       viewerProfile.blockedUsers = nextList;
+    }
+
+    async function insertBlockRow() {
+      const now = nowIso();
+      const payloads = [
+        {
+          blocker_id: currentUser.id,
+          blocked_id: targetUid,
+          from_user_id: currentUser.id,
+          to_user_id: targetUid,
+          status: "active",
+          created_at: now,
+          updated_at: now
+        },
+        {
+          blockerId: currentUser.id,
+          blockedId: targetUid,
+          fromUserId: currentUser.id,
+          toUserId: targetUid,
+          status: "active",
+          createdAt: now,
+          updatedAt: now
+        },
+        {
+          user_id: currentUser.id,
+          blocked_user_id: targetUid,
+          status: "active",
+          created_at: now
+        }
+      ];
+
+      for (const table of BLOCK_TABLES) {
+        for (const payload of payloads) {
+          try {
+            const { error } = await supabase.from(table).upsert(payload);
+            if (!error) return true;
+          } catch {}
+        }
+      }
+
+      return false;
+    }
+
+    async function deleteBlockRow() {
+      let worked = false;
+
+      for (const table of BLOCK_TABLES) {
+        const variants = [
+          { blocker_id: currentUser.id, blocked_id: targetUid },
+          { blockerId: currentUser.id, blockedId: targetUid },
+          { from_user_id: currentUser.id, to_user_id: targetUid },
+          { fromUserId: currentUser.id, toUserId: targetUid },
+          { user_id: currentUser.id, blocked_user_id: targetUid }
+        ];
+
+        for (const variant of variants) {
+          try {
+            let q = supabase.from(table).delete();
+            Object.entries(variant).forEach(([key, value]) => {
+              q = q.eq(key, value);
+            });
+            const { error } = await q;
+            if (!error) worked = true;
+          } catch {}
+        }
+      }
+
+      return worked;
     }
 
     async function handleBlockToggle() {
@@ -1993,7 +2385,11 @@
           ? currentList.filter(uid => uid !== targetUid)
           : [...currentList, targetUid];
 
+        if (currentlyBlocked) await deleteBlockRow();
+        else await insertBlockRow();
+
         await updateViewerBlockedUsers(nextList);
+        await refreshBlockState();
 
         renderProfile();
         renderCurrentTab();
@@ -2144,9 +2540,7 @@
         shown.forEach(renderPostCard);
       }
 
-      if (rows.length > visibleLimit) {
-        showMoreBtn.classList.remove("hidden");
-      }
+      if (rows.length > visibleLimit) showMoreBtn.classList.remove("hidden");
     }
 
     function renderPhotoTile(post) {
@@ -2166,7 +2560,6 @@
     function renderPostCard(post) {
       const card = document.createElement("div");
       card.className = "post-card";
-
       const postUrl = buildItemUrl("post", post.id, { source: post.sourceTable || "" });
 
       card.innerHTML = `
@@ -2182,16 +2575,9 @@
       `;
 
       const img = card.querySelector(".post-img");
-      if (img) {
-        img.addEventListener("error", () => {
-          img.style.display = "none";
-        });
-      }
+      if (img) img.addEventListener("error", () => { img.style.display = "none"; });
 
-      card.querySelector(".share-btn").addEventListener("click", () => {
-        sharePost(post);
-      });
-
+      card.querySelector(".share-btn").addEventListener("click", () => sharePost(post));
       contentList.appendChild(card);
     }
 
@@ -2203,9 +2589,9 @@
         <div class="card-title">${escapeHtml(event.title)}</div>
         <div class="badge-row">
           <span class="badge ${event.creatorId === targetUid ? "badge-green" : "badge-purple"}">${event.creatorId === targetUid ? "Created" : "Joined"}</span>
-          <span class="badge ${event.visibility === "private" ? "badge-yellow" : "badge-blue"}">${event.visibility === "private" ? "Private" : "Public"}</span>
+          <span class="badge ${normalizeText(event.visibility) === "private" ? "badge-yellow" : "badge-blue"}">${normalizeText(event.visibility) === "private" ? "Private" : "Public"}</span>
         </div>
-        <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" • ") || "Event")}</div>
+        <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" â¢ ") || "Event")}</div>
         <div class="desc">${escapeHtml(event.description || "No description.")}</div>
 
         <div class="card-actions">
@@ -2215,10 +2601,7 @@
         </div>
       `;
 
-      card.querySelector(".share-btn").addEventListener("click", () => {
-        shareEvent(event);
-      });
-
+      card.querySelector(".share-btn").addEventListener("click", () => shareEvent(event));
       contentList.appendChild(card);
     }
 
@@ -2232,7 +2615,7 @@
           <span class="badge badge-green">Added</span>
           ${place.category ? `<span class="badge badge-purple">${escapeHtml(place.category)}</span>` : ""}
         </div>
-        <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" • ") || "Place")}</div>
+        <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" â¢ ") || "Place")}</div>
         <div class="desc">${escapeHtml(place.description || "No description.")}</div>
 
         <div class="card-actions">
@@ -2242,10 +2625,7 @@
         </div>
       `;
 
-      card.querySelector(".share-btn").addEventListener("click", () => {
-        sharePlace(place);
-      });
-
+      card.querySelector(".share-btn").addEventListener("click", () => sharePlace(place));
       contentList.appendChild(card);
     }
 
@@ -2269,10 +2649,7 @@
         </div>
       `;
 
-      card.querySelector(".share-btn").addEventListener("click", () => {
-        shareCommunity(community);
-      });
-
+      card.querySelector(".share-btn").addEventListener("click", () => shareCommunity(community));
       contentList.appendChild(card);
     }
 
@@ -2321,12 +2698,8 @@
 
     function badgeTimeMs(value) {
       if (!value) return 0;
-      try {
-        const ms = new Date(value).getTime();
-        return Number.isFinite(ms) ? ms : 0;
-      } catch {
-        return 0;
-      }
+      const ms = new Date(value).getTime();
+      return Number.isFinite(ms) ? ms : 0;
     }
 
     function isInboxMessageUnreadForBadge(msg, uid) {
@@ -2337,10 +2710,7 @@
         if (msg.readValue === false) return true;
       }
 
-      if (msg.hasSeenColumn) {
-        return !msg.seenValue;
-      }
-
+      if (msg.hasSeenColumn) return !msg.seenValue;
       return false;
     }
 
@@ -2362,10 +2732,7 @@
         }
 
         try {
-          const { data, error } = await supabase
-            .from("message_requests")
-            .select("*")
-            .eq(targetColumn, uid);
+          const { data, error } = await supabase.from("message_requests").select("*").eq(targetColumn, uid);
 
           if (!error) {
             return (data || []).filter(row => {
@@ -2420,20 +2787,12 @@
             .in(attempt.threadColumn, threadIds)
             .order(attempt.orderColumn, { ascending: true });
 
-          if (!error) {
-            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
-          }
+          if (!error) return (data || []).map(row => readMessageForBadge(row, row.id || ""));
         } catch {}
 
         try {
-          const { data, error } = await supabase
-            .from("chat_messages")
-            .select("*")
-            .in(attempt.threadColumn, threadIds);
-
-          if (!error) {
-            return (data || []).map(row => readMessageForBadge(row, row.id || ""));
-          }
+          const { data, error } = await supabase.from("chat_messages").select("*").in(attempt.threadColumn, threadIds);
+          if (!error) return (data || []).map(row => readMessageForBadge(row, row.id || ""));
         } catch {}
       }
 
@@ -2443,7 +2802,6 @@
     async function countUnreadChatMessages(uid) {
       const threads = await loadInboxThreadsForBadge(uid);
       const threadIds = threads.map(thread => thread.id).filter(Boolean);
-
       if (!threadIds.length) return 0;
 
       const messages = await fetchInboxMessagesForBadge(threadIds);
@@ -2458,13 +2816,10 @@
       let total = 0;
 
       threads.forEach(thread => {
-        const list = (byThread.get(thread.id) || [])
-          .sort((a, b) => badgeTimeMs(a.createdAt) - badgeTimeMs(b.createdAt));
-
+        const list = (byThread.get(thread.id) || []).sort((a, b) => badgeTimeMs(a.createdAt) - badgeTimeMs(b.createdAt));
         if (!list.length) return;
 
         const newest = [...list].sort((a, b) => badgeTimeMs(b.createdAt) - badgeTimeMs(a.createdAt))[0];
-
         if (newest?.senderId === uid) return;
 
         const lastOutgoingMs = list
@@ -2560,6 +2915,8 @@
         return;
       }
 
+      await refreshBlockState();
+
       await Promise.all([
         checkFollowState(),
         loadCounts(),
@@ -2575,10 +2932,8 @@
       renderVisibilityPanels();
     }
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) {
-        window.location.href = "login.html";
-      }
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) window.location.href = "login.html";
     });
 
     loadProfile().catch(err => {
@@ -2589,14 +2944,16 @@
     /*
       OWNSPACE MEMBER PAGE UPDATE:
 
-      UPDATED:
-      - Top-right Search button replaced with compact menu button.
-      - Menu includes Share Profile, Block/Unblock User, Report User.
-      - Follow/Unfollow/Request and Message moved beside Public/Private badge as small pills.
-      - Removed old large action row and separate Following badge.
-      - Block toggles blocked_users / blockedUsers on users/public_profiles.
-      - If blocked, profile content and messaging are disabled.
-      - Existing tabs, posts, photos, events, places, communities, share buttons, and inbox badge logic preserved.
+      ADDED:
+      - Trust Bar is clickable/tappable.
+      - Opens a clean Trust Card popup.
+      - Trust Card shows score, label, short meaning, safe activity info, and separate Points note.
+      - Does not reveal full Trust algorithm, so users cannot game it.
+
+      IMPROVED:
+      - Block system now checks blocked_users / user_blocks / blocks tables plus old blocked_users array fallback.
+      - Block/Unblock tries the proper block table first and still updates old profile arrays for compatibility.
+      - Existing member profile UI, follow/request, message, report, share, tabs, posts, photos, events, places, communities, and inbox badge are preserved.
     */
   </script>
 </body>
