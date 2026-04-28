@@ -768,6 +768,21 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    async function withTimeout(promise, ms = 7000, fallback = null) {
+      let timer = null;
+
+      try {
+        return await Promise.race([
+          promise,
+          new Promise(resolve => {
+            timer = setTimeout(() => resolve(fallback), ms);
+          })
+        ]);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
+
     function setPageMessage(text = "", type = "") {
       pageMessage.textContent = text;
       pageMessage.className = `page-message ${type}`;
@@ -1182,12 +1197,17 @@
 
     async function selectMaybeSingle(table, column, value) {
       try {
-        const { data, error } = await supabase
-          .from(table)
-          .select("*")
-          .eq(column, value)
-          .maybeSingle();
+        const result = await withTimeout(
+          supabase
+            .from(table)
+            .select("*")
+            .eq(column, value)
+            .maybeSingle(),
+          4500,
+          { data: null, error: new Error("Profile lookup timed out.") }
+        );
 
+        const { data, error } = result || {};
         if (!error && data) return data;
       } catch {}
 
@@ -1562,6 +1582,28 @@
       } catch {}
     }
 
+    async function fetchThreadById(threadId) {
+      try {
+        const result = await withTimeout(
+          supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", threadId)
+            .maybeSingle(),
+          7000,
+          { data: null, error: new Error("Chat thread lookup timed out.") }
+        );
+
+        const { data, error } = result || {};
+
+        if (error) throw error;
+        return data || null;
+      } catch (err) {
+        console.error("Thread lookup failed:", err?.message || err);
+        return null;
+      }
+    }
+
     async function findExistingThreadByUsers(uidA, uidB) {
       const attempts = [
         ["participant_a", uidA, "participant_b", uidB],
@@ -1694,8 +1736,35 @@
       setModeUI("chat");
       listenToMessages(currentThreadId);
 
-      currentTargetProfile = await loadFullProfile(currentTargetUid);
+      currentTargetProfile = normalizeProfile({ uid: currentTargetUid, display_name: "Member" }, currentTargetUid);
       setHeader(currentTargetProfile);
+
+      loadFullProfile(currentTargetUid)
+        .then(profile => {
+          currentTargetProfile = profile;
+          setHeader(profile);
+
+          if (
+            profile.softDeleted ||
+            profile.isHiddenByAdmin ||
+            profile.moderationStatus === "banned"
+          ) {
+            showBlocked("This account is not available for chat.");
+            return;
+          }
+
+          iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
+          targetBlockedMe = (profile.blockedUsers || []).includes(currentUser.id);
+
+          if (iBlockedTarget || targetBlockedMe) {
+            showBlocked(
+              iBlockedTarget
+                ? "You blocked this member. Unblock them from settings to chat again."
+                : "This member is not available for chat."
+            );
+          }
+        })
+        .catch(() => {});
 
       if (
         currentTargetProfile.softDeleted ||
@@ -2322,7 +2391,13 @@
       }
 
       currentUser = authData.user;
-      currentViewerProfile = await loadFullProfile(currentUser.id);
+
+      currentViewerProfile = normalizeProfile({ uid: currentUser.id, display_name: "Me" }, currentUser.id);
+      loadFullProfile(currentUser.id)
+        .then(profile => {
+          currentViewerProfile = profile || currentViewerProfile;
+        })
+        .catch(() => {});
 
       const params = new URLSearchParams(window.location.search);
       const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
@@ -2335,16 +2410,10 @@
 
       try {
         if (threadIdParam) {
-          const { data, error } = await supabase
-            .from("chat_threads")
-            .select("*")
-            .eq("id", threadIdParam)
-            .maybeSingle();
-
-          if (error) throw error;
+          const data = await fetchThreadById(threadIdParam);
 
           if (!data) {
-            showBlocked("Chat not found.");
+            showBlocked("Chat not found or still loading. Go back to Inbox and open it again.");
             return;
           }
 
@@ -2420,7 +2489,15 @@
       FIXED:
       - Light theme is default now, but still respects osTheme / bwTheme.
       - Chat messages render first; read-update runs in the background.
+      - Profile loading no longer blocks chat screen from opening.
+      - Thread lookup has a timeout so the page never stays blank on Loading... forever.
       - This removes the 4s + 6s feeling caused by slow fallback read updates.
       - Broken tick text is replaced with clean SVG ticks.
       - Opening a chat marks incoming chat_messages as read/seen using detected schema columns.
-      - Read update no longer sends one payload with many possibly-
+      - Read update no longer sends one payload with many possibly-missing columns.
+      - It detects actual fields in returned chat_messages and updates only those.
+      - If detection fails, fallback updates run in parallel, not before rendering.
+      - Opening a chat marks matching message notifications as read in the background.
+      - Incoming request notification is marked read when the request is opened.
+      - Accepting/declining request clears request notifications.
+      - Re
