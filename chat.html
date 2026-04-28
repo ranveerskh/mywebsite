@@ -177,8 +177,6 @@
       flex-shrink:0;
     }
 
-    html[data-theme="dark"] .verified-badge{color:#8cffb4}
-
     .verified-badge svg{width:13px;height:13px;display:block}
 
     .chat-subline{
@@ -357,6 +355,12 @@
         var(--surface);
     }
 
+    #messagesList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
     .messages-loading,
     .messages-empty{
       margin:auto;
@@ -411,7 +415,7 @@
     }
 
     .bubble.mine{
-      background:linear-gradient(180deg, color-mix(in srgb, var(--mine) 92%, #fff 8%), var(--mine));
+      background:var(--mine);
       border-color:rgba(76,201,255,.16);
       border-bottom-right-radius:8px;
     }
@@ -442,18 +446,12 @@
     }
 
     .read-tick{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:18px;
-      height:14px;
-      margin-left:1px;
-      color:var(--muted);
-      flex-shrink:0;
+      color:var(--green);
+      font-weight:950;
+      letter-spacing:-2px;
+      font-size:12px;
+      line-height:1;
     }
-
-    .read-tick.seen{color:var(--green)}
-    .read-tick svg{width:18px;height:14px;display:block;stroke:currentColor}
 
     .composer-panel{
       background:var(--composer-bg);
@@ -591,7 +589,7 @@
           <div class="chat-subline">
             <span id="targetUsername" class="chat-username hidden">@username</span>
             <span class="state-dot" aria-hidden="true"></span>
-            <span id="topSub" class="chat-state">Loading...</span>
+            <span id="topSub" class="chat-state">Opening...</span>
           </div>
         </div>
       </div>
@@ -646,7 +644,7 @@
       <div id="messagesPanel" class="messages-panel panel hidden">
         <div class="messages-toolbar">
           <div class="toolbar-title">Conversation</div>
-          <div id="toolbarChip" class="toolbar-chip">Secure chat</div>
+          <div id="toolbarChip" class="toolbar-chip">Direct chat</div>
         </div>
 
         <div id="messagesBody" class="messages-body">
@@ -730,11 +728,11 @@
     let messageChannels = [];
     let requestChannel = null;
     let threadChannel = null;
-    let refreshTimer = null;
 
     let iBlockedTarget = false;
     let targetBlockedMe = false;
-    let readMarkingThreads = new Set();
+    let lastUnreadSignature = "";
+    let refreshTimer = null;
 
     function getStoredTheme() {
       return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
@@ -744,6 +742,7 @@
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
+
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -764,51 +763,6 @@
       });
     }
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function withTimeout(promise, ms = 7000, fallback = null) {
-      let timer = null;
-
-      try {
-        return await Promise.race([
-          promise,
-          new Promise(resolve => {
-            timer = setTimeout(() => resolve(fallback), ms);
-          })
-        ]);
-      } finally {
-        if (timer) clearTimeout(timer);
-      }
-    }
-
-    async function getCurrentUserFast() {
-      try {
-        const sessionResult = await withTimeout(
-          supabase.auth.getSession(),
-          2500,
-          null
-        );
-
-        const sessionUser = sessionResult?.data?.session?.user || null;
-        if (sessionUser) return sessionUser;
-      } catch {}
-
-      try {
-        const userResult = await withTimeout(
-          supabase.auth.getUser(),
-          4500,
-          null
-        );
-
-        const authUser = userResult?.data?.user || null;
-        if (authUser) return authUser;
-      } catch {}
-
-      return null;
-    }
-
     function setPageMessage(text = "", type = "") {
       pageMessage.textContent = text;
       pageMessage.className = `page-message ${type}`;
@@ -827,10 +781,6 @@
 
     function nowIso() {
       return new Date().toISOString();
-    }
-
-    function hasOwn(obj, key) {
-      return Object.prototype.hasOwnProperty.call(obj || {}, key);
     }
 
     function getField(raw, names) {
@@ -855,6 +805,7 @@
 
     function formatTime(ts) {
       if (!ts) return "Just now";
+
       try {
         const d = new Date(ts);
         if (Number.isNaN(d.getTime())) return "Just now";
@@ -875,10 +826,8 @@
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
 
-        const key = d.toDateString();
-
-        if (key === today.toDateString()) return "Today";
-        if (key === yesterday.toDateString()) return "Yesterday";
+        if (d.toDateString() === today.toDateString()) return "Today";
+        if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
 
         return d.toLocaleDateString([], {
           month: "short",
@@ -896,7 +845,7 @@
       } catch {}
 
       try {
-        localStorage.setItem("ownspaceBadgeRefreshAt", String(Date.now()));
+        localStorage.setItem("ownspace_badges_refresh", String(Date.now()));
       } catch {}
 
       try {
@@ -904,17 +853,6 @@
           window.OwnSpaceBadges.refresh();
         }
       } catch {}
-    }
-
-    function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-      return (
-        msg.includes("does not exist") ||
-        msg.includes("schema cache") ||
-        msg.includes("could not find") ||
-        msg.includes("column") ||
-        msg.includes("relation")
-      );
     }
 
     async function tryUpdate(table, payload, buildQuery) {
@@ -948,203 +886,6 @@
       }
 
       throw lastError || new Error(`Could not insert into ${table}.`);
-    }
-
-    function buildNotificationReadPayloads() {
-      const now = nowIso();
-
-      return [
-        { is_read: true, read_at: now, updated_at: now },
-        { is_read: true, updated_at: now },
-        { is_read: true },
-        { read: true, updated_at: now },
-        { read: true },
-        { isRead: true, readAt: now, updatedAt: now },
-        { isRead: true },
-        { readAt: now }
-      ];
-    }
-
-    async function markThreadNotificationsRead(threadId) {
-      if (!currentUser || !threadId) return;
-
-      const toColumns = ["to_user_id", "user_id", "toUserId", "userId"];
-      const threadColumns = ["thread_id", "threadId"];
-      const payloads = buildNotificationReadPayloads();
-
-      const attempts = [];
-
-      for (const payload of payloads) {
-        for (const toCol of toColumns) {
-          for (const threadCol of threadColumns) {
-            attempts.push(
-              tryUpdate("notifications", payload, q =>
-                q.eq(toCol, currentUser.id).eq(threadCol, threadId)
-              )
-            );
-          }
-        }
-      }
-
-      await Promise.allSettled(attempts);
-    }
-
-    async function markRequestNotificationsRead(requestId) {
-      if (!currentUser || !requestId) return;
-
-      const toColumns = ["to_user_id", "user_id", "toUserId", "userId"];
-      const requestColumns = ["request_id", "requestId", "message_request_id", "messageRequestId"];
-      const payloads = buildNotificationReadPayloads();
-
-      const attempts = [];
-
-      for (const payload of payloads) {
-        for (const toCol of toColumns) {
-          for (const requestCol of requestColumns) {
-            attempts.push(
-              tryUpdate("notifications", payload, q =>
-                q.eq(toCol, currentUser.id).eq(requestCol, requestId)
-              )
-            );
-          }
-        }
-      }
-
-      await Promise.allSettled(attempts);
-    }
-
-    function getReadPayloadFromRaw(raw) {
-      const now = nowIso();
-      const payload = {};
-
-      if (hasOwn(raw, "seen_at")) payload.seen_at = now;
-      if (hasOwn(raw, "read_at")) payload.read_at = now;
-      if (hasOwn(raw, "is_read")) payload.is_read = true;
-      if (hasOwn(raw, "read")) payload.read = true;
-
-      if (hasOwn(raw, "seenAt")) payload.seenAt = now;
-      if (hasOwn(raw, "readAt")) payload.readAt = now;
-      if (hasOwn(raw, "isRead")) payload.isRead = true;
-
-      return payload;
-    }
-
-    function getThreadColumnFromRaw(raw) {
-      if (hasOwn(raw, "thread_id")) return "thread_id";
-      if (hasOwn(raw, "threadId")) return "threadId";
-      return "";
-    }
-
-    function getSenderColumnFromRaw(raw) {
-      if (hasOwn(raw, "sender_id")) return "sender_id";
-      if (hasOwn(raw, "senderId")) return "senderId";
-      if (hasOwn(raw, "from_user_id")) return "from_user_id";
-      if (hasOwn(raw, "fromUserId")) return "fromUserId";
-      return "";
-    }
-
-    async function markMessagesReadFast(threadId, messages = []) {
-      if (!threadId || !currentUser) return;
-
-      const incoming = messages.filter(msg => msg.senderId && msg.senderId !== currentUser.id);
-
-      const sample = incoming.find(msg => {
-        const raw = msg.__raw || {};
-        const payload = getReadPayloadFromRaw(raw);
-        return getThreadColumnFromRaw(raw) && getSenderColumnFromRaw(raw) && Object.keys(payload).length;
-      });
-
-      if (sample) {
-        const raw = sample.__raw || {};
-        const payload = getReadPayloadFromRaw(raw);
-        const threadColumn = getThreadColumnFromRaw(raw);
-        const senderColumn = getSenderColumnFromRaw(raw);
-
-        const ok = await tryUpdate("chat_messages", payload, q =>
-          q.eq(threadColumn, threadId).neq(senderColumn, currentUser.id)
-        );
-
-        if (ok) return;
-      }
-
-      const fallbackFilterSets = [
-        { thread: "thread_id", sender: "sender_id" },
-        { thread: "threadId", sender: "senderId" },
-        { thread: "thread_id", sender: "from_user_id" },
-        { thread: "threadId", sender: "fromUserId" }
-      ];
-
-      const now = nowIso();
-      const fallbackPayloads = [
-        { seen_at: now },
-        { read_at: now },
-        { is_read: true },
-        { read: true },
-        { seenAt: now },
-        { readAt: now },
-        { isRead: true }
-      ];
-
-      const attempts = [];
-
-      for (const filter of fallbackFilterSets) {
-        for (const payload of fallbackPayloads) {
-          attempts.push(
-            tryUpdate("chat_messages", payload, q =>
-              q.eq(filter.thread, threadId).neq(filter.sender, currentUser.id)
-            )
-          );
-        }
-      }
-
-      await Promise.allSettled(attempts);
-    }
-
-    function markMessagesSeenInBackground(threadId, messages = []) {
-      if (!threadId || !currentUser) return;
-      if (readMarkingThreads.has(threadId)) return;
-
-      readMarkingThreads.add(threadId);
-
-      Promise.resolve()
-        .then(async () => {
-          await Promise.allSettled([
-            markMessagesReadFast(threadId, messages),
-            markThreadNotificationsRead(threadId)
-          ]);
-          notifyBadgeRefresh();
-        })
-        .catch(err => {
-          console.warn("Read update skipped:", err?.message || err);
-        })
-        .finally(() => {
-          readMarkingThreads.delete(threadId);
-        });
-    }
-
-    async function markRequestTouched(requestId) {
-      if (!currentUser || !requestId) return;
-
-      const now = nowIso();
-
-      const payloads = [
-        { seen_at: now, read_at: now, updated_at: now },
-        { read_at: now, updated_at: now },
-        { seen_at: now, updated_at: now },
-        { seenAt: now, readAt: now, updatedAt: now },
-        { is_read: true },
-        { read: true },
-        { isRead: true }
-      ];
-
-      const attempts = payloads.map(payload =>
-        tryUpdate("message_requests", payload, q => q.eq("id", requestId))
-      );
-
-      attempts.push(markRequestNotificationsRead(requestId));
-
-      await Promise.allSettled(attempts);
-      notifyBadgeRefresh();
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
@@ -1199,15 +940,12 @@
         text: getField(d, ["text", "message", "starter_text", "starterText"]),
         status: getField(d, ["status", "request_status", "requestStatus"]) || "pending",
         createdAt: d.created_at ?? d.createdAt ?? null,
-        updatedAt: d.updated_at ?? d.updatedAt ?? null,
-        __raw: d
+        updatedAt: d.updated_at ?? d.updatedAt ?? null
       };
     }
 
     function normalizeMessage(raw, fallbackId = "") {
       const d = raw || {};
-      const seenAt = d.seen_at ?? d.seenAt ?? d.read_at ?? d.readAt ?? null;
-      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
 
       return {
         id: d.id || fallbackId || "",
@@ -1215,25 +953,19 @@
         senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
         text: getField(d, ["text", "message", "body"]),
         createdAt: d.created_at ?? d.createdAt ?? null,
-        seenAt,
-        isRead: readValue === true,
-        __raw: d
+        seenAt: d.seen_at ?? d.seenAt ?? d.read_at ?? d.readAt ?? null,
+        isRead: d.is_read ?? d.read ?? d.isRead ?? null
       };
     }
 
     async function selectMaybeSingle(table, column, value) {
       try {
-        const result = await withTimeout(
-          supabase
-            .from(table)
-            .select("*")
-            .eq(column, value)
-            .maybeSingle(),
-          4500,
-          { data: null, error: new Error("Profile lookup timed out.") }
-        );
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
 
-        const { data, error } = result || {};
         if (!error && data) return data;
       } catch {}
 
@@ -1297,16 +1029,20 @@
       showAvatar(profile.photoURL || "");
     }
 
-    function clearMessageListener() {
-      messageChannels.forEach(channel => {
-        try { supabase.removeChannel(channel); } catch {}
+    function clearMessageListeners() {
+      messageChannels.forEach(ch => {
+        try { supabase.removeChannel(ch); } catch {}
       });
+
       messageChannels = [];
 
       if (threadChannel) {
         try { supabase.removeChannel(threadChannel); } catch {}
         threadChannel = null;
       }
+
+      clearTimeout(refreshTimer);
+      refreshTimer = null;
     }
 
     function clearRequestListener() {
@@ -1317,8 +1053,7 @@
     }
 
     function clearAllListeners() {
-      clearTimeout(refreshTimer);
-      clearMessageListener();
+      clearMessageListeners();
       clearRequestListener();
     }
 
@@ -1329,19 +1064,6 @@
       requestInfoPanel.classList.add("hidden");
       composerPanel.classList.add("hidden");
       topSub.textContent = "Unavailable";
-    }
-
-    function showOpeningState(text = "Opening chat...") {
-      blockedPanel.classList.add("hidden");
-      requestInfoPanel.classList.add("hidden");
-      composerPanel.classList.add("hidden");
-      messagesPanel.classList.remove("hidden");
-      messagesLoading.classList.remove("hidden");
-      messagesLoading.textContent = text;
-      messagesEmpty.classList.add("hidden");
-      messagesList.classList.add("hidden");
-      toolbarChip.textContent = "Opening";
-      topSub.textContent = text;
     }
 
     function hideBlocked() {
@@ -1432,69 +1154,59 @@
 
     function scrollMessagesToBottom() {
       requestAnimationFrame(() => {
-        messagesBody.scrollTop = messagesBody.scrollHeight + 300;
+        messagesBody.scrollTop = messagesBody.scrollHeight + 500;
       });
     }
 
     async function fetchMessages(threadId) {
-      const attempts = [
-        { threadColumn: "thread_id", orderColumn: "created_at" },
-        { threadColumn: "threadId", orderColumn: "createdAt" },
-        { threadColumn: "thread_id", orderColumn: "" },
-        { threadColumn: "threadId", orderColumn: "" }
-      ];
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("thread_id", threadId)
+          .order("created_at", { ascending: true });
 
-      for (const attempt of attempts) {
-        try {
-          let q = supabase
-            .from("chat_messages")
-            .select("*")
-            .eq(attempt.threadColumn, threadId);
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
 
-          if (attempt.orderColumn) q = q.order(attempt.orderColumn, { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("threadId", threadId)
+          .order("createdAt", { ascending: true });
 
-          const { data, error } = await q;
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
 
-          if (!error) {
-            return (data || [])
-              .map(row => normalizeMessage(row, row.id))
-              .sort((a, b) => tsMs(a.createdAt) - tsMs(b.createdAt));
-          }
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("thread_id", threadId);
 
-          if (!isMissingSchemaError(error)) console.warn("Messages query failed:", error.message);
-        } catch {}
-      }
+        if (!error) {
+          return (data || [])
+            .map(row => normalizeMessage(row, row.id))
+            .sort((a, b) => tsMs(a.createdAt) - tsMs(b.createdAt));
+        }
+      } catch {}
 
       return [];
     }
 
-    function buildReadTickHtml(msg) {
-      const seen = !!(msg.seenAt || msg.isRead === true);
-
-      if (seen) {
-        return `
-          <span class="read-tick seen" title="Seen" aria-label="Seen">
-            <svg viewBox="0 0 24 16" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M2 8.4 5.8 12 13.2 3.8"></path>
-              <path d="M10.8 11.8 13.2 14 22 3"></path>
-            </svg>
-          </span>
-        `;
-      }
-
-      return `
-        <span class="read-tick sent" title="Sent" aria-label="Sent">
-          <svg viewBox="0 0 18 16" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M2 8.4 6 12 16 3.8"></path>
-          </svg>
-        </span>
-      `;
+    function getUnreadSignature(messages) {
+      return messages
+        .filter(msg => msg.senderId !== currentUser.id)
+        .filter(msg => !(msg.seenAt || msg.isRead === true))
+        .map(msg => msg.id || `${msg.senderId}-${msg.createdAt}-${msg.text}`)
+        .join("|");
     }
 
     function renderMessages(messages) {
       messagesLoading.classList.add("hidden");
       messagesList.innerHTML = "";
-      messagesList.className = "";
+      messagesList.classList.remove("hidden");
 
       const finalMessages = [...messages].sort((a, b) => tsMs(a.createdAt) - tsMs(b.createdAt));
 
@@ -1504,9 +1216,7 @@
           threadId: currentThreadId,
           senderId: currentThreadData.starterFrom || currentTargetUid,
           text: currentThreadData.starterText,
-          createdAt: currentThreadData.createdAt || currentThreadData.lastMessageAt || null,
-          seenAt: null,
-          isRead: false
+          createdAt: currentThreadData.createdAt || currentThreadData.lastMessageAt || null
         });
       }
 
@@ -1533,6 +1243,7 @@
         }
 
         const mine = msg.senderId === currentUser.id;
+        const tickHtml = msg.seenAt || msg.isRead === true ? "&#10003;&#10003;" : "&#10003;";
 
         const row = document.createElement("div");
         row.className = `bubble-row ${mine ? "mine" : "other"}`;
@@ -1542,7 +1253,7 @@
             <div class="bubble-text">${escapeHtml(msg.text || "")}</div>
             <div class="bubble-meta">
               <span>${escapeHtml(formatTime(msg.createdAt))}</span>
-              ${mine ? buildReadTickHtml(msg) : ""}
+              ${mine ? `<span class="read-tick">${tickHtml}</span>` : ""}
             </div>
           </div>
         `;
@@ -1553,13 +1264,120 @@
       scrollMessagesToBottom();
     }
 
-    async function refreshMessages(threadId, options = {}) {
+    async function markThreadNotificationsReadFast(threadId) {
+      if (!currentUser?.id || !threadId) return;
+
+      const now = nowIso();
+
+      const updates = [
+        tryUpdate("notifications", { is_read:true, read_at:now, updated_at:now }, q => q.eq("to_user_id", currentUser.id).eq("thread_id", threadId)),
+        tryUpdate("notifications", { is_read:true }, q => q.eq("to_user_id", currentUser.id).eq("thread_id", threadId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("to_user_id", currentUser.id).eq("thread_id", threadId)),
+
+        tryUpdate("notifications", { is_read:true, read_at:now, updated_at:now }, q => q.eq("user_id", currentUser.id).eq("thread_id", threadId)),
+        tryUpdate("notifications", { is_read:true }, q => q.eq("user_id", currentUser.id).eq("thread_id", threadId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("user_id", currentUser.id).eq("thread_id", threadId)),
+
+        tryUpdate("notifications", { isRead:true, readAt:now, updatedAt:now }, q => q.eq("toUserId", currentUser.id).eq("threadId", threadId)),
+        tryUpdate("notifications", { isRead:true }, q => q.eq("toUserId", currentUser.id).eq("threadId", threadId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("toUserId", currentUser.id).eq("threadId", threadId)),
+
+        tryUpdate("notifications", { isRead:true, readAt:now, updatedAt:now }, q => q.eq("userId", currentUser.id).eq("threadId", threadId)),
+        tryUpdate("notifications", { isRead:true }, q => q.eq("userId", currentUser.id).eq("threadId", threadId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("userId", currentUser.id).eq("threadId", threadId))
+      ];
+
+      await Promise.allSettled(updates);
+      notifyBadgeRefresh();
+    }
+
+    async function markRequestNotificationsReadFast(requestId) {
+      if (!currentUser?.id || !requestId) return;
+
+      const now = nowIso();
+
+      const updates = [
+        tryUpdate("notifications", { is_read:true, read_at:now, updated_at:now }, q => q.eq("to_user_id", currentUser.id).eq("request_id", requestId)),
+        tryUpdate("notifications", { is_read:true }, q => q.eq("to_user_id", currentUser.id).eq("request_id", requestId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("to_user_id", currentUser.id).eq("request_id", requestId)),
+
+        tryUpdate("notifications", { is_read:true, read_at:now, updated_at:now }, q => q.eq("user_id", currentUser.id).eq("request_id", requestId)),
+        tryUpdate("notifications", { is_read:true }, q => q.eq("user_id", currentUser.id).eq("request_id", requestId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("user_id", currentUser.id).eq("request_id", requestId)),
+
+        tryUpdate("notifications", { isRead:true, readAt:now, updatedAt:now }, q => q.eq("toUserId", currentUser.id).eq("requestId", requestId)),
+        tryUpdate("notifications", { isRead:true }, q => q.eq("toUserId", currentUser.id).eq("requestId", requestId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("toUserId", currentUser.id).eq("requestId", requestId)),
+
+        tryUpdate("notifications", { isRead:true, readAt:now, updatedAt:now }, q => q.eq("userId", currentUser.id).eq("requestId", requestId)),
+        tryUpdate("notifications", { isRead:true }, q => q.eq("userId", currentUser.id).eq("requestId", requestId)),
+        tryUpdate("notifications", { read:true }, q => q.eq("userId", currentUser.id).eq("requestId", requestId))
+      ];
+
+      await Promise.allSettled(updates);
+      notifyBadgeRefresh();
+    }
+
+    async function markMessagesSeenFast(threadId) {
+      if (!currentUser?.id || !threadId) return;
+
+      const now = nowIso();
+
+      const updates = [
+        tryUpdate("chat_messages", { seen_at:now, read_at:now, is_read:true }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { seen_at:now, is_read:true }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { read_at:now, is_read:true }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { seen_at:now }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { read_at:now }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { is_read:true }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+        tryUpdate("chat_messages", { read:true }, q => q.eq("thread_id", threadId).neq("sender_id", currentUser.id)),
+
+        tryUpdate("chat_messages", { seenAt:now, readAt:now, isRead:true }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { seenAt:now, isRead:true }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { readAt:now, isRead:true }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { seenAt:now }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { readAt:now }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { isRead:true }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+        tryUpdate("chat_messages", { read:true }, q => q.eq("threadId", threadId).neq("senderId", currentUser.id)),
+
+        tryUpdate("chat_messages", { seen_at:now, read_at:now, is_read:true }, q => q.eq("thread_id", threadId).neq("from_user_id", currentUser.id)),
+        tryUpdate("chat_messages", { seen_at:now }, q => q.eq("thread_id", threadId).neq("from_user_id", currentUser.id))
+      ];
+
+      await Promise.allSettled(updates);
+      await markThreadNotificationsReadFast(threadId);
+    }
+
+    async function markRequestTouchedFast(requestId) {
+      if (!currentUser?.id || !requestId) return;
+
+      const now = nowIso();
+
+      const updates = [
+        tryUpdate("message_requests", { seen_at:now, read_at:now, updated_at:now }, q => q.eq("id", requestId)),
+        tryUpdate("message_requests", { read_at:now, updated_at:now }, q => q.eq("id", requestId)),
+        tryUpdate("message_requests", { seen_at:now, updated_at:now }, q => q.eq("id", requestId)),
+        tryUpdate("message_requests", { seenAt:now, readAt:now, updatedAt:now }, q => q.eq("id", requestId)),
+        tryUpdate("message_requests", { is_read:true }, q => q.eq("id", requestId)),
+        tryUpdate("message_requests", { read:true }, q => q.eq("id", requestId))
+      ];
+
+      await Promise.allSettled(updates);
+      await markRequestNotificationsReadFast(requestId);
+    }
+
+    async function refreshMessages(threadId) {
       try {
         const messages = await fetchMessages(threadId);
         renderMessages(messages);
 
-        if (options.markRead !== false) {
-          markMessagesSeenInBackground(threadId, messages);
+        const unreadSig = getUnreadSignature(messages);
+
+        if (unreadSig && unreadSig !== lastUnreadSignature) {
+          lastUnreadSignature = unreadSig;
+          markMessagesSeenFast(threadId).catch(console.warn);
+        } else {
+          markThreadNotificationsReadFast(threadId).catch(() => {});
         }
       } catch (err) {
         console.error(err);
@@ -1573,74 +1391,54 @@
     function scheduleMessageRefresh(threadId) {
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
-        refreshMessages(threadId).catch(() => {});
-      }, 160);
+        refreshMessages(threadId).catch(console.warn);
+      }, 180);
     }
 
     function listenToMessages(threadId) {
-      clearMessageListener();
+      clearMessageListeners();
 
       messagesPanel.classList.remove("hidden");
       messagesLoading.classList.remove("hidden");
       messagesList.classList.add("hidden");
       messagesEmpty.classList.add("hidden");
 
-      refreshMessages(threadId);
+      refreshMessages(threadId).catch(console.warn);
 
-      const messageFilters = [`thread_id=eq.${threadId}`, `threadId=eq.${threadId}`];
+      const channelA = supabase
+        .channel(`ownspace-chat-messages-snake-${threadId}-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          { event:"*", schema:"public", table:"chat_messages", filter:`thread_id=eq.${threadId}` },
+          () => scheduleMessageRefresh(threadId)
+        )
+        .subscribe();
 
-      messageFilters.forEach((filter, index) => {
-        try {
-          const channel = supabase
-            .channel(`ownspace-chat-messages-${threadId}-${index}-${Math.random().toString(36).slice(2)}`)
-            .on(
-              "postgres_changes",
-              { event: "*", schema: "public", table: "chat_messages", filter },
-              () => scheduleMessageRefresh(threadId)
-            )
-            .subscribe();
+      const channelB = supabase
+        .channel(`ownspace-chat-messages-camel-${threadId}-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          { event:"*", schema:"public", table:"chat_messages", filter:`threadId=eq.${threadId}` },
+          () => scheduleMessageRefresh(threadId)
+        )
+        .subscribe();
 
-          messageChannels.push(channel);
-        } catch {}
-      });
+      messageChannels.push(channelA, channelB);
 
-      try {
-        threadChannel = supabase
-          .channel(`ownspace-chat-thread-${threadId}-${Math.random().toString(36).slice(2)}`)
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "chat_threads", filter: `id=eq.${threadId}` },
-            async (payload) => {
-              if (payload?.new) {
-                currentThreadData = normalizeThread(payload.new, payload.new.id);
-              }
-              scheduleMessageRefresh(threadId);
+      threadChannel = supabase
+        .channel(`ownspace-chat-thread-${threadId}-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          { event:"*", schema:"public", table:"chat_threads", filter:`id=eq.${threadId}` },
+          async payload => {
+            if (payload?.new) {
+              currentThreadData = normalizeThread(payload.new, payload.new.id);
             }
-          )
-          .subscribe();
-      } catch {}
-    }
 
-    async function fetchThreadById(threadId) {
-      try {
-        const result = await withTimeout(
-          supabase
-            .from("chat_threads")
-            .select("*")
-            .eq("id", threadId)
-            .maybeSingle(),
-          3500,
-          { data: null, error: new Error("Chat thread lookup timed out.") }
-        );
-
-        const { data, error } = result || {};
-
-        if (error) throw error;
-        return data || null;
-      } catch (err) {
-        console.error("Thread lookup failed:", err?.message || err);
-        return null;
-      }
+            scheduleMessageRefresh(threadId);
+          }
+        )
+        .subscribe();
     }
 
     async function findExistingThreadByUsers(uidA, uidB) {
@@ -1684,10 +1482,12 @@
             .select("*")
             .eq(colA, valA)
             .eq(colB, valB)
-            .order(orderCol, { ascending: false })
+            .order(orderCol, { ascending:false })
             .limit(1);
 
-          if (!error && data && data.length) return normalizeRequest(data[0], data[0].id);
+          if (!error && data && data.length) {
+            return normalizeRequest(data[0], data[0].id);
+          }
         } catch {}
       }
 
@@ -1697,7 +1497,7 @@
     async function createNotificationSafe(targetUid, payload) {
       if (!targetUid || targetUid === currentUser.id) return;
 
-      const createdAt = payload.created_at || nowIso();
+      const now = payload.created_at || payload.createdAt || nowIso();
 
       const variants = [
         {
@@ -1705,7 +1505,7 @@
           from_user_id: currentUser.id,
           to_user_id: targetUid,
           user_id: targetUid,
-          created_at: createdAt,
+          created_at: now,
           is_read: false,
           read: false
         },
@@ -1718,7 +1518,7 @@
           userId: targetUid,
           threadId: payload.thread_id || payload.threadId || "",
           requestId: payload.request_id || payload.requestId || "",
-          createdAt: createdAt,
+          createdAt: now,
           isRead: false,
           read: false
         },
@@ -1729,7 +1529,7 @@
           user_id: targetUid,
           thread_id: payload.thread_id || "",
           request_id: payload.request_id || "",
-          created_at: createdAt,
+          created_at: now,
           is_read: false
         }
       ];
@@ -1765,53 +1565,16 @@
       return false;
     }
 
-    async function openThread(threadModel) {
-      clearAllListeners();
-
-      currentThreadId = threadModel.id;
-      currentThreadData = threadModel;
-      currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
-
-      setModeUI("chat");
-      listenToMessages(currentThreadId);
-
-      currentTargetProfile = normalizeProfile({ uid: currentTargetUid, display_name: "Member" }, currentTargetUid);
-      setHeader(currentTargetProfile);
-
-      loadFullProfile(currentTargetUid)
-        .then(profile => {
-          currentTargetProfile = profile;
-          setHeader(profile);
-
-          if (
-            profile.softDeleted ||
-            profile.isHiddenByAdmin ||
-            profile.moderationStatus === "banned"
-          ) {
-            showBlocked("This account is not available for chat.");
-            return;
-          }
-
-          iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
-          targetBlockedMe = (profile.blockedUsers || []).includes(currentUser.id);
-
-          if (iBlockedTarget || targetBlockedMe) {
-            showBlocked(
-              iBlockedTarget
-                ? "You blocked this member. Unblock them from settings to chat again."
-                : "This member is not available for chat."
-            );
-          }
-        })
-        .catch(() => {});
+    function checkBlockedAfterProfileLoad() {
+      if (!currentTargetProfile || !currentViewerProfile) return false;
 
       if (
         currentTargetProfile.softDeleted ||
         currentTargetProfile.isHiddenByAdmin ||
-        currentTargetProfile.moderationStatus === "banned"
+        String(currentTargetProfile.moderationStatus || "").toLowerCase() === "banned"
       ) {
         showBlocked("This account is not available for chat.");
-        return;
+        return true;
       }
 
       iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(currentTargetUid);
@@ -1823,21 +1586,42 @@
             ? "You blocked this member. Unblock them from settings to chat again."
             : "This member is not available for chat."
         );
+        return true;
       }
+
+      return false;
+    }
+
+    async function openThread(threadModel) {
+      clearAllListeners();
+
+      currentThreadId = threadModel.id;
+      currentThreadData = threadModel;
+      currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
+
+      setModeUI("chat");
+      listenToMessages(currentThreadId);
+
+      markThreadNotificationsReadFast(currentThreadId).catch(() => {});
+      markMessagesSeenFast(currentThreadId).catch(() => {});
+
+      currentTargetProfile = await loadFullProfile(currentTargetUid);
+      setHeader(currentTargetProfile);
+      checkBlockedAfterProfileLoad();
     }
 
     async function listenToPendingRequest(requestId, direction) {
       clearRequestListener();
 
       if (direction === "incoming") {
-        markRequestTouched(requestId).catch(() => {});
+        markRequestTouchedFast(requestId).catch(() => {});
       }
 
       requestChannel = supabase
-        .channel(`ownspace-message-request-${requestId}-${Math.random().toString(36).slice(2)}`)
+        .channel(`ownspace-message-request-${requestId}-${Date.now()}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "message_requests", filter: `id=eq.${requestId}` },
+          { event:"*", schema:"public", table:"message_requests", filter:`id=eq.${requestId}` },
           async () => {
             try {
               const { data, error } = await supabase
@@ -1851,7 +1635,7 @@
               requestDocModel = normalizeRequest(data, data.id);
 
               if (direction === "incoming") {
-                markRequestTouched(requestId).catch(() => {});
+                markRequestTouchedFast(requestId).catch(() => {});
               }
 
               if (requestDocModel.status === "accepted") {
@@ -1860,7 +1644,7 @@
                 for (let i = 0; i < 5; i++) {
                   thread = await findExistingThreadByUsers(requestDocModel.requesterId, requestDocModel.targetId);
                   if (thread) break;
-                  await sleep(250);
+                  await new Promise(resolve => setTimeout(resolve, 250));
                 }
 
                 if (thread) {
@@ -1888,36 +1672,10 @@
       clearAllListeners();
 
       currentTargetUid = targetUid;
-      currentTargetProfile = normalizeProfile({ uid: targetUid, display_name: "Member" }, targetUid);
+      currentTargetProfile = await loadFullProfile(targetUid);
       setHeader(currentTargetProfile);
 
-      loadFullProfile(targetUid)
-        .then(profile => {
-          currentTargetProfile = profile || currentTargetProfile;
-          setHeader(currentTargetProfile);
-        })
-        .catch(() => {});
-
-      if (
-        currentTargetProfile.softDeleted ||
-        currentTargetProfile.isHiddenByAdmin ||
-        currentTargetProfile.moderationStatus === "banned"
-      ) {
-        showBlocked("This account is not available for chat.");
-        return;
-      }
-
-      iBlockedTarget = (currentViewerProfile.blockedUsers || []).includes(targetUid);
-      targetBlockedMe = (currentTargetProfile.blockedUsers || []).includes(currentUser.id);
-
-      if (iBlockedTarget || targetBlockedMe) {
-        showBlocked(
-          iBlockedTarget
-            ? "You blocked this member. Unblock them from settings to chat again."
-            : "This member is not available for chat."
-        );
-        return;
-      }
+      if (checkBlockedAfterProfileLoad()) return;
 
       const existingThread = await findExistingThreadByUsers(currentUser.id, targetUid);
 
@@ -1927,6 +1685,7 @@
       }
 
       const outgoingReq = await loadRequestBetween(currentUser.id, targetUid);
+
       if (outgoingReq && outgoingReq.status === "pending") {
         requestDocModel = outgoingReq;
         setModeUI("request_outgoing_pending");
@@ -1935,10 +1694,11 @@
       }
 
       const incomingReq = await loadRequestBetween(targetUid, currentUser.id);
+
       if (incomingReq && incomingReq.status === "pending") {
         requestDocModel = incomingReq;
         setModeUI("request_incoming_pending");
-        markRequestTouched(incomingReq.id).catch(() => {});
+        markRequestTouchedFast(incomingReq.id).catch(() => {});
         await listenToPendingRequest(incomingReq.id, "incoming");
         return;
       }
@@ -1957,16 +1717,18 @@
 
     async function ensureDirectThread() {
       if (currentThreadId) {
-        const { data, error } = await supabase
-          .from("chat_threads")
-          .select("*")
-          .eq("id", currentThreadId)
-          .maybeSingle();
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", currentThreadId)
+            .maybeSingle();
 
-        if (!error && data) {
-          currentThreadData = normalizeThread(data, data.id);
-          return currentThreadData;
-        }
+          if (!error && data) {
+            currentThreadData = normalizeThread(data, data.id);
+            return currentThreadData;
+          }
+        } catch {}
       }
 
       const existing = await findExistingThreadByUsers(currentUser.id, currentTargetUid);
@@ -1982,34 +1744,34 @@
 
       const created = await insertWithFallback("chat_threads", [
         {
-          type: "direct",
-          status: "accepted",
-          participant_a: pair[0],
-          participant_b: pair[1],
-          created_by: currentUser.id,
-          created_at: createdAt,
-          updated_at: createdAt,
-          last_message_text: "",
-          last_message_at: createdAt,
-          last_sender_id: ""
+          type:"direct",
+          status:"accepted",
+          participant_a:pair[0],
+          participant_b:pair[1],
+          created_by:currentUser.id,
+          created_at:createdAt,
+          updated_at:createdAt,
+          last_message_text:"",
+          last_message_at:createdAt,
+          last_sender_id:""
         },
         {
-          type: "direct",
-          status: "accepted",
-          participantA: pair[0],
-          participantB: pair[1],
-          createdBy: currentUser.id,
-          createdAt: createdAt,
-          updatedAt: createdAt,
-          lastMessageText: "",
-          lastMessageAt: createdAt,
-          lastSenderId: ""
+          type:"direct",
+          status:"accepted",
+          participantA:pair[0],
+          participantB:pair[1],
+          createdBy:currentUser.id,
+          createdAt:createdAt,
+          updatedAt:createdAt,
+          lastMessageText:"",
+          lastMessageAt:createdAt,
+          lastSenderId:""
         },
         {
-          participant_a: pair[0],
-          participant_b: pair[1],
-          status: "accepted",
-          created_at: createdAt
+          participant_a:pair[0],
+          participant_b:pair[1],
+          status:"accepted",
+          created_at:createdAt
         }
       ]);
 
@@ -2022,42 +1784,41 @@
     async function insertChatMessage(threadId, text, createdAt, senderId = currentUser.id) {
       await insertWithFallback("chat_messages", [
         {
-          thread_id: threadId,
-          sender_id: senderId,
+          thread_id:threadId,
+          sender_id:senderId,
           text,
-          created_at: createdAt,
-          seen_at: null,
-          read_at: null,
-          is_read: false,
-          read: false
+          created_at:createdAt,
+          seen_at:null,
+          read_at:null,
+          is_read:false
         },
         {
-          thread_id: threadId,
-          sender_id: senderId,
+          thread_id:threadId,
+          sender_id:senderId,
           text,
-          created_at: createdAt,
-          seen_at: null
+          created_at:createdAt,
+          seen_at:null
         },
         {
-          thread_id: threadId,
-          sender_id: senderId,
+          thread_id:threadId,
+          sender_id:senderId,
           text,
-          created_at: createdAt
+          created_at:createdAt
         },
         {
-          threadId: threadId,
-          senderId: senderId,
+          threadId:threadId,
+          senderId:senderId,
           text,
-          createdAt: createdAt,
-          seenAt: null,
-          readAt: null,
-          isRead: false
+          createdAt:createdAt,
+          seenAt:null,
+          readAt:null,
+          isRead:false
         },
         {
-          threadId: threadId,
-          senderId: senderId,
+          threadId:threadId,
+          senderId:senderId,
           text,
-          createdAt: createdAt
+          createdAt:createdAt
         }
       ]);
     }
@@ -2065,23 +1826,23 @@
     async function updateThreadAfterMessage(threadId, text, createdAt, senderId = currentUser.id) {
       const payloads = [
         {
-          status: "accepted",
-          last_message_text: text,
-          last_message_at: createdAt,
-          last_sender_id: senderId,
-          updated_at: createdAt
+          status:"accepted",
+          last_message_text:text,
+          last_message_at:createdAt,
+          last_sender_id:senderId,
+          updated_at:createdAt
         },
         {
-          status: "accepted",
-          lastMessageText: text,
-          lastMessageAt: createdAt,
-          lastSenderId: senderId,
-          updatedAt: createdAt
+          status:"accepted",
+          lastMessageText:text,
+          lastMessageAt:createdAt,
+          lastSenderId:senderId,
+          updatedAt:createdAt
         },
         {
-          last_message_text: text,
-          last_message_at: createdAt,
-          last_sender_id: senderId
+          last_message_text:text,
+          last_message_at:createdAt,
+          last_sender_id:senderId
         }
       ];
 
@@ -2098,17 +1859,13 @@
       await insertChatMessage(thread.id, text, createdAt, currentUser.id);
       await updateThreadAfterMessage(thread.id, text, createdAt, currentUser.id);
 
-      await createNotificationSafe(currentTargetUid, {
-        type: "message",
-        title: "New message",
-        text: `${currentViewerProfile?.displayName || "Someone"} sent you a message.`,
-        from_user_id: currentUser.id,
-        to_user_id: currentTargetUid,
-        thread_id: thread.id,
-        created_at: createdAt,
-        is_read: false,
-        read: false
-      });
+      createNotificationSafe(currentTargetUid, {
+        type:"message",
+        title:"New message",
+        text:`${currentViewerProfile?.displayName || "Someone"} sent you a message.`,
+        thread_id:thread.id,
+        created_at:createdAt
+      }).catch(() => {});
 
       currentThreadId = thread.id;
       currentThreadData = thread;
@@ -2118,7 +1875,7 @@
       if (!messageChannels.length) {
         listenToMessages(thread.id);
       } else {
-        scheduleMessageRefresh(thread.id);
+        refreshMessages(thread.id).catch(() => {});
       }
 
       notifyBadgeRefresh();
@@ -2138,49 +1895,45 @@
 
       const row = await insertWithFallback("message_requests", [
         {
-          requester_id: currentUser.id,
-          target_id: currentTargetUid,
-          from_user_id: currentUser.id,
-          to_user_id: currentTargetUid,
+          requester_id:currentUser.id,
+          target_id:currentTargetUid,
+          from_user_id:currentUser.id,
+          to_user_id:currentTargetUid,
           text,
-          message: text,
-          status: "pending",
-          created_at: createdAt,
-          updated_at: createdAt
+          message:text,
+          status:"pending",
+          created_at:createdAt,
+          updated_at:createdAt
         },
         {
-          requesterId: currentUser.id,
-          targetId: currentTargetUid,
-          fromUserId: currentUser.id,
-          toUserId: currentTargetUid,
+          requesterId:currentUser.id,
+          targetId:currentTargetUid,
+          fromUserId:currentUser.id,
+          toUserId:currentTargetUid,
           text,
-          message: text,
-          status: "pending",
-          createdAt: createdAt,
-          updatedAt: createdAt
+          message:text,
+          status:"pending",
+          createdAt:createdAt,
+          updatedAt:createdAt
         },
         {
-          requester_id: currentUser.id,
-          target_id: currentTargetUid,
+          requester_id:currentUser.id,
+          target_id:currentTargetUid,
           text,
-          status: "pending",
-          created_at: createdAt
+          status:"pending",
+          created_at:createdAt
         }
       ]);
 
       requestDocModel = normalizeRequest(row, row?.id || "");
 
-      await createNotificationSafe(currentTargetUid, {
-        type: "message_request",
-        title: "New message request",
-        text: `${currentViewerProfile?.displayName || "Someone"} sent you a message request.`,
-        from_user_id: currentUser.id,
-        to_user_id: currentTargetUid,
-        request_id: requestDocModel.id,
-        created_at: createdAt,
-        is_read: false,
-        read: false
-      });
+      createNotificationSafe(currentTargetUid, {
+        type:"message_request",
+        title:"New message request",
+        text:`${currentViewerProfile?.displayName || "Someone"} sent you a message request.`,
+        request_id:requestDocModel.id,
+        created_at:createdAt
+      }).catch(() => {});
 
       setModeUI("request_outgoing_pending");
       await listenToPendingRequest(requestDocModel.id, "outgoing");
@@ -2192,14 +1945,14 @@
 
       const payloads = status === "accepted"
         ? [
-            { status: "accepted", accepted_at: now, accepted_by: currentUser.id, updated_at: now },
-            { status: "accepted", acceptedAt: now, acceptedBy: currentUser.id, updatedAt: now },
-            { status: "accepted" }
+            { status:"accepted", accepted_at:now, accepted_by:currentUser.id, updated_at:now },
+            { status:"accepted", acceptedAt:now, acceptedBy:currentUser.id, updatedAt:now },
+            { status:"accepted" }
           ]
         : [
-            { status: "declined", declined_at: now, declined_by: currentUser.id, updated_at: now },
-            { status: "declined", declinedAt: now, declinedBy: currentUser.id, updatedAt: now },
-            { status: "declined" }
+            { status:"declined", declined_at:now, declined_by:currentUser.id, updated_at:now },
+            { status:"declined", declinedAt:now, declinedBy:currentUser.id, updatedAt:now },
+            { status:"declined" }
           ];
 
       let worked = false;
@@ -2221,70 +1974,70 @@
 
         const row = await insertWithFallback("chat_threads", [
           {
-            type: "direct",
-            status: "accepted",
-            participant_a: pair[0],
-            participant_b: pair[1],
-            created_by: currentUser.id,
-            accepted_from_request_id: requestModel.id,
-            starter_text: requestModel.text || "",
-            starter_from: requestModel.requesterId || "",
-            created_at: createdAt,
-            updated_at: createdAt,
-            last_message_text: requestModel.text || "",
-            last_message_at: requestModel.createdAt || createdAt,
-            last_sender_id: requestModel.requesterId || ""
+            type:"direct",
+            status:"accepted",
+            participant_a:pair[0],
+            participant_b:pair[1],
+            created_by:currentUser.id,
+            accepted_from_request_id:requestModel.id,
+            starter_text:requestModel.text || "",
+            starter_from:requestModel.requesterId || "",
+            created_at:createdAt,
+            updated_at:createdAt,
+            last_message_text:requestModel.text || "",
+            last_message_at:requestModel.createdAt || createdAt,
+            last_sender_id:requestModel.requesterId || ""
           },
           {
-            type: "direct",
-            status: "accepted",
-            participantA: pair[0],
-            participantB: pair[1],
-            createdBy: currentUser.id,
-            acceptedFromRequestId: requestModel.id,
-            starterText: requestModel.text || "",
-            starterFrom: requestModel.requesterId || "",
-            createdAt: createdAt,
-            updatedAt: createdAt,
-            lastMessageText: requestModel.text || "",
-            lastMessageAt: requestModel.createdAt || createdAt,
-            lastSenderId: requestModel.requesterId || ""
+            type:"direct",
+            status:"accepted",
+            participantA:pair[0],
+            participantB:pair[1],
+            createdBy:currentUser.id,
+            acceptedFromRequestId:requestModel.id,
+            starterText:requestModel.text || "",
+            starterFrom:requestModel.requesterId || "",
+            createdAt:createdAt,
+            updatedAt:createdAt,
+            lastMessageText:requestModel.text || "",
+            lastMessageAt:requestModel.createdAt || createdAt,
+            lastSenderId:requestModel.requesterId || ""
           },
           {
-            participant_a: pair[0],
-            participant_b: pair[1],
-            status: "accepted",
-            created_at: createdAt
+            participant_a:pair[0],
+            participant_b:pair[1],
+            status:"accepted",
+            created_at:createdAt
           }
         ]);
 
         thread = normalizeThread(row, row?.id || "");
       } else {
-        const updatePayloads = [
+        const payloads = [
           {
-            status: "accepted",
-            accepted_from_request_id: requestModel.id,
-            starter_text: thread.starterText || requestModel.text || "",
-            starter_from: thread.starterFrom || requestModel.requesterId || "",
-            last_message_text: thread.lastMessageText || requestModel.text || "",
-            last_message_at: thread.lastMessageAt || requestModel.createdAt || createdAt,
-            last_sender_id: thread.lastSenderId || requestModel.requesterId || "",
-            updated_at: createdAt
+            status:"accepted",
+            accepted_from_request_id:requestModel.id,
+            starter_text:thread.starterText || requestModel.text || "",
+            starter_from:thread.starterFrom || requestModel.requesterId || "",
+            last_message_text:thread.lastMessageText || requestModel.text || "",
+            last_message_at:thread.lastMessageAt || requestModel.createdAt || createdAt,
+            last_sender_id:thread.lastSenderId || requestModel.requesterId || "",
+            updated_at:createdAt
           },
           {
-            status: "accepted",
-            acceptedFromRequestId: requestModel.id,
-            starterText: thread.starterText || requestModel.text || "",
-            starterFrom: thread.starterFrom || requestModel.requesterId || "",
-            lastMessageText: thread.lastMessageText || requestModel.text || "",
-            lastMessageAt: thread.lastMessageAt || requestModel.createdAt || createdAt,
-            lastSenderId: thread.lastSenderId || requestModel.requesterId || "",
-            updatedAt: createdAt
+            status:"accepted",
+            acceptedFromRequestId:requestModel.id,
+            starterText:thread.starterText || requestModel.text || "",
+            starterFrom:thread.starterFrom || requestModel.requesterId || "",
+            lastMessageText:thread.lastMessageText || requestModel.text || "",
+            lastMessageAt:thread.lastMessageAt || requestModel.createdAt || createdAt,
+            lastSenderId:thread.lastSenderId || requestModel.requesterId || "",
+            updatedAt:createdAt
           },
-          { status: "accepted" }
+          { status:"accepted" }
         ];
 
-        for (const payload of updatePayloads) {
+        for (const payload of payloads) {
           const ok = await tryUpdate("chat_threads", payload, q => q.eq("id", thread.id));
           if (ok) break;
         }
@@ -2292,6 +2045,7 @@
 
       if (requestModel.text) {
         const existingMessages = await fetchMessages(thread.id);
+
         const alreadyHasStarter = existingMessages.some(msg =>
           msg.senderId === requestModel.requesterId &&
           String(msg.text || "").trim() === String(requestModel.text || "").trim()
@@ -2316,22 +2070,18 @@
 
       try {
         await updateMessageRequestStatus(requestDocModel.id, "accepted");
-        markRequestTouched(requestDocModel.id).catch(() => {});
+        markRequestTouchedFast(requestDocModel.id).catch(() => {});
 
         const thread = await createThreadFromRequest(requestDocModel);
 
-        await createNotificationSafe(requestDocModel.requesterId, {
-          type: "message_request_accepted",
-          title: "Message request accepted",
-          text: `${currentViewerProfile?.displayName || "Someone"} accepted your message request.`,
-          from_user_id: currentUser.id,
-          to_user_id: requestDocModel.requesterId,
-          thread_id: thread.id,
-          request_id: requestDocModel.id,
-          created_at: nowIso(),
-          is_read: false,
-          read: false
-        });
+        createNotificationSafe(requestDocModel.requesterId, {
+          type:"message_request_accepted",
+          title:"Message request accepted",
+          text:`${currentViewerProfile?.displayName || "Someone"} accepted your message request.`,
+          thread_id:thread.id,
+          request_id:requestDocModel.id,
+          created_at:nowIso()
+        }).catch(() => {});
 
         await openThread(thread);
         setPageMessage("Request accepted.", "ok");
@@ -2353,7 +2103,7 @@
 
       try {
         await updateMessageRequestStatus(requestDocModel.id, "declined");
-        markRequestTouched(requestDocModel.id).catch(() => {});
+        markRequestTouchedFast(requestDocModel.id).catch(() => {});
         setModeUI("request_declined");
         setPageMessage("Request declined.", "ok");
         notifyBadgeRefresh();
@@ -2420,7 +2170,7 @@
 
     messageInput.addEventListener("input", autoResizeMessageBox);
 
-    messageInput.addEventListener("keydown", (e) => {
+    messageInput.addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -2428,39 +2178,27 @@
     });
 
     async function initPage() {
-      setPageMessage("");
-      topSub.textContent = "Checking login...";
+      const { data:authData, error:authError } = await supabase.auth.getUser();
 
-      const params = new URLSearchParams(window.location.search);
-      const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
-      const uidParam = (params.get("uid") || params.get("userId") || params.get("user_id") || "").trim();
-
-      if (threadIdParam) {
-        showOpeningState("Opening chat...");
-      } else if (uidParam) {
-        topSub.textContent = "Opening member...";
-      }
-
-      const authUser = await getCurrentUserFast();
-
-      if (!authUser) {
+      if (authError || !authData?.user) {
         clearAllListeners();
         window.location.href = "login.html";
         return;
       }
 
-      currentUser = authUser;
-
-      currentViewerProfile = normalizeProfile(
-        { uid: currentUser.id, display_name: "Me" },
-        currentUser.id
-      );
+      currentUser = authData.user;
+      currentViewerProfile = normalizeProfile({ uid:currentUser.id }, currentUser.id);
 
       loadFullProfile(currentUser.id)
         .then(profile => {
-          currentViewerProfile = profile || currentViewerProfile;
+          currentViewerProfile = profile;
+          checkBlockedAfterProfileLoad();
         })
         .catch(() => {});
+
+      const params = new URLSearchParams(window.location.search);
+      const threadIdParam = (params.get("threadId") || params.get("thread_id") || "").trim();
+      const uidParam = (params.get("uid") || params.get("userId") || params.get("user_id") || "").trim();
 
       if (!threadIdParam && !uidParam) {
         showBlocked("No conversation selected.");
@@ -2469,13 +2207,16 @@
 
       try {
         if (threadIdParam) {
-          showOpeningState("Opening chat...");
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", threadIdParam)
+            .maybeSingle();
 
-          const data = await fetchThreadById(threadIdParam);
+          if (error) throw error;
 
           if (!data) {
-            showBlocked("Chat did not open. This usually means chat_threads SELECT/RLS is not allowing this user to read the thread.");
-            setPageMessage("Thread read failed. Check Supabase RLS for chat_threads select.", "err");
+            showBlocked("Chat not found.");
             return;
           }
 
@@ -2494,22 +2235,15 @@
             await openThread(threadModel);
           } else {
             currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
-            currentTargetProfile = normalizeProfile({ uid: currentTargetUid, display_name: "Member" }, currentTargetUid);
+            currentTargetProfile = await loadFullProfile(currentTargetUid);
             setHeader(currentTargetProfile);
-
-            loadFullProfile(currentTargetUid)
-              .then(profile => {
-                currentTargetProfile = profile || currentTargetProfile;
-                setHeader(currentTargetProfile);
-              })
-              .catch(() => {});
 
             const incomingReq = await loadRequestBetween(currentTargetUid, currentUser.id);
 
             if (incomingReq && incomingReq.status === "pending") {
               requestDocModel = incomingReq;
               setModeUI("request_incoming_pending");
-              markRequestTouched(incomingReq.id).catch(() => {});
+              markRequestTouchedFast(incomingReq.id).catch(() => {});
               await listenToPendingRequest(incomingReq.id, "incoming");
             } else {
               const outgoingReq = await loadRequestBetween(currentUser.id, currentTargetUid);
@@ -2523,8 +2257,6 @@
               }
             }
           }
-
-          return;
         }
 
         if (uidParam) {
@@ -2533,7 +2265,6 @@
             return;
           }
 
-          showOpeningState("Opening chat...");
           await openByTargetUid(uidParam);
         }
 
@@ -2548,29 +2279,12 @@
       } catch (err) {
         console.error(err);
         showBlocked("Could not load chat.");
-        setPageMessage(err?.message || "Could not load chat.", "err");
       }
     }
 
-    window.addEventListener("beforeunload", () => {
-      clearAllListeners();
-    });
+    window.addEventListener("beforeunload", clearAllListeners);
 
     initPage();
-
-    /*
-      OWNSPACE CHAT PERFORMANCE + READ FIX:
-
-      FIXED:
-      - Light theme is default now, but still respects osTheme / bwTheme.
-      - Chat messages render first; read-update runs in the background.
-      - Profile loading no longer blocks chat screen from opening.
-      - Thread lookup has a timeout so the page never stays blank on Loading... forever.
-      - Login check uses getSession first; this fixes pages stuck at top Loading... on mobile Safari.
-      - This removes the 4s + 6s feeling caused by slow fallback read updates.
-      - Broken tick text is replaced with clean SVG ticks.
-      - Opening a chat marks incoming chat_messages as read/seen using detected schema columns.
-      - Read update no longer sends one payload with many possibly-missing columns.
-      - It detects actual fields in returned chat_messages and updates only those.
-      - If detection fails, fallback updates run in parallel, not before rendering.
-      - Opening a chat marks matching message notifications as read in th
+  </script>
+</body>
+</html>
