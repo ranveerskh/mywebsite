@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>OwnSpace - Admin</title>
 
   <style>
@@ -54,7 +54,7 @@
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:10px 10px calc(104px + env(safe-area-inset-bottom,0px));
     }
 
     .app{max-width:920px;margin:0 auto}
@@ -62,7 +62,7 @@
 
     .topbar{
       position:sticky;
-      top:0;
+      top:8px;
       z-index:40;
       backdrop-filter:blur(14px);
       background:var(--topbar-bg);
@@ -129,9 +129,9 @@
 
     .hero-title{
       position:relative;
-      font-size:20px;
+      font-size:21px;
       font-weight:950;
-      line-height:1.2;
+      line-height:1.16;
       letter-spacing:-.03em;
       margin-bottom:5px;
     }
@@ -141,6 +141,7 @@
       color:var(--muted);
       font-size:13px;
       line-height:1.55;
+      max-width:760px;
     }
 
     .summary-grid{
@@ -213,10 +214,18 @@
       font-size:14px;
     }
 
+    .section-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
     .section-title{
       font-size:18px;
       font-weight:950;
-      margin-bottom:6px;
+      margin-bottom:5px;
       letter-spacing:-.01em;
     }
 
@@ -224,7 +233,6 @@
       color:var(--muted);
       font-size:13px;
       line-height:1.55;
-      margin-bottom:12px;
     }
 
     .toolbar{
@@ -266,6 +274,7 @@
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
+      white-space:nowrap;
     }
 
     .action-btn svg{
@@ -294,10 +303,7 @@
     html[data-theme="dark"] .message.ok{color:#86efac}
     html[data-theme="dark"] .message.err{color:#fda4af}
 
-    .list{
-      display:grid;
-      gap:10px;
-    }
+    .list{display:grid;gap:10px}
 
     .card{
       background:var(--surface-2);
@@ -336,6 +342,34 @@
       white-space:pre-wrap;
       word-break:break-word;
     }
+
+    .compact-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .quick-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:13px;
+    }
+
+    .quick-card .card-title{font-size:15px;margin-bottom:8px}
+    .quick-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:9px 0;
+      border-top:1px solid var(--line-soft);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .quick-line:first-of-type{border-top:none}
+    .quick-line strong{color:var(--text);font-size:13px}
 
     .meta-grid{
       display:grid;
@@ -455,29 +489,11 @@
       margin-bottom:12px;
     }
 
-    .form{
-      display:grid;
-      gap:11px;
-    }
-
-    .grid-2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .field{
-      display:grid;
-      gap:6px;
-    }
-
+    .form{display:grid;gap:11px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:grid;gap:6px}
     .field.full{grid-column:1/-1}
-
-    .label{
-      font-size:12px;
-      font-weight:950;
-      color:var(--text);
-    }
+    .label{font-size:12px;font-weight:950;color:var(--text)}
 
     .input,
     .textarea,
@@ -493,15 +509,19 @@
       font-size:14px;
     }
 
-    .textarea{
-      min-height:96px;
-      resize:vertical;
-      line-height:1.55;
-    }
-
-    .input::placeholder,
-    .textarea::placeholder{color:var(--muted)}
+    .textarea{min-height:96px;resize:vertical;line-height:1.55}
+    .input::placeholder,.textarea::placeholder{color:var(--muted)}
     .select option{color:#111}
+
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .check-row input{width:17px;height:17px;accent-color:var(--blue)}
 
     .proof-warning{
       background:rgba(245,185,66,.10);
@@ -513,6 +533,26 @@
       line-height:1.5;
       margin-bottom:10px;
     }
+
+    details.more-box{
+      margin-top:10px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+
+    details.more-box summary{
+      list-style:none;
+      cursor:pointer;
+      padding:10px 11px;
+      font-size:12px;
+      font-weight:950;
+      color:var(--text);
+    }
+
+    details.more-box summary::-webkit-details-marker{display:none}
+    details.more-box .more-inner{padding:0 11px 11px}
 
     .bottom-nav{
       position:fixed;
@@ -551,33 +591,39 @@
       position:relative;
     }
 
-    .nav-link.active{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-    }
+    .nav-link.active{background:rgba(76,201,255,.14);color:var(--text)}
+    .icon-svg{width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:1}
+    .icon-svg svg{width:20px;height:20px;display:block}
 
-    .icon-svg{
-      width:20px;
-      height:20px;
-      display:flex;
+    .nav-badge{
+      position:absolute;
+      top:5px;
+      right:22%;
+      min-width:18px;
+      height:18px;
+      padding:0 5px;
+      border-radius:999px;
+      background:var(--red);
+      color:#fff;
+      display:none;
       align-items:center;
       justify-content:center;
+      font-size:10px;
+      font-weight:950;
+      border:2px solid var(--nav-bg);
       line-height:1;
     }
 
-    .icon-svg svg{
-      width:20px;
-      height:20px;
-      display:block;
-    }
+    .nav-badge.show{display:flex}
 
     @media(max-width:900px){
       .summary-grid{grid-template-columns:repeat(2,1fr)}
       .tabs{grid-template-columns:repeat(4,1fr)}
+      .compact-grid{grid-template-columns:1fr}
     }
 
     @media(max-width:700px){
-      body{padding:10px 10px 108px}
+      body{padding:10px 10px calc(104px + env(safe-area-inset-bottom,0px))}
       .brand{font-size:17px}
       .panel{padding:11px;border-radius:20px}
       .summary-grid{grid-template-columns:repeat(2,1fr)}
@@ -585,6 +631,7 @@
       .meta-grid,.grid-2{grid-template-columns:1fr}
       .toolbar .action-btn{flex:1}
       .inline-actions .action-btn{flex:1}
+      .section-head{display:block}
       .bottom-nav{padding:7px;gap:5px}
       .nav-link{font-size:10px;padding:8px 3px}
     }
@@ -605,10 +652,11 @@
         <div class="brand-sub">Admin Panel</div>
       </div>
 
-      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh">
+      <button id="signOutBtn" class="top-icon-btn" type="button" aria-label="Sign out">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-          <path d="M21 3v6h-6"></path>
+          <path d="M10 17l5-5-5-5"></path>
+          <path d="M15 12H3"></path>
+          <path d="M21 19V5a2 2 0 0 0-2-2h-6"></path>
         </svg>
       </button>
     </div>
@@ -622,7 +670,7 @@
       <div class="panel hero">
         <div class="hero-title">Central Admin</div>
         <div class="hero-sub">
-          Manage users, reports, verifications, communities, Hub posts, places, trust score, and moderation history from one clean OwnSpace admin panel.
+          Manage users, reports, verification, communities, OwnSpace Hub posts, places, Trust Bar changes, and moderation history from one clean control panel.
         </div>
 
         <div class="summary-grid">
@@ -630,25 +678,21 @@
             <div class="summary-label">Users</div>
             <div id="sumUsers" class="summary-value">0</div>
           </div>
-
           <div class="summary-card">
             <div class="summary-label">Open Reports</div>
             <div id="sumReports" class="summary-value">0</div>
           </div>
-
           <div class="summary-card">
             <div class="summary-label">Verification</div>
             <div id="sumVerification" class="summary-value">0</div>
           </div>
-
           <div class="summary-card">
             <div class="summary-label">Communities</div>
             <div id="sumCommunities" class="summary-value">0</div>
           </div>
-
           <div class="summary-card">
             <div class="summary-label">Low Trust</div>
-            <div id="sumHistory" class="summary-value">0</div>
+            <div id="sumLowTrust" class="summary-value">0</div>
           </div>
         </div>
       </div>
@@ -696,17 +740,6 @@
       <span>Nearby</span>
     </a>
 
-    <a href="nearby-communities.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 19a4 4 0 0 1 8 0"></path>
-          <circle cx="11" cy="9" r="3"></circle>
-          <path d="M17 11a3 3 0 0 1 3 3v5"></path>
-        </svg>
-      </span>
-      <span>Community</span>
-    </a>
-
     <a href="search.html" class="nav-link">
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -715,6 +748,17 @@
         </svg>
       </span>
       <span>Search</span>
+    </a>
+
+    <a href="inbox.html" class="nav-link">
+      <span id="inboxBadge" class="nav-badge">0</span>
+      <span class="icon-svg" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16v12H4z"></path>
+          <path d="M4 7l8 6 8-6"></path>
+        </svg>
+      </span>
+      <span>Inbox</span>
     </a>
 
     <a href="profile.html" class="nav-link active">
@@ -734,8 +778,7 @@
     const VERIFICATION_BUCKET = "verification";
 
     const backBtn = document.getElementById("backBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
-
+    const signOutBtn = document.getElementById("signOutBtn");
     const accessPanel = document.getElementById("accessPanel");
     const accessLoading = document.getElementById("accessLoading");
     const accessDenied = document.getElementById("accessDenied");
@@ -745,13 +788,14 @@
     const sumReports = document.getElementById("sumReports");
     const sumVerification = document.getElementById("sumVerification");
     const sumCommunities = document.getElementById("sumCommunities");
-    const sumHistory = document.getElementById("sumHistory");
-
+    const sumLowTrust = document.getElementById("sumLowTrust");
     const pageMessage = document.getElementById("pageMessage");
     const sectionLoading = document.getElementById("sectionLoading");
     const sectionContent = document.getElementById("sectionContent");
+    const inboxBadge = document.getElementById("inboxBadge");
 
     let currentUser = null;
+    let currentUserProfile = null;
     let currentTab = "dashboard";
 
     const state = {
@@ -790,36 +834,27 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"></path>
         </svg>
-      `,
-      refresh: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-          <path d="M21 3v6h-6"></path>
-        </svg>
       `
     };
 
-    function nowIso() {
-      return new Date().toISOString();
-    }
+    function nowIso(){ return new Date().toISOString(); }
 
-    function getStoredTheme() {
+    function getStoredTheme(){
       return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
-    function resolveTheme(themeValue) {
+    function resolveTheme(themeValue){
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
       return themeValue === "dark" ? "dark" : "light";
     }
 
-    function applyTheme(themeValue = getStoredTheme()) {
+    function applyTheme(themeValue = getStoredTheme()){
       document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
     }
 
     applyTheme();
-
     window.addEventListener("storage", (e) => {
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
     });
@@ -836,27 +871,28 @@
       else window.location.href = "profile.html";
     });
 
-    refreshBtn.addEventListener("click", async () => {
-      await refreshCurrent();
+    signOutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "login.html";
     });
 
-    function setMessage(text = "", type = "") {
+    function setMessage(text = "", type = ""){
       pageMessage.textContent = text;
       pageMessage.className = `message ${type}`;
     }
 
-    function setSectionLoading(show, text = "Loading section...") {
+    function setSectionLoading(show, text = "Loading section..."){
       sectionLoading.textContent = text;
       sectionLoading.classList.toggle("hidden", !show);
     }
 
-    function escapeHtml(text) {
+    function escapeHtml(text){
       const div = document.createElement("div");
       div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
     }
 
-    function val(obj, names, fallback = "") {
+    function val(obj, names, fallback = ""){
       for (const name of names) {
         const value = obj?.[name];
         if (value !== undefined && value !== null && String(value).trim() !== "") return value;
@@ -864,7 +900,7 @@
       return fallback;
     }
 
-    function boolVal(obj, names, fallback = false) {
+    function boolVal(obj, names, fallback = false){
       for (const name of names) {
         const value = obj?.[name];
         if (value !== undefined && value !== null) return !!value;
@@ -872,11 +908,11 @@
       return fallback;
     }
 
-    function normalizeStatus(status = "") {
+    function normalizeStatus(status = ""){
       return String(status || "").toLowerCase().trim();
     }
 
-    function isMissingSchemaError(error) {
+    function isMissingSchemaError(error){
       const msg = String(error?.message || "").toLowerCase();
       return (
         msg.includes("does not exist") ||
@@ -887,164 +923,104 @@
       );
     }
 
-    function isColumnError(error) {
+    function isColumnError(error){
       const msg = String(error?.message || "").toLowerCase();
-      return (
-        msg.includes("schema cache") ||
-        msg.includes("column") ||
-        msg.includes("could not find") ||
-        msg.includes("does not exist")
-      );
+      return msg.includes("schema cache") || msg.includes("column") || msg.includes("could not find") || msg.includes("does not exist");
     }
 
-    function clampNumber(value, min, max) {
+    function clampNumber(value, min, max){
       const n = Number(value);
       if (!Number.isFinite(n)) return min;
       return Math.max(min, Math.min(max, Math.round(n)));
     }
 
-    function clampTrust(value) {
-      return clampNumber(value, TRUST.min, TRUST.max);
-    }
+    function clampTrust(value){ return clampNumber(value, TRUST.min, TRUST.max); }
 
-    function getTrustScore(row) {
+    function getTrustScore(row){
       return clampTrust(val(row, ["trust_score", "trustScore"], TRUST.default));
     }
 
-    function getTrustText(score) {
+    function getTrustText(score){
       const s = clampTrust(score);
-      if (s >= 80) return "High trust";
-      if (s >= 55) return "Normal trust";
-      if (s >= 30) return "Low trust";
-      return "Very low trust";
+      if (s >= 85) return "Highly trusted";
+      if (s >= 70) return "Trusted";
+      if (s >= 50) return "Normal";
+      if (s >= 25) return "Low trust";
+      return "Risky";
     }
 
-    function trustBar(score) {
+    function trustBar(score){
       const s = clampTrust(score);
       return `
         <div class="trust-wrap">
           <div class="trust-head">
             <span>Trust Bar</span>
-            <span>${s}% · ${escapeHtml(getTrustText(s))}</span>
+            <span>${s}% Â· ${escapeHtml(getTrustText(s))}</span>
           </div>
-          <div class="trust-track">
-            <div class="trust-fill" style="width:${s}%"></div>
-          </div>
-          <div class="trust-note">Purchased points do not increase trust. Trust changes only from safety, verification, approvals, and moderation actions.</div>
+          <div class="trust-track"><div class="trust-fill" style="width:${s}%"></div></div>
+          <div class="trust-note">Purchased points do not increase trust. Trust changes only through safety, verification, approvals, and moderation.</div>
         </div>
       `;
     }
 
-    function tsMs(ts) {
+    function tsMs(ts){
       if (!ts) return 0;
-
-      try {
-        if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().getTime();
-      } catch {}
-
-      try {
-        if (typeof ts === "object" && typeof ts.seconds === "number") return ts.seconds * 1000;
-      } catch {}
-
+      try { if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().getTime(); } catch {}
+      try { if (typeof ts === "object" && typeof ts.seconds === "number") return ts.seconds * 1000; } catch {}
       try {
         const ms = new Date(ts).getTime();
         return Number.isFinite(ms) ? ms : 0;
-      } catch {
-        return 0;
-      }
+      } catch { return 0; }
     }
 
-    function createdMs(item) {
-      return tsMs(
-        item?.created_at ??
-        item?.createdAt ??
-        item?.created ??
-        item?.timestamp ??
-        item?.updated_at ??
-        item?.updatedAt
-      );
+    function createdMs(item){
+      return tsMs(item?.created_at ?? item?.createdAt ?? item?.created ?? item?.timestamp ?? item?.updated_at ?? item?.updatedAt);
     }
 
-    function fmtDate(ts) {
+    function fmtDate(ts){
       if (!ts) return "Just now";
-
-      try {
-        if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().toLocaleString();
-      } catch {}
-
-      try {
-        if (typeof ts === "object" && typeof ts.seconds === "number") return new Date(ts.seconds * 1000).toLocaleString();
-      } catch {}
-
+      try { if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().toLocaleString(); } catch {}
+      try { if (typeof ts === "object" && typeof ts.seconds === "number") return new Date(ts.seconds * 1000).toLocaleString(); } catch {}
       try {
         const d = new Date(ts);
         if (!Number.isNaN(d.getTime())) return d.toLocaleString();
       } catch {}
-
       return "Just now";
     }
 
-    function normalizeUrl(url) {
-      const value = String(url || "").trim();
-      if (!value) return "";
-      if (/^https?:\/\//i.test(value)) return value;
-      return "https://" + value;
-    }
-
-    function badgeClass(status) {
+    function badgeClass(status){
       const s = normalizeStatus(status);
-
-      if (["approved", "active", "published", "resolved", "verified"].includes(s)) return "green";
-      if (["pending", "open", "need_more_info", "review"].includes(s)) return "yellow";
+      if (["approved", "active", "published", "resolved", "verified", "restore", "restored"].includes(s)) return "green";
+      if (["pending", "open", "need_more_info", "review", "warned"].includes(s)) return "yellow";
       if (["featured", "pinned", "admin", "creator"].includes(s)) return "purple";
-      if (["rejected", "hidden", "banned", "suspended", "warned", "deleted"].includes(s)) return "red";
+      if (["rejected", "hidden", "banned", "suspended", "deleted", "hide", "ban"].includes(s)) return "red";
       return "blue";
     }
 
-    async function selectAll(table) {
+    async function selectAll(table){
       const { data, error } = await supabase.from(table).select("*");
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     }
 
-    async function selectAllSafe(table) {
-      try {
-        return await selectAll(table);
-      } catch (err) {
+    async function selectAllSafe(table){
+      try { return await selectAll(table); }
+      catch (err) {
         if (!isMissingSchemaError(err)) console.warn(`Could not load ${table}:`, err?.message || err);
         return [];
       }
     }
 
-    async function selectAllFromTables(tables) {
-      const out = [];
-
-      for (const table of tables) {
-        const rows = await selectAllSafe(table);
-        rows.forEach(row => out.push({ ...row, __table: table }));
-      }
-
-      return out;
-    }
-
-    async function selectRowByColumn(table, column, value) {
+    async function selectRowByColumn(table, column, value){
       if (!value) return null;
-
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .eq(column, value)
-        .maybeSingle();
-
+      const { data, error } = await supabase.from(table).select("*").eq(column, value).maybeSingle();
       if (error) throw error;
       return data || null;
     }
 
-    async function selectUserRow(uid) {
+    async function selectUserRow(uid){
       if (!uid) return null;
-
-      const columns = ["uid", "id", "user_id", "userId"];
-
+      const columns = ["id", "uid", "user_id", "userId"];
       for (const table of ["users", "public_profiles"]) {
         for (const column of columns) {
           try {
@@ -1053,99 +1029,103 @@
           } catch {}
         }
       }
-
       return null;
     }
 
-    async function ensureAdmin(uid) {
-      const columns = ["uid", "id", "user_id", "userId"];
+    async function ensureAdmin(uid){
+      const columns = ["id", "uid", "user_id", "userId"];
 
       for (const column of columns) {
         try {
           const row = await selectRowByColumn("admins", column, uid);
           if (row) return true;
         } catch (err) {
-          if (!isMissingSchemaError(err)) console.warn(`Admin check skipped admins.${column}`, err?.message || err);
+          if (!isMissingSchemaError(err) && !isColumnError(err)) console.warn(`Admin check skipped admins.${column}:`, err?.message || err);
         }
       }
 
       try {
-        const userRows = await selectAllSafe("users");
-        const me = userRows.find(row => {
-          const id = val(row, ["uid", "id", "user_id", "userId"], "");
-          return id === uid;
-        });
-
+        const me = await selectUserRow(uid);
         if (me && (me.is_admin === true || me.isAdmin === true || normalizeStatus(me.role) === "admin")) return true;
       } catch {}
 
       return false;
     }
 
-    async function insertWithFallback(table, payloadVariants = []) {
+    async function insertWithFallback(table, payloadVariants = []){
       let lastError = null;
-
       for (const payload of payloadVariants) {
         try {
-          const { data, error } = await supabase
-            .from(table)
-            .insert(payload)
-            .select()
-            .maybeSingle();
-
+          const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
           if (!error) return data || null;
           lastError = error;
-        } catch (err) {
-          lastError = err;
-        }
+          if (!isMissingSchemaError(error) && !isColumnError(error)) break;
+        } catch (err) { lastError = err; }
       }
-
       throw lastError || new Error(`Could not insert into ${table}.`);
     }
 
-    async function updateByColumnWithFallback(table, column, value, payloadVariants = []) {
+    async function updateByColumnWithFallback(table, column, value, payloadVariants = []){
       let lastError = null;
-
       for (const payload of payloadVariants) {
         try {
-          const { data, error } = await supabase
-            .from(table)
-            .update(payload)
-            .eq(column, value)
-            .select();
-
+          const { data, error } = await supabase.from(table).update(payload).eq(column, value).select();
           if (!error) return data || [];
           lastError = error;
-          if (isMissingSchemaError(error) || isColumnError(error)) continue;
-        } catch (err) {
-          lastError = err;
-        }
+          if (!isMissingSchemaError(error) && !isColumnError(error)) break;
+        } catch (err) { lastError = err; }
       }
-
       throw lastError || new Error(`Could not update ${table}.${column}.`);
     }
 
-    async function updateByIdWithFallback(table, id, payloadVariants = []) {
+    async function updateByIdWithFallback(table, id, payloadVariants = [], idColumns = ["id"]){
       let lastError = null;
-      const idColumns = ["id", "uid", "user_id", "userId"];
-
       for (const idColumn of idColumns) {
-        try {
-          return await updateByColumnWithFallback(table, idColumn, id, payloadVariants);
-        } catch (err) {
-          lastError = err;
-        }
+        try { return await updateByColumnWithFallback(table, idColumn, id, payloadVariants); }
+        catch (err) { lastError = err; }
       }
-
       throw lastError || new Error(`Could not update ${table}.`);
     }
 
-    async function deleteById(table, id) {
+    async function updateUserTables(uid, payloadVariants){
+      await Promise.allSettled([
+        updateByIdWithFallback("users", uid, payloadVariants, ["id", "uid", "user_id", "userId"]),
+        updateByIdWithFallback("public_profiles", uid, payloadVariants, ["id", "uid", "user_id", "userId"])
+      ]);
+    }
+
+    async function deleteById(table, id){
       const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
     }
 
-    async function logAdminAction(action, payload = {}) {
+    function getUserId(row){ return String(val(row, ["uid", "id", "user_id", "userId"], "") || ""); }
+    function getUserName(row){ return String(val(row, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member"); }
+    function getUsername(row){ return String(val(row, ["username", "handle", "user_name", "userName"], "") || ""); }
+    function getUserEmail(row){ return String(val(row, ["email"], "") || ""); }
+    function getUserStatus(row){ return normalizeStatus(val(row, ["moderation_status", "moderationStatus", "status"], "active") || "active"); }
+
+    function isHiddenUser(row){
+      return !!(row?.is_hidden_by_admin || row?.isHiddenByAdmin || row?.soft_deleted || row?.softDeleted || row?.deactivated || row?.banned) || getUserStatus(row) === "banned";
+    }
+
+    function mergeUserRows(usersRows, publicRows){
+      const map = new Map();
+      usersRows.forEach(row => {
+        const uid = getUserId(row);
+        if (!uid) return;
+        map.set(uid, { ...row, uid, __sources:["users"] });
+      });
+      publicRows.forEach(row => {
+        const uid = getUserId(row);
+        if (!uid) return;
+        if (map.has(uid)) map.set(uid, { ...map.get(uid), ...row, uid, __sources:[...(map.get(uid).__sources || []), "public_profiles"] });
+        else map.set(uid, { ...row, uid, __sources:["public_profiles"] });
+      });
+      return Array.from(map.values());
+    }
+
+    async function logAdminAction(action, payload = {}){
       if (!currentUser?.id) return;
 
       const snakePayload = {
@@ -1193,18 +1173,60 @@
         created_at: nowIso()
       };
 
+      try { await insertWithFallback("moderation_history", [snakePayload, camelPayload, minimalPayload]); }
+      catch (err) { console.warn("Could not log admin action:", err?.message || err); }
+    }
+
+    async function createNotification(targetUid, payload = {}){
+      if (!targetUid) return;
+      const link = payload.link || "notifications.html";
+      const title = payload.title || "OwnSpace update";
+      const message = payload.message || "You have a new update.";
+      const type = payload.type || "admin";
+
       try {
-        await insertWithFallback("moderation_history", [
-          snakePayload,
-          camelPayload,
-          minimalPayload
+        await insertWithFallback("notifications", [
+          {
+            user_id: targetUid,
+            to_user_id: targetUid,
+            recipient_id: targetUid,
+            from_user_id: currentUser?.id || null,
+            type,
+            title,
+            message,
+            text: message,
+            link,
+            read: false,
+            is_read: false,
+            created_at: nowIso()
+          },
+          {
+            userId: targetUid,
+            toUserId: targetUid,
+            recipientId: targetUid,
+            fromUserId: currentUser?.id || null,
+            type,
+            title,
+            message,
+            text: message,
+            link,
+            read: false,
+            isRead: false,
+            createdAt: nowIso()
+          },
+          {
+            user_id: targetUid,
+            type,
+            message,
+            created_at: nowIso()
+          }
         ]);
       } catch (err) {
-        console.warn("Could not log admin action:", err?.message || err);
+        console.warn("Notification insert skipped:", err?.message || err);
       }
     }
 
-    async function updateTrustScore(targetUid, newScore, reason = "trust_update", extra = {}) {
+    async function updateTrustScore(targetUid, newScore, reason = "trust_update", extra = {}){
       if (!targetUid) return null;
 
       const existing = await selectUserRow(targetUid);
@@ -1212,29 +1234,11 @@
       const after = clampTrust(newScore);
       const delta = after - before;
 
-      const payloads = [
-        {
-          trust_score: after,
-          trustScore: after,
-          trust_updated_at: nowIso(),
-          trust_reason: reason,
-          updated_at: nowIso()
-        },
-        {
-          trustScore: after,
-          trustUpdatedAt: nowIso(),
-          trustReason: reason,
-          updatedAt: nowIso()
-        },
-        {
-          trust_score: after,
-          updated_at: nowIso()
-        }
-      ];
-
-      await Promise.allSettled([
-        updateByIdWithFallback("users", targetUid, payloads),
-        updateByIdWithFallback("public_profiles", targetUid, payloads)
+      await updateUserTables(targetUid, [
+        { trust_score: after, trust_updated_at: nowIso(), trust_reason: reason, updated_at: nowIso() },
+        { trustScore: after, trustUpdatedAt: nowIso(), trustReason: reason, updatedAt: nowIso() },
+        { trust_score: after },
+        { trustScore: after }
       ]);
 
       await logAdminAction("trust_updated", {
@@ -1250,102 +1254,33 @@
       return { before, after, delta };
     }
 
-    async function changeTrustScore(targetUid, delta, reason = "trust_change", extra = {}) {
+    async function changeTrustScore(targetUid, delta, reason = "trust_change", extra = {}){
       if (!targetUid) return null;
-
       const existing = await selectUserRow(targetUid);
       const before = existing ? getTrustScore(existing) : TRUST.default;
-      const after = clampTrust(before + Number(delta || 0));
-
-      return updateTrustScore(targetUid, after, reason, extra);
+      return updateTrustScore(targetUid, before + Number(delta || 0), reason, extra);
     }
 
-    async function restoreTrustFloor(targetUid, floor = TRUST.restoredFloor, reason = "trust_restore", extra = {}) {
+    async function restoreTrustFloor(targetUid, floor = TRUST.restoredFloor, reason = "trust_restore", extra = {}){
       if (!targetUid) return null;
-
       const existing = await selectUserRow(targetUid);
       const before = existing ? getTrustScore(existing) : TRUST.default;
-      const after = Math.max(before, floor);
-
-      return updateTrustScore(targetUid, after, reason, extra);
+      return updateTrustScore(targetUid, Math.max(before, floor), reason, extra);
     }
 
-    async function forceTrustZero(targetUid, reason = "trust_ban", extra = {}) {
+    async function forceTrustZero(targetUid, reason = "trust_ban", extra = {}){
       return updateTrustScore(targetUid, 0, reason, extra);
     }
 
-    function getUserId(row) {
-      return String(val(row, ["uid", "id", "user_id", "userId"], "") || "");
-    }
-
-    function getUserName(row) {
-      return String(val(row, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member");
-    }
-
-    function getUsername(row) {
-      return String(val(row, ["username", "handle", "user_name", "userName"], "") || "");
-    }
-
-    function getUserEmail(row) {
-      return String(val(row, ["email"], "") || "");
-    }
-
-    function getUserStatus(row) {
-      return normalizeStatus(val(row, ["moderation_status", "moderationStatus", "status"], "active") || "active");
-    }
-
-    function isHiddenUser(row) {
-      return !!(
-        row?.is_hidden_by_admin ||
-        row?.isHiddenByAdmin ||
-        row?.soft_deleted ||
-        row?.softDeleted ||
-        row?.deactivated ||
-        row?.banned
-      ) || getUserStatus(row) === "banned";
-    }
-
-    function mergeUserRows(usersRows, publicRows) {
-      const map = new Map();
-
-      usersRows.forEach(row => {
-        const uid = getUserId(row);
-        if (!uid) return;
-        map.set(uid, { ...row, uid, __sources: ["users"] });
-      });
-
-      publicRows.forEach(row => {
-        const uid = getUserId(row);
-        if (!uid) return;
-        if (map.has(uid)) {
-          map.set(uid, { ...map.get(uid), ...row, uid, __sources: [...(map.get(uid).__sources || []), "public_profiles"] });
-        } else {
-          map.set(uid, { ...row, uid, __sources: ["public_profiles"] });
-        }
-      });
-
-      return Array.from(map.values());
-    }
-
-    function getReportStatus(row) {
-      return normalizeStatus(val(row, ["status"], "open") || "open");
-    }
-
-    function isReportOpen(row) {
+    function getReportStatus(row){ return normalizeStatus(val(row, ["status"], "open") || "open"); }
+    function isReportOpen(row){
       const s = getReportStatus(row);
       return !["resolved", "closed", "done", "dismissed"].includes(s);
     }
 
-    function normalizeCommunity(row) {
+    function normalizeCommunity(row){
       const status = normalizeStatus(val(row, ["status"], "active") || "active");
-      const hidden = !!(
-        row?.hidden ||
-        row?.hidden_by_admin ||
-        row?.hiddenByAdmin ||
-        row?.soft_deleted ||
-        row?.softDeleted
-      ) || status === "deleted";
-
+      const hidden = !!(row?.hidden || row?.hidden_by_admin || row?.hiddenByAdmin || row?.soft_deleted || row?.softDeleted) || status === "deleted" || status === "hidden";
       return {
         id: String(val(row, ["id"], "") || ""),
         name: String(val(row, ["name", "title", "community_name", "communityName"], "Untitled Community") || "Untitled Community"),
@@ -1367,16 +1302,9 @@
       };
     }
 
-    function normalizePlace(row) {
+    function normalizePlace(row){
       const status = normalizeStatus(val(row, ["status"], "") || "");
-      const hidden = !!(
-        row?.hidden ||
-        row?.hidden_by_admin ||
-        row?.hiddenByAdmin ||
-        row?.soft_deleted ||
-        row?.softDeleted
-      ) || status === "deleted";
-
+      const hidden = !!(row?.hidden || row?.hidden_by_admin || row?.hiddenByAdmin || row?.soft_deleted || row?.softDeleted) || status === "deleted" || status === "hidden";
       return {
         id: String(val(row, ["id"], "") || ""),
         name: String(val(row, ["name", "title", "place_name", "placeName"], "Unnamed Place") || "Unnamed Place"),
@@ -1397,22 +1325,14 @@
       };
     }
 
-    function normalizeHubPost(row) {
+    function normalizeHubPost(row){
       const status = normalizeStatus(val(row, ["status"], "") || "");
-      const hidden = !!(
-        row?.hidden ||
-        row?.hidden_by_admin ||
-        row?.hiddenByAdmin ||
-        row?.soft_deleted ||
-        row?.softDeleted
-      ) || status === "deleted";
-
-      const published = row.published !== false && row.is_published !== false && row.isPublished !== false && status !== "draft";
-
+      const hidden = !!(row?.hidden || row?.hidden_by_admin || row?.hiddenByAdmin || row?.soft_deleted || row?.softDeleted) || status === "deleted" || status === "hidden";
+      const published = row.published !== false && row.is_published !== false && row.isPublished !== false && status !== "draft" && !hidden;
       return {
         id: String(val(row, ["id"], "") || ""),
         title: String(val(row, ["title", "name"], "Untitled Hub Post") || "Untitled Hub Post"),
-        summary: String(val(row, ["summary", "description", "caption"], "") || ""),
+        summary: String(val(row, ["summary", "description", "caption", "body", "content"], "") || ""),
         type: String(val(row, ["post_type", "postType", "type"], "update") || "update"),
         category: String(val(row, ["category", "topic"], "General") || "General"),
         creatorId: String(val(row, ["created_by", "createdBy", "user_id", "userId", "author_id", "authorId", "uid"], "") || ""),
@@ -1427,41 +1347,60 @@
       };
     }
 
-    function getBadgeLabel(type) {
+    function getBadgeLabel(type){
       const t = normalizeStatus(type);
       if (t === "creator") return "Verified Creator";
       if (t === "business") return "Verified Business";
       return "Verified Account";
     }
 
-    async function refreshCurrent() {
+    async function loadInboxBadge(){
+      if (!currentUser?.id || !inboxBadge) return;
+      let count = 0;
+      try {
+        const requests = await selectAllSafe("message_requests");
+        count += requests.filter(r => {
+          const target = val(r, ["target_id", "targetId", "to_user_id", "toUserId", "receiver_id", "receiverId"], "");
+          const s = normalizeStatus(val(r, ["status"], "pending"));
+          return target === currentUser.id && ["pending", "open", "requested"].includes(s);
+        }).length;
+      } catch {}
+
+      try {
+        const messages = await selectAllSafe("chat_messages");
+        count += messages.filter(m => {
+          const receiver = val(m, ["receiver_id", "receiverId", "to_user_id", "toUserId", "target_id", "targetId"], "");
+          const sender = val(m, ["sender_id", "senderId", "from_user_id", "fromUserId", "user_id", "userId"], "");
+          const seen = val(m, ["seen_at", "seenAt", "read_at", "readAt"], "");
+          return receiver === currentUser.id && sender !== currentUser.id && !seen;
+        }).length;
+      } catch {}
+
+      if (count > 0) {
+        inboxBadge.textContent = count > 99 ? "99+" : String(count);
+        inboxBadge.classList.add("show");
+      } else {
+        inboxBadge.classList.remove("show");
+      }
+    }
+
+    async function refreshCurrent(){
       setMessage("");
       await loadSummary();
       await loadSection(currentTab);
+      await loadInboxBadge();
     }
 
-    function setActiveTab(tab) {
+    function setActiveTab(tab){
       currentTab = tab;
-
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tab);
-      });
-
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
       loadSection(tab, true);
     }
 
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
-    });
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
 
-    async function loadSummary() {
-      const [
-        usersRows,
-        publicRows,
-        reports,
-        verifications,
-        communitiesRaw
-      ] = await Promise.all([
+    async function loadSummary(){
+      const [usersRows, publicRows, reports, verifications, communitiesRaw] = await Promise.all([
         selectAllSafe("users"),
         selectAllSafe("public_profiles"),
         selectAllSafe("reports"),
@@ -1479,10 +1418,10 @@
         return s === "pending" || s === "need_more_info";
       }).length);
       sumCommunities.textContent = String(communities.filter(c => !c.hidden).length);
-      sumHistory.textContent = String(users.filter(u => getTrustScore(u) <= 40).length);
+      sumLowTrust.textContent = String(users.filter(u => getTrustScore(u) <= 40).length);
     }
 
-    async function loadSection(tab, refreshSummary = false) {
+    async function loadSection(tab, refreshSummary = false){
       setMessage("");
       setSectionLoading(true);
       sectionContent.innerHTML = "";
@@ -1496,7 +1435,6 @@
         else if (tab === "hub") await loadHub();
         else if (tab === "places") await loadPlaces();
         else if (tab === "history") await loadHistory();
-
         if (refreshSummary) await loadSummary();
       } catch (err) {
         console.error(err);
@@ -1506,17 +1444,8 @@
       setSectionLoading(false);
     }
 
-    async function loadDashboard() {
-      const [
-        reports,
-        verifications,
-        communitiesRaw,
-        hubPostsRaw,
-        placesRaw,
-        historyRaw,
-        usersRows,
-        publicRows
-      ] = await Promise.all([
+    async function loadDashboard(){
+      const [reports, verifications, communitiesRaw, hubPostsRaw, placesRaw, historyRaw, usersRows, publicRows] = await Promise.all([
         selectAllSafe("reports"),
         selectAllSafe("verification_requests"),
         selectAllSafe("communities"),
@@ -1528,273 +1457,141 @@
       ]);
 
       const users = mergeUserRows(usersRows, publicRows);
+      const openReports = reports.filter(isReportOpen).sort((a,b) => createdMs(b) - createdMs(a)).slice(0,4);
+      const pendingVerification = verifications.filter(v => ["pending", "need_more_info"].includes(normalizeStatus(val(v, ["status"], "pending")))).sort((a,b) => createdMs(b) - createdMs(a)).slice(0,4);
+      const pendingCommunities = communitiesRaw.map(normalizeCommunity).filter(c => !c.hidden && (c.pending || !c.approved) && !c.rejected).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0,4);
+      const pendingPlaces = placesRaw.map(normalizePlace).filter(p => !p.hidden && p.pending && !p.approved && !p.rejected).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0,4);
+      const recentHub = hubPostsRaw.map(normalizeHubPost).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0,4);
+      const lowTrustUsers = users.filter(u => getTrustScore(u) <= 40).sort((a,b) => getTrustScore(a) - getTrustScore(b)).slice(0,4);
+      const recentHistory = historyRaw.sort((a,b) => createdMs(b) - createdMs(a)).slice(0,5);
 
-      const openReports = reports.filter(isReportOpen).sort((a, b) => createdMs(b) - createdMs(a)).slice(0, 5);
-
-      const pendingVerification = verifications
-        .filter(v => {
-          const s = normalizeStatus(val(v, ["status"], "pending"));
-          return s === "pending" || s === "need_more_info";
-        })
-        .sort((a, b) => createdMs(b) - createdMs(a))
-        .slice(0, 5);
-
-      const pendingCommunities = communitiesRaw
-        .map(normalizeCommunity)
-        .filter(c => !c.hidden && (c.pending || !c.approved))
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
-        .slice(0, 5);
-
-      const pendingPlaces = placesRaw
-        .map(normalizePlace)
-        .filter(p => !p.hidden && p.pending && !p.approved && !p.rejected)
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
-        .slice(0, 5);
-
-      const recentHub = hubPostsRaw
-        .map(normalizeHubPost)
-        .sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt))
-        .slice(0, 5);
-
-      const lowTrustUsers = users
-        .filter(u => getTrustScore(u) <= 40)
-        .sort((a, b) => getTrustScore(a) - getTrustScore(b))
-        .slice(0, 5);
-
-      const recentHistory = historyRaw
-        .sort((a, b) => createdMs(b) - createdMs(a))
-        .slice(0, 8);
+      function quickLines(items, empty, render){
+        return items.length ? items.map(render).join("") : `<div class="empty-box">${escapeHtml(empty)}</div>`;
+      }
 
       sectionContent.innerHTML = `
-        <div class="section-title">Dashboard</div>
-        <div class="section-note">Quick view of pending work, trust alerts, and recent admin actions.</div>
+        <div class="section-head">
+          <div>
+            <div class="section-title">Dashboard</div>
+            <div class="section-note">Quick view of pending work, low trust users, and recent admin actions.</div>
+          </div>
+          <button id="reloadDashboardBtn" class="action-btn blue" type="button">Reload</button>
+        </div>
 
-        <div class="list">
-          <div class="card">
+        <div class="compact-grid">
+          <div class="quick-card">
             <div class="card-title">Open Reports</div>
-            ${openReports.length ? openReports.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(val(item, ["target_type", "targetType", "type"], "Report"))}</strong>
-                ${escapeHtml(val(item, ["reason", "title", "description", "text"], "No reason provided"))}
-              </div>
-            `).join("") : `<div class="empty-box">No open reports.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn purple dash-go" data-tab="reports" type="button">Open Reports</button>
-            </div>
+            ${quickLines(openReports, "No open reports.", item => `
+              <div class="quick-line"><span>${escapeHtml(val(item, ["reason", "title", "description", "text"], "Report"))}</span><strong>${escapeHtml(val(item, ["target_type", "targetType", "type"], "item"))}</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn purple dash-go" data-tab="reports" type="button">Open Reports</button></div>
           </div>
 
-          <div class="card">
+          <div class="quick-card">
             <div class="card-title">Low Trust Users</div>
-            ${lowTrustUsers.length ? lowTrustUsers.map(user => `
-              <div class="meta-item">
-                <strong>${escapeHtml(getUserName(user))}</strong>
-                ${escapeHtml(getUsername(user) ? "@" + getUsername(user) : getUserId(user))} • Trust ${escapeHtml(String(getTrustScore(user)))}%
-              </div>
-            `).join("") : `<div class="empty-box">No low trust users.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn red dash-go-users-low" type="button">Open Low Trust</button>
-            </div>
+            ${quickLines(lowTrustUsers, "No low trust users.", user => `
+              <div class="quick-line"><span>${escapeHtml(getUserName(user))}</span><strong>${escapeHtml(String(getTrustScore(user)))}%</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn red dash-go-users-low" type="button">Open Low Trust</button></div>
           </div>
 
-          <div class="card">
-            <div class="card-title">Verification Requests</div>
-            ${pendingVerification.length ? pendingVerification.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(val(item, ["full_legal_name", "full_name", "username", "email"], "Verification Request"))}</strong>
-                ${escapeHtml(getBadgeLabel(val(item, ["badge_type", "verification_type"], "account")))} • ${escapeHtml(val(item, ["status"], "pending"))}
-              </div>
-            `).join("") : `<div class="empty-box">No pending verification.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn green dash-go" data-tab="verification" type="button">Open Verification</button>
-            </div>
+          <div class="quick-card">
+            <div class="card-title">Verification</div>
+            ${quickLines(pendingVerification, "No pending verification.", item => `
+              <div class="quick-line"><span>${escapeHtml(val(item, ["username", "email", "full_name", "full_legal_name"], "Request"))}</span><strong>${escapeHtml(getBadgeLabel(val(item, ["badge_type", "verification_type"], "account")))}</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn green dash-go" data-tab="verification" type="button">Open Verification</button></div>
           </div>
 
-          <div class="card">
-            <div class="card-title">Pending Communities</div>
-            ${pendingCommunities.length ? pendingCommunities.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(item.name)}</strong>
-                ${escapeHtml(item.category)} • ${escapeHtml(item.creatorName)}
-              </div>
-            `).join("") : `<div class="empty-box">No pending communities.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn blue dash-go" data-tab="communities" type="button">Open Communities</button>
-            </div>
+          <div class="quick-card">
+            <div class="card-title">Communities</div>
+            ${quickLines(pendingCommunities, "No pending communities.", item => `
+              <div class="quick-line"><span>${escapeHtml(item.name)}</span><strong>${escapeHtml(item.category)}</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn blue dash-go" data-tab="communities" type="button">Open Communities</button></div>
           </div>
 
-          <div class="card">
-            <div class="card-title">Pending Places</div>
-            ${pendingPlaces.length ? pendingPlaces.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(item.name)}</strong>
-                ${escapeHtml(item.city)} • ${escapeHtml(item.category)}
-              </div>
-            `).join("") : `<div class="empty-box">No pending places.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn yellow dash-go" data-tab="places" type="button">Open Places</button>
-            </div>
+          <div class="quick-card">
+            <div class="card-title">Places</div>
+            ${quickLines(pendingPlaces, "No pending places.", item => `
+              <div class="quick-line"><span>${escapeHtml(item.name)}</span><strong>${escapeHtml(item.city)}</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn yellow dash-go" data-tab="places" type="button">Open Places</button></div>
           </div>
 
-          <div class="card">
-            <div class="card-title">Recent Hub Posts</div>
-            ${recentHub.length ? recentHub.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(item.title)}</strong>
-                ${escapeHtml(item.type)} • ${escapeHtml(item.status)}
-              </div>
-            `).join("") : `<div class="empty-box">No Hub posts yet.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn purple dash-go" data-tab="hub" type="button">Open Hub</button>
-            </div>
+          <div class="quick-card">
+            <div class="card-title">OwnSpace Hub</div>
+            ${quickLines(recentHub, "No Hub posts yet.", item => `
+              <div class="quick-line"><span>${escapeHtml(item.title)}</span><strong>${escapeHtml(item.status)}</strong></div>
+            `)}
+            <div class="inline-actions"><button class="action-btn purple dash-go" data-tab="hub" type="button">Open Hub</button></div>
           </div>
+        </div>
 
-          <div class="card">
-            <div class="card-title">Recent History</div>
-            ${recentHistory.length ? recentHistory.map(item => `
-              <div class="meta-item">
-                <strong>${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</strong>
-                ${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}
-              </div>
-            `).join("") : `<div class="empty-box">No history yet.</div>`}
-            <div class="inline-actions">
-              <button class="action-btn red dash-go" data-tab="history" type="button">Open History</button>
-            </div>
-          </div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-title">Recent History</div>
+          ${recentHistory.length ? recentHistory.map(item => `
+            <div class="quick-line"><span>${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</span><strong>${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</strong></div>
+          `).join("") : `<div class="empty-box">No history yet.</div>`}
+          <div class="inline-actions"><button class="action-btn red dash-go" data-tab="history" type="button">Open History</button></div>
         </div>
       `;
 
-      sectionContent.querySelectorAll(".dash-go").forEach(btn => {
-        btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
-      });
-
-      sectionContent.querySelectorAll(".dash-go-users-low").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.usersFilter = "low_trust";
-          setActiveTab("users");
-        });
-      });
+      document.getElementById("reloadDashboardBtn").addEventListener("click", refreshCurrent);
+      sectionContent.querySelectorAll(".dash-go").forEach(btn => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
+      sectionContent.querySelectorAll(".dash-go-users-low").forEach(btn => btn.addEventListener("click", () => {
+        state.usersFilter = "low_trust";
+        setActiveTab("users");
+      }));
     }
 
-    async function updateUserModeration(targetUid, action) {
+    async function updateUserModeration(targetUid, action){
       if (!targetUid) return;
-
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-      const untilIso = new Date(Date.now() + thirtyDaysMs).toISOString();
+      const untilIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
       if (action === "warn") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            { moderation_status: "warned", warning_until: untilIso, updated_at: nowIso() },
-            { moderationStatus: "warned", warningUntil: untilIso, updatedAt: nowIso() },
-            { moderation_status: "warned" }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            { moderation_status: "warned", warning_until: untilIso, updated_at: nowIso() },
-            { moderationStatus: "warned", warningUntil: untilIso, updatedAt: nowIso() },
-            { moderation_status: "warned" }
-          ])
+        await updateUserTables(targetUid, [
+          { moderation_status: "warned", warning_until: untilIso, updated_at: nowIso() },
+          { moderationStatus: "warned", warningUntil: untilIso, updatedAt: nowIso() },
+          { moderation_status: "warned" }
         ]);
-
         await changeTrustScore(targetUid, TRUST.warned, "admin_warned_user");
+        await createNotification(targetUid, { type:"warning", title:"Account warning", message:"Your OwnSpace account received a 30-day warning. Please review the community rules.", link:"profile.html" });
       }
 
       if (action === "suspend") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            { moderation_status: "suspended", suspended: true, suspension_until: untilIso, updated_at: nowIso() },
-            { moderationStatus: "suspended", suspended: true, suspensionUntil: untilIso, updatedAt: nowIso() },
-            { moderation_status: "suspended" }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            { moderation_status: "suspended", suspended: true, suspension_until: untilIso, updated_at: nowIso() },
-            { moderationStatus: "suspended", suspended: true, suspensionUntil: untilIso, updatedAt: nowIso() },
-            { moderation_status: "suspended" }
-          ])
+        await updateUserTables(targetUid, [
+          { moderation_status: "suspended", suspended: true, suspension_until: untilIso, updated_at: nowIso() },
+          { moderationStatus: "suspended", suspended: true, suspensionUntil: untilIso, updatedAt: nowIso() },
+          { moderation_status: "suspended" }
         ]);
-
         await changeTrustScore(targetUid, TRUST.suspended, "admin_suspended_user");
+        await createNotification(targetUid, { type:"suspension", title:"Account suspended", message:"Your OwnSpace account has been suspended for 30 days.", link:"profile.html" });
       }
 
       if (action === "ban") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            { moderation_status: "banned", banned: true, is_hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
-            { moderationStatus: "banned", banned: true, isHiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
-            { moderation_status: "banned" }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            { moderation_status: "banned", banned: true, is_hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
-            { moderationStatus: "banned", banned: true, isHiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
-            { moderation_status: "banned" }
-          ])
+        await updateUserTables(targetUid, [
+          { moderation_status: "banned", banned: true, is_hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
+          { moderationStatus: "banned", banned: true, isHiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
+          { moderation_status: "banned" }
         ]);
-
         await forceTrustZero(targetUid, "admin_banned_user");
       }
 
       if (action === "restore") {
-        await Promise.allSettled([
-          updateByIdWithFallback("users", targetUid, [
-            {
-              moderation_status: "active",
-              banned: false,
-              suspended: false,
-              is_hidden_by_admin: false,
-              soft_deleted: false,
-              warning_until: null,
-              suspension_until: null,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "active",
-              banned: false,
-              suspended: false,
-              isHiddenByAdmin: false,
-              softDeleted: false,
-              warningUntil: null,
-              suspensionUntil: null,
-              updatedAt: nowIso()
-            },
-            { moderation_status: "active" }
-          ]),
-          updateByIdWithFallback("public_profiles", targetUid, [
-            {
-              moderation_status: "active",
-              banned: false,
-              suspended: false,
-              is_hidden_by_admin: false,
-              soft_deleted: false,
-              warning_until: null,
-              suspension_until: null,
-              updated_at: nowIso()
-            },
-            {
-              moderationStatus: "active",
-              banned: false,
-              suspended: false,
-              isHiddenByAdmin: false,
-              softDeleted: false,
-              warningUntil: null,
-              suspensionUntil: null,
-              updatedAt: nowIso()
-            },
-            { moderation_status: "active" }
-          ])
+        await updateUserTables(targetUid, [
+          { moderation_status: "active", banned: false, suspended: false, is_hidden_by_admin: false, soft_deleted: false, warning_until: null, suspension_until: null, updated_at: nowIso() },
+          { moderationStatus: "active", banned: false, suspended: false, isHiddenByAdmin: false, softDeleted: false, warningUntil: null, suspensionUntil: null, updatedAt: nowIso() },
+          { moderation_status: "active" }
         ]);
-
         await restoreTrustFloor(targetUid, TRUST.restoredFloor, "admin_restored_user");
+        await createNotification(targetUid, { type:"account_restored", title:"Account restored", message:"Your OwnSpace account is active again.", link:"profile.html" });
       }
     }
 
-    async function loadUsers() {
-      const [usersRows, publicRows] = await Promise.all([
-        selectAllSafe("users"),
-        selectAllSafe("public_profiles")
-      ]);
-
-      let users = mergeUserRows(usersRows, publicRows)
-        .sort((a, b) => getUserName(a).localeCompare(getUserName(b)));
-
+    async function loadUsers(){
+      const [usersRows, publicRows] = await Promise.all([selectAllSafe("users"), selectAllSafe("public_profiles")]);
+      let users = mergeUserRows(usersRows, publicRows).sort((a,b) => getUserName(a).localeCompare(getUserName(b)));
       const q = state.usersSearch.trim().toLowerCase();
 
       users = users.filter(user => {
@@ -1810,15 +1607,7 @@
         if (state.usersFilter === "low_trust" && trustScore > 40) return false;
 
         if (q) {
-          const text = [
-            getUserId(user),
-            getUserName(user),
-            getUsername(user),
-            getUserEmail(user),
-            status,
-            String(trustScore)
-          ].join(" ").toLowerCase();
-
+          const text = [getUserId(user), getUserName(user), getUsername(user), getUserEmail(user), status, String(trustScore)].join(" ").toLowerCase();
           if (!text.includes(q)) return false;
         }
 
@@ -1829,9 +1618,8 @@
         <div class="section-title">Users</div>
         <div class="section-note">Search users, view Trust Bar, warn, suspend, ban, restore, or add Hub author permission.</div>
 
-        <div class="toolbar">
+        <div class="toolbar" style="margin-top:12px;">
           <input id="usersSearchInput" class="search-box" type="text" placeholder="Search by name, username, email, UID..." value="${escapeHtml(state.usersSearch)}" />
-
           <button class="action-btn ${state.usersFilter === "all" ? "blue" : ""} users-filter" data-filter="all" type="button">All</button>
           <button class="action-btn ${state.usersFilter === "verified" ? "green" : ""} users-filter" data-filter="verified" type="button">Verified</button>
           <button class="action-btn ${state.usersFilter === "low_trust" ? "red" : ""} users-filter" data-filter="low_trust" type="button">Low Trust</button>
@@ -1847,30 +1635,30 @@
             const verified = boolVal(user, ["verified", "is_verified", "isVerified"], false);
             const hidden = isHiddenUser(user);
             const trustScore = getTrustScore(user);
-
             return `
               <div class="card">
                 <div class="card-top">
                   <div class="card-title">${escapeHtml(getUserName(user))}</div>
-                  <div class="card-time">${escapeHtml(uid.slice(0, 8))}</div>
+                  <div class="card-time">${escapeHtml(uid.slice(0,8))}</div>
                 </div>
-
                 <div class="badge-row">
                   <span class="badge ${badgeClass(hidden ? "banned" : status)}">${escapeHtml(hidden ? "hidden/banned" : status || "active")}</span>
                   ${verified ? `<span class="badge green">Verified</span>` : `<span class="badge">Not verified</span>`}
                   ${getUsername(user) ? `<span class="badge blue">@${escapeHtml(getUsername(user))}</span>` : ""}
-                  <span class="badge ${badgeClass(trustScore <= 40 ? "banned" : trustScore >= 80 ? "verified" : "active")}">Trust ${trustScore}%</span>
+                  <span class="badge ${trustScore <= 40 ? "red" : trustScore >= 80 ? "green" : "blue"}">Trust ${trustScore}%</span>
                 </div>
-
                 ${trustBar(trustScore)}
-
-                <div class="meta-grid">
-                  <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
-                  <div class="meta-item"><strong>Email</strong>${escapeHtml(getUserEmail(user) || "Not added")}</div>
-                  <div class="meta-item"><strong>Trust</strong>${escapeHtml(String(trustScore))}%</div>
-                  <div class="meta-item"><strong>Points</strong>${escapeHtml(String(val(user, ["points_balance", "pointsBalance"], 0)))}</div>
-                </div>
-
+                <details class="more-box">
+                  <summary>View details</summary>
+                  <div class="more-inner">
+                    <div class="meta-grid">
+                      <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
+                      <div class="meta-item"><strong>Email</strong>${escapeHtml(getUserEmail(user) || "Not added")}</div>
+                      <div class="meta-item"><strong>Points</strong>${escapeHtml(String(val(user, ["points_balance", "pointsBalance"], 0)))}</div>
+                      <div class="meta-item"><strong>Sources</strong>${escapeHtml((user.__sources || []).join(", "))}</div>
+                    </div>
+                  </div>
+                </details>
                 <div class="inline-actions">
                   <a href="member.html?uid=${encodeURIComponent(uid)}" class="action-btn blue">${ICONS.open} Open</a>
                   <button class="action-btn yellow user-action" data-action="warn" data-uid="${escapeHtml(uid)}" type="button">Warn 30d</button>
@@ -1892,102 +1680,62 @@
         usersSearchInput._timer = setTimeout(loadUsers, 300);
       });
 
-      sectionContent.querySelectorAll(".users-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.usersFilter = btn.dataset.filter;
-          loadUsers();
-        });
-      });
+      sectionContent.querySelectorAll(".users-filter").forEach(btn => btn.addEventListener("click", () => {
+        state.usersFilter = btn.dataset.filter;
+        loadUsers();
+      }));
 
-      sectionContent.querySelectorAll(".user-action").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const uid = btn.dataset.uid;
-          const action = btn.dataset.action;
-          if (!uid || !action) return;
+      sectionContent.querySelectorAll(".user-action").forEach(btn => btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const action = btn.dataset.action;
+        if (!uid || !action) return;
+        if (action === "ban" && !confirm("Ban/hide this user? Trust will become 0.")) return;
+        btn.disabled = true;
+        try {
+          await updateUserModeration(uid, action);
+          await logAdminAction(`user_${action}`, { targetUserId: uid, targetType:"user" });
+          await loadSummary();
+          await loadUsers();
+          setMessage(`User ${action} action saved and Trust Bar updated.`, "ok");
+        } catch (err) {
+          console.error(err);
+          setMessage(`Could not ${action} user.`, "err");
+          btn.disabled = false;
+        }
+      }));
 
-          if (action === "ban") {
-            const ok = confirm("Ban/hide this user? Trust will become 0.");
-            if (!ok) return;
-          }
-
-          btn.disabled = true;
-
-          try {
-            await updateUserModeration(uid, action);
-            await logAdminAction(`user_${action}`, {
-              targetUserId: uid,
-              targetType: "user"
-            });
-
-            await loadSummary();
-            await loadUsers();
-            setMessage(`User ${action} action saved and Trust Bar updated.`, "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(`Could not ${action} user.`, "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".hub-author-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const uid = btn.dataset.uid;
-          const name = btn.dataset.name || "Member";
-          if (!uid) return;
-
-          btn.disabled = true;
-
-          try {
-            await insertWithFallback("hub_authors", [
-              {
-                user_id: uid,
-                display_name: name,
-                can_post: true,
-                active: true,
-                created_by: currentUser.id,
-                created_at: nowIso(),
-                updated_at: nowIso()
-              },
-              {
-                userId: uid,
-                displayName: name,
-                canPost: true,
-                active: true,
-                createdBy: currentUser.id,
-                createdAt: nowIso(),
-                updatedAt: nowIso()
-              },
-              {
-                uid,
-                active: true,
-                created_at: nowIso()
-              }
-            ]);
-
-            await changeTrustScore(uid, TRUST.hubAuthorAdded, "hub_author_permission_added");
-
-            await logAdminAction("hub_author_added", {
-              targetUserId: uid,
-              targetType: "hub_author"
-            });
-
-            await loadSummary();
-            await loadUsers();
-            setMessage("Hub author permission added and Trust Bar updated.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not add Hub author. Maybe already exists or RLS blocked it.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
+      sectionContent.querySelectorAll(".hub-author-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const name = btn.dataset.name || "Member";
+        if (!uid) return;
+        btn.disabled = true;
+        try {
+          await addHubAuthor(uid, name);
+          await loadSummary();
+          await loadUsers();
+          setMessage("Hub author permission added and Trust Bar updated.", "ok");
+        } catch (err) {
+          console.error(err);
+          setMessage("Could not add Hub author. Maybe already exists or RLS blocked it.", "err");
+          btn.disabled = false;
+        }
+      }));
     }
 
-    async function hideReportedContent(report) {
+    async function addHubAuthor(uid, name = "Member"){
+      await insertWithFallback("hub_authors", [
+        { user_id: uid, display_name: name, can_post: true, active: true, created_by: currentUser.id, created_at: nowIso(), updated_at: nowIso() },
+        { userId: uid, displayName: name, canPost: true, active: true, createdBy: currentUser.id, createdAt: nowIso(), updatedAt: nowIso() },
+        { uid, active: true, created_at: nowIso() }
+      ]);
+      await changeTrustScore(uid, TRUST.hubAuthorAdded, "hub_author_permission_added");
+      await logAdminAction("hub_author_added", { targetUserId: uid, targetType:"hub_author" });
+      await createNotification(uid, { type:"hub_author", title:"Hub author access added", message:"You can now publish in OwnSpace Hub.", link:"hub.html" });
+    }
+
+    async function hideReportedContent(report){
       const targetType = normalizeStatus(val(report, ["target_type", "targetType", "type"], ""));
       const targetId = val(report, ["target_id", "targetId"], "");
-
       if (!targetId) return;
 
       if (targetType === "post") {
@@ -1996,7 +1744,6 @@
           { hidden: true, hiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
           { hidden: true }
         ]);
-
         await updateByIdWithFallback("community_posts", targetId, [
           { hidden: true, hidden_by_admin: true, soft_deleted: true, updated_at: nowIso() },
           { hidden: true, hiddenByAdmin: true, softDeleted: true, updatedAt: nowIso() },
@@ -2004,8 +1751,8 @@
         ]).catch(() => {});
       } else if (targetType === "community") {
         await updateByIdWithFallback("communities", targetId, [
-          { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
-          { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, status:"hidden", updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, status:"hidden", updatedAt: nowIso() },
           { hidden: true }
         ]);
       } else if (targetType === "event") {
@@ -2017,8 +1764,8 @@
       } else if (targetType === "place") {
         const source = val(report, ["target_source", "targetSource", "source"], "nearby_places") || "nearby_places";
         await updateByIdWithFallback(source, targetId, [
-          { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
-          { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
+          { hidden: true, hidden_by_admin: true, soft_deleted: true, status:"hidden", updated_at: nowIso() },
+          { hidden: true, hiddenByAdmin: true, softDeleted: true, status:"hidden", updatedAt: nowIso() },
           { hidden: true }
         ]);
       } else if (targetType === "profile" || targetType === "user") {
@@ -2027,31 +1774,17 @@
       }
     }
 
-    async function applyModerationAction(report, action) {
+    async function applyModerationAction(report, action){
       const targetUid = val(report, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId", "target_uid", "targetUid"], "");
       const reportId = val(report, ["id"], "");
 
-      if (targetUid && ["warn", "suspend", "ban", "restore"].includes(action)) {
-        await updateUserModeration(targetUid, action);
-      }
+      if (targetUid && ["warn", "suspend", "ban", "restore"].includes(action)) await updateUserModeration(targetUid, action);
 
       if (reportId) {
         await updateByIdWithFallback("reports", reportId, [
-          {
-            status: action === "resolve" ? "resolved" : action,
-            reviewed_at: nowIso(),
-            reviewed_by: currentUser.id,
-            updated_at: nowIso()
-          },
-          {
-            status: action === "resolve" ? "resolved" : action,
-            reviewedAt: nowIso(),
-            reviewedBy: currentUser.id,
-            updatedAt: nowIso()
-          },
-          {
-            status: action === "resolve" ? "resolved" : action
-          }
+          { status: action === "resolve" ? "resolved" : action, reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
+          { status: action === "resolve" ? "resolved" : action, reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
+          { status: action === "resolve" ? "resolved" : action }
         ]);
       }
 
@@ -2063,11 +1796,8 @@
       });
     }
 
-    async function loadReports() {
-      const docs = (await selectAllSafe("reports"))
-        .map(d => ({ ...d }))
-        .sort((a, b) => createdMs(b) - createdMs(a));
-
+    async function loadReports(){
+      const docs = (await selectAllSafe("reports")).map(d => ({...d})).sort((a,b) => createdMs(b) - createdMs(a));
       const filtered = docs.filter(item => {
         const open = isReportOpen(item);
         if (state.reportsFilter === "open") return open;
@@ -2077,9 +1807,9 @@
 
       sectionContent.innerHTML = `
         <div class="section-title">Reports</div>
-        <div class="section-note">Review reports and take moderation action. Warnings and suspensions are set for 30 days and also update Trust Bar.</div>
+        <div class="section-note">Review reports and take moderation action. Warnings and suspensions are 30 days and update Trust Bar.</div>
 
-        <div class="toolbar">
+        <div class="toolbar" style="margin-top:12px;">
           <button class="action-btn ${state.reportsFilter === "open" ? "blue" : ""} reports-filter" data-filter="open" type="button">Open</button>
           <button class="action-btn ${state.reportsFilter === "resolved" ? "green" : ""} reports-filter" data-filter="resolved" type="button">Resolved</button>
           <button class="action-btn ${state.reportsFilter === "all" ? "purple" : ""} reports-filter" data-filter="all" type="button">All</button>
@@ -2091,30 +1821,34 @@
             const status = getReportStatus(item);
             const targetType = val(item, ["target_type", "targetType", "type"], "unknown");
             const targetId = val(item, ["target_id", "targetId"], "");
-
+            const openLink = targetType === "post" ? `post.html?postId=${encodeURIComponent(targetId)}` :
+              targetType === "community" ? `community.html?communityId=${encodeURIComponent(targetId)}` :
+              targetType === "place" ? `place.html?placeId=${encodeURIComponent(targetId)}` :
+              targetType === "event" ? `event.html?eventId=${encodeURIComponent(targetId)}` : "#";
             return `
               <div class="card">
                 <div class="card-top">
                   <div class="card-title">${escapeHtml(val(item, ["title", "reason"], "Report"))}</div>
                   <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
                 </div>
-
                 <div class="badge-row">
                   <span class="badge yellow">${escapeHtml(targetType)}</span>
                   <span class="badge ${isReportOpen(item) ? "red" : "green"}">${escapeHtml(status || "open")}</span>
                 </div>
-
-                <div class="meta-grid">
-                  <div class="meta-item"><strong>Reporter</strong>${escapeHtml(val(item, ["reporter_id", "reporterId", "from_user_id", "fromUserId"], "Unknown"))}</div>
-                  <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId"], "Unknown"))}</div>
-                  <div class="meta-item"><strong>Target ID</strong>${escapeHtml(targetId || "Not linked")}</div>
-                  <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["target_source", "targetSource", "source"], "Not set"))}</div>
-                </div>
-
                 <div class="card-text">${escapeHtml(val(item, ["reason", "text", "description"], "No report description added."))}</div>
-
+                <details class="more-box">
+                  <summary>Report details</summary>
+                  <div class="more-inner">
+                    <div class="meta-grid">
+                      <div class="meta-item"><strong>Reporter</strong>${escapeHtml(val(item, ["reporter_id", "reporterId", "from_user_id", "fromUserId"], "Unknown"))}</div>
+                      <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId", "reported_user_id", "reportedUserId"], "Unknown"))}</div>
+                      <div class="meta-item"><strong>Target ID</strong>${escapeHtml(targetId || "Not linked")}</div>
+                      <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["target_source", "targetSource", "source"], "Not set"))}</div>
+                    </div>
+                  </div>
+                </details>
                 <div class="inline-actions">
-                  ${targetId ? `<a class="action-btn blue" href="${targetType === "post" ? "post.html?postId=" + encodeURIComponent(targetId) : targetType === "community" ? "community.html?communityId=" + encodeURIComponent(targetId) : targetType === "place" ? "place.html?placeId=" + encodeURIComponent(targetId) : targetType === "event" ? "event.html?eventId=" + encodeURIComponent(targetId) : "#"}">${ICONS.open} Open</a>` : ""}
+                  ${targetId ? `<a class="action-btn blue" href="${openLink}">${ICONS.open} Open</a>` : ""}
                   <button class="action-btn yellow hide-content-btn" data-id="${escapeHtml(id)}" type="button">Hide Content</button>
                   <button class="action-btn blue report-action" data-action="warn" data-id="${escapeHtml(id)}" type="button">Warn</button>
                   <button class="action-btn purple report-action" data-action="suspend" data-id="${escapeHtml(id)}" type="button">Suspend</button>
@@ -2127,65 +1861,47 @@
         </div>
       `;
 
-      sectionContent.querySelectorAll(".reports-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.reportsFilter = btn.dataset.filter;
-          loadReports();
-        });
-      });
+      sectionContent.querySelectorAll(".reports-filter").forEach(btn => btn.addEventListener("click", () => {
+        state.reportsFilter = btn.dataset.filter;
+        loadReports();
+      }));
 
-      sectionContent.querySelectorAll(".hide-content-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          if (!report) return;
+      sectionContent.querySelectorAll(".hide-content-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
+        if (!report) return;
+        btn.disabled = true;
+        try {
+          await hideReportedContent(report);
+          await logAdminAction("content_hidden", { reportId: val(report, ["id"], ""), targetId: val(report, ["target_id", "targetId"], ""), targetType: val(report, ["target_type", "targetType", "type"], "") });
+          setMessage("Reported content hidden.", "ok");
+        } catch (err) {
+          console.error(err);
+          setMessage("Could not hide content.", "err");
+          btn.disabled = false;
+        }
+      }));
 
-          btn.disabled = true;
-
-          try {
-            await hideReportedContent(report);
-            await logAdminAction("content_hidden", {
-              reportId: val(report, ["id"], ""),
-              targetId: val(report, ["target_id", "targetId"], ""),
-              targetType: val(report, ["target_type", "targetType", "type"], "")
-            });
-            setMessage("Reported content hidden.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not hide content.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".report-action").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
-          const action = btn.dataset.action;
-          if (!report || !action) return;
-
-          if (action === "ban") {
-            const ok = confirm("Ban this user and hide reported content when possible? Trust will become 0.");
-            if (!ok) return;
-          }
-
-          btn.disabled = true;
-
-          try {
-            await applyModerationAction(report, action);
-            if (action === "ban") await hideReportedContent(report).catch(() => {});
-            await loadSummary();
-            await loadReports();
-            setMessage(`Report ${action} saved and Trust Bar updated when user was linked.`, "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(`Could not ${action} report.`, "err");
-            btn.disabled = false;
-          }
-        });
-      });
+      sectionContent.querySelectorAll(".report-action").forEach(btn => btn.addEventListener("click", async () => {
+        const report = filtered.find(r => String(r.id) === String(btn.dataset.id));
+        const action = btn.dataset.action;
+        if (!report || !action) return;
+        if (action === "ban" && !confirm("Ban this user and hide reported content when possible? Trust will become 0.")) return;
+        btn.disabled = true;
+        try {
+          await applyModerationAction(report, action);
+          if (action === "ban") await hideReportedContent(report).catch(() => {});
+          await loadSummary();
+          await loadReports();
+          setMessage(`Report ${action} saved and Trust Bar updated when user was linked.`, "ok");
+        } catch (err) {
+          console.error(err);
+          setMessage(`Could not ${action} report.`, "err");
+          btn.disabled = false;
+        }
+      }));
     }
 
-    function getProofPaths(req) {
+    function getProofPaths(req){
       return [
         val(req, ["govt_id_path", "government_id_path", "id_path"], ""),
         val(req, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], ""),
@@ -2193,16 +1909,10 @@
       ].filter(Boolean);
     }
 
-    function cleanStoragePath(path) {
+    function cleanStoragePath(path){
       let cleanPath = String(path || "").trim();
-
       if (cleanPath.includes("/storage/v1/object/")) {
-        const markers = [
-          "/object/sign/verification/",
-          "/object/public/verification/",
-          "/verification/"
-        ];
-
+        const markers = ["/object/sign/verification/", "/object/public/verification/", "/verification/"];
         for (const marker of markers) {
           if (cleanPath.includes(marker)) {
             cleanPath = cleanPath.split(marker)[1].split("?")[0];
@@ -2210,31 +1920,20 @@
           }
         }
       }
-
-      if (cleanPath.startsWith("verification/")) {
-        cleanPath = cleanPath.replace("verification/", "");
-      }
-
-      try {
-        cleanPath = decodeURIComponent(cleanPath);
-      } catch {}
-
+      if (cleanPath.startsWith("verification/")) cleanPath = cleanPath.replace("verification/", "");
+      try { cleanPath = decodeURIComponent(cleanPath); } catch {}
       return cleanPath;
     }
 
-    async function createSignedProofUrl(path) {
+    async function createSignedProofUrl(path){
       const cleanPath = cleanStoragePath(path);
       if (!cleanPath) throw new Error("Proof file missing.");
-
-      const { data, error } = await supabase.storage
-        .from(VERIFICATION_BUCKET)
-        .createSignedUrl(cleanPath, 300);
-
+      const { data, error } = await supabase.storage.from(VERIFICATION_BUCKET).createSignedUrl(cleanPath, 300);
       if (error) throw error;
       return data.signedUrl;
     }
 
-    async function openProof(path) {
+    async function openProof(path){
       try {
         const signedUrl = await createSignedProofUrl(path);
         window.open(signedUrl, "_blank", "noopener,noreferrer");
@@ -2244,226 +1943,78 @@
       }
     }
 
-    async function deleteVerificationProofFiles(req) {
+    async function deleteVerificationProofFiles(req){
       const paths = getProofPaths(req).map(cleanStoragePath).filter(Boolean);
       if (!paths.length) return;
-
       const { error } = await supabase.storage.from(VERIFICATION_BUCKET).remove(paths);
       if (error) console.warn("Proof delete failed:", error.message || error);
     }
 
-    async function updateVerificationUser(uid, approved, badgeType) {
-      await Promise.allSettled([
-        updateByIdWithFallback("users", uid, [
-          {
-            is_verified: approved,
-            verified: approved,
-            verification_status: approved ? "approved" : "rejected",
-            verification_badge: approved ? badgeType : null,
-            verified_at: approved ? nowIso() : null,
-            age_verified: approved,
-            legal_name_checked: approved,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: approved,
-            verified: approved,
-            verificationStatus: approved ? "approved" : "rejected",
-            verificationBadge: approved ? badgeType : null,
-            verifiedAt: approved ? nowIso() : null,
-            ageVerified: approved,
-            legalNameChecked: approved,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: approved
-          }
-        ]),
-        updateByIdWithFallback("public_profiles", uid, [
-          {
-            is_verified: approved,
-            verified: approved,
-            verification_status: approved ? "approved" : "rejected",
-            verification_badge: approved ? badgeType : null,
-            verified_at: approved ? nowIso() : null,
-            age_verified: approved,
-            updated_at: nowIso()
-          },
-          {
-            isVerified: approved,
-            verified: approved,
-            verificationStatus: approved ? "approved" : "rejected",
-            verificationBadge: approved ? badgeType : null,
-            verifiedAt: approved ? nowIso() : null,
-            ageVerified: approved,
-            updatedAt: nowIso()
-          },
-          {
-            is_verified: approved
-          }
-        ])
+    async function updateVerificationUser(uid, approved, badgeType){
+      await updateUserTables(uid, [
+        { is_verified: approved, verified: approved, verification_status: approved ? "approved" : "rejected", verification_badge: approved ? badgeType : null, verified_at: approved ? nowIso() : null, age_verified: approved, legal_name_checked: approved, updated_at: nowIso() },
+        { isVerified: approved, verified: approved, verificationStatus: approved ? "approved" : "rejected", verificationBadge: approved ? badgeType : null, verifiedAt: approved ? nowIso() : null, ageVerified: approved, legalNameChecked: approved, updatedAt: nowIso() },
+        { is_verified: approved },
+        { isVerified: approved }
       ]);
 
-      if (approved) {
-        await changeTrustScore(uid, TRUST.verificationApproved, "verification_approved");
-      } else {
-        await changeTrustScore(uid, TRUST.verificationRejected, "verification_rejected");
-      }
+      if (approved) await changeTrustScore(uid, TRUST.verificationApproved, "verification_approved");
+      else await changeTrustScore(uid, TRUST.verificationRejected, "verification_rejected");
     }
 
-    async function approveVerification(req) {
+    async function approveVerification(req){
       const uid = val(req, ["uid", "user_id", "userId"], "");
       const requestId = val(req, ["id"], "");
       const badgeType = val(req, ["badge_type", "verification_type"], "account");
       const note = prompt("Admin note for approval? Optional:", "") || "";
-
       if (!uid || !requestId) throw new Error("Missing verification user/request id.");
 
       await deleteVerificationProofFiles(req);
-
       await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        {
-          status: "approved",
-          admin_note: note,
-          reviewed_at: nowIso(),
-          reviewed_by: currentUser.id,
-          age_verified: true,
-          proof_deleted: true,
-          proof_deleted_at: nowIso(),
-          govt_id_path: null,
-          govt_id_url: null,
-          selfie_code_path: null,
-          selfie_with_id_url: null,
-          business_proof_path: null,
-          business_proof_url: null,
-          full_legal_name: null,
-          full_name: null,
-          dob: null,
-          updated_at: nowIso()
-        },
-        {
-          status: "approved",
-          adminNote: note,
-          reviewedAt: nowIso(),
-          reviewedBy: currentUser.id,
-          ageVerified: true,
-          proofDeleted: true,
-          proofDeletedAt: nowIso(),
-          updatedAt: nowIso()
-        },
-        {
-          status: "approved",
-          proof_deleted: true
-        }
+        { status:"approved", admin_note: note, reviewed_at: nowIso(), reviewed_by: currentUser.id, age_verified:true, proof_deleted:true, proof_deleted_at: nowIso(), govt_id_path:null, govt_id_url:null, selfie_code_path:null, selfie_with_id_url:null, business_proof_path:null, business_proof_url:null, full_legal_name:null, full_name:null, dob:null, updated_at: nowIso() },
+        { status:"approved", adminNote: note, reviewedAt: nowIso(), reviewedBy: currentUser.id, ageVerified:true, proofDeleted:true, proofDeletedAt: nowIso(), updatedAt: nowIso() },
+        { status:"approved", proof_deleted:true }
       ]);
-
       await updateVerificationUser(uid, true, badgeType);
-
-      await logAdminAction("verification_approved", {
-        targetUserId: uid,
-        targetId: requestId,
-        targetType: "verification",
-        adminNote: note
-      });
+      await createNotification(uid, { type:"verification", title:"Verification approved", message:`Your ${getBadgeLabel(badgeType)} request was approved.`, link:"verification.html" });
+      await logAdminAction("verification_approved", { targetUserId: uid, targetId: requestId, targetType:"verification", adminNote: note });
     }
 
-    async function rejectVerification(req) {
+    async function rejectVerification(req){
       const uid = val(req, ["uid", "user_id", "userId"], "");
       const requestId = val(req, ["id"], "");
       const reason = prompt("Reason for rejection / admin note:", "") || "";
-
       if (!uid || !requestId) throw new Error("Missing verification user/request id.");
 
       await deleteVerificationProofFiles(req);
-
       await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        {
-          status: "rejected",
-          admin_note: reason,
-          rejection_reason: reason,
-          reviewed_at: nowIso(),
-          reviewed_by: currentUser.id,
-          proof_deleted: true,
-          proof_deleted_at: nowIso(),
-          govt_id_path: null,
-          govt_id_url: null,
-          selfie_code_path: null,
-          selfie_with_id_url: null,
-          business_proof_path: null,
-          business_proof_url: null,
-          full_legal_name: null,
-          full_name: null,
-          dob: null,
-          updated_at: nowIso()
-        },
-        {
-          status: "rejected",
-          adminNote: reason,
-          rejectionReason: reason,
-          reviewedAt: nowIso(),
-          reviewedBy: currentUser.id,
-          proofDeleted: true,
-          proofDeletedAt: nowIso(),
-          updatedAt: nowIso()
-        },
-        {
-          status: "rejected",
-          proof_deleted: true
-        }
+        { status:"rejected", admin_note: reason, rejection_reason: reason, reviewed_at: nowIso(), reviewed_by: currentUser.id, proof_deleted:true, proof_deleted_at: nowIso(), govt_id_path:null, govt_id_url:null, selfie_code_path:null, selfie_with_id_url:null, business_proof_path:null, business_proof_url:null, full_legal_name:null, full_name:null, dob:null, updated_at: nowIso() },
+        { status:"rejected", adminNote: reason, rejectionReason: reason, reviewedAt: nowIso(), reviewedBy: currentUser.id, proofDeleted:true, proofDeletedAt: nowIso(), updatedAt: nowIso() },
+        { status:"rejected", proof_deleted:true }
       ]);
-
       await updateVerificationUser(uid, false, "");
-
-      await logAdminAction("verification_rejected", {
-        targetUserId: uid,
-        targetId: requestId,
-        targetType: "verification",
-        reason
-      });
+      await createNotification(uid, { type:"verification", title:"Verification rejected", message: reason ? `Your verification was rejected: ${reason}` : "Your verification request was rejected.", link:"verification.html" });
+      await logAdminAction("verification_rejected", { targetUserId: uid, targetId: requestId, targetType:"verification", reason });
     }
 
-    async function needMoreInfoVerification(req) {
+    async function needMoreInfoVerification(req){
       const uid = val(req, ["uid", "user_id", "userId"], "");
       const requestId = val(req, ["id"], "");
       const note = prompt("What more information is needed?", "") || "";
-
       if (!uid || !requestId) throw new Error("Missing verification user/request id.");
       if (!note.trim()) throw new Error("Admin note is required for Need More Info.");
 
       await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        {
-          status: "need_more_info",
-          admin_note: note,
-          reviewed_at: nowIso(),
-          reviewed_by: currentUser.id,
-          updated_at: nowIso()
-        },
-        {
-          status: "need_more_info",
-          adminNote: note,
-          reviewedAt: nowIso(),
-          reviewedBy: currentUser.id,
-          updatedAt: nowIso()
-        },
-        {
-          status: "need_more_info",
-          admin_note: note
-        }
+        { status:"need_more_info", admin_note: note, reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
+        { status:"need_more_info", adminNote: note, reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
+        { status:"need_more_info", admin_note: note }
       ]);
-
-      await logAdminAction("verification_need_more_info", {
-        targetUserId: uid,
-        targetId: requestId,
-        targetType: "verification",
-        adminNote: note
-      });
+      await createNotification(uid, { type:"verification", title:"Verification needs more info", message: note, link:"verification.html" });
+      await logAdminAction("verification_need_more_info", { targetUserId: uid, targetId: requestId, targetType:"verification", adminNote: note });
     }
 
-    async function loadVerification() {
-      const docs = (await selectAllSafe("verification_requests"))
-        .map(d => ({ ...d }))
-        .sort((a, b) => createdMs(b) - createdMs(a));
-
+    async function loadVerification(){
+      const docs = (await selectAllSafe("verification_requests")).map(d => ({...d})).sort((a,b) => createdMs(b) - createdMs(a));
       const filtered = docs.filter(item => {
         const s = normalizeStatus(val(item, ["status"], "pending"));
         if (state.verificationFilter === "pending") return s === "pending" || s === "need_more_info";
@@ -2475,10 +2026,7 @@
       sectionContent.innerHTML = `
         <div class="section-title">Verification</div>
         <div class="section-note">Review verification requests. Approval increases Trust Bar. Rejection slightly lowers Trust Bar. Proof files are deleted after approval/rejection.</div>
-
-        <div class="proof-warning">
-          Personal verification proof must not be kept longer than needed. Open proof files only for review, then approve/reject so files can be removed.
-        </div>
+        <div class="proof-warning">Personal verification proof must not be kept longer than needed. Open proof files only for review, then approve/reject so files can be removed.</div>
 
         <div class="toolbar">
           <button class="action-btn ${state.verificationFilter === "pending" ? "yellow" : ""} verification-filter" data-filter="pending" type="button">Pending</button>
@@ -2493,39 +2041,36 @@
             const uid = val(item, ["uid", "user_id", "userId"], "");
             const status = normalizeStatus(val(item, ["status"], "pending"));
             const badgeType = val(item, ["badge_type", "verification_type"], "account");
-
             const govtPath = val(item, ["govt_id_path", "government_id_path", "id_path"], "");
             const selfiePath = val(item, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], "");
             const businessProofPath = val(item, ["business_proof_path", "business_path"], "");
-
             return `
               <div class="card">
                 <div class="card-top">
                   <div class="card-title">${escapeHtml(getBadgeLabel(badgeType))}</div>
                   <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
                 </div>
-
                 <div class="badge-row">
                   <span class="badge ${badgeClass(status)}">${escapeHtml(status || "pending")}</span>
-                  <span class="badge blue">${escapeHtml(val(item, ["username"], "No username"))}</span>
-                  <span class="badge ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "green" : "yellow"}">
-                    ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "Proof deleted" : "Proof stored"}
-                  </span>
+                  <span class="badge blue">${escapeHtml(val(item, ["username", "email"], "No username"))}</span>
+                  <span class="badge ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "green" : "yellow"}">${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "Proof deleted" : "Proof stored"}</span>
                 </div>
-
-                <div class="meta-grid">
-                  <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
-                  <div class="meta-item"><strong>Full Legal Name</strong>${escapeHtml(val(item, ["full_legal_name", "full_name"], "Cleared / not available"))}</div>
-                  <div class="meta-item"><strong>Email</strong>${escapeHtml(val(item, ["email"], "Not added"))}</div>
-                  <div class="meta-item"><strong>DOB</strong>${escapeHtml(val(item, ["dob"], "Cleared / not available"))}</div>
-                  <div class="meta-item"><strong>18+ Confirmed</strong>${boolVal(item, ["age_confirmed", "ageConfirmed"], false) ? "Yes" : "No"}</div>
-                  <div class="meta-item"><strong>Daily Code</strong>${escapeHtml(val(item, ["daily_code", "dailyCode"], "Not added"))}</div>
-                  <div class="meta-item"><strong>Social Link</strong>${escapeHtml(val(item, ["social_link", "socialLink"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Business Name</strong>${escapeHtml(val(item, ["business_name", "businessName"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Business Link</strong>${escapeHtml(val(item, ["business_link", "businessLink"], "Not required / not added"))}</div>
-                  <div class="meta-item"><strong>Admin Note</strong>${escapeHtml(val(item, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "No note"))}</div>
-                </div>
-
+                <details class="more-box" open>
+                  <summary>Verification details</summary>
+                  <div class="more-inner">
+                    <div class="meta-grid">
+                      <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
+                      <div class="meta-item"><strong>Full Legal Name</strong>${escapeHtml(val(item, ["full_legal_name", "full_name"], "Cleared / not available"))}</div>
+                      <div class="meta-item"><strong>Email</strong>${escapeHtml(val(item, ["email"], "Not added"))}</div>
+                      <div class="meta-item"><strong>DOB</strong>${escapeHtml(val(item, ["dob"], "Cleared / not available"))}</div>
+                      <div class="meta-item"><strong>18+ Confirmed</strong>${boolVal(item, ["age_confirmed", "ageConfirmed"], false) ? "Yes" : "No"}</div>
+                      <div class="meta-item"><strong>Daily Code</strong>${escapeHtml(val(item, ["daily_code", "dailyCode"], "Not added"))}</div>
+                      <div class="meta-item"><strong>Social Link</strong>${escapeHtml(val(item, ["social_link", "socialLink"], "Not required / not added"))}</div>
+                      <div class="meta-item"><strong>Business</strong>${escapeHtml(val(item, ["business_name", "businessName", "business_link", "businessLink"], "Not required / not added"))}</div>
+                      <div class="meta-item"><strong>Admin Note</strong>${escapeHtml(val(item, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "No note"))}</div>
+                    </div>
+                  </div>
+                </details>
                 <div class="inline-actions">
                   ${govtPath ? `<button class="action-btn blue open-proof-btn" data-path="${escapeHtml(govtPath)}" type="button">Open ID</button>` : ""}
                   ${selfiePath ? `<button class="action-btn purple open-proof-btn" data-path="${escapeHtml(selfiePath)}" type="button">Open Selfie</button>` : ""}
@@ -2540,115 +2085,60 @@
         </div>
       `;
 
-      sectionContent.querySelectorAll(".verification-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.verificationFilter = btn.dataset.filter;
-          loadVerification();
-        });
-      });
-
-      sectionContent.querySelectorAll(".open-proof-btn").forEach(btn => {
-        btn.addEventListener("click", () => openProof(btn.dataset.path));
-      });
-
-      sectionContent.querySelectorAll(".approve-verification-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-          if (!req) return;
-
-          const ok = confirm("Approve this verification? Proof files will be deleted after approval and Trust Bar will increase.");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await approveVerification(req);
-            await loadSummary();
-            await loadVerification();
-            setMessage("Verification approved, proof files deleted, and Trust Bar updated.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(err?.message || "Could not approve verification.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".reject-verification-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-          if (!req) return;
-
-          const ok = confirm("Reject this verification? Proof files will be deleted after rejection.");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await rejectVerification(req);
-            await loadSummary();
-            await loadVerification();
-            setMessage("Verification rejected, proof files deleted, and Trust Bar updated.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(err?.message || "Could not reject verification.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".more-info-verification-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-          if (!req) return;
-
-          btn.disabled = true;
-
-          try {
-            await needMoreInfoVerification(req);
-            await loadSummary();
-            await loadVerification();
-            setMessage("Marked as Need More Info.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(err?.message || "Could not update verification request.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
+      sectionContent.querySelectorAll(".verification-filter").forEach(btn => btn.addEventListener("click", () => {
+        state.verificationFilter = btn.dataset.filter;
+        loadVerification();
+      }));
+      sectionContent.querySelectorAll(".open-proof-btn").forEach(btn => btn.addEventListener("click", () => openProof(btn.dataset.path)));
+      sectionContent.querySelectorAll(".approve-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
+        if (!req) return;
+        if (!confirm("Approve this verification? Proof files will be deleted after approval and Trust Bar will increase.")) return;
+        btn.disabled = true;
+        try { await approveVerification(req); await loadSummary(); await loadVerification(); setMessage("Verification approved, proof files deleted, user notified, and Trust Bar updated.", "ok"); }
+        catch (err) { console.error(err); setMessage(err?.message || "Could not approve verification.", "err"); btn.disabled = false; }
+      }));
+      sectionContent.querySelectorAll(".reject-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
+        if (!req) return;
+        if (!confirm("Reject this verification? Proof files will be deleted after rejection.")) return;
+        btn.disabled = true;
+        try { await rejectVerification(req); await loadSummary(); await loadVerification(); setMessage("Verification rejected, proof files deleted, user notified, and Trust Bar updated.", "ok"); }
+        catch (err) { console.error(err); setMessage(err?.message || "Could not reject verification.", "err"); btn.disabled = false; }
+      }));
+      sectionContent.querySelectorAll(".more-info-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
+        if (!req) return;
+        btn.disabled = true;
+        try { await needMoreInfoVerification(req); await loadSummary(); await loadVerification(); setMessage("Marked as Need More Info and user notified.", "ok"); }
+        catch (err) { console.error(err); setMessage(err?.message || "Could not update verification request.", "err"); btn.disabled = false; }
+      }));
     }
 
-    async function loadCommunities() {
+    async function loadCommunities(){
       const rows = (await selectAllSafe("communities")).map(normalizeCommunity);
-
       const filtered = rows.filter(item => {
         if (state.communitiesFilter === "pending") return !item.hidden && (item.pending || !item.approved) && !item.rejected;
         if (state.communitiesFilter === "active") return !item.hidden && item.approved && !item.rejected;
         if (state.communitiesFilter === "featured") return !item.hidden && item.featured;
         if (state.communitiesFilter === "hidden") return item.hidden || item.rejected;
         return true;
-      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      }).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt));
 
       sectionContent.innerHTML = `
         <div class="section-title">Communities</div>
-        <div class="section-note">Approve, feature, hide, restore, or manage communities. Approval increases creator Trust Bar.</div>
-
-        <div class="toolbar">
+        <div class="section-note">Approve, feature, pin, hide, restore, or manage communities. Approval increases creator Trust Bar.</div>
+        <div class="toolbar" style="margin-top:12px;">
           <button class="action-btn ${state.communitiesFilter === "active" ? "green" : ""} communities-filter" data-filter="active" type="button">Active</button>
           <button class="action-btn ${state.communitiesFilter === "pending" ? "yellow" : ""} communities-filter" data-filter="pending" type="button">Pending</button>
           <button class="action-btn ${state.communitiesFilter === "featured" ? "purple" : ""} communities-filter" data-filter="featured" type="button">Featured</button>
           <button class="action-btn ${state.communitiesFilter === "hidden" ? "red" : ""} communities-filter" data-filter="hidden" type="button">Hidden</button>
           <button class="action-btn ${state.communitiesFilter === "all" ? "blue" : ""} communities-filter" data-filter="all" type="button">All</button>
         </div>
-
         <div class="list">
           ${filtered.length ? filtered.map(item => `
             <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(item.name)}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
-              </div>
-
+              <div class="card-top"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div></div>
               <div class="badge-row">
                 <span class="badge ${badgeClass(item.hidden ? "hidden" : item.approved ? "approved" : item.rejected ? "rejected" : "pending")}">${escapeHtml(item.hidden ? "hidden" : item.approved ? "approved" : item.rejected ? "rejected" : "pending")}</span>
                 <span class="badge blue">${escapeHtml(item.category)}</span>
@@ -2656,16 +2146,13 @@
                 ${item.featured ? `<span class="badge purple">Featured</span>` : ""}
                 ${item.pinned ? `<span class="badge purple">Pinned</span>` : ""}
               </div>
-
-              <div class="meta-grid">
+              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+              <details class="more-box"><summary>Community details</summary><div class="more-inner"><div class="meta-grid">
                 <div class="meta-item"><strong>Community ID</strong>${escapeHtml(item.id || "Missing")}</div>
                 <div class="meta-item"><strong>Owner</strong>${escapeHtml(item.creatorName || item.creatorId || "Unknown")}</div>
                 <div class="meta-item"><strong>Members</strong>${escapeHtml(String(item.memberCount || 0))}</div>
                 <div class="meta-item"><strong>Creator ID</strong>${escapeHtml(item.creatorId || "Unknown")}</div>
-              </div>
-
-              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
-
+              </div></div></details>
               <div class="inline-actions">
                 <a class="action-btn blue" href="community.html?communityId=${encodeURIComponent(item.id)}">${ICONS.open} Open</a>
                 <button class="action-btn green community-action" data-action="approve" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Approve</button>
@@ -2679,127 +2166,90 @@
         </div>
       `;
 
-      sectionContent.querySelectorAll(".communities-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.communitiesFilter = btn.dataset.filter;
-          loadCommunities();
-        });
-      });
-
-      sectionContent.querySelectorAll(".community-action").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const action = btn.dataset.action;
-          const creatorId = btn.dataset.creator || "";
-          if (!id || !action) return;
-
-          if (action === "hide") {
-            const ok = confirm("Hide this community? Creator Trust Bar will decrease.");
-            if (!ok) return;
-          }
-
-          btn.disabled = true;
-
-          try {
-            let payloads = [];
-
-            if (action === "approve") {
-              payloads = [
-                { approved: true, is_approved: true, pending: false, rejected: false, status: "approved", updated_at: nowIso() },
-                { approved: true, isApproved: true, pending: false, rejected: false, status: "approved", updatedAt: nowIso() },
-                { approved: true, status: "approved" }
-              ];
-            }
-
-            if (action === "feature" || action === "unfeature") {
-              const value = action === "feature";
-              payloads = [
-                { featured: value, is_featured: value, updated_at: nowIso() },
-                { featured: value, isFeatured: value, updatedAt: nowIso() },
-                { featured: value }
-              ];
-            }
-
-            if (action === "pin" || action === "unpin") {
-              const value = action === "pin";
-              payloads = [
-                { pinned: value, is_pinned: value, updated_at: nowIso() },
-                { pinned: value, isPinned: value, updatedAt: nowIso() },
-                { pinned: value }
-              ];
-            }
-
-            if (action === "hide") {
-              payloads = [
-                { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
-                { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
-                { hidden: true }
-              ];
-            }
-
-            if (action === "restore") {
-              payloads = [
-                { hidden: false, hidden_by_admin: false, soft_deleted: false, rejected: false, status: "approved", approved: true, updated_at: nowIso() },
-                { hidden: false, hiddenByAdmin: false, softDeleted: false, rejected: false, status: "approved", approved: true, updatedAt: nowIso() },
-                { hidden: false, status: "approved" }
-              ];
-            }
-
-            await updateByIdWithFallback("communities", id, payloads);
-
-            if (creatorId && action === "approve") {
-              await changeTrustScore(creatorId, TRUST.communityApproved, "community_approved", { targetId: id, targetType: "community" });
-            }
-
-            if (creatorId && action === "hide") {
-              await changeTrustScore(creatorId, TRUST.communityHidden, "community_hidden", { targetId: id, targetType: "community" });
-            }
-
-            if (creatorId && action === "restore") {
-              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "community_restored", { targetId: id, targetType: "community" });
-            }
-
-            await logAdminAction(`community_${action}`, {
-              targetId: id,
-              targetUserId: creatorId,
-              targetType: "community"
-            });
-
-            await loadSummary();
-            await loadCommunities();
-            setMessage(`Community ${action} saved and Trust Bar updated when creator was linked.`, "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(`Could not ${action} community.`, "err");
-            btn.disabled = false;
-          }
-        });
-      });
+      sectionContent.querySelectorAll(".communities-filter").forEach(btn => btn.addEventListener("click", () => { state.communitiesFilter = btn.dataset.filter; loadCommunities(); }));
+      sectionContent.querySelectorAll(".community-action").forEach(btn => btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const creatorId = btn.dataset.creator || "";
+        if (!id || !action) return;
+        if (action === "hide" && !confirm("Hide this community? Creator Trust Bar will decrease.")) return;
+        btn.disabled = true;
+        try {
+          let payloads = [];
+          if (action === "approve") payloads = [{ approved:true, is_approved:true, pending:false, rejected:false, status:"approved", updated_at:nowIso() }, { approved:true, isApproved:true, pending:false, rejected:false, status:"approved", updatedAt:nowIso() }, { approved:true, status:"approved" }];
+          if (action === "feature" || action === "unfeature") { const value = action === "feature"; payloads = [{ featured:value, is_featured:value, updated_at:nowIso() }, { featured:value, isFeatured:value, updatedAt:nowIso() }, { featured:value }]; }
+          if (action === "pin" || action === "unpin") { const value = action === "pin"; payloads = [{ pinned:value, is_pinned:value, updated_at:nowIso() }, { pinned:value, isPinned:value, updatedAt:nowIso() }, { pinned:value }]; }
+          if (action === "hide") payloads = [{ hidden:true, hidden_by_admin:true, soft_deleted:true, status:"hidden", updated_at:nowIso() }, { hidden:true, hiddenByAdmin:true, softDeleted:true, status:"hidden", updatedAt:nowIso() }, { hidden:true }];
+          if (action === "restore") payloads = [{ hidden:false, hidden_by_admin:false, soft_deleted:false, rejected:false, status:"approved", approved:true, updated_at:nowIso() }, { hidden:false, hiddenByAdmin:false, softDeleted:false, rejected:false, status:"approved", approved:true, updatedAt:nowIso() }, { hidden:false, status:"approved" }];
+          await updateByIdWithFallback("communities", id, payloads);
+          if (creatorId && action === "approve") await changeTrustScore(creatorId, TRUST.communityApproved, "community_approved", { targetId:id, targetType:"community" });
+          if (creatorId && action === "hide") await changeTrustScore(creatorId, TRUST.communityHidden, "community_hidden", { targetId:id, targetType:"community" });
+          if (creatorId && action === "restore") await restoreTrustFloor(creatorId, TRUST.restoredFloor, "community_restored", { targetId:id, targetType:"community" });
+          await logAdminAction(`community_${action}`, { targetId:id, targetUserId:creatorId, targetType:"community" });
+          await loadSummary(); await loadCommunities();
+          setMessage(`Community ${action} saved and Trust Bar updated when creator was linked.`, "ok");
+        } catch (err) { console.error(err); setMessage(`Could not ${action} community.`, "err"); btn.disabled = false; }
+      }));
     }
 
-    async function loadHub() {
-      const [hubRowsRaw, authorRows] = await Promise.all([
-        selectAllSafe("hub_posts"),
-        selectAllSafe("hub_authors")
-      ]);
+    async function createHubPost(){
+      const title = document.getElementById("hubTitleInput").value.trim();
+      const type = document.getElementById("hubTypeInput").value.trim() || "update";
+      const category = document.getElementById("hubCategoryInput").value.trim() || "General";
+      const summary = document.getElementById("hubSummaryInput").value.trim();
+      const body = document.getElementById("hubBodyInput").value.trim();
+      const publishNow = document.getElementById("hubPublishInput").checked;
+      const featured = document.getElementById("hubFeaturedInput").checked;
+      const pinned = document.getElementById("hubPinnedInput").checked;
 
+      if (!title) throw new Error("Hub title is required.");
+
+      const creatorName = getUserName(currentUserProfile || {}) || currentUser.email || "OwnSpace";
+      await insertWithFallback("hub_posts", [
+        { title, summary, body, caption: summary, post_type:type, category, created_by:currentUser.id, creator_name:creatorName, published:publishNow, status:publishNow ? "published" : "draft", featured, pinned, created_at:nowIso(), updated_at:nowIso() },
+        { title, summary, body, caption: summary, postType:type, category, createdBy:currentUser.id, creatorName, published:publishNow, status:publishNow ? "published" : "draft", featured, pinned, createdAt:nowIso(), updatedAt:nowIso() },
+        { title, summary, created_by:currentUser.id, created_at:nowIso() }
+      ]);
+      if (publishNow) await changeTrustScore(currentUser.id, TRUST.hubPostPublished, "admin_hub_post_published");
+      await logAdminAction("hub_post_created", { targetUserId:currentUser.id, targetType:"hub_post", note:title });
+    }
+
+    async function loadHub(){
+      const [hubRowsRaw, authorRows] = await Promise.all([selectAllSafe("hub_posts"), selectAllSafe("hub_authors")]);
       const posts = hubRowsRaw.map(normalizeHubPost).filter(post => {
         if (state.hubFilter === "published") return post.published && !post.hidden;
         if (state.hubFilter === "featured") return (post.featured || post.pinned) && !post.hidden;
         if (state.hubFilter === "hidden") return post.hidden;
         if (state.hubFilter === "draft") return !post.published && !post.hidden;
         return true;
-      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      }).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt));
 
       sectionContent.innerHTML = `
         <div class="section-title">OwnSpace Hub</div>
-        <div class="section-note">Manage Hub posts and approved Hub authors. The public Hub page reads from <strong>hub_posts</strong>.</div>
+        <div class="section-note">Create Hub posts, manage published/draft posts, and approve trusted users as Hub authors.</div>
+
+        <div class="editor">
+          <div class="section-title">Create New Hub Post</div>
+          <div class="section-note">Use Hub for important OwnSpace updates, featured stories, safety notes, polls, or approved-author posts.</div>
+          <div class="form" style="margin-top:12px;">
+            <div class="grid-2">
+              <div class="field"><label class="label" for="hubTitleInput">Title</label><input id="hubTitleInput" class="input" placeholder="Post title..." /></div>
+              <div class="field"><label class="label" for="hubTypeInput">Type</label><input id="hubTypeInput" class="input" placeholder="update, article, poll..." value="update" /></div>
+              <div class="field"><label class="label" for="hubCategoryInput">Category</label><input id="hubCategoryInput" class="input" placeholder="Safety, News, Community..." value="General" /></div>
+              <div class="field"><label class="label" for="hubSummaryInput">Short Description</label><input id="hubSummaryInput" class="input" placeholder="Small summary..." /></div>
+              <div class="field full"><label class="label" for="hubBodyInput">Body / Details</label><textarea id="hubBodyInput" class="textarea" placeholder="Full post details..."></textarea></div>
+            </div>
+            <label class="check-row"><input id="hubPublishInput" type="checkbox" checked /> Publish now</label>
+            <label class="check-row"><input id="hubFeaturedInput" type="checkbox" /> Feature this post</label>
+            <label class="check-row"><input id="hubPinnedInput" type="checkbox" /> Pin this post</label>
+            <div class="inline-actions"><button id="createHubPostBtn" class="action-btn green" type="button">Create New</button><a href="hub.html" class="action-btn blue">${ICONS.open} Open Hub</a></div>
+          </div>
+        </div>
 
         <div class="editor">
           <div class="section-title">Add Hub Author</div>
           <div class="section-note">Paste a user UID to allow them to publish in OwnSpace Hub. This gives a small Trust Bar boost.</div>
-
-          <div class="toolbar">
+          <div class="toolbar" style="margin-top:12px;margin-bottom:0;">
             <input id="hubAuthorUidInput" class="search-box" type="text" placeholder="User UID..." value="${escapeHtml(state.hubAuthorSearch)}" />
             <button id="addHubAuthorBtn" class="action-btn green" type="button">Add Author</button>
           </div>
@@ -2811,13 +2261,12 @@
           <button class="action-btn ${state.hubFilter === "draft" ? "yellow" : ""} hub-filter" data-filter="draft" type="button">Draft</button>
           <button class="action-btn ${state.hubFilter === "hidden" ? "red" : ""} hub-filter" data-filter="hidden" type="button">Hidden</button>
           <button class="action-btn ${state.hubFilter === "all" ? "blue" : ""} hub-filter" data-filter="all" type="button">All</button>
-          <a href="hub.html" class="action-btn blue">${ICONS.open} Open Hub</a>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
           <div class="card-title">Hub Authors</div>
           <div class="badge-row" style="margin-top:10px;">
-            ${authorRows.length ? authorRows.slice(0, 20).map(a => {
+            ${authorRows.length ? authorRows.slice(0,30).map(a => {
               const uid = val(a, ["user_id", "userId", "uid", "id"], "");
               return `<span class="badge ${a.active === false || a.disabled === true ? "red" : "green"}">${escapeHtml(val(a, ["display_name", "displayName", "name"], uid || "Author"))}</span>`;
             }).join("") : `<span class="badge yellow">No authors found</span>`}
@@ -2827,11 +2276,7 @@
         <div class="list">
           ${posts.length ? posts.map(post => `
             <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(post.title)}</div>
-                <div class="card-time">${escapeHtml(fmtDate(post.createdAt))}</div>
-              </div>
-
+              <div class="card-top"><div class="card-title">${escapeHtml(post.title)}</div><div class="card-time">${escapeHtml(fmtDate(post.createdAt))}</div></div>
               <div class="badge-row">
                 <span class="badge ${badgeClass(post.status)}">${escapeHtml(post.status)}</span>
                 <span class="badge blue">${escapeHtml(post.type)}</span>
@@ -2839,14 +2284,11 @@
                 ${post.featured ? `<span class="badge purple">Featured</span>` : ""}
                 ${post.pinned ? `<span class="badge purple">Pinned</span>` : ""}
               </div>
-
-              <div class="meta-grid">
+              <div class="card-text">${escapeHtml(post.summary || "No summary added.")}</div>
+              <details class="more-box"><summary>Post details</summary><div class="more-inner"><div class="meta-grid">
                 <div class="meta-item"><strong>Post ID</strong>${escapeHtml(post.id)}</div>
                 <div class="meta-item"><strong>Author</strong>${escapeHtml(post.creatorName || post.creatorId || "Unknown")}</div>
-              </div>
-
-              <div class="card-text">${escapeHtml(post.summary || "No summary added.")}</div>
-
+              </div></div></details>
               <div class="inline-actions">
                 <a href="hub.html?postId=${encodeURIComponent(post.id)}" class="action-btn blue">${ICONS.open} Open</a>
                 <button class="action-btn purple hub-action" data-action="${post.featured ? "unfeature" : "feature"}" data-id="${escapeHtml(post.id)}" data-creator="${escapeHtml(post.creatorId)}" type="button">${post.featured ? "Unfeature" : "Feature"}</button>
@@ -2860,209 +2302,86 @@
         </div>
       `;
 
+      document.getElementById("createHubPostBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("createHubPostBtn");
+        btn.disabled = true;
+        try { await createHubPost(); await loadSummary(); await loadHub(); setMessage("Hub post created.", "ok"); }
+        catch (err) { console.error(err); setMessage(err?.message || "Could not create Hub post.", "err"); btn.disabled = false; }
+      });
+
       const hubAuthorUidInput = document.getElementById("hubAuthorUidInput");
       const addHubAuthorBtn = document.getElementById("addHubAuthorBtn");
-
-      hubAuthorUidInput.addEventListener("input", () => {
-        state.hubAuthorSearch = hubAuthorUidInput.value.trim();
-      });
-
+      hubAuthorUidInput.addEventListener("input", () => { state.hubAuthorSearch = hubAuthorUidInput.value.trim(); });
       addHubAuthorBtn.addEventListener("click", async () => {
         const uid = hubAuthorUidInput.value.trim();
-        if (!uid) {
-          setMessage("Paste user UID first.", "err");
-          return;
-        }
-
+        if (!uid) { setMessage("Paste user UID first.", "err"); return; }
         addHubAuthorBtn.disabled = true;
+        try { await addHubAuthor(uid); state.hubAuthorSearch = ""; await loadSummary(); await loadHub(); setMessage("Hub author added and Trust Bar updated.", "ok"); }
+        catch (err) { console.error(err); setMessage("Could not add Hub author. Maybe duplicate or RLS blocked it.", "err"); addHubAuthorBtn.disabled = false; }
+      });
 
+      sectionContent.querySelectorAll(".hub-filter").forEach(btn => btn.addEventListener("click", () => { state.hubFilter = btn.dataset.filter; loadHub(); }));
+      sectionContent.querySelectorAll(".hub-action").forEach(btn => btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const creatorId = btn.dataset.creator || "";
+        if (!id || !action) return;
+        if (action === "hide" && !confirm("Hide this Hub post?")) return;
+        btn.disabled = true;
         try {
-          await insertWithFallback("hub_authors", [
-            {
-              user_id: uid,
-              can_post: true,
-              active: true,
-              created_by: currentUser.id,
-              created_at: nowIso(),
-              updated_at: nowIso()
-            },
-            {
-              userId: uid,
-              canPost: true,
-              active: true,
-              createdBy: currentUser.id,
-              createdAt: nowIso(),
-              updatedAt: nowIso()
-            },
-            {
-              uid,
-              active: true,
-              created_at: nowIso()
-            }
-          ]);
-
-          await changeTrustScore(uid, TRUST.hubAuthorAdded, "hub_author_added");
-
-          await logAdminAction("hub_author_added", {
-            targetUserId: uid,
-            targetType: "hub_author"
-          });
-
-          state.hubAuthorSearch = "";
-          await loadSummary();
-          await loadHub();
-          setMessage("Hub author added and Trust Bar updated.", "ok");
-        } catch (err) {
-          console.error(err);
-          setMessage("Could not add Hub author. Maybe duplicate or RLS blocked it.", "err");
-          addHubAuthorBtn.disabled = false;
-        }
-      });
-
-      sectionContent.querySelectorAll(".hub-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.hubFilter = btn.dataset.filter;
-          loadHub();
-        });
-      });
-
-      sectionContent.querySelectorAll(".hub-action").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const action = btn.dataset.action;
-          const creatorId = btn.dataset.creator || "";
-          if (!id || !action) return;
-
-          if (action === "hide") {
-            const ok = confirm("Hide this Hub post?");
-            if (!ok) return;
-          }
-
-          btn.disabled = true;
-
-          try {
-            let payloads = [];
-
-            if (action === "feature" || action === "unfeature") {
-              const value = action === "feature";
-              payloads = [
-                { featured: value, is_featured: value, updated_at: nowIso() },
-                { featured: value, isFeatured: value, updatedAt: nowIso() },
-                { featured: value }
-              ];
-            }
-
-            if (action === "pin" || action === "unpin") {
-              const value = action === "pin";
-              payloads = [
-                { pinned: value, is_pinned: value, updated_at: nowIso() },
-                { pinned: value, isPinned: value, updatedAt: nowIso() },
-                { pinned: value }
-              ];
-            }
-
-            if (action === "publish") {
-              payloads = [
-                { published: true, is_published: true, hidden: false, soft_deleted: false, updated_at: nowIso() },
-                { published: true, isPublished: true, hidden: false, softDeleted: false, updatedAt: nowIso() },
-                { published: true }
-              ];
-            }
-
-            if (action === "hide") {
-              payloads = [
-                { hidden: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
-                { hidden: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
-                { hidden: true }
-              ];
-            }
-
-            if (action === "restore") {
-              payloads = [
-                { hidden: false, soft_deleted: false, status: "published", published: true, updated_at: nowIso() },
-                { hidden: false, softDeleted: false, status: "published", published: true, updatedAt: nowIso() },
-                { hidden: false, published: true }
-              ];
-            }
-
-            await updateByIdWithFallback("hub_posts", id, payloads);
-
-            if (creatorId && action === "publish") {
-              await changeTrustScore(creatorId, TRUST.hubPostPublished, "hub_post_published", { targetId: id, targetType: "hub_post" });
-            }
-
-            if (creatorId && action === "hide") {
-              await changeTrustScore(creatorId, TRUST.hubPostHidden, "hub_post_hidden", { targetId: id, targetType: "hub_post" });
-            }
-
-            if (creatorId && action === "restore") {
-              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "hub_post_restored", { targetId: id, targetType: "hub_post" });
-            }
-
-            await logAdminAction(`hub_${action}`, {
-              targetId: id,
-              targetUserId: creatorId,
-              targetType: "hub_post"
-            });
-
-            await loadSummary();
-            await loadHub();
-            setMessage(`Hub post ${action} saved and Trust Bar updated when author was linked.`, "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(`Could not ${action} Hub post.`, "err");
-            btn.disabled = false;
-          }
-        });
-      });
+          let payloads = [];
+          if (action === "feature" || action === "unfeature") { const value = action === "feature"; payloads = [{ featured:value, is_featured:value, updated_at:nowIso() }, { featured:value, isFeatured:value, updatedAt:nowIso() }, { featured:value }]; }
+          if (action === "pin" || action === "unpin") { const value = action === "pin"; payloads = [{ pinned:value, is_pinned:value, updated_at:nowIso() }, { pinned:value, isPinned:value, updatedAt:nowIso() }, { pinned:value }]; }
+          if (action === "publish") payloads = [{ published:true, is_published:true, hidden:false, soft_deleted:false, status:"published", updated_at:nowIso() }, { published:true, isPublished:true, hidden:false, softDeleted:false, status:"published", updatedAt:nowIso() }, { published:true }];
+          if (action === "hide") payloads = [{ hidden:true, soft_deleted:true, status:"hidden", updated_at:nowIso() }, { hidden:true, softDeleted:true, status:"hidden", updatedAt:nowIso() }, { hidden:true }];
+          if (action === "restore") payloads = [{ hidden:false, soft_deleted:false, status:"published", published:true, updated_at:nowIso() }, { hidden:false, softDeleted:false, status:"published", published:true, updatedAt:nowIso() }, { hidden:false, published:true }];
+          await updateByIdWithFallback("hub_posts", id, payloads);
+          if (creatorId && action === "publish") await changeTrustScore(creatorId, TRUST.hubPostPublished, "hub_post_published", { targetId:id, targetType:"hub_post" });
+          if (creatorId && action === "hide") await changeTrustScore(creatorId, TRUST.hubPostHidden, "hub_post_hidden", { targetId:id, targetType:"hub_post" });
+          if (creatorId && action === "restore") await restoreTrustFloor(creatorId, TRUST.restoredFloor, "hub_post_restored", { targetId:id, targetType:"hub_post" });
+          await logAdminAction(`hub_${action}`, { targetId:id, targetUserId:creatorId, targetType:"hub_post" });
+          await loadSummary(); await loadHub();
+          setMessage(`Hub post ${action} saved and Trust Bar updated when author was linked.`, "ok");
+        } catch (err) { console.error(err); setMessage(`Could not ${action} Hub post.`, "err"); btn.disabled = false; }
+      }));
     }
 
-    async function loadPlaces() {
+    async function loadPlaces(){
       const rows = (await selectAllSafe("nearby_places")).map(normalizePlace);
-
       const filtered = rows.filter(item => {
         if (state.placesFilter === "pending") return !item.hidden && item.pending && !item.approved && !item.rejected;
         if (state.placesFilter === "approved") return !item.hidden && item.approved;
         if (state.placesFilter === "rejected") return item.rejected;
         if (state.placesFilter === "hidden") return item.hidden;
         return true;
-      }).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+      }).sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt));
 
       sectionContent.innerHTML = `
         <div class="section-title">Places</div>
         <div class="section-note">Approve, reject, hide, restore, or delete place submissions. Approval increases creator Trust Bar.</div>
-
-        <div class="toolbar">
+        <div class="toolbar" style="margin-top:12px;">
           <button class="action-btn ${state.placesFilter === "pending" ? "yellow" : ""} places-filter" data-filter="pending" type="button">Pending</button>
           <button class="action-btn ${state.placesFilter === "approved" ? "green" : ""} places-filter" data-filter="approved" type="button">Approved</button>
           <button class="action-btn ${state.placesFilter === "rejected" ? "red" : ""} places-filter" data-filter="rejected" type="button">Rejected</button>
           <button class="action-btn ${state.placesFilter === "hidden" ? "red" : ""} places-filter" data-filter="hidden" type="button">Hidden</button>
           <button class="action-btn ${state.placesFilter === "all" ? "blue" : ""} places-filter" data-filter="all" type="button">All</button>
         </div>
-
         <div class="list">
           ${filtered.length ? filtered.map(item => `
             <div class="card">
-              <div class="card-top">
-                <div class="card-title">${escapeHtml(item.name)}</div>
-                <div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div>
-              </div>
-
+              <div class="card-top"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-time">${escapeHtml(fmtDate(item.createdAt))}</div></div>
               <div class="badge-row">
                 <span class="badge ${badgeClass(item.hidden ? "hidden" : item.status)}">${escapeHtml(item.hidden ? "hidden" : item.status)}</span>
                 <span class="badge blue">${escapeHtml(item.city)}</span>
                 <span class="badge purple">${escapeHtml(item.category)}</span>
               </div>
-
-              <div class="meta-grid">
+              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
+              <details class="more-box"><summary>Place details</summary><div class="more-inner"><div class="meta-grid">
                 <div class="meta-item"><strong>Address</strong>${escapeHtml(item.address || "Not added")}</div>
                 <div class="meta-item"><strong>Website</strong>${escapeHtml(item.website || "Not added")}</div>
                 <div class="meta-item"><strong>Submitted By</strong>${escapeHtml(item.creatorName || item.creatorId || "Unknown")}</div>
                 <div class="meta-item"><strong>Place ID</strong>${escapeHtml(item.id || "Missing")}</div>
-              </div>
-
-              <div class="card-text">${escapeHtml(item.description || "No description added.")}</div>
-
+              </div></div></details>
               <div class="inline-actions">
                 <a class="action-btn blue" href="place.html?placeId=${encodeURIComponent(item.id)}&source=nearby_places">${ICONS.open} Open</a>
                 <button class="action-btn green place-action" data-action="approve" data-id="${escapeHtml(item.id)}" data-creator="${escapeHtml(item.creatorId)}" type="button">Approve</button>
@@ -3076,163 +2395,66 @@
         </div>
       `;
 
-      sectionContent.querySelectorAll(".places-filter").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.placesFilter = btn.dataset.filter;
-          loadPlaces();
-        });
-      });
-
-      sectionContent.querySelectorAll(".place-action").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const action = btn.dataset.action;
-          const creatorId = btn.dataset.creator || "";
-          if (!id || !action) return;
-
-          if (action === "hide") {
-            const ok = confirm("Hide this place? Creator Trust Bar will decrease.");
-            if (!ok) return;
-          }
-
-          btn.disabled = true;
-
-          try {
-            let payloads = [];
-
-            if (action === "approve") {
-              payloads = [
-                { approved: true, is_approved: true, is_public: true, pending: false, rejected: false, status: "approved", visibility: "public", reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
-                { approved: true, isApproved: true, isPublic: true, pending: false, rejected: false, status: "approved", visibility: "public", reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
-                { approved: true, status: "approved" }
-              ];
-            }
-
-            if (action === "reject") {
-              payloads = [
-                { approved: false, pending: false, rejected: true, status: "rejected", reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
-                { approved: false, pending: false, rejected: true, status: "rejected", reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
-                { rejected: true, status: "rejected" }
-              ];
-            }
-
-            if (action === "hide") {
-              payloads = [
-                { hidden: true, hidden_by_admin: true, soft_deleted: true, status: "hidden", updated_at: nowIso() },
-                { hidden: true, hiddenByAdmin: true, softDeleted: true, status: "hidden", updatedAt: nowIso() },
-                { hidden: true }
-              ];
-            }
-
-            if (action === "restore") {
-              payloads = [
-                { hidden: false, hidden_by_admin: false, soft_deleted: false, rejected: false, approved: true, status: "approved", updated_at: nowIso() },
-                { hidden: false, hiddenByAdmin: false, softDeleted: false, rejected: false, approved: true, status: "approved", updatedAt: nowIso() },
-                { hidden: false, approved: true, status: "approved" }
-              ];
-            }
-
-            await updateByIdWithFallback("nearby_places", id, payloads);
-
-            if (creatorId && action === "approve") {
-              await changeTrustScore(creatorId, TRUST.placeApproved, "place_approved", { targetId: id, targetType: "place" });
-            }
-
-            if (creatorId && action === "reject") {
-              await changeTrustScore(creatorId, TRUST.placeRejected, "place_rejected", { targetId: id, targetType: "place" });
-            }
-
-            if (creatorId && action === "hide") {
-              await changeTrustScore(creatorId, TRUST.placeHidden, "place_hidden", { targetId: id, targetType: "place" });
-            }
-
-            if (creatorId && action === "restore") {
-              await restoreTrustFloor(creatorId, TRUST.restoredFloor, "place_restored", { targetId: id, targetType: "place" });
-            }
-
-            await logAdminAction(`place_${action}`, {
-              targetId: id,
-              targetUserId: creatorId,
-              targetType: "place"
-            });
-
-            await loadSummary();
-            await loadPlaces();
-            setMessage(`Place ${action} saved and Trust Bar updated when creator was linked.`, "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage(`Could not ${action} place.`, "err");
-            btn.disabled = false;
-          }
-        });
-      });
-
-      sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const creatorId = btn.dataset.creator || "";
-          if (!id) return;
-
-          const ok = confirm("Permanently delete this place?");
-          if (!ok) return;
-
-          btn.disabled = true;
-
-          try {
-            await deleteById("nearby_places", id);
-
-            if (creatorId) {
-              await changeTrustScore(creatorId, TRUST.placeHidden, "place_deleted", { targetId: id, targetType: "place" });
-            }
-
-            await logAdminAction("place_deleted", {
-              targetId: id,
-              targetUserId: creatorId,
-              targetType: "place"
-            });
-
-            await loadSummary();
-            await loadPlaces();
-            setMessage("Place deleted and Trust Bar updated when creator was linked.", "ok");
-          } catch (err) {
-            console.error(err);
-            setMessage("Could not delete place.", "err");
-            btn.disabled = false;
-          }
-        });
-      });
+      sectionContent.querySelectorAll(".places-filter").forEach(btn => btn.addEventListener("click", () => { state.placesFilter = btn.dataset.filter; loadPlaces(); }));
+      sectionContent.querySelectorAll(".place-action").forEach(btn => btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const creatorId = btn.dataset.creator || "";
+        if (!id || !action) return;
+        if (action === "hide" && !confirm("Hide this place? Creator Trust Bar will decrease.")) return;
+        btn.disabled = true;
+        try {
+          let payloads = [];
+          if (action === "approve") payloads = [{ approved:true, is_approved:true, is_public:true, pending:false, rejected:false, status:"approved", visibility:"public", reviewed_at:nowIso(), reviewed_by:currentUser.id, updated_at:nowIso() }, { approved:true, isApproved:true, isPublic:true, pending:false, rejected:false, status:"approved", visibility:"public", reviewedAt:nowIso(), reviewedBy:currentUser.id, updatedAt:nowIso() }, { approved:true, status:"approved" }];
+          if (action === "reject") payloads = [{ approved:false, pending:false, rejected:true, status:"rejected", reviewed_at:nowIso(), reviewed_by:currentUser.id, updated_at:nowIso() }, { approved:false, pending:false, rejected:true, status:"rejected", reviewedAt:nowIso(), reviewedBy:currentUser.id, updatedAt:nowIso() }, { rejected:true, status:"rejected" }];
+          if (action === "hide") payloads = [{ hidden:true, hidden_by_admin:true, soft_deleted:true, status:"hidden", updated_at:nowIso() }, { hidden:true, hiddenByAdmin:true, softDeleted:true, status:"hidden", updatedAt:nowIso() }, { hidden:true }];
+          if (action === "restore") payloads = [{ hidden:false, hidden_by_admin:false, soft_deleted:false, rejected:false, approved:true, status:"approved", updated_at:nowIso() }, { hidden:false, hiddenByAdmin:false, softDeleted:false, rejected:false, approved:true, status:"approved", updatedAt:nowIso() }, { hidden:false, approved:true, status:"approved" }];
+          await updateByIdWithFallback("nearby_places", id, payloads);
+          if (creatorId && action === "approve") await changeTrustScore(creatorId, TRUST.placeApproved, "place_approved", { targetId:id, targetType:"place" });
+          if (creatorId && action === "reject") await changeTrustScore(creatorId, TRUST.placeRejected, "place_rejected", { targetId:id, targetType:"place" });
+          if (creatorId && action === "hide") await changeTrustScore(creatorId, TRUST.placeHidden, "place_hidden", { targetId:id, targetType:"place" });
+          if (creatorId && action === "restore") await restoreTrustFloor(creatorId, TRUST.restoredFloor, "place_restored", { targetId:id, targetType:"place" });
+          await logAdminAction(`place_${action}`, { targetId:id, targetUserId:creatorId, targetType:"place" });
+          await loadSummary(); await loadPlaces();
+          setMessage(`Place ${action} saved and Trust Bar updated when creator was linked.`, "ok");
+        } catch (err) { console.error(err); setMessage(`Could not ${action} place.`, "err"); btn.disabled = false; }
+      }));
+      sectionContent.querySelectorAll(".delete-place-btn").forEach(btn => btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const creatorId = btn.dataset.creator || "";
+        if (!id) return;
+        if (!confirm("Permanently delete this place?")) return;
+        btn.disabled = true;
+        try {
+          await deleteById("nearby_places", id);
+          if (creatorId) await changeTrustScore(creatorId, TRUST.placeHidden, "place_deleted", { targetId:id, targetType:"place" });
+          await logAdminAction("place_deleted", { targetId:id, targetUserId:creatorId, targetType:"place" });
+          await loadSummary(); await loadPlaces();
+          setMessage("Place deleted and Trust Bar updated when creator was linked.", "ok");
+        } catch (err) { console.error(err); setMessage("Could not delete place.", "err"); btn.disabled = false; }
+      }));
     }
 
-    async function loadHistory() {
-      const docs = (await selectAllSafe("moderation_history"))
-        .map(d => ({ ...d }))
-        .sort((a, b) => createdMs(b) - createdMs(a));
-
+    async function loadHistory(){
+      const docs = (await selectAllSafe("moderation_history")).map(d => ({...d})).sort((a,b) => createdMs(b) - createdMs(a));
       sectionContent.innerHTML = `
         <div class="section-title">Moderation History</div>
         <div class="section-note">Recent admin actions, Trust Bar changes, and moderation logs.</div>
-
-        <div class="list">
+        <div class="list" style="margin-top:12px;">
           ${docs.length ? docs.map(item => {
             const trustBefore = val(item, ["trust_before", "trustBefore"], "");
             const trustAfter = val(item, ["trust_after", "trustAfter"], "");
             const trustDelta = val(item, ["trust_delta", "trustDelta"], "");
             const hasTrust = trustAfter !== "";
-
             return `
               <div class="card">
-                <div class="card-top">
-                  <div class="card-title">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</div>
-                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
-                </div>
-
+                <div class="card-top"><div class="card-title">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</div><div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div></div>
                 <div class="badge-row">
                   <span class="badge ${badgeClass(val(item, ["action", "action_type", "actionType"], ""))}">${escapeHtml(val(item, ["action", "action_type", "actionType"], "Action"))}</span>
-                  ${hasTrust ? `<span class="badge blue">Trust ${escapeHtml(String(trustBefore || "-"))}% → ${escapeHtml(String(trustAfter))}%</span>` : ""}
+                  ${hasTrust ? `<span class="badge blue">Trust ${escapeHtml(String(trustBefore || "-"))}% â ${escapeHtml(String(trustAfter))}%</span>` : ""}
                   ${trustDelta !== "" ? `<span class="badge ${Number(trustDelta) >= 0 ? "green" : "red"}">${Number(trustDelta) >= 0 ? "+" : ""}${escapeHtml(String(trustDelta))}</span>` : ""}
                 </div>
-
-                <div class="meta-grid">
+                <details class="more-box"><summary>History details</summary><div class="more-inner"><div class="meta-grid">
                   <div class="meta-item"><strong>Admin</strong>${escapeHtml(val(item, ["admin_uid", "adminUid", "admin_id", "adminId"], "Unknown"))}</div>
                   <div class="meta-item"><strong>Target Type</strong>${escapeHtml(val(item, ["target_type", "targetType"], "Not set"))}</div>
                   <div class="meta-item"><strong>Target User</strong>${escapeHtml(val(item, ["target_user_id", "targetUserId"], "Not set"))}</div>
@@ -3240,7 +2462,7 @@
                   <div class="meta-item"><strong>Source</strong>${escapeHtml(val(item, ["source"], "Not set"))}</div>
                   <div class="meta-item"><strong>Reason</strong>${escapeHtml(val(item, ["reason"], "No reason"))}</div>
                   <div class="meta-item"><strong>Note</strong>${escapeHtml(val(item, ["note", "admin_note", "adminNote"], "No note"))}</div>
-                </div>
+                </div></div></details>
               </div>
             `;
           }).join("") : `<div class="empty-box">No moderation history found.</div>`}
@@ -3248,20 +2470,19 @@
       `;
     }
 
-    async function initAdmin() {
+    async function initAdmin(){
       const { data, error } = await supabase.auth.getUser();
-
       if (error || !data?.user) {
         window.location.href = "login.html";
         return;
       }
 
       currentUser = data.user;
+      currentUserProfile = await selectUserRow(currentUser.id).catch(() => null);
 
       try {
         const ok = await ensureAdmin(currentUser.id);
         accessLoading.classList.add("hidden");
-
         if (!ok) {
           accessDenied.classList.remove("hidden");
           return;
@@ -3269,8 +2490,8 @@
 
         accessPanel.classList.add("hidden");
         adminWrap.classList.remove("hidden");
-
         await loadSummary();
+        await loadInboxBadge();
         await loadSection(currentTab);
       } catch (err) {
         console.error(err);
@@ -3279,42 +2500,11 @@
       }
 
       supabase.auth.onAuthStateChange((event, session) => {
-        if (!session?.user) {
-          window.location.href = "login.html";
-        }
+        if (!session?.user) window.location.href = "login.html";
       });
     }
 
     initAdmin();
-
-    /*
-      OWNSPACE ADMIN.HTML TRUST ENGINE UPDATE
-
-      TRUST CHANGES:
-      - Verification approved: +25
-      - Verification rejected: -5
-      - Community approved: +8
-      - Community hidden: -10
-      - Place approved: +6
-      - Place rejected: -3
-      - Place hidden/deleted: -10
-      - Hub author added: +5
-      - Hub post published: +4
-      - Hub post hidden: -8
-      - Warn: -12
-      - Suspend: -25
-      - Ban: Trust becomes 0
-      - Restore: Trust becomes at least 50
-
-      IMPORTANT:
-      - Purchased points do not increase trust.
-      - Users should not be allowed to edit trust_score in RLS.
-      - Admin actions write trust_score to users and public_profiles.
-      - moderation_history stores trust_before, trust_after, trust_delta when columns exist.
-
-      NEXT:
-      - Update Supabase RLS so only admins can update trust_score / moderation fields.
-    */
   </script>
 </body>
 </html>
