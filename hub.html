@@ -6,7 +6,7 @@
   <title>OwnSpace - Hub</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 
     :root,
     html[data-theme="light"]{
@@ -25,7 +25,13 @@
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --soft-shadow:0 6px 14px rgba(20,33,61,.045);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     html[data-theme="dark"]{
@@ -44,17 +50,23 @@
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
+      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.12);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     body{
       background:
-        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
-        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.07), transparent 24%),
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:6px 6px 82px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -67,58 +79,66 @@
       backdrop-filter:blur(14px);
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
-      border-radius:18px;
-      padding:7px 9px;
-      margin-bottom:10px;
+      border-radius:14px;
+      padding:5px 6px;
+      margin-bottom:7px;
       display:grid;
-      grid-template-columns:42px 1fr 42px;
+      grid-template-columns:34px 1fr 34px;
       align-items:center;
-      gap:8px;
+      gap:6px;
       box-shadow:var(--shadow);
     }
 
     .top-icon-btn{
-      width:42px;
-      height:42px;
+      width:34px;
+      height:34px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:13px;
+      border-radius:11px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
       text-decoration:none;
+      flex-shrink:0;
+      position:relative;
+    }
+
+    .top-icon-btn.refresh-top{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.22);
     }
 
     .top-icon-btn svg{
-      width:19px;
-      height:19px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .top-center{text-align:center;min-width:0}
 
     .brand{
-      font-size:18px;
+      font-size:15.5px;
       font-weight:950;
-      line-height:1.05;
+      line-height:1;
       letter-spacing:-.02em;
     }
 
     .brand-sub{
-      font-size:10px;
+      font-size:9px;
       color:var(--muted);
-      margin-top:2px;
+      margin-top:1px;
+      font-weight:800;
     }
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:13px;
-      margin-bottom:10px;
+      border-radius:16px;
+      padding:8px;
+      margin-bottom:7px;
       box-shadow:var(--shadow);
     }
 
@@ -126,142 +146,156 @@
       position:relative;
       overflow:hidden;
       background:
-        linear-gradient(135deg, rgba(76,201,255,.13), rgba(167,139,250,.10)),
+        radial-gradient(circle at 85% 20%, rgba(167,139,250,.10), transparent 30%),
+        linear-gradient(135deg, rgba(76,201,255,.12), rgba(167,139,250,.08)),
         var(--surface);
     }
 
-    .hero-card:before{
-      content:"";
-      position:absolute;
-      inset:auto -80px -120px auto;
-      width:230px;
-      height:230px;
-      border-radius:50%;
-      background:rgba(61,220,132,.08);
-      pointer-events:none;
+    .hero-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:start;
+      margin-bottom:7px;
+      position:relative;
+      z-index:1;
     }
 
     .hero-title{
-      position:relative;
-      font-size:21px;
+      font-size:16px;
       font-weight:950;
-      line-height:1.2;
+      line-height:1.15;
       letter-spacing:-.03em;
-      margin-bottom:6px;
+      margin-bottom:2px;
     }
 
     .hero-sub{
-      position:relative;
       color:var(--muted);
-      font-size:13px;
-      line-height:1.55;
-      margin-bottom:12px;
+      font-size:10.5px;
+      line-height:1.35;
+    }
+
+    .hub-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 8px;
+      border-radius:999px;
+      font-size:10.2px;
+      font-weight:950;
+      border:1px solid rgba(167,139,250,.22);
+      background:var(--purple-soft);
+      color:var(--text);
+      white-space:nowrap;
     }
 
     .chip-row{
-      position:relative;
       display:flex;
-      gap:7px;
+      gap:5px;
       flex-wrap:wrap;
-      margin-bottom:12px;
+      margin-bottom:7px;
     }
 
     .chip{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:6px 10px;
+      padding:5px 7px;
       border-radius:999px;
-      font-size:11px;
+      font-size:9.8px;
       font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
       line-height:1;
+      white-space:nowrap;
     }
 
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .chip-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:var(--red-soft);border-color:rgba(255,93,115,.20)}
 
     .action-row{
-      position:relative;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
       align-items:center;
+    }
+
+    .action-row.three{
+      grid-template-columns:repeat(3,1fr);
     }
 
     .action-btn,
     .mini-btn{
       border:none;
       border-radius:12px;
-      padding:10px 12px;
-      font-size:12px;
+      padding:8px 9px;
+      font-size:11px;
       font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
+      gap:5px;
       cursor:pointer;
-      min-height:40px;
+      min-height:34px;
       color:var(--text);
       border:1px solid var(--line);
       background:var(--surface-2);
+      white-space:nowrap;
+      min-width:0;
     }
 
     .action-btn svg,
     .mini-btn svg{
-      width:15px;
-      height:15px;
+      width:14px;
+      height:14px;
       display:block;
       flex-shrink:0;
     }
 
     .action-btn:disabled,
-    .mini-btn:disabled{
-      opacity:.65;
-      cursor:not-allowed;
-    }
+    .mini-btn:disabled{opacity:.65;cursor:not-allowed}
 
-    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
-    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
-    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
-    .btn-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
-    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .btn-primary{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .btn-green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}
+    .btn-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
+    .btn-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}
+    .btn-red{background:var(--red-soft);border-color:rgba(255,93,115,.22)}
     .btn-soft{background:var(--surface-2);border-color:var(--line)}
 
     .search-wrap{
       position:relative;
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .search-box{
       width:100%;
       border:none;
       outline:none;
-      padding:13px 44px 13px 14px;
-      border-radius:16px;
+      padding:10px 39px 10px 11px;
+      border-radius:13px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      font-size:14px;
+      font-size:12.5px;
+      min-height:38px;
     }
 
     .search-box::placeholder{color:var(--muted)}
 
     .clear-btn{
       position:absolute;
-      right:8px;
+      right:5px;
       top:50%;
       transform:translateY(-50%);
-      width:30px;
-      height:30px;
+      width:29px;
+      height:29px;
       border:none;
-      border-radius:10px;
+      border-radius:9px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
@@ -271,14 +305,15 @@
       justify-content:center;
       font-size:13px;
       font-weight:950;
+      line-height:1;
     }
 
     .tabs{
       display:flex;
-      gap:7px;
+      gap:5px;
       overflow-x:auto;
-      padding-bottom:2px;
-      margin-bottom:10px;
+      padding-bottom:1px;
+      margin-bottom:7px;
       scrollbar-width:none;
     }
 
@@ -291,62 +326,59 @@
       color:var(--text);
       border:1px solid var(--line);
       border-radius:999px;
-      padding:9px 12px;
-      font-size:12px;
+      padding:6px 8px;
+      font-size:10.2px;
       font-weight:950;
       cursor:pointer;
       white-space:nowrap;
+      min-height:29px;
     }
 
     .tab-btn.active{
-      background:rgba(76,201,255,.14);
+      background:var(--blue-soft);
       border-color:rgba(76,201,255,.22);
     }
 
     .composer{
       display:grid;
-      gap:10px;
+      gap:7px;
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
+      border-radius:14px;
+      padding:9px;
     }
 
     .composer-head{
-      display:flex;
+      display:grid;
+      grid-template-columns:1fr auto;
       justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      flex-wrap:wrap;
+      align-items:start;
+      gap:8px;
     }
 
     .composer-title{
-      font-size:16px;
+      font-size:13.5px;
       font-weight:950;
-      margin-bottom:4px;
+      margin-bottom:2px;
     }
 
     .composer-sub{
       color:var(--muted);
-      font-size:12px;
-      line-height:1.45;
+      font-size:10.5px;
+      line-height:1.35;
     }
 
     .form-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:10px;
+      gap:7px;
     }
 
-    .field{
-      display:grid;
-      gap:6px;
-    }
-
+    .field{display:grid;gap:5px}
     .field.full{grid-column:1/-1}
 
     .label{
-      font-size:12px;
+      font-size:10.8px;
       font-weight:950;
       color:var(--text);
     }
@@ -357,28 +389,27 @@
       width:100%;
       border:none;
       outline:none;
-      padding:12px 13px;
-      border-radius:15px;
+      padding:10px 11px;
+      border-radius:13px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
-      font-size:14px;
+      font-size:12.5px;
+      min-height:38px;
     }
 
     .textarea{
-      min-height:96px;
+      min-height:88px;
       resize:vertical;
-      line-height:1.55;
+      line-height:1.48;
     }
 
     .input::placeholder,
     .textarea::placeholder{color:var(--muted)}
 
-    .select option{color:#111}
-
     .check-row{
       display:flex;
-      gap:8px;
+      gap:6px;
       flex-wrap:wrap;
       align-items:center;
     }
@@ -386,48 +417,48 @@
     .check-pill{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:6px;
       background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 11px;
-      font-size:12px;
+      border-radius:12px;
+      padding:8px 9px;
+      font-size:11px;
       font-weight:850;
       color:var(--text);
     }
 
     .check-pill input{
       accent-color:var(--blue);
-      transform:scale(1.05);
+      transform:scale(1.02);
     }
 
     .file-box{
       border:1px dashed var(--line);
-      border-radius:16px;
-      padding:12px;
+      border-radius:13px;
+      padding:9px;
       background:var(--surface-3);
     }
 
     .file-input{
       width:100%;
       color:var(--text);
-      font-size:13px;
+      font-size:12px;
     }
 
     .file-input::file-selector-button{
       border:none;
-      background:rgba(76,201,255,.14);
+      background:var(--blue-soft);
       color:var(--text);
       border:1px solid rgba(76,201,255,.20);
       border-radius:10px;
-      padding:8px 10px;
-      margin-right:10px;
+      padding:7px 9px;
+      margin-right:8px;
       cursor:pointer;
       font-weight:950;
     }
 
     .preview-wrap{
-      margin-top:10px;
+      margin-top:8px;
       display:none;
     }
 
@@ -435,23 +466,24 @@
 
     .preview-img{
       width:100%;
-      max-height:260px;
+      max-height:240px;
       object-fit:cover;
-      border-radius:14px;
+      border-radius:13px;
       border:1px solid var(--line);
       background:var(--surface-2);
       display:block;
     }
 
     .message{
-      min-height:18px;
-      font-size:13px;
-      line-height:1.45;
+      min-height:0;
+      font-size:11px;
+      line-height:1.4;
+      color:var(--muted);
     }
 
+    .message:not(:empty){min-height:16px}
     .success{color:#22b36c}
     .error{color:#e74c66}
-
     html[data-theme="dark"] .success{color:#86efac}
     html[data-theme="dark"] .error{color:#fda4af}
 
@@ -459,78 +491,77 @@
     .empty-box{
       text-align:center;
       color:var(--muted);
-      padding:22px 12px;
+      padding:18px 8px;
       background:var(--surface-2);
-      border-radius:16px;
+      border-radius:14px;
       border:1px dashed var(--line);
-      font-size:14px;
-      line-height:1.55;
+      font-size:12.5px;
+      line-height:1.45;
+      font-weight:850;
     }
 
     .featured-strip{
       display:grid;
-      gap:10px;
-      margin-bottom:10px;
+      gap:6px;
+      margin-bottom:7px;
     }
 
     .section-small-title{
-      font-size:15px;
+      font-size:13px;
       font-weight:950;
-      margin-bottom:8px;
+      margin-bottom:1px;
     }
 
-    .list{
-      display:grid;
-      gap:10px;
-    }
+    .list{display:grid;gap:6px}
 
     .post-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
+      border-radius:14px;
+      padding:8px;
       overflow:hidden;
+      box-shadow:var(--soft-shadow);
     }
 
     .post-card.pinned{
       border-color:rgba(245,185,66,.26);
-      background:linear-gradient(135deg, rgba(245,185,66,.08), transparent 35%), var(--surface-2);
+      background:linear-gradient(135deg, rgba(245,185,66,.07), transparent 35%), var(--surface-2);
     }
 
     .cover{
       width:100%;
-      max-height:320px;
+      max-height:280px;
       object-fit:cover;
-      border-radius:15px;
+      border-radius:13px;
       display:block;
       background:var(--surface-3);
       border:1px solid var(--line);
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .post-title{
-      font-size:17px;
+      font-size:14px;
       font-weight:950;
-      line-height:1.35;
+      line-height:1.3;
       letter-spacing:-.01em;
-      margin-bottom:7px;
+      margin-bottom:5px;
       word-break:break-word;
     }
 
     .badge-row{
       display:flex;
-      gap:7px;
+      gap:5px;
       flex-wrap:wrap;
-      margin-bottom:9px;
+      margin-bottom:7px;
     }
 
     .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:5px 9px;
+      padding:5px 7px;
       border-radius:999px;
-      font-size:11px;
+      font-size:9.5px;
       font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-3);
@@ -538,49 +569,49 @@
       line-height:1;
     }
 
-    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:var(--red-soft);border-color:rgba(255,93,115,.20)}
 
     .post-summary{
       color:var(--text);
-      line-height:1.55;
-      font-size:14px;
+      line-height:1.48;
+      font-size:12.5px;
       white-space:pre-wrap;
       word-break:break-word;
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .post-body{
       color:var(--text);
-      line-height:1.65;
-      font-size:14px;
+      line-height:1.55;
+      font-size:12.5px;
       white-space:pre-wrap;
       word-break:break-word;
       border-top:1px solid var(--line-soft);
-      padding-top:11px;
-      margin-top:10px;
+      padding-top:8px;
+      margin-top:8px;
     }
 
     .credit-line{
       color:var(--muted);
-      font-size:12px;
-      line-height:1.45;
+      font-size:10.8px;
+      line-height:1.35;
       background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:13px;
-      padding:9px 10px;
-      margin-top:10px;
+      border-radius:12px;
+      padding:7px 8px;
+      margin-top:7px;
     }
 
     .poll-box{
       display:grid;
-      gap:8px;
-      margin-top:10px;
-      padding:10px;
-      border-radius:15px;
+      gap:6px;
+      margin-top:7px;
+      padding:8px;
+      border-radius:13px;
       background:var(--surface-3);
       border:1px solid var(--line);
     }
@@ -588,13 +619,13 @@
     .poll-option{
       display:flex;
       justify-content:space-between;
-      gap:10px;
+      gap:8px;
       align-items:center;
-      padding:10px;
-      border-radius:12px;
+      padding:8px;
+      border-radius:11px;
       background:var(--surface-2);
       border:1px solid var(--line);
-      font-size:13px;
+      font-size:11.5px;
       font-weight:850;
     }
 
@@ -605,31 +636,29 @@
 
     .post-actions{
       display:flex;
-      gap:7px;
+      gap:5px;
       flex-wrap:wrap;
-      margin-top:10px;
+      margin-top:7px;
       align-items:center;
     }
 
-    .share-btn{
-      margin-left:auto;
-    }
+    .share-btn{margin-left:auto}
 
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:10px;
-      width:min(760px, calc(100% - 16px));
+      bottom:8px;
+      width:min(760px, calc(100% - 12px));
       background:var(--nav-bg);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:8px;
+      border-radius:16px;
+      padding:5px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:6px;
+      gap:4px;
       z-index:50;
-      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      box-shadow:0 14px 32px rgba(0,0,0,.18);
       overflow:hidden;
     }
 
@@ -640,12 +669,12 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:4px;
-      padding:9px 5px;
-      border-radius:14px;
-      font-size:10.5px;
-      font-weight:800;
-      min-height:56px;
+      gap:2px;
+      padding:5px 3px;
+      border-radius:12px;
+      font-size:9.5px;
+      font-weight:850;
+      min-height:43px;
       border:none;
       background:transparent;
       cursor:pointer;
@@ -653,13 +682,13 @@
     }
 
     .nav-link.active{
-      background:rgba(76,201,255,.14);
+      background:var(--blue-soft);
       color:var(--text);
     }
 
     .icon-svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -667,40 +696,47 @@
     }
 
     .icon-svg svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .nav-badge{
       position:absolute;
-      top:5px;
-      right:10px;
-      min-width:17px;
-      height:17px;
+      top:2px;
+      right:8px;
+      min-width:15px;
+      height:15px;
       padding:0 4px;
       border-radius:999px;
       background:var(--red);
       color:#fff;
-      font-size:10px;
+      font-size:9px;
       font-weight:950;
-      display:flex;
+      display:none;
       align-items:center;
       justify-content:center;
       line-height:1;
       border:2px solid var(--nav-bg);
     }
 
+    .nav-badge.show{display:flex}
+
     @media(max-width:700px){
-      body{padding:10px 10px 108px}
-      .brand{font-size:17px}
-      .panel{padding:11px;border-radius:20px}
-      .form-grid{grid-template-columns:1fr}
+      body{padding:6px 6px 82px}
+      .form-grid,.action-row.three{grid-template-columns:1fr}
       .action-row .action-btn,
       .post-actions .mini-btn{flex:1}
       .share-btn{margin-left:0}
-      .bottom-nav{padding:7px;gap:5px}
-      .nav-link{font-size:10px;padding:8px 3px}
+      .bottom-nav{padding:5px;gap:4px}
+      .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
+      .nav-badge{right:8px}
+    }
+
+    @media(max-width:390px){
+      .action-btn,.mini-btn{font-size:10.5px;padding:7px 7px}
+      .chip{font-size:9.3px}
+      .post-title{font-size:13.5px}
     }
   </style>
 </head>
@@ -708,29 +744,34 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="feed.html" class="top-icon-btn" aria-label="Back to feed">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
-      </a>
+      </button>
 
       <div class="top-center">
         <div class="brand">OwnSpace</div>
         <div class="brand-sub">Hub</div>
       </div>
 
-      <button id="refreshBtn" class="top-icon-btn" type="button" aria-label="Refresh hub">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-          <path d="M21 3v6h-6"></path>
+      <button id="refreshBtn" class="top-icon-btn refresh-top" type="button" aria-label="Refresh hub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8 8 0 0 0-14.9-3"></path>
+          <path d="M4 4v5h5"></path>
+          <path d="M4 13a8 8 0 0 0 14.9 3"></path>
+          <path d="M20 20v-5h-5"></path>
         </svg>
       </button>
     </div>
 
     <div class="panel hero-card">
-      <div class="hero-title">OwnSpace Hub</div>
-      <div class="hero-sub">
-        Official updates, featured posts, learning content, safety notes, polls, articles and community guidance — all in one trusted place.
+      <div class="hero-row">
+        <div>
+          <div class="hero-title">OwnSpace Hub</div>
+          <div class="hero-sub">Official updates, featured posts, learning content, safety notes, polls and articles.</div>
+        </div>
+        <div class="hub-pill">Official</div>
       </div>
 
       <div class="chip-row">
@@ -740,29 +781,33 @@
         <span id="statusChip" class="chip chip-green">Ready</span>
       </div>
 
-      <div class="action-row">
+      <div class="action-row three">
         <button id="refreshHeroBtn" class="action-btn btn-primary" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-            <path d="M21 3v6h-6"></path>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 11a8 8 0 0 0-14.9-3"></path>
+            <path d="M4 4v5h5"></path>
+            <path d="M4 13a8 8 0 0 0 14.9 3"></path>
+            <path d="M20 20v-5h-5"></path>
           </svg>
           Refresh
         </button>
 
         <a href="feed.html" class="action-btn btn-soft">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 10.5 12 3l9 7.5"></path>
             <path d="M5 10v10h14V10"></path>
           </svg>
           Feed
         </a>
 
-        <a href="settings.html" class="action-btn btn-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
-            <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04A1.8 1.8 0 0 0 14.8 19.6a1.8 1.8 0 0 0-1.1 1.65V21.4a2.1 2.1 0 0 1-4.2 0v-.06A1.8 1.8 0 0 0 8.4 19.7a1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.8 15.1a1.8 1.8 0 0 0-1.65-1.1H2.1a2.1 2.1 0 0 1 0-4.2h.06A1.8 1.8 0 0 0 3.8 8.7a1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 0 1 6.37 3.7l.04.04A1.8 1.8 0 0 0 8.4 4.1a1.8 1.8 0 0 0 1.1-1.65V2.4a2.1 2.1 0 0 1 4.2 0v.06a1.8 1.8 0 0 0 1.1 1.64 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04A1.8 1.8 0 0 0 19.4 8.7c.28.6.9 1.1 1.65 1.1h.06a2.1 2.1 0 0 1 0 4.2h-.06A1.8 1.8 0 0 0 19.4 15z"></path>
+        <a href="nearby-communities.html" class="action-btn btn-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          Settings
+          Communities
         </a>
       </div>
     </div>
@@ -865,7 +910,7 @@
     <div class="panel">
       <div class="search-wrap">
         <input id="searchInput" class="search-box" type="text" placeholder="Search Hub posts, updates, safety, learn..." />
-        <button id="clearBtn" class="clear-btn hidden" type="button">✕</button>
+        <button id="clearBtn" class="clear-btn hidden" type="button">×</button>
       </div>
 
       <div class="tabs" id="tabsRow">
@@ -878,10 +923,11 @@
         <button class="tab-btn" data-filter="article" type="button">Articles</button>
       </div>
 
-      <div id="authorActionRow" class="action-row hidden" style="margin-bottom:10px;">
+      <div id="authorActionRow" class="action-row hidden" style="margin-bottom:7px;">
         <button id="showComposerBtn" type="button" class="action-btn btn-green">
           Create Hub Post
         </button>
+        <a href="profile.html" class="action-btn btn-primary">My Profile</a>
       </div>
 
       <div id="featuredStrip" class="featured-strip hidden">
@@ -928,13 +974,13 @@
     </a>
 
     <a href="inbox.html" class="nav-link">
+      <span id="inboxBadge" class="nav-badge">0</span>
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       </span>
       <span>Inbox</span>
-      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
 
     <a href="profile.html" class="nav-link">
@@ -954,6 +1000,7 @@
     const STORAGE_BUCKET = "media";
     const HUB_SOURCES = ["hub_posts"];
 
+    const backBtn = document.getElementById("backBtn");
     const postCountChip = document.getElementById("postCountChip");
     const featuredCountChip = document.getElementById("featuredCountChip");
     const authorChip = document.getElementById("authorChip");
@@ -1006,6 +1053,7 @@
     let hubPosts = [];
     let hubChannels = [];
     let refreshTimer = null;
+    let badgeRefreshTimer = null;
     let previewObjectUrl = "";
 
     const ICONS = {
@@ -1053,13 +1101,14 @@
     }
 
     function getStoredTheme() {
-      return localStorage.getItem("osTheme") || "light";
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
     }
 
     function resolveTheme(themeValue) {
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
+
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -1070,7 +1119,19 @@
     applyTheme();
 
     window.addEventListener("storage", (e) => {
-      if (e.key === "osTheme") applyTheme();
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+
+      if (
+        e.key === "ownspace_badges_refresh" ||
+        e.key === "ownspace_inbox_refresh" ||
+        e.key === "ownspace_chat_read_refresh"
+      ) {
+        scheduleBadgeRefresh(120);
+      }
+
+      if (e.key === "ownspace_hub_refresh") {
+        scheduleRefresh();
+      }
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1107,7 +1168,9 @@
         msg.includes("does not exist") ||
         msg.includes("not found in the schema cache") ||
         msg.includes("could not find the table") ||
-        msg.includes("could not find")
+        msg.includes("could not find") ||
+        msg.includes("schema cache") ||
+        msg.includes("column")
       );
     }
 
@@ -1150,6 +1213,15 @@
       } catch {
         return 0;
       }
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+      if (typeof value === "object" && typeof value.toDate === "function") return value.toDate().getTime();
+      if (typeof value === "object" && typeof value.seconds === "number") return value.seconds * 1000;
+
+      const ms = new Date(value).getTime();
+      return Number.isFinite(ms) ? ms : 0;
     }
 
     function formatDate(valueMs) {
@@ -1639,7 +1711,6 @@
           if (!ok) return;
 
           const typed = prompt("Type DELETE to permanently delete this Hub post.");
-
           if (typed !== "DELETE") return;
 
           deleteBtn.disabled = true;
@@ -1749,7 +1820,10 @@
       openLoading();
 
       try {
-        await loadHubPosts();
+        await Promise.all([
+          loadHubPosts(),
+          loadInboxBadge()
+        ]);
       } catch (err) {
         console.error(err);
         showEmpty("Could not load OwnSpace Hub.");
@@ -1779,11 +1853,26 @@
       HUB_SOURCES.forEach(source => {
         try {
           const channel = supabase
-            .channel(`hub-live-${source}`)
+            .channel(`hub-live-${source}-${Math.random().toString(36).slice(2)}`)
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: source },
               () => scheduleRefresh()
+            )
+            .subscribe();
+
+          hubChannels.push(channel);
+        } catch {}
+      });
+
+      ["message_requests", "chat_threads", "chat_messages"].forEach(table => {
+        try {
+          const channel = supabase
+            .channel(`hub-badge-${table}-${Math.random().toString(36).slice(2)}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table },
+              () => scheduleBadgeRefresh()
             )
             .subscribe();
 
@@ -1896,6 +1985,11 @@
         return;
       }
 
+      if (file && !file.type.startsWith("image/")) {
+        setComposerMessage("Please upload an image file only.", "error");
+        return;
+      }
+
       savePostBtn.disabled = true;
       savePostBtn.textContent = "Publishing...";
       setComposerMessage("");
@@ -1914,6 +2008,7 @@
         const creatorName = currentProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
         const creatorUsername = currentProfile?.username || "";
         const pollData = pollRaw.map(text => ({ text, votes: 0 }));
+        const createdAt = nowIso();
 
         const snakePayload = {
           title,
@@ -1934,8 +2029,8 @@
           created_by: currentUser.id,
           creator_name: creatorName,
           creator_username: creatorUsername,
-          created_at: nowIso(),
-          updated_at: nowIso()
+          created_at: createdAt,
+          updated_at: createdAt
         };
 
         const camelPayload = {
@@ -1957,8 +2052,8 @@
           createdBy: currentUser.id,
           creatorName,
           creatorUsername,
-          createdAt: nowIso(),
-          updatedAt: nowIso()
+          createdAt,
+          updatedAt: createdAt
         };
 
         const minimalPayload = {
@@ -1969,7 +2064,7 @@
           category,
           image_url: uploadedImageUrl,
           created_by: currentUser.id,
-          created_at: nowIso()
+          created_at: createdAt
         };
 
         await insertHubPostWithFallback([
@@ -1982,6 +2077,10 @@
         imageFile.value = "";
         setPreviewFromFile(null);
         updatePollVisibility();
+
+        try {
+          localStorage.setItem("ownspace_hub_refresh", String(Date.now()));
+        } catch {}
 
         setComposerMessage("Hub post published.", "success");
         await refreshAll();
@@ -2074,6 +2173,11 @@
     refreshBtn.addEventListener("click", refreshAll);
     refreshHeroBtn.addEventListener("click", refreshAll);
 
+    backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "feed.html";
+    });
+
     async function countRows(table, buildQuery) {
       try {
         const query = supabase
@@ -2088,7 +2192,17 @@
     }
 
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = [
+        "target_id",
+        "to_user_id",
+        "receiver_id",
+        "recipient_id",
+        "targetId",
+        "toUserId",
+        "receiverId",
+        "recipientId"
+      ];
+
       const statusColumns = ["status", "request_status", "requestStatus"];
 
       for (const targetColumn of targetColumns) {
@@ -2096,62 +2210,165 @@
           const count = await countRows("message_requests", q =>
             q.eq(targetColumn, uid).eq(statusColumn, "pending")
           );
+
           if (count !== null) return count;
         }
 
-        const countWithoutStatus = await countRows("message_requests", q =>
-          q.eq(targetColumn, uid)
-        );
-        if (countWithoutStatus !== null) return countWithoutStatus;
+        try {
+          const { data, error } = await supabase
+            .from("message_requests")
+            .select("*")
+            .eq(targetColumn, uid);
+
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = getField(row, ["status", "request_status", "requestStatus"]) || "pending";
+              return normalizeText(status) === "pending";
+            }).length;
+          }
+        } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getField(d, ["thread_id", "threadId"]),
+        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function isMessageUnread(msg) {
+      if (!msg || msg.senderId === currentUser.id) return false;
+
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
+    async function fetchChatThreadsForUser(uid) {
+      const map = new Map();
+
+      const attempts = [
+        { a: "participant_a", b: "participant_b" },
+        { a: "participantA", b: "participantB" }
+      ];
+
+      for (const fields of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${fields.a}.eq.${uid},${fields.b}.eq.${uid}`);
+
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              const status = normalizeText(getField(row, ["status"]) || "accepted");
+              if (row.id && status === "accepted") map.set(row.id, row);
+            });
+          }
+        } catch {}
+      }
+
+      return Array.from(map.values());
+    }
+
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
+
       try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("thread_id", threadIds)
+          .order("created_at", { ascending: true });
 
-        if (!Array.isArray(threads) || !threads.length) return 0;
-
-        const threadIds = threads.map(t => t.id).filter(Boolean);
-        if (!threadIds.length) return 0;
-
-        const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-        for (const field of seenFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .is(field, null);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        const boolFields = ["is_read", "read"];
-
-        for (const field of boolFields) {
-          try {
-            const { count, error } = await supabase
-              .from("chat_messages")
-              .select("id", { count: "exact", head: true })
-              .in("thread_id", threadIds)
-              .neq("sender_id", uid)
-              .eq(field, false);
-
-            if (!error) return count || 0;
-          } catch {}
-        }
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
       } catch {}
 
-      return 0;
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("threadId", threadIds)
+          .order("createdAt", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const threads = await fetchChatThreadsForUser(uid);
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+
+        if (!threadIds.length) return 0;
+
+        const messages = await fetchMessagesForThreads(threadIds);
+        const byThread = new Map();
+
+        messages.forEach(msg => {
+          if (!msg.threadId) return;
+          if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+          byThread.get(msg.threadId).push(msg);
+        });
+
+        let total = 0;
+
+        threads.forEach(thread => {
+          const list = byThread.get(thread.id) || [];
+
+          if (!list.length) return;
+
+          const newest = [...list].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))[0];
+
+          if (newest?.senderId === uid) return;
+
+          const lastOutgoingMs = list
+            .filter(msg => msg.senderId === uid)
+            .reduce((max, msg) => Math.max(max, toMillis(msg.createdAt)), 0);
+
+          const unreadInThread = list.filter(msg => {
+            if (msg.senderId === uid) return false;
+            if (toMillis(msg.createdAt) <= lastOutgoingMs) return false;
+            return isMessageUnread(msg);
+          }).length;
+
+          total += unreadInThread;
+        });
+
+        return total;
+      } catch (err) {
+        console.warn("Unread chat count failed:", err?.message || err);
+        return 0;
+      }
     }
 
     async function loadInboxBadge() {
@@ -2166,14 +2383,24 @@
         const total = Number(pendingRequests || 0) + Number(unreadChats || 0);
 
         if (!total) {
-          inboxBadge.classList.add("hidden");
+          inboxBadge.textContent = "0";
+          inboxBadge.classList.remove("show");
         } else {
           inboxBadge.textContent = total > 99 ? "99+" : String(total);
-          inboxBadge.classList.remove("hidden");
+          inboxBadge.classList.add("show");
         }
       } catch {
-        inboxBadge.classList.add("hidden");
+        inboxBadge.textContent = "0";
+        inboxBadge.classList.remove("show");
       }
+    }
+
+    function scheduleBadgeRefresh(delay = 350) {
+      clearTimeout(badgeRefreshTimer);
+
+      badgeRefreshTimer = setTimeout(() => {
+        loadInboxBadge().catch(() => {});
+      }, delay);
     }
 
     async function initPage() {
@@ -2192,21 +2419,32 @@
 
       updateAuthorUI();
 
-      await Promise.all([
-        refreshAll(),
-        loadInboxBadge()
-      ]);
+      await refreshAll();
 
       setupRealtime();
 
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         if (!session?.user) {
+          clearRealtimeChannels();
           window.location.href = "login.html";
         }
       });
     }
 
+    window.addEventListener("pageshow", () => scheduleBadgeRefresh(120));
+    window.addEventListener("focus", () => scheduleBadgeRefresh(180));
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) scheduleBadgeRefresh(160);
+    });
+
+    window.addEventListener("ownspace:badges-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:inbox-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:chat-read-refresh", () => scheduleBadgeRefresh(120));
+
     window.addEventListener("beforeunload", () => {
+      clearTimeout(refreshTimer);
+      clearTimeout(badgeRefreshTimer);
       clearRealtimeChannels();
       if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     });
@@ -2215,6 +2453,26 @@
       console.error(err);
       showEmpty("Could not load OwnSpace Hub.");
     });
+
+    /*
+      OWNSPACE HUB COMPACT UPDATE:
+
+      FIXED / UPDATED:
+      - Matched compact Nearby page spacing/topbar/panels/bottom nav.
+      - Removed big settings button from hero actions.
+      - Added clean Communities shortcut instead.
+      - Kept admin/approved Hub author composer.
+      - Kept hub_posts fallback insert payloads.
+      - Kept featured/pinned strip, search, tabs, polls, credits, external link, share, hide/delete.
+      - Fixed clear button to ×.
+      - Fixed inbox badge:
+        pending message_requests + truly unread incoming chat_messages only.
+      - Does not count general notifications.
+      - Does not count old incoming messages before your latest outgoing reply.
+      - Added realtime badge refresh for message_requests, chat_threads, chat_messages.
+      - Added realtime hub refresh for hub_posts.
+      - Light theme remains default with dark theme support.
+    */
   </script>
 </body>
 </html>
