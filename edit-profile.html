@@ -411,17 +411,6 @@
     .username-note{margin-top:1px}
     .note{margin-top:7px}
 
-    .account-warning{
-      color:var(--text);
-      background:rgba(245,185,66,.10);
-      border:1px solid rgba(245,185,66,.20);
-      border-radius:12px;
-      padding:8px;
-      font-size:10.5px;
-      line-height:1.4;
-      margin-top:6px;
-    }
-
     .username-status{
       margin-top:3px;
       font-size:10.8px;
@@ -696,7 +685,7 @@
         <div class="head">
           <div>
             <div class="head-title">Edit Your Profile</div>
-            <div class="head-sub">Update public info, account email, photo, links, location and nearby visibility.</div>
+            <div class="head-sub">Update public info, photo, links, location and nearby visibility.</div>
           </div>
         </div>
 
@@ -704,7 +693,7 @@
           <span class="chip chip-blue">Photo upload</span>
           <span class="chip chip-green">Profile sync</span>
           <span class="chip chip-purple">2 profile links</span>
-          <span class="chip chip-yellow">Email security</span>
+          <span class="chip chip-yellow">Nearby support</span>
         </div>
 
         <div class="quick-actions">
@@ -731,32 +720,6 @@
         </div>
 
         <form id="profileForm" class="form">
-          <div class="section">
-            <div class="section-title">Account Email</div>
-            <div class="section-sub">To change email, type the new email twice and enter your current password.</div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="newEmail">New Email</label>
-                <input type="email" id="newEmail" class="input" placeholder="new@email.com" autocomplete="email" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="confirmNewEmail">Confirm New Email</label>
-                <input type="email" id="confirmNewEmail" class="input" placeholder="Re-type new email" autocomplete="email" />
-              </div>
-            </div>
-
-            <div class="field" style="margin-top:7px;">
-              <label class="label" for="currentPassword">Current Password</label>
-              <input type="password" id="currentPassword" class="input" placeholder="Enter current password to change email" autocomplete="current-password" />
-            </div>
-
-            <div class="account-warning">
-              Leave these email fields blank if you only want to update your profile. Supabase may send a confirmation email before the new email becomes active.
-            </div>
-          </div>
-
           <div class="section">
             <div class="section-title">Profile Photo</div>
             <div class="section-sub">Upload a clear profile photo. You can remove or replace it anytime.</div>
@@ -1011,10 +974,6 @@
     const inboxBadge = document.getElementById("inboxBadge");
 
     const emailText = document.getElementById("emailText");
-    const newEmailInput = document.getElementById("newEmail");
-    const confirmNewEmailInput = document.getElementById("confirmNewEmail");
-    const currentPasswordInput = document.getElementById("currentPassword");
-
     const verifiedLink = document.getElementById("verifiedLink");
     const nearbyStatusText = document.getElementById("nearbyStatusText");
 
@@ -1118,14 +1077,6 @@
     function showMessage(text, type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
-    }
-
-    function normalizeEmail(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function isValidEmail(value) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
     }
 
     function normalizeUsername(value) {
@@ -1660,82 +1611,6 @@
       };
     }
 
-    async function updateAccountEmailIfNeeded() {
-      const currentAuthEmail = normalizeEmail(currentUser?.email || "");
-      const newEmail = normalizeEmail(newEmailInput.value);
-      const confirmNewEmail = normalizeEmail(confirmNewEmailInput.value);
-      const password = String(currentPasswordInput.value || "");
-
-      const touchedEmailFields = !!(newEmail || confirmNewEmail || password);
-
-      if (!touchedEmailFields) {
-        return {
-          changed: false,
-          requestedEmail: currentAuthEmail,
-          message: ""
-        };
-      }
-
-      if (!newEmail || !confirmNewEmail || !password) {
-        throw new Error("To change email, enter new email twice and your current password.");
-      }
-
-      if (!isValidEmail(newEmail)) {
-        throw new Error("Please enter a valid new email address.");
-      }
-
-      if (newEmail !== confirmNewEmail) {
-        throw new Error("New email and confirm email do not match.");
-      }
-
-      if (currentAuthEmail && newEmail === currentAuthEmail) {
-        throw new Error("New email is the same as your current email.");
-      }
-
-      if (!currentAuthEmail) {
-        throw new Error("Current account email is missing. Please log out and log in again.");
-      }
-
-      showMessage("Checking current password...", "success");
-
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: currentAuthEmail,
-        password
-      });
-
-      if (signInError) {
-        throw new Error("Current password is incorrect or could not be verified.");
-      }
-
-      if (signInData?.user) {
-        currentUser = signInData.user;
-      }
-
-      showMessage("Sending email change request...", "success");
-
-      const { data: updateData, error: updateError } = await supabase.auth.updateUser({
-        email: newEmail
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      if (updateData?.user) {
-        currentUser = updateData.user;
-      }
-
-      newEmailInput.value = "";
-      confirmNewEmailInput.value = "";
-      currentPasswordInput.value = "";
-
-      return {
-        changed: true,
-        requestedEmail: newEmail,
-        message: "Email change request sent. Please check your email to confirm the change."
-      };
-    }
-
     genderInput.addEventListener("change", toggleGenderCustom);
 
     usernameInput.addEventListener("input", () => {
@@ -1990,8 +1865,6 @@
       showMessage("");
 
       try {
-        const emailUpdate = await updateAccountEmailIfNeeded();
-
         const availability = await checkUsernameAvailability(username);
 
         if (!availability.ok && availability.reason !== "own") {
@@ -2037,11 +1910,6 @@
         const latValue = locationChanged ? null : originalLat;
         const lngValue = locationChanged ? null : originalLng;
 
-        const authEmailAfterUpdate = normalizeEmail(currentUser.email || "");
-        const emailForUsersTable = emailUpdate.changed
-          ? emailUpdate.requestedEmail
-          : authEmailAfterUpdate;
-
         const basePayload = {
           uid: currentUser.id,
           display_name: displayName,
@@ -2072,7 +1940,7 @@
 
         const userFullPayload = {
           ...basePayload,
-          email: emailForUsersTable || "",
+          email: currentUser.email || "",
           display_name_lower: displayName.toLowerCase(),
           username_lower: username,
           real_name: currentRealName || "",
@@ -2097,7 +1965,7 @@
 
         const userCompatibilityPayload = {
           uid: currentUser.id,
-          email: emailForUsersTable || "",
+          email: currentUser.email || "",
           display_name: displayName,
           username,
           bio,
@@ -2132,7 +2000,7 @@
 
         const userMinimalPayload = {
           uid: currentUser.id,
-          email: emailForUsersTable || "",
+          email: currentUser.email || "",
           display_name: displayName,
           username,
           bio,
@@ -2202,16 +2070,10 @@
         clearSelectedPhotoObjectUrl();
 
         nearbyStatusText.textContent = nearbyStatusLabel(showInNearby, nearbyDiscoveryMode);
-        emailText.textContent = emailUpdate.changed ? emailUpdate.requestedEmail : (currentUser.email || emailForUsersTable || "-");
+        emailText.textContent = currentUser.email || "-";
         showPreview(currentPhotoURL);
         setUsernameStatus("Username saved.", true);
-
-        if (emailUpdate.changed) {
-          showMessage("Profile saved. Email change request sent. Please confirm it from your email.", "success");
-        } else {
-          showMessage("Profile updated successfully.", "success");
-        }
-
+        showMessage("Profile updated successfully.", "success");
         announceProfileRefresh();
         scheduleInboxBadgeRefresh(120);
       } catch (error) {
@@ -2244,21 +2106,16 @@
     /*
       OWNSPACE EDIT PROFILE UPDATE:
 
-      ADDED:
-      - Account Email section.
-      - User must enter:
-        1) New email
-        2) Confirm new email
-        3) Current password
-      - Password is verified using supabase.auth.signInWithPassword().
-      - Email is changed using supabase.auth.updateUser({ email }).
-      - Email is saved only into users.email.
-      - Email is NOT sent to public_profiles, fixing:
-        Could not find the 'email' column of 'public_profiles' in the schema cache.
+      UPDATED NOW:
+      - Removed email-change section from edit-profile.html.
+      - Email is display-only here.
+      - Email remains saved only in users table, never public_profiles.
+      - No new email / confirm email / password fields on this page.
+      - Email change can be added separately in settings.html.
 
       PRESERVED:
       - Profile photo upload.
-      - Username check.
+      - Username availability check.
       - Nearby city/GPS/everywhere.
       - Location search.
       - Two profile links.
