@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OwnSpace - Communities</title>
+  <title>OwnSpace - Nearby Communities</title>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
@@ -25,8 +25,8 @@
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 30px rgba(20,33,61,.08);
-      --shadow-soft:0 10px 22px rgba(20,33,61,.06);
+      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --soft-shadow:0 6px 14px rgba(20,33,61,.045);
     }
 
     html[data-theme="dark"]{
@@ -45,18 +45,18 @@
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
-      --shadow-soft:0 10px 24px rgba(0,0,0,.16);
+      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.12);
     }
 
     body{
       background:
-        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
-        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),
+        radial-gradient(circle at 86% 12%, rgba(61,220,132,.06), transparent 24%),
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:8px 8px 108px;
+      padding:6px 6px 82px;
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -69,23 +69,23 @@
       backdrop-filter:blur(14px);
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
-      border-radius:18px;
-      padding:7px 9px;
-      margin-bottom:10px;
+      border-radius:14px;
+      padding:5px 6px;
+      margin-bottom:7px;
       display:grid;
-      grid-template-columns:42px 1fr 42px;
+      grid-template-columns:34px 1fr 34px;
       align-items:center;
-      gap:8px;
+      gap:6px;
       box-shadow:var(--shadow);
     }
 
     .top-icon-btn{
-      width:42px;
-      height:42px;
+      width:34px;
+      height:34px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:13px;
+      border-radius:11px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -96,55 +96,98 @@
       position:relative;
     }
 
+    .top-icon-btn.refresh-top{
+      background:rgba(61,220,132,.13);
+      border-color:rgba(61,220,132,.22);
+    }
+
     .top-icon-btn svg{
-      width:19px;
-      height:19px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .top-center{text-align:center;min-width:0}
 
     .brand{
-      font-size:18px;
+      font-size:15.5px;
       font-weight:950;
-      line-height:1.05;
+      line-height:1;
       letter-spacing:-.02em;
     }
 
     .brand-sub{
-      font-size:10px;
+      font-size:9px;
       color:var(--muted);
-      margin-top:2px;
+      margin-top:1px;
+      font-weight:800;
     }
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:12px;
-      margin-bottom:10px;
+      border-radius:16px;
+      padding:8px;
+      margin-bottom:7px;
       box-shadow:var(--shadow);
+    }
+
+    .hero-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:8px;
+      margin-bottom:7px;
+    }
+
+    .page-title{
+      font-size:16px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      line-height:1.15;
+      margin-bottom:2px;
+    }
+
+    .page-sub{
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.35;
+    }
+
+    .mode-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 8px;
+      border-radius:999px;
+      font-size:10.5px;
+      font-weight:950;
+      border:1px solid rgba(76,201,255,.22);
+      background:rgba(76,201,255,.13);
+      color:var(--text);
+      white-space:nowrap;
     }
 
     .top-actions{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:8px;
+      gap:6px;
+      margin-bottom:7px;
     }
 
     .action-btn{
       border:none;
-      border-radius:14px;
-      padding:11px 10px;
-      font-size:13px;
+      border-radius:11px;
+      padding:8px 9px;
+      font-size:11px;
       font-weight:950;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:7px;
+      gap:6px;
       cursor:pointer;
-      min-height:46px;
+      min-height:34px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
@@ -153,23 +196,40 @@
     }
 
     .action-btn svg{
-      width:16px;
-      height:16px;
+      width:15px;
+      height:15px;
       display:block;
       flex-shrink:0;
     }
 
-    .btn-primary{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
-    .btn-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
+    .btn-primary{background:rgba(76,201,255,.13);border-color:rgba(76,201,255,.22)}
+    .btn-purple{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.22)}
+    .btn-green{background:rgba(61,220,132,.13);border-color:rgba(61,220,132,.22)}
+    .btn-yellow{background:rgba(245,185,66,.13);border-color:rgba(245,185,66,.22)}
+
+    .action-btn:disabled{opacity:.65;cursor:not-allowed}
+
+    .meta-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:6px;
+      font-size:10.6px;
+      color:var(--muted);
+      line-height:1.35;
+      padding:1px 2px 0;
+    }
+
+    .meta-row strong{color:var(--text);font-weight:950}
 
     .status-text{
-      min-height:18px;
-      font-size:12.5px;
-      margin-top:8px;
-      line-height:1.45;
+      min-height:0;
+      font-size:11px;
+      margin-top:5px;
+      line-height:1.35;
       color:var(--muted);
     }
 
+    .status-text:not(:empty){min-height:15px}
     .status-ok{color:#22b36c}
     .status-err{color:#e74c66}
     html[data-theme="dark"] .status-ok{color:#9cf0bf}
@@ -178,8 +238,8 @@
     .tabs{
       display:grid;
       grid-template-columns:repeat(4,1fr);
-      gap:6px;
-      margin-bottom:10px;
+      gap:5px;
+      margin-bottom:7px;
     }
 
     .tab-link{
@@ -187,51 +247,52 @@
       color:var(--text);
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:9px 5px;
-      min-height:40px;
+      border-radius:11px;
+      padding:7px 4px;
+      min-height:32px;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-      font-size:11.5px;
+      font-size:10.5px;
       font-weight:950;
       white-space:nowrap;
     }
 
     .tab-link.active{
-      background:rgba(76,201,255,.14);
+      background:rgba(76,201,255,.13);
       border-color:rgba(76,201,255,.22);
     }
 
     .search-wrap{
       position:relative;
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .search-box{
       width:100%;
       border:none;
       outline:none;
-      padding:13px 44px 13px 14px;
-      border-radius:16px;
+      padding:10px 39px 10px 11px;
+      border-radius:13px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      font-size:14px;
+      font-size:12.5px;
+      min-height:38px;
     }
 
     .search-box::placeholder{color:var(--muted)}
 
     .clear-btn{
       position:absolute;
-      right:7px;
+      right:5px;
       top:50%;
       transform:translateY(-50%);
-      width:32px;
-      height:32px;
+      width:29px;
+      height:29px;
       border:none;
-      border-radius:10px;
+      border-radius:9px;
       background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
@@ -239,231 +300,191 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:14px;
+      font-size:13px;
       font-weight:950;
+      line-height:1;
     }
 
     .filter-row{
       display:flex;
-      gap:7px;
+      gap:5px;
       flex-wrap:wrap;
-      margin-bottom:10px;
+      margin-bottom:7px;
+    }
+
+    .filter-btn,
+    .filter-chip{
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:999px;
+      padding:5px 7px;
+      font-size:9.8px;
+      font-weight:950;
+      line-height:1;
     }
 
     .filter-btn{
-      border:none;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:8px 11px;
-      font-size:12px;
-      font-weight:950;
       cursor:pointer;
     }
 
-    .filter-btn.active{
-      background:rgba(76,201,255,.14);
+    .filter-btn.active,
+    .filter-chip.active{
+      background:rgba(76,201,255,.13);
       border-color:rgba(76,201,255,.22);
     }
 
-    .list{
-      display:grid;
-      gap:9px;
-    }
+    .filter-chip.green{background:rgba(61,220,132,.12);border-color:rgba(61,220,132,.20)}
+    .filter-chip.purple{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.20)}
+    .filter-chip.yellow{background:rgba(245,185,66,.12);border-color:rgba(245,185,66,.20)}
+
+    .list{display:grid;gap:6px}
 
     .loading-box,
     .empty-box{
       text-align:center;
       color:var(--muted);
-      padding:22px 10px;
+      padding:18px 8px;
       background:var(--surface-2);
-      border-radius:16px;
+      border-radius:14px;
       border:1px dashed var(--line);
-      font-size:14px;
-      line-height:1.55;
+      font-size:12.5px;
+      line-height:1.45;
     }
 
     .community-tile{
-      width:100%;
+      display:block;
       text-decoration:none;
-      color:var(--text);
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.18)),
-        var(--surface-2);
+      color:inherit;
+      background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:19px;
-      padding:10px;
-      display:grid;
-      grid-template-columns:56px 1fr 30px;
-      gap:10px;
-      align-items:center;
-      min-height:84px;
-      box-shadow:var(--shadow-soft);
-      cursor:pointer;
-      transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
-      position:relative;
+      border-radius:14px;
+      padding:8px;
       overflow:hidden;
-    }
-
-    html[data-theme="dark"] .community-tile{
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
-        var(--surface-2);
+      box-shadow:var(--soft-shadow);
+      transition:transform .15s ease, background .15s ease, border-color .15s ease;
     }
 
     .community-tile:hover{
-      border-color:rgba(76,201,255,.30);
-      box-shadow:0 15px 30px rgba(20,33,61,.10);
-    }
-
-    .community-tile:active{
-      transform:scale(.992);
-    }
-
-    .tile-photo,
-    .tile-placeholder{
-      width:56px;
-      height:56px;
-      border-radius:17px;
-      border:1px solid var(--line);
       background:var(--surface-3);
-      overflow:hidden;
-      flex-shrink:0;
+      border-color:rgba(76,201,255,.26);
     }
 
-    .tile-photo{
-      object-fit:cover;
-      display:block;
-    }
+    .community-tile:active{transform:scale(.992)}
 
-    .tile-placeholder{
+    .community-card{
       display:flex;
+      gap:8px;
       align-items:center;
-      justify-content:center;
-      font-size:23px;
-      font-weight:950;
-      background:
-        radial-gradient(circle at 26% 20%, rgba(76,201,255,.24), transparent 36%),
-        linear-gradient(135deg, rgba(167,139,250,.17), rgba(61,220,132,.12)),
-        var(--surface-3);
-      color:var(--text);
-    }
-
-    .tile-main{
       min-width:0;
     }
 
-    .tile-top{
+    .community-photo,
+    .community-placeholder{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      flex-shrink:0;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+    }
+
+    .community-photo{object-fit:cover}
+
+    .community-placeholder{
       display:flex;
       align-items:center;
+      justify-content:center;
+      color:var(--text);
+      font-size:19px;
+      font-weight:950;
+      background:
+        radial-gradient(circle at 24% 20%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
+    }
+
+    .community-body{min-width:0;flex:1}
+
+    .community-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
       gap:7px;
       min-width:0;
     }
 
-    .tile-name{
-      font-size:15.5px;
-      line-height:1.25;
+    .community-main{min-width:0;flex:1}
+
+    .community-title{
+      font-size:13px;
       font-weight:950;
-      letter-spacing:-.02em;
+      line-height:1.2;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       min-width:0;
     }
 
-    .tile-location{
-      display:flex;
-      align-items:center;
-      gap:5px;
+    .community-category{
+      font-size:10.8px;
+      color:var(--blue);
+      font-weight:900;
+      margin-top:2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .community-meta{
+      font-size:10.8px;
       color:var(--muted);
-      margin-top:4px;
-      font-size:12px;
-      font-weight:850;
-      min-width:0;
-    }
-
-    .tile-location svg{
-      width:12px;
-      height:12px;
-      flex-shrink:0;
-    }
-
-    .tile-location span{
+      line-height:1.35;
+      margin-top:2px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-      min-width:0;
     }
 
-    .tile-chips{
-      display:flex;
-      align-items:center;
-      gap:5px;
-      flex-wrap:wrap;
-      margin-top:7px;
-    }
-
-    .tile-chip{
+    .community-pill{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:4px;
-      border-radius:999px;
       padding:5px 7px;
-      font-size:10.5px;
+      border-radius:999px;
+      font-size:9.5px;
       font-weight:950;
-      line-height:1;
+      border:1px solid rgba(167,139,250,.20);
+      background:rgba(167,139,250,.13);
       color:var(--text);
-      background:var(--surface);
-      border:1px solid var(--line);
+      flex-shrink:0;
       white-space:nowrap;
+      max-width:88px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      line-height:1;
     }
 
-    .tile-chip svg{
-      width:11px;
-      height:11px;
-      flex-shrink:0;
-    }
-
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-
-    .tile-arrow{
-      width:30px;
-      height:30px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:var(--surface);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      flex-shrink:0;
-    }
-
-    .tile-arrow svg{
-      width:16px;
-      height:16px;
-    }
+    .community-pill.green{background:rgba(61,220,132,.13);border-color:rgba(61,220,132,.20)}
+    .community-pill.yellow{background:rgba(245,185,66,.13);border-color:rgba(245,185,66,.20)}
+    .community-pill.blue{background:rgba(76,201,255,.13);border-color:rgba(76,201,255,.20)}
+    .community-pill.purple{background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.20)}
 
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:10px;
-      width:min(760px, calc(100% - 16px));
+      bottom:8px;
+      width:min(760px, calc(100% - 12px));
       background:var(--nav-bg);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:8px;
+      border-radius:16px;
+      padding:5px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:6px;
+      gap:4px;
       z-index:50;
-      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      box-shadow:0 14px 32px rgba(0,0,0,.18);
       overflow:hidden;
     }
 
@@ -474,12 +495,12 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:4px;
-      padding:9px 5px;
-      border-radius:14px;
-      font-size:10.5px;
-      font-weight:800;
-      min-height:56px;
+      gap:2px;
+      padding:5px 3px;
+      border-radius:12px;
+      font-size:9.5px;
+      font-weight:850;
+      min-height:43px;
       border:none;
       background:transparent;
       cursor:pointer;
@@ -487,13 +508,13 @@
     }
 
     .nav-link.active{
-      background:rgba(76,201,255,.14);
+      background:rgba(76,201,255,.13);
       color:var(--text);
     }
 
     .icon-svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -501,103 +522,46 @@
     }
 
     .icon-svg svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .nav-badge{
       position:absolute;
-      top:5px;
-      right:10px;
-      min-width:17px;
-      height:17px;
+      top:2px;
+      right:8px;
+      min-width:15px;
+      height:15px;
       padding:0 4px;
       border-radius:999px;
       background:var(--red);
       color:#fff;
-      font-size:10px;
+      font-size:9px;
       font-weight:950;
-      display:flex;
+      display:none;
       align-items:center;
       justify-content:center;
       line-height:1;
       border:2px solid var(--nav-bg);
     }
 
-    @media (max-width:700px){
-      .brand{font-size:17px}
+    .nav-badge.show{display:flex}
 
-      .top-actions{
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-      }
-
-      .action-btn{
-        font-size:12.5px;
-        padding:10px 8px;
-        min-height:44px;
-      }
-
-      .tabs{
-        grid-template-columns:repeat(4,1fr);
-        gap:6px;
-      }
-
-      .tab-link{
-        font-size:10.5px;
-        padding:8px 3px;
-      }
-
-      .bottom-nav{
-        padding:7px;
-        gap:5px;
-      }
-
-      .nav-link{
-        font-size:10px;
-        padding:8px 3px;
-      }
+    @media(max-width:700px){
+      body{padding:6px 6px 82px}
+      .community-meta{white-space:normal;overflow:visible;text-overflow:clip}
+      .bottom-nav{padding:5px;gap:4px}
+      .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
+      .nav-badge{right:8px}
     }
 
-    @media(max-width:390px){
-      body{padding-left:7px;padding-right:7px}
-
-      .action-btn{
-        font-size:11.5px;
-        padding:9px 6px;
-        gap:5px;
-      }
-
-      .action-btn svg{
-        width:15px;
-        height:15px;
-      }
-
-      .tab-link{font-size:9.8px}
-
-      .filter-btn{
-        font-size:11px;
-        padding:8px 10px;
-      }
-
-      .community-tile{
-        grid-template-columns:50px 1fr 28px;
-        gap:8px;
-        padding:9px;
-        min-height:78px;
-      }
-
-      .tile-photo,
-      .tile-placeholder{
-        width:50px;
-        height:50px;
-        border-radius:16px;
-      }
-
-      .tile-name{font-size:15px}
-      .tile-chip{font-size:10px;padding:5px 6px}
-      .tile-arrow{width:28px;height:28px}
+    @media(max-width:420px){
+      .top-actions{grid-template-columns:1fr 1fr}
+      .action-btn{font-size:10.5px;padding:7px 7px}
+      .tab-link{font-size:9.7px;padding:6px 3px}
+      .community-pill{max-width:76px;font-size:9px}
+      .meta-row{grid-template-columns:1fr;font-size:10.4px}
     }
   </style>
 </head>
@@ -605,26 +569,36 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="feed.html" class="top-icon-btn" aria-label="Back to Feed">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
-      </a>
+      </button>
 
       <div class="top-center">
         <div class="brand">OwnSpace</div>
-        <div class="brand-sub">Communities</div>
+        <div class="brand-sub">Nearby communities</div>
       </div>
 
-      <a href="settings.html" class="top-icon-btn" aria-label="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
-          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2.05 2.05 0 0 1-2.9 2.9l-.04-.04A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .56 1.7 1.7 0 0 0-.4 1.04V21a2.05 2.05 0 0 1-4.1 0v-.06a1.7 1.7 0 0 0-.4-1.04 1.7 1.7 0 0 0-1-.56 1.7 1.7 0 0 0-1.84.38l-.04.04a2.05 2.05 0 0 1-2.9-2.9l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.56-1 1.7 1.7 0 0 0-1.04-.4H3a2.05 2.05 0 0 1 0-4.1h.06a1.7 1.7 0 0 0 1.04-.4 1.7 1.7 0 0 0 .56-1 1.7 1.7 0 0 0-.38-1.84l-.04-.04a2.05 2.05 0 0 1 2.9-2.9l.04.04A1.7 1.7 0 0 0 9 4.6c.38-.08.74-.27 1-.56.26-.29.4-.66.4-1.04V3a2.05 2.05 0 0 1 4.1 0v.06c0 .38.14.75.4 1.04.26.29.62.48 1 .56a1.7 1.7 0 0 0 1.84-.38l.04-.04a2.05 2.05 0 0 1 2.9 2.9l-.04.04A1.7 1.7 0 0 0 19.4 9c.08.38.27.74.56 1 .29.26.66.4 1.04.4H21a2.05 2.05 0 0 1 0 4.1h-.06c-.38 0-.75.14-1.04.4-.29.26-.48.62-.5 1.1z"></path>
+      <button id="refreshBtn" class="top-icon-btn refresh-top" type="button" aria-label="Refresh communities">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8 8 0 0 0-14.9-3"></path>
+          <path d="M4 4v5h5"></path>
+          <path d="M4 13a8 8 0 0 0 14.9 3"></path>
+          <path d="M20 20v-5h-5"></path>
         </svg>
-      </a>
+      </button>
     </div>
 
     <div class="panel">
+      <div class="hero-row">
+        <div>
+          <div class="page-title">Nearby Communities</div>
+          <div class="page-sub">Search communities by name, category, city, province or country.</div>
+        </div>
+        <div id="modePill" class="mode-pill">Community</div>
+      </div>
+
       <div class="top-actions">
         <a href="create-community.html" class="action-btn btn-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -645,20 +619,25 @@
         </a>
       </div>
 
+      <div class="meta-row">
+        <div id="smallFilterText">Showing: All communities</div>
+        <div id="smallCountText"><strong>Communities:</strong> 0</div>
+      </div>
+
       <div id="pageStatus" class="status-text"></div>
     </div>
 
     <div class="panel">
       <div class="tabs">
-        <a href="nearby.html" class="tab-link">People</a>
-        <a href="nearby-events.html" class="tab-link">Events</a>
-        <a href="nearby-places.html" class="tab-link">Places</a>
-        <a href="communities.html" class="tab-link active">Community</a>
+        <a href="nearby.html" class="tab-link" data-nearby-tab="people">People</a>
+        <a href="nearby-events.html" class="tab-link" data-nearby-tab="events">Events</a>
+        <a href="nearby-places.html" class="tab-link" data-nearby-tab="places">Places</a>
+        <a href="nearby-communities.html" class="tab-link active" data-nearby-tab="communities">Community</a>
       </div>
 
       <div class="search-wrap">
         <input id="searchInput" class="search-box" type="text" placeholder="Search communities, category, city..." />
-        <button id="clearBtn" class="clear-btn hidden" type="button">Ã</button>
+        <button id="clearBtn" class="clear-btn hidden" type="button" aria-label="Clear search">×</button>
       </div>
 
       <div class="filter-row">
@@ -668,6 +647,11 @@
         <button class="filter-btn" type="button" data-filter="popular">Popular</button>
         <button class="filter-btn" type="button" data-filter="joined">Joined</button>
         <button class="filter-btn" type="button" data-filter="created">Created</button>
+      </div>
+
+      <div class="filter-row">
+        <span id="searchChip" class="filter-chip">Search: off</span>
+        <span id="filterChip" class="filter-chip purple">Filter: all</span>
       </div>
 
       <div id="listLoading" class="loading-box">Loading communities...</div>
@@ -709,13 +693,13 @@
     </a>
 
     <a href="inbox.html" class="nav-link">
+      <span id="inboxBadge" class="nav-badge">0</span>
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       </span>
       <span>Inbox</span>
-      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
 
     <a href="profile.html" class="nav-link">
@@ -732,8 +716,14 @@
   <script type="module">
     import { supabase } from "./supabase.js";
 
+    const backBtn = document.getElementById("backBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
     const inboxBadge = document.getElementById("inboxBadge");
     const pageStatus = document.getElementById("pageStatus");
+    const smallFilterText = document.getElementById("smallFilterText");
+    const smallCountText = document.getElementById("smallCountText");
+    const searchChip = document.getElementById("searchChip");
+    const filterChip = document.getElementById("filterChip");
 
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearBtn");
@@ -755,9 +745,70 @@
 
     let realtimeChannels = [];
     let refreshTimer = null;
+    let badgeRefreshTimer = null;
 
     const COMMUNITY_TABLE = "communities";
     const MEMBER_TABLES = ["community_members", "communityMembers", "communities_members"];
+
+    rememberNearbyTab();
+
+    function rememberNearbyTab() {
+      try {
+        localStorage.setItem("ownspace_nearby_tab", "communities");
+        localStorage.setItem("ownspace_nearby_last_tab", "communities");
+      } catch {}
+    }
+
+    document.querySelectorAll("[data-nearby-tab]").forEach(link => {
+      link.addEventListener("click", () => {
+        try {
+          localStorage.setItem("ownspace_nearby_tab", link.dataset.nearbyTab || "communities");
+          localStorage.setItem("ownspace_nearby_last_tab", link.dataset.nearbyTab || "communities");
+        } catch {}
+      });
+    });
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      return themeValue === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+
+      if (
+        e.key === "ownspace_badges_refresh" ||
+        e.key === "ownspace_inbox_refresh" ||
+        e.key === "ownspace_chat_read_refresh"
+      ) {
+        scheduleBadgeRefresh(120);
+      }
+
+      if (e.key === "ownspace_communities_refresh" || e.key === "ownspace_nearby_refresh") {
+        scheduleRefresh(180);
+      }
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
 
     const ICONS = {
       check: `
@@ -783,50 +834,8 @@
           <path d="M12 3a14 14 0 0 1 0 18"></path>
           <path d="M12 3a14 14 0 0 0 0 18"></path>
         </svg>
-      `,
-      open: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 18l6-6-6-6"></path>
-        </svg>
-      `,
-      pin: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 17v5"></path>
-          <path d="M9 7 7 3h10l-2 4"></path>
-          <path d="M7 14h10l-2-7H9Z"></path>
-        </svg>
       `
     };
-
-    function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
-    }
-
-    function resolveTheme(themeValue) {
-      if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-
-      return themeValue === "dark" ? "dark" : "light";
-    }
-
-    function applyTheme(themeValue = getStoredTheme()) {
-      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-    }
-
-    applyTheme();
-
-    window.addEventListener("storage", (e) => {
-      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
-    });
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", () => {
-        if (getStoredTheme() === "system") applyTheme("system");
-      });
-    }
 
     function setPageStatus(text = "", type = "") {
       pageStatus.textContent = text;
@@ -922,7 +931,7 @@
         verified: getBool(d, ["verified", "is_verified", "isVerified"], false),
         softDeleted: getBool(d, ["soft_deleted", "softDeleted"], false),
         isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin"], false),
-        moderationStatus: getString(d, ["moderation_status", "moderationStatus", "status"], "")
+        moderationStatus: normalizeText(getString(d, ["moderation_status", "moderationStatus", "status"], ""))
       };
     }
 
@@ -936,10 +945,13 @@
 
       const rejected =
         status === "rejected" ||
+        status === "declined" ||
         getBool(d, ["rejected", "is_rejected", "isRejected"], false);
 
       const explicitlyPending =
         status === "pending" ||
+        status === "review" ||
+        status === "under_review" ||
         getBool(d, ["pending", "is_pending", "isPending"], false);
 
       const explicitlyApproved =
@@ -970,16 +982,21 @@
         "mediaUrl"
       ], "");
 
-      return {
+      const city = getString(d, ["city", "location_city", "locationCity"], "");
+      const province = getString(d, ["province", "state", "region", "location_province", "locationProvince"], "");
+      const country = getString(d, ["country", "location_country", "locationCountry"], "");
+      const location = getString(d, ["location", "place", "address", "nearby_location", "nearbyLocation"], "");
+
+      const model = {
         id: getString(d, ["id"], fallbackId) || fallbackId || "",
         name: getString(d, ["name", "title", "community_name", "communityName"], "Untitled Community") || "Untitled Community",
         description: getString(d, ["description", "desc", "about", "summary"], ""),
         category: getString(d, ["category", "topic", "type"], "General") || "General",
         privacy,
-        city: getString(d, ["city", "location_city", "locationCity"], ""),
-        province: getString(d, ["province", "state", "region", "location_province", "locationProvince"], ""),
-        country: getString(d, ["country", "location_country", "locationCountry"], ""),
-        location: getString(d, ["location", "place", "address", "nearby_location", "nearbyLocation"], ""),
+        city,
+        province,
+        country,
+        location,
         coverURL,
         creatorId: getString(d, ["creator_id", "creatorId", "created_by", "createdBy", "owner_id", "ownerId", "user_id", "userId", "uid"], ""),
         creatorName: getString(d, ["creator_name", "creatorName", "display_name", "displayName", "owner_name", "ownerName"], "Member") || "Member",
@@ -997,11 +1014,28 @@
           d.hiddenByAdmin ||
           d.soft_deleted ||
           d.softDeleted
-        ) || status === "deleted",
+        ) || status === "deleted" || status === "removed",
         createdAt,
         createdAtMs: toMillis(createdAt),
         searchable: ""
       };
+
+      const locationText = getLocationText(model);
+
+      model.searchable = [
+        model.name,
+        model.description,
+        model.category,
+        model.city,
+        model.province,
+        model.country,
+        model.location,
+        locationText,
+        model.creatorName,
+        model.privacy
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      return model;
     }
 
     function normalizeMembership(raw) {
@@ -1009,7 +1043,7 @@
 
       return {
         id: getString(d, ["id"], ""),
-        communityId: getString(d, ["community_id", "communityId", "group_id", "groupId"], ""),
+        communityId: getString(d, ["community_id", "communityId", "group_id", "groupId", "circle_id", "circleId"], ""),
         userId: getString(d, ["user_id", "userId", "uid", "member_id", "memberId"], ""),
         role: getString(d, ["role"], "member") || "member",
         status: normalizeText(getString(d, ["status", "member_status", "memberStatus"], "active") || "active"),
@@ -1125,7 +1159,8 @@
 
           if (!error && Array.isArray(data)) {
             data.forEach(row => {
-              if (row.id) map.set(row.id, row);
+              const status = normalizeText(getString(row, ["status"], "accepted") || "accepted");
+              if (row.id && status === "accepted") map.set(row.id, row);
             });
           }
         } catch {}
@@ -1223,13 +1258,15 @@
         const total = Number(requests || 0) + Number(unreadMessages || 0);
 
         if (!total) {
-          inboxBadge.classList.add("hidden");
+          inboxBadge.textContent = "0";
+          inboxBadge.classList.remove("show");
         } else {
           inboxBadge.textContent = total > 99 ? "99+" : String(total);
-          inboxBadge.classList.remove("hidden");
+          inboxBadge.classList.add("show");
         }
       } catch {
-        inboxBadge.classList.add("hidden");
+        inboxBadge.textContent = "0";
+        inboxBadge.classList.remove("show");
       }
     }
 
@@ -1319,26 +1356,7 @@
 
         if (error) throw error;
 
-        communitiesData = (data || [])
-          .map(row => {
-            const model = normalizeCommunity(row, row.id);
-            const locationText = getLocationText(model);
-
-            model.searchable = [
-              model.name,
-              model.description,
-              model.category,
-              model.city,
-              model.province,
-              model.country,
-              model.location,
-              locationText,
-              model.creatorName,
-              model.privacy
-            ].filter(Boolean).join(" ").toLowerCase();
-
-            return model;
-          });
+        communitiesData = (data || []).map(row => normalizeCommunity(row, row.id));
       } catch (err) {
         console.error("Communities load failed:", err);
         communitiesData = [];
@@ -1404,8 +1422,33 @@
       return Math.max(Number(model.memberCount || 0), liveCount);
     }
 
+    function updateMeta(count = null) {
+      const filterLabels = {
+        all: "All communities",
+        featured: "Featured communities",
+        new: "Newest communities",
+        popular: "Popular communities",
+        joined: "Joined communities",
+        created: "Created by you"
+      };
+
+      smallFilterText.textContent = `Showing: ${filterLabels[currentFilter] || "All communities"}`;
+
+      filterChip.textContent = `Filter: ${currentFilter}`;
+      filterChip.className = "filter-chip purple";
+
+      const q = normalizeText(searchInput.value);
+
+      searchChip.textContent = q ? `Search: ${q.length > 14 ? q.slice(0, 14) + "..." : q}` : "Search: off";
+      searchChip.className = q ? "filter-chip green" : "filter-chip";
+
+      if (typeof count === "number") {
+        smallCountText.innerHTML = `<strong>Communities:</strong> ${count}`;
+      }
+    }
+
     function getFilteredCommunities() {
-      const q = searchInput.value.trim().toLowerCase();
+      const q = normalizeText(searchInput.value);
 
       return communitiesData
         .filter(isVisibleCommunity)
@@ -1460,12 +1503,14 @@
       listWrap.classList.add("hidden");
       emptyBox.classList.remove("hidden");
       emptyBox.textContent = text;
+      updateMeta(0);
     }
 
-    function showList() {
+    function showList(count) {
       listLoading.classList.add("hidden");
       listWrap.classList.remove("hidden");
       emptyBox.classList.add("hidden");
+      updateMeta(count);
     }
 
     function updateClearButton() {
@@ -1482,18 +1527,12 @@
       return "Public";
     }
 
-    function getPrivacyChipClass(model) {
-      if (model.privacy === "private") return "chip-yellow";
-      if (["request", "approval", "request_only"].includes(model.privacy)) return "chip-purple";
-      return "chip-green";
-    }
-
-    function getPrivacyIcon(model) {
-      if (model.privacy === "private" || ["request", "approval", "request_only"].includes(model.privacy)) {
-        return ICONS.lock;
-      }
-
-      return ICONS.globe;
+    function getRightPill(model) {
+      if (model.mine) return { text: "Mine", className: "blue" };
+      if (model.joined) return { text: "Joined", className: "green" };
+      if (model.featured) return { text: "Featured", className: "purple" };
+      if (model.privacy === "private") return { text: "Private", className: "yellow" };
+      return { text: getPrivacyLabel(model), className: "" };
     }
 
     function renderCommunities() {
@@ -1530,78 +1569,55 @@
         const firstLetter = (model.name || "C").trim().charAt(0).toUpperCase() || "C";
 
         const photoHtml = model.coverURL
-          ? `<img class="tile-photo" src="${escapeHtml(model.coverURL)}" alt="">`
-          : `<div class="tile-placeholder">${escapeHtml(firstLetter)}</div>`;
+          ? `<img class="community-photo" src="${escapeHtml(model.coverURL)}" alt="Community image">`
+          : `<div class="community-placeholder">${escapeHtml(firstLetter)}</div>`;
 
         const memberCount = Number(model.liveMemberCount || 0);
         const memberText = `${memberCount} member${memberCount === 1 ? "" : "s"}`;
         const locationText = getLocationText(model);
+        const privacyText = getPrivacyLabel(model);
+        const pill = getRightPill(model);
 
-        const chips = [];
-
-        chips.push(`<span class="tile-chip chip-blue">${escapeHtml(model.category || "General")}</span>`);
-
-        chips.push(`
-          <span class="tile-chip ${getPrivacyChipClass(model)}">
-            ${getPrivacyIcon(model)}
-            ${escapeHtml(getPrivacyLabel(model))}
-          </span>
-        `);
-
-        chips.push(`<span class="tile-chip">${escapeHtml(memberText)}</span>`);
-
-        if (model.mine) {
-          chips.push(`<span class="tile-chip chip-green">${ICONS.check} Mine</span>`);
-        } else if (model.joined) {
-          chips.push(`<span class="tile-chip chip-green">${ICONS.check} Joined</span>`);
-        }
-
-        if (model.featured) {
-          chips.push(`<span class="tile-chip chip-purple">${ICONS.star} Featured</span>`);
-        }
-
-        if (model.pinned) {
-          chips.push(`<span class="tile-chip chip-yellow">${ICONS.star} Pinned</span>`);
-        }
+        const metaLine = [
+          locationText,
+          memberText,
+          model.postCount ? `${model.postCount} posts` : "",
+          privacyText
+        ].filter(Boolean).join(" • ");
 
         tile.innerHTML = `
-          ${photoHtml}
+          <div class="community-card">
+            ${photoHtml}
 
-          <div class="tile-main">
-            <div class="tile-top">
-              <div class="tile-name">${escapeHtml(model.name)}</div>
+            <div class="community-body">
+              <div class="community-head">
+                <div class="community-main">
+                  <div class="community-title">${escapeHtml(model.name)}</div>
+                  <div class="community-category">${escapeHtml(model.category || "General")}</div>
+                  <div class="community-meta">${escapeHtml(metaLine)}</div>
+                </div>
+
+                <span class="community-pill ${pill.className}">${escapeHtml(pill.text)}</span>
+              </div>
             </div>
-
-            <div class="tile-location">
-              ${ICONS.pin}
-              <span>${escapeHtml(locationText)}</span>
-            </div>
-
-            <div class="tile-chips">
-              ${chips.join("")}
-            </div>
-          </div>
-
-          <div class="tile-arrow" aria-hidden="true">
-            ${ICONS.open}
           </div>
         `;
 
-        const photo = tile.querySelector(".tile-photo");
+        const photo = tile.querySelector(".community-photo");
 
         if (photo) {
           photo.addEventListener("error", () => {
-            photo.outerHTML = `<div class="tile-placeholder">${escapeHtml(firstLetter)}</div>`;
+            photo.outerHTML = `<div class="community-placeholder">${escapeHtml(firstLetter)}</div>`;
           });
         }
 
         listWrap.appendChild(tile);
       });
 
-      showList();
+      showList(rows.length);
     }
 
-    async function refreshAll() {
+    async function refreshAll(showOk = false) {
       openLoading();
       setPageStatus("");
 
@@ -1612,24 +1628,26 @@
       ]);
 
       renderCommunities();
+
+      if (showOk) setPageStatus("Communities refreshed.", "status-ok");
     }
 
-    function scheduleRefresh() {
+    function scheduleRefresh(delay = 350) {
       clearTimeout(refreshTimer);
 
       refreshTimer = setTimeout(() => {
-        refreshAll().catch(err => {
+        refreshAll(false).catch(err => {
           console.error("Community refresh failed:", err);
         });
-      }, 350);
+      }, delay);
     }
 
-    function scheduleBadgeRefresh() {
-      clearTimeout(refreshTimer);
+    function scheduleBadgeRefresh(delay = 350) {
+      clearTimeout(badgeRefreshTimer);
 
-      refreshTimer = setTimeout(() => {
+      badgeRefreshTimer = setTimeout(() => {
         loadInboxBadge().catch(() => {});
-      }, 350);
+      }, delay);
     }
 
     function clearRealtimeChannels() {
@@ -1649,8 +1667,7 @@
         { table: COMMUNITY_TABLE, handler: scheduleRefresh },
         { table: "message_requests", handler: scheduleBadgeRefresh },
         { table: "chat_threads", handler: scheduleBadgeRefresh },
-        { table: "chat_messages", handler: scheduleBadgeRefresh },
-        { table: "notifications", handler: scheduleBadgeRefresh }
+        { table: "chat_messages", handler: scheduleBadgeRefresh }
       ];
 
       MEMBER_TABLES.forEach(table => {
@@ -1700,6 +1717,46 @@
       });
     });
 
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.disabled = true;
+      setPageStatus("Refreshing communities...", "");
+
+      try {
+        await refreshAll(true);
+      } catch (err) {
+        console.error(err);
+        setPageStatus("Could not refresh communities.", "status-err");
+      }
+
+      refreshBtn.disabled = false;
+    });
+
+    backBtn.addEventListener("click", () => {
+      rememberNearbyTab();
+
+      if (document.referrer) history.back();
+      else window.location.href = "nearby.html";
+    });
+
+    window.addEventListener("pageshow", () => {
+      scheduleBadgeRefresh(120);
+      scheduleRefresh(250);
+    });
+
+    window.addEventListener("focus", () => {
+      scheduleBadgeRefresh(180);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        scheduleBadgeRefresh(160);
+      }
+    });
+
+    window.addEventListener("ownspace:badges-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:inbox-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:chat-read-refresh", () => scheduleBadgeRefresh(120));
+
     async function initPage() {
       const { data, error } = await supabase.auth.getUser();
 
@@ -1713,46 +1770,45 @@
 
       try {
         await loadCurrentUserProfile();
-        await refreshAll();
+        await refreshAll(false);
         setupRealtime();
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+          if (!session?.user) {
+            clearRealtimeChannels();
+            window.location.href = "login.html";
+          }
+        });
       } catch (err) {
         console.error(err);
         showEmpty("Could not load communities.");
         setPageStatus("Could not load communities.", "status-err");
       }
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session?.user) {
-          clearRealtimeChannels();
-          window.location.href = "login.html";
-        }
-      });
     }
 
     window.addEventListener("beforeunload", () => {
+      clearTimeout(refreshTimer);
+      clearTimeout(badgeRefreshTimer);
       clearRealtimeChannels();
     });
 
     initPage();
 
     /*
-      OWNSPACE COMMUNITIES UPDATE:
-
-      COMPACT CLICKABLE TILE UI:
-      - Community list has compact rows only.
-      - No Join/Open/Share/extra action buttons inside each row.
-      - Full community tile opens community.html?communityId=...
-      - Shows photo/initial, community name, location, category, privacy, members, joined/mine/featured/pinned status.
+      OWNSPACE NEARBY COMMUNITIES UPDATE:
 
       FIXED:
-      - Broken clear button character fixed to Ã.
-      - Inbox badge now follows the same cleaned logic:
-        pending message_requests + truly unread incoming chat_messages.
-      - It does not count general notifications.
-      - It does not count all old chat history forever.
-      - If newest message in a thread is yours, that thread counts 0 unread.
-      - Incoming messages before your latest outgoing message are ignored.
-      - Added realtime badge refresh for message_requests, chat_threads, chat_messages, notifications.
+      - Matched Nearby People / Nearby Places compact topbar, margins, tabs, search, cards, and bottom nav.
+      - Replaced big settings top button with compact refresh button.
+      - Fixed broken clear button character to ×.
+      - Added hero title row and compact meta count.
+      - Added search/filter chips.
+      - Community cards are now compact like places/events.
+      - Full tile opens community.html?communityId=...
+      - Inbox badge counts only message_requests + unread chat_messages.
+      - Removed general notifications from inbox badge count.
+      - Fixed timer bug where badge refresh and full refresh shared the same timer.
+      - Light theme remains default with dark theme support.
     */
   </script>
 </body>
