@@ -381,6 +381,24 @@
 
     .save-btn{width:100%}
 
+    .danger-note-box{
+      background:var(--red-soft);
+      border:1px solid rgba(255,93,115,.18);
+      border-radius:13px;
+      padding:8px 9px;
+      color:var(--text);
+      font-size:10.8px;
+      line-height:1.4;
+      font-weight:800;
+    }
+
+    .danger-note-box strong{
+      display:block;
+      font-size:11.2px;
+      margin-bottom:2px;
+      font-weight:950;
+    }
+
     .message{
       min-height:0;
       font-size:11px;
@@ -661,12 +679,17 @@
             <span>Save Changes</span>
           </button>
 
+          <div class="danger-note-box">
+            <strong>Danger zone</strong>
+            Deleting a community is permanent. It may remove members, requests, posts, and community data. You must type DELETE to confirm.
+          </div>
+
           <div class="action-row">
             <a id="openCommunityBtn" href="nearby-communities.html" class="action-btn btn-primary">
               <span>Open Community</span>
             </a>
-            <button type="button" id="hideCommunityBtn" class="action-btn btn-red">
-              <span>Hide Community</span>
+            <button type="button" id="deleteCommunityBtn" class="action-btn btn-red">
+              <span>Delete Community</span>
             </button>
           </div>
 
@@ -733,6 +756,7 @@
     import { supabase } from "./supabase.js";
 
     const STORAGE_BUCKET = "media";
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
     const backBtn = document.getElementById("backBtn");
     const topOpenCommunityBtn = document.getElementById("topOpenCommunityBtn");
@@ -741,7 +765,7 @@
     const content = document.getElementById("content");
     const communityForm = document.getElementById("communityForm");
     const saveBtn = document.getElementById("saveBtn");
-    const hideCommunityBtn = document.getElementById("hideCommunityBtn");
+    const deleteCommunityBtn = document.getElementById("deleteCommunityBtn");
     const openCommunityBtn = document.getElementById("openCommunityBtn");
     const statusPill = document.getElementById("statusPill");
     const message = document.getElementById("message");
@@ -769,6 +793,9 @@
     let currentProfile = null;
     let currentCommunityId = "";
     let currentCommunity = null;
+    let currentCommunitySource = "communities";
+    let currentIsOwner = false;
+    let currentIsAdmin = false;
     let previewObjectUrl = "";
     let badgeRefreshTimer = null;
     let liveChannels = [];
@@ -872,6 +899,19 @@
       return Number.isFinite(ms) ? ms : 0;
     }
 
+    function isMissingSchemaError(error) {
+      const msg = String(error?.message || error || "").toLowerCase();
+
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("does not exist") ||
+        msg.includes("relation") ||
+        msg.includes("column") ||
+        msg.includes("not found")
+      );
+    }
+
     function countryAliases(country) {
       const c = normalizeText(country);
 
@@ -934,11 +974,12 @@
       };
     }
 
-    function normalizeCommunity(raw, fallbackId = "") {
+    function normalizeCommunity(raw, fallbackId = "", source = "communities") {
       const d = raw || {};
 
       return {
         id: getField(d, ["id"], fallbackId) || fallbackId || "",
+        source,
         name: getField(d, ["name", "title", "community_name", "communityName"], "Community") || "Community",
         category: getField(d, ["category", "topic"], "General") || "General",
         description: getField(d, ["description", "desc", "about"]),
@@ -1024,7 +1065,10 @@
             .eq("id", id)
             .maybeSingle();
 
-          if (!error && data) return normalizeCommunity({ id: data.id, ...data }, data.id);
+          if (!error && data) {
+            currentCommunitySource = table;
+            return normalizeCommunity({ id: data.id, ...data }, data.id, table);
+          }
         } catch {}
       }
 
@@ -1050,10 +1094,38 @@
 
     imageFileInput.addEventListener("change", () => {
       const file = imageFileInput.files?.[0] || null;
+
+      if (!file) {
+        setPreviewFromFile(null);
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        imageFileInput.value = "";
+        setPreviewFromFile(null);
+        showMessage("Please upload an image file only.", "error");
+        return;
+      }
+
+      if (file.size > MAX_IMAGE_BYTES) {
+        imageFileInput.value = "";
+        setPreviewFromFile(null);
+        showMessage("Image must be under 5 MB.", "error");
+        return;
+      }
+
       setPreviewFromFile(file);
     });
 
     async function uploadCommunityImage(file, userId) {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Please upload an image file only.");
+      }
+
+      if (file.size > MAX_IMAGE_BYTES) {
+        throw new Error("Image must be under 5 MB.");
+      }
+
       const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
       const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `communities/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
@@ -1062,7 +1134,8 @@
         .from(STORAGE_BUCKET)
         .upload(path, file, {
           cacheControl: "3600",
-          upsert: false
+          upsert: false,
+          contentType: file.type || "image/jpeg"
         });
 
       if (uploadError) throw uploadError;
@@ -1077,19 +1150,22 @@
 
     async function updateCommunityWithFallback(payloadVariants) {
       let lastError = null;
+      const tables = [currentCommunitySource || "communities", "communities", "community"].filter((v, i, arr) => v && arr.indexOf(v) === i);
 
-      for (const payload of payloadVariants) {
-        try {
-          const { error } = await supabase
-            .from("communities")
-            .update(payload)
-            .eq("id", currentCommunityId);
+      for (const table of tables) {
+        for (const payload of payloadVariants) {
+          try {
+            const { error } = await supabase
+              .from(table)
+              .update(payload)
+              .eq("id", currentCommunityId);
 
-          if (!error) return true;
+            if (!error) return true;
 
-          lastError = error || lastError;
-        } catch (err) {
-          lastError = err;
+            lastError = error || lastError;
+          } catch (err) {
+            lastError = err;
+          }
         }
       }
 
@@ -1125,37 +1201,114 @@
       return false;
     }
 
-    async function softHideCommunity() {
-      const ok = confirm("Hide this community? This will soft-delete it from public view.");
+    async function deleteRowsByColumn(table, column, value) {
+      try {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq(column, value);
 
-      if (!ok) return;
+        if (!error) return true;
 
-      hideCommunityBtn.disabled = true;
+        if (!isMissingSchemaError(error)) {
+          console.warn(`Delete related rows failed: ${table}.${column}`, error.message || error);
+        }
+      } catch (err) {
+        if (!isMissingSchemaError(err)) {
+          console.warn(`Delete related rows failed: ${table}.${column}`, err?.message || err);
+        }
+      }
+
+      return false;
+    }
+
+    async function deleteCommunityRelatedData(communityId) {
+      const relatedTables = [
+        "community_members",
+        "community_join_requests",
+        "community_requests",
+        "community_invites",
+        "community_authors",
+        "community_posts",
+        "community_post_comments",
+        "community_comments",
+        "community_post_likes",
+        "community_likes",
+        "posts"
+      ];
+
+      const communityColumns = [
+        "community_id",
+        "communityId",
+        "community",
+        "group_id",
+        "groupId"
+      ];
+
+      for (const table of relatedTables) {
+        for (const column of communityColumns) {
+          await deleteRowsByColumn(table, column, communityId);
+        }
+      }
+    }
+
+    async function deleteCommunityMain(communityId) {
+      let lastError = null;
+      const tables = [currentCommunitySource || "communities", "communities", "community"].filter((v, i, arr) => v && arr.indexOf(v) === i);
+
+      for (const table of tables) {
+        try {
+          const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq("id", communityId);
+
+          if (!error) return true;
+
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not delete community.");
+    }
+
+    function resetDeleteButton() {
+      deleteCommunityBtn.disabled = false;
+      deleteCommunityBtn.innerHTML = "<span>Delete Community</span>";
+    }
+
+    async function deleteCommunity() {
+      if (!currentUser || !currentCommunity || !currentCommunityId) return;
+
+      if (!currentIsOwner && !currentIsAdmin) {
+        showMessage("Only the owner or admin can delete this community.", "error");
+        return;
+      }
+
+      const firstConfirm = confirm(
+        "Delete this community permanently?\n\nThis may remove members, posts, requests, and community data.\n\nThis action cannot be undone."
+      );
+
+      if (!firstConfirm) return;
+
+      const typed = prompt('Type DELETE to permanently delete this community.');
+
+      if (typed !== "DELETE") {
+        showMessage("Delete cancelled. You must type DELETE exactly.", "error");
+        return;
+      }
+
+      deleteCommunityBtn.disabled = true;
+      deleteCommunityBtn.innerHTML = "<span>Deleting...</span>";
       showMessage("");
 
       try {
-        await updateCommunityWithFallback([
-          {
-            hidden: true,
-            soft_deleted: true,
-            status: "deleted",
-            deleted_at: nowIso(),
-            updated_at: nowIso()
-          },
-          {
-            hidden: true,
-            softDeleted: true,
-            status: "deleted",
-            deletedAt: nowIso(),
-            updatedAt: nowIso()
-          },
-          {
-            hidden: true,
-            status: "deleted"
-          }
-        ]);
+        await deleteCommunityRelatedData(currentCommunityId);
+        await deleteCommunityMain(currentCommunityId);
 
-        showMessage("Community hidden.", "success");
+        showMessage("Community deleted permanently.", "success");
 
         try {
           localStorage.setItem("ownspace_communities_refresh", String(Date.now()));
@@ -1167,12 +1320,12 @@
         }, 450);
       } catch (err) {
         console.error(err);
-        showMessage(err?.message || "Could not hide community.", "error");
-        hideCommunityBtn.disabled = false;
+        showMessage(err?.message || "Could not delete community.", "error");
+        resetDeleteButton();
       }
     }
 
-    hideCommunityBtn.addEventListener("click", softHideCommunity);
+    deleteCommunityBtn.addEventListener("click", deleteCommunity);
 
     function fillForm() {
       nameInput.value = currentCommunity.name || "";
@@ -1255,6 +1408,11 @@
 
       if (imageFile && !imageFile.type.startsWith("image/")) {
         showMessage("Please upload an image file only.", "error");
+        return;
+      }
+
+      if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
+        showMessage("Image must be under 5 MB.", "error");
         return;
       }
 
@@ -1678,17 +1836,17 @@
 
         if (!currentCommunity || currentCommunity.hidden) {
           loadingBox.classList.add("hidden");
-          notAllowedBox.textContent = "Community not found or hidden.";
+          notAllowedBox.textContent = "Community not found.";
           notAllowedBox.classList.remove("hidden");
           return;
         }
 
-        const admin = await isAdminUser(currentUser.id);
-        const owner = currentCommunity.creatorId === currentUser.id;
+        currentIsAdmin = await isAdminUser(currentUser.id);
+        currentIsOwner = currentCommunity.creatorId === currentUser.id;
 
-        statusPill.textContent = admin && !owner ? "Admin" : "Owner";
+        statusPill.textContent = currentIsAdmin && !currentIsOwner ? "Admin" : "Owner";
 
-        if (!owner && !admin) {
+        if (!currentIsOwner && !currentIsAdmin) {
           loadingBox.classList.add("hidden");
           notAllowedBox.classList.remove("hidden");
           return;
@@ -1734,23 +1892,20 @@
     initPage();
 
     /*
-      OWNSPACE EDIT COMMUNITY COMPACT UPDATE:
+      OWNSPACE EDIT COMMUNITY DELETE UPDATE:
 
-      FIXED / UPDATED:
-      - Matched Nearby/Create Community compact style.
-      - Removed bad settings gear icon.
-      - Added clean top-right Open Community icon.
-      - Added Request to Join privacy option.
-      - Kept owner/admin permission checks.
-      - Kept current photo preview and optional replacement upload.
-      - Added duplicate community-name check, excluding current community.
-      - Fixed inbox badge logic:
-        pending message_requests + truly unread incoming chat_messages only.
-      - Does not count general notifications.
-      - Does not count old incoming messages before your latest outgoing reply.
-      - Added realtime badge refresh for message_requests, chat_threads, chat_messages.
-      - Sends refresh signals after save/hide.
-      - Keeps rich/compatible/minimal Supabase fallback updates.
+      UPDATED:
+      - Replaced Hide Community with Delete Community.
+      - Delete now requires typing DELETE exactly.
+      - Delete is permanent, not soft-hide.
+      - Deletes related community rows first where tables/columns exist:
+        community_members, community_posts, requests, invites, comments, likes, and posts linked by community_id.
+      - Ignores missing schema/table/column errors during related cleanup.
+      - Deletes the community from communities/community table.
+      - Keeps owner/admin permission check before delete.
+      - Keeps compact OwnSpace theme and sizes.
+      - Added 5 MB image upload limit.
+      - Updated “Community not found or hidden” to “Community not found.”
     */
   </script>
 </body>
