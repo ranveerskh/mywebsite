@@ -1068,7 +1068,6 @@
                     <div class="badge-row">
                       <span id="profileTypeBadge" class="status-badge status-blue">Public</span>
                       <span id="accountStateBadge" class="status-badge status-green">Active</span>
-                      <span id="adminBadge" class="status-badge status-purple hidden">Admin</span>
                       <span id="moderationBadge" class="status-badge status-red hidden">Restricted</span>
                     </div>
                   </div>
@@ -1326,8 +1325,8 @@
           </div>
         </div>
 
-        <div class="accordion-item" data-section="safety">
-          <button class="accordion-head" type="button" data-section="safety">
+        <div class="accordion-item" data-section="feedback">
+          <button class="accordion-head" type="button" data-section="feedback">
             <div class="accordion-left">
               <span class="section-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
@@ -1579,32 +1578,6 @@
                     <span>Explore or add nearby places.</span>
                   </span>
                 </a>
-
-                <a id="reportsAdminLink" href="reports-admin.html" class="quick-link hidden">
-                  <span class="quick-link-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 9v4"></path>
-                      <path d="M12 17h.01"></path>
-                      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
-                    </svg>
-                  </span>
-                  <span>
-                    <strong>Reports Admin</strong>
-                    <span>Review reports and moderation actions.</span>
-                  </span>
-                </a>
-
-                <a id="feedbackAdminLink" href="feedback-admin.html" class="quick-link hidden">
-                  <span class="quick-link-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-                    </svg>
-                  </span>
-                  <span>
-                    <strong>Feedback Admin</strong>
-                    <span>Review feedback and feature requests.</span>
-                  </span>
-                </a>
               </div>
             </div>
           </div>
@@ -1747,7 +1720,6 @@
     let currentPublicData = {};
     let currentProfile = {};
     let currentBlockedUsers = [];
-    let isCurrentUserAdmin = false;
 
     const backBtn = document.getElementById("backBtn");
     const pageStatus = document.getElementById("pageStatus");
@@ -1771,7 +1743,6 @@
     const bioText = document.getElementById("bioText");
     const profileTypeBadge = document.getElementById("profileTypeBadge");
     const accountStateBadge = document.getElementById("accountStateBadge");
-    const adminBadge = document.getElementById("adminBadge");
     const moderationBadge = document.getElementById("moderationBadge");
 
     const emailEl = document.getElementById("email");
@@ -1792,8 +1763,6 @@
     const blockedEmpty = document.getElementById("blockedEmpty");
     const blockedStatus = document.getElementById("blockedStatus");
 
-    const reportsAdminLink = document.getElementById("reportsAdminLink");
-    const feedbackAdminLink = document.getElementById("feedbackAdminLink");
     const verificationStatusText = document.getElementById("verificationStatusText");
 
     const feedbackForm = document.getElementById("feedbackForm");
@@ -1983,10 +1952,7 @@
         locationVisibility: normalizeLocationVisibility(rawLocationVisibility),
         createdAt: d.created_at ?? d.createdAt ?? d.created ?? null,
         softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated", "is_deactivated", "isDeactivated"], false),
-        isHiddenByAdmin: getBool(d, ["is_hidden_by_admin", "isHiddenByAdmin", "hidden_by_admin", "hiddenByAdmin"], false),
-        deleteRequested: getBool(d, ["delete_requested", "deleteRequested"], false),
-        isAdmin: getBool(d, ["is_admin", "isAdmin"], false),
-        role: getString(d, ["role"], "")
+        deleteRequested: getBool(d, ["delete_requested", "deleteRequested"], false)
       };
     }
 
@@ -2164,22 +2130,6 @@
       return null;
     }
 
-    async function checkAdmin(uid) {
-      const checks = [
-        ["admins", "id"],
-        ["admins", "uid"],
-        ["admins", "user_id"],
-        ["admins", "userId"]
-      ];
-
-      for (const [table, column] of checks) {
-        const row = await selectByColumn(table, column, uid);
-        if (row) return true;
-      }
-
-      return false;
-    }
-
     async function upsertOrUpdateByUid(table, uid, payloadVariants) {
       let lastError = null;
 
@@ -2305,7 +2255,7 @@
           currentUser.id
         );
 
-        applyProfileHeader(currentProfile, isCurrentUserAdmin);
+        applyProfileHeader(currentProfile);
         updateMiniStatuses();
         announceRefresh();
 
@@ -2440,7 +2390,7 @@
       reactivateBtn.classList.toggle("hidden", !currentProfile.softDeleted);
     }
 
-    function applyProfileHeader(profile, isAdmin) {
+    function applyProfileHeader(profile) {
       displayNameEl.textContent = profile.softDeleted ? "Hidden Account" : profile.displayName || "Member";
 
       if (profile.isVerified) verifiedDot.classList.remove("hidden");
@@ -2466,9 +2416,6 @@
 
       accountStateBadge.textContent = profile.softDeleted ? "Hidden" : profile.deleteRequested ? "Delete Requested" : "Active";
       accountStateBadge.className = `status-badge ${profile.softDeleted || profile.deleteRequested ? "status-yellow" : "status-green"}`;
-
-      if (isAdmin) adminBadge.classList.remove("hidden");
-      else adminBadge.classList.add("hidden");
 
       moderationBadge.classList.add("hidden");
 
@@ -2838,7 +2785,7 @@
         currentUser.id
       );
 
-      applyProfileHeader(currentProfile, isCurrentUserAdmin);
+      applyProfileHeader(currentProfile);
       updateInputsFromProfile();
       announceRefresh();
     }
@@ -3108,11 +3055,10 @@
       const uid = currentUser.id;
 
       try {
-        const [userRow, publicRow, verificationRow, adminStatus] = await Promise.all([
+        const [userRow, publicRow, verificationRow] = await Promise.all([
           loadUserRow(uid),
           loadPublicProfileRow(uid),
-          loadVerificationRequest(uid),
-          checkAdmin(uid)
+          loadVerificationRequest(uid)
         ]);
 
         currentUserData = userRow || {};
@@ -3124,16 +3070,11 @@
           uid
         );
 
-        isCurrentUserAdmin =
-          adminStatus ||
-          currentProfile.isAdmin === true ||
-          currentProfile.role === "admin";
-
         currentBlockedUsers = Array.isArray(currentProfile.blockedUsers)
           ? currentProfile.blockedUsers
           : [];
 
-        applyProfileHeader(currentProfile, isCurrentUserAdmin);
+        applyProfileHeader(currentProfile);
 
         emailEl.textContent = currentUser.email || "-";
         uidEl.textContent = "Ready";
@@ -3147,14 +3088,6 @@
           : "not_requested";
 
         setVerificationText(requestStatus, !!currentProfile.isVerified);
-
-        if (isCurrentUserAdmin) {
-          reportsAdminLink.classList.remove("hidden");
-          feedbackAdminLink.classList.remove("hidden");
-        } else {
-          reportsAdminLink.classList.add("hidden");
-          feedbackAdminLink.classList.add("hidden");
-        }
 
         await renderBlockedList();
 
@@ -3188,17 +3121,16 @@
     loadSettings();
 
     /*
-      OWNSPACE SETTINGS COMPACT PREMIUM UPDATE:
+      OWNSPACE SETTINGS USER-ONLY UPDATE:
 
-      UI:
-      - Settings page is now much more compact and consistent with Feed, Inbox, Notifications, and Follow Requests.
-      - Smaller topbar, accordion rows, forms, cards, profile preview, quick links, and bottom nav.
-      - Light theme remains default.
-      - Verified badge and icons use the cleaner compact OwnSpace style.
-      - Removed extra-heavy spacing so the page feels less dirty and more premium on iPhone.
+      REMOVED:
+      - Reports Admin quick link.
+      - Feedback Admin quick link.
+      - Admin badge from account preview.
+      - Admin check function and admin-only display logic.
 
-      LOGIC PRESERVED:
-      - Account summary, verification status, admin links.
+      KEPT:
+      - Account summary and verification status.
       - Theme save to localStorage + Supabase.
       - Private account, city/gender visibility, nearby visibility, nearby mode, location visibility.
       - Feedback and feature request submissions.
@@ -3206,10 +3138,8 @@
       - Logout, temporary hide/reactivate, permanent delete request.
       - Inbox badge counts only pending message_requests + unread chat_messages.
 
-      EXTRA FIX:
-      - Now listens for old bwTheme too, then saves OwnSpace osTheme.
-      - After settings changes, sends refresh signals for profile/badges/notifications.
-      - Badge refreshes on focus/pageshow/visibility return.
+      EXTRA:
+      - This page is now only for normal user settings, not admin tools.
     */
   </script>
 </body>
