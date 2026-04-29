@@ -411,6 +411,17 @@
     .username-note{margin-top:1px}
     .note{margin-top:7px}
 
+    .account-warning{
+      color:var(--text);
+      background:rgba(245,185,66,.10);
+      border:1px solid rgba(245,185,66,.20);
+      border-radius:12px;
+      padding:8px;
+      font-size:10.5px;
+      line-height:1.4;
+      margin-top:6px;
+    }
+
     .username-status{
       margin-top:3px;
       font-size:10.8px;
@@ -693,7 +704,7 @@
           <span class="chip chip-blue">Photo upload</span>
           <span class="chip chip-green">Profile sync</span>
           <span class="chip chip-purple">2 profile links</span>
-          <span class="chip chip-yellow">Email edit</span>
+          <span class="chip chip-yellow">Email security</span>
         </div>
 
         <div class="quick-actions">
@@ -722,12 +733,27 @@
         <form id="profileForm" class="form">
           <div class="section">
             <div class="section-title">Account Email</div>
-            <div class="section-sub">This is your login email. Changing it may require email confirmation.</div>
+            <div class="section-sub">To change email, type the new email twice and enter your current password.</div>
 
-            <div class="field">
-              <label class="label" for="accountEmail">Email Address</label>
-              <input type="email" id="accountEmail" class="input" placeholder="your@email.com" required />
-              <div class="small-note">If Supabase email confirmation is enabled, check your new email inbox after saving.</div>
+            <div class="grid">
+              <div class="field">
+                <label class="label" for="newEmail">New Email</label>
+                <input type="email" id="newEmail" class="input" placeholder="new@email.com" autocomplete="email" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="confirmNewEmail">Confirm New Email</label>
+                <input type="email" id="confirmNewEmail" class="input" placeholder="Re-type new email" autocomplete="email" />
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:7px;">
+              <label class="label" for="currentPassword">Current Password</label>
+              <input type="password" id="currentPassword" class="input" placeholder="Enter current password to change email" autocomplete="current-password" />
+            </div>
+
+            <div class="account-warning">
+              Leave these email fields blank if you only want to update your profile. Supabase may send a confirmation email before the new email becomes active.
             </div>
           </div>
 
@@ -985,7 +1011,10 @@
     const inboxBadge = document.getElementById("inboxBadge");
 
     const emailText = document.getElementById("emailText");
-    const accountEmailInput = document.getElementById("accountEmail");
+    const newEmailInput = document.getElementById("newEmail");
+    const confirmNewEmailInput = document.getElementById("confirmNewEmail");
+    const currentPasswordInput = document.getElementById("currentPassword");
+
     const verifiedLink = document.getElementById("verifiedLink");
     const nearbyStatusText = document.getElementById("nearbyStatusText");
 
@@ -1019,7 +1048,6 @@
     let currentUser = null;
     let verifiedStatus = false;
     let originalUsernameLower = "";
-    let originalEmailLower = "";
     let originalLocationKey = "";
     let originalLat = null;
     let originalLng = null;
@@ -1092,20 +1120,20 @@
       message.className = `message ${type}`;
     }
 
+    function normalizeEmail(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+    }
+
     function normalizeUsername(value) {
       return String(value || "").trim().toLowerCase();
     }
 
     function normalizeText(value) {
       return String(value || "").trim().toLowerCase();
-    }
-
-    function normalizeEmail(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
     }
 
     function titleText(value) {
@@ -1632,6 +1660,82 @@
       };
     }
 
+    async function updateAccountEmailIfNeeded() {
+      const currentAuthEmail = normalizeEmail(currentUser?.email || "");
+      const newEmail = normalizeEmail(newEmailInput.value);
+      const confirmNewEmail = normalizeEmail(confirmNewEmailInput.value);
+      const password = String(currentPasswordInput.value || "");
+
+      const touchedEmailFields = !!(newEmail || confirmNewEmail || password);
+
+      if (!touchedEmailFields) {
+        return {
+          changed: false,
+          requestedEmail: currentAuthEmail,
+          message: ""
+        };
+      }
+
+      if (!newEmail || !confirmNewEmail || !password) {
+        throw new Error("To change email, enter new email twice and your current password.");
+      }
+
+      if (!isValidEmail(newEmail)) {
+        throw new Error("Please enter a valid new email address.");
+      }
+
+      if (newEmail !== confirmNewEmail) {
+        throw new Error("New email and confirm email do not match.");
+      }
+
+      if (currentAuthEmail && newEmail === currentAuthEmail) {
+        throw new Error("New email is the same as your current email.");
+      }
+
+      if (!currentAuthEmail) {
+        throw new Error("Current account email is missing. Please log out and log in again.");
+      }
+
+      showMessage("Checking current password...", "success");
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentAuthEmail,
+        password
+      });
+
+      if (signInError) {
+        throw new Error("Current password is incorrect or could not be verified.");
+      }
+
+      if (signInData?.user) {
+        currentUser = signInData.user;
+      }
+
+      showMessage("Sending email change request...", "success");
+
+      const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      if (updateData?.user) {
+        currentUser = updateData.user;
+      }
+
+      newEmailInput.value = "";
+      confirmNewEmailInput.value = "";
+      currentPasswordInput.value = "";
+
+      return {
+        changed: true,
+        requestedEmail: newEmail,
+        message: "Email change request sent. Please check your email to confirm the change."
+      };
+    }
+
     genderInput.addEventListener("change", toggleGenderCustom);
 
     usernameInput.addEventListener("input", () => {
@@ -1714,6 +1818,8 @@
       }
 
       currentUser = authData.user;
+      emailText.textContent = currentUser.email || "-";
+      scheduleInboxBadgeRefresh(150);
 
       try {
         const [userRes, publicRes] = await Promise.all([
@@ -1727,13 +1833,6 @@
         const userData = userRes.data || {};
         const publicData = publicRes.data || {};
         const merged = { ...publicData, ...userData };
-
-        const authEmail = currentUser.email || getField(merged, ["email"]) || "";
-        originalEmailLower = normalizeEmail(authEmail);
-        accountEmailInput.value = authEmail;
-        emailText.textContent = authEmail || "-";
-
-        scheduleInboxBadgeRefresh(150);
 
         const links = extractLinksToLoad(merged);
 
@@ -1816,7 +1915,6 @@
 
       if (!currentUser) return;
 
-      const accountEmail = normalizeEmail(accountEmailInput.value);
       const displayName = displayNameInput.value.trim();
       const username = normalizeUsername(usernameInput.value);
       const city = cityInput.value.trim();
@@ -1842,16 +1940,6 @@
 
       if (!link1) link1Label = "";
       if (!link2) link2Label = "";
-
-      if (!accountEmail) {
-        showMessage("Email is required.", "error");
-        return;
-      }
-
-      if (!isValidEmail(accountEmail)) {
-        showMessage("Please enter a valid email address.", "error");
-        return;
-      }
 
       if (!displayName) {
         showMessage("Display name is required.", "error");
@@ -1902,6 +1990,8 @@
       showMessage("");
 
       try {
+        const emailUpdate = await updateAccountEmailIfNeeded();
+
         const availability = await checkUsernameAvailability(username);
 
         if (!availability.ok && availability.reason !== "own") {
@@ -1921,26 +2011,6 @@
           showMessage("Uploading profile photo...", "success");
           const uploadResult = await uploadProfilePhoto(selectedPhotoFile, currentUser.id);
           finalPhotoURL = uploadResult.publicUrl;
-        }
-
-        const emailChanged = accountEmail && accountEmail !== originalEmailLower;
-
-        if (emailChanged) {
-          showMessage("Requesting email change...", "success");
-
-          const { data: emailUpdateData, error: emailUpdateError } = await supabase.auth.updateUser({
-            email: accountEmail,
-            data: {
-              display_name: displayName,
-              photo_url: finalPhotoURL
-            }
-          });
-
-          if (emailUpdateError) throw emailUpdateError;
-
-          if (emailUpdateData?.user) {
-            currentUser = emailUpdateData.user;
-          }
         }
 
         if (originalUsernameLower && originalUsernameLower !== username) {
@@ -1966,6 +2036,11 @@
         const locationChanged = locationKey(city, province, country) !== originalLocationKey;
         const latValue = locationChanged ? null : originalLat;
         const lngValue = locationChanged ? null : originalLng;
+
+        const authEmailAfterUpdate = normalizeEmail(currentUser.email || "");
+        const emailForUsersTable = emailUpdate.changed
+          ? emailUpdate.requestedEmail
+          : authEmailAfterUpdate;
 
         const basePayload = {
           uid: currentUser.id,
@@ -1997,8 +2072,7 @@
 
         const userFullPayload = {
           ...basePayload,
-          email: accountEmail,
-          pending_email: emailChanged ? accountEmail : "",
+          email: emailForUsersTable || "",
           display_name_lower: displayName.toLowerCase(),
           username_lower: username,
           real_name: currentRealName || "",
@@ -2021,9 +2095,9 @@
           warning_until: currentWarningUntil
         };
 
-        const compatibilityPayload = {
+        const userCompatibilityPayload = {
           uid: currentUser.id,
-          email: accountEmail,
+          email: emailForUsersTable || "",
           display_name: displayName,
           username,
           bio,
@@ -2039,9 +2113,42 @@
           updated_at: nowIso()
         };
 
-        const minimalPayload = {
+        const publicCompatibilityPayload = {
           uid: currentUser.id,
-          email: accountEmail,
+          display_name: displayName,
+          username,
+          bio,
+          photo_url: finalPhotoURL,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          is_private: isPrivate,
+          show_in_nearby: showInNearby,
+          nearby_mode: nearbyDiscoveryMode,
+          location_visibility: locationVisibility,
+          updated_at: nowIso()
+        };
+
+        const userMinimalPayload = {
+          uid: currentUser.id,
+          email: emailForUsersTable || "",
+          display_name: displayName,
+          username,
+          bio,
+          photo_url: finalPhotoURL,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          is_private: isPrivate,
+          show_in_nearby: showInNearby,
+          location_visibility: locationVisibility,
+          updated_at: nowIso()
+        };
+
+        const publicMinimalPayload = {
+          uid: currentUser.id,
           display_name: displayName,
           username,
           bio,
@@ -2058,31 +2165,32 @@
 
         await upsertWithFallback("users", [
           userFullPayload,
-          compatibilityPayload,
-          minimalPayload
+          userCompatibilityPayload,
+          userMinimalPayload
         ]);
 
         await upsertWithFallback("public_profiles", [
           publicFullPayload,
-          compatibilityPayload,
-          minimalPayload
+          publicCompatibilityPayload,
+          publicMinimalPayload
         ]);
 
-        if (!emailChanged) {
-          const { error: authUpdateError } = await supabase.auth.updateUser({
-            data: {
-              display_name: displayName,
-              photo_url: finalPhotoURL
-            }
-          });
-
-          if (authUpdateError) {
-            console.error("Auth metadata update warning:", authUpdateError);
+        const { data: metadataUpdateData, error: authUpdateError } = await supabase.auth.updateUser({
+          data: {
+            display_name: displayName,
+            photo_url: finalPhotoURL
           }
+        });
+
+        if (authUpdateError) {
+          console.error("Auth metadata update warning:", authUpdateError);
+        }
+
+        if (metadataUpdateData?.user) {
+          currentUser = metadataUpdateData.user;
         }
 
         originalUsernameLower = username;
-        originalEmailLower = accountEmail;
         originalLocationKey = locationKey(city, province, country);
         originalLat = latValue;
         originalLng = lngValue;
@@ -2094,12 +2202,12 @@
         clearSelectedPhotoObjectUrl();
 
         nearbyStatusText.textContent = nearbyStatusLabel(showInNearby, nearbyDiscoveryMode);
-        emailText.textContent = accountEmail || "-";
+        emailText.textContent = emailUpdate.changed ? emailUpdate.requestedEmail : (currentUser.email || emailForUsersTable || "-");
         showPreview(currentPhotoURL);
         setUsernameStatus("Username saved.", true);
 
-        if (emailChanged) {
-          showMessage("Profile saved. Check your new email inbox to confirm the email change if confirmation is enabled.", "success");
+        if (emailUpdate.changed) {
+          showMessage("Profile saved. Email change request sent. Please confirm it from your email.", "success");
         } else {
           showMessage("Profile updated successfully.", "success");
         }
@@ -2138,26 +2246,25 @@
 
       ADDED:
       - Account Email section.
-      - Email validation.
-      - Supabase Auth email update using supabase.auth.updateUser({ email }).
-      - Profile users.email sync.
-      - Confirmation note if Supabase requires email confirmation.
+      - User must enter:
+        1) New email
+        2) Confirm new email
+        3) Current password
+      - Password is verified using supabase.auth.signInWithPassword().
+      - Email is changed using supabase.auth.updateUser({ email }).
+      - Email is saved only into users.email.
+      - Email is NOT sent to public_profiles, fixing:
+        Could not find the 'email' column of 'public_profiles' in the schema cache.
 
-      UI:
-      - Compact OwnSpace style preserved.
-      - Light theme default with dark theme support.
-      - Email edit added without changing bottom nav.
-
-      LOGIC PRESERVED:
-      - Supabase profile load/save.
-      - Photo upload to media bucket.
-      - Username availability check.
-      - Nearby city/GPS/everywhere fields.
-      - Location search text.
+      PRESERVED:
+      - Profile photo upload.
+      - Username check.
+      - Nearby city/GPS/everywhere.
+      - Location search.
       - Two profile links.
-      - Gender, private profile and visibility toggles.
-      - Auth metadata update.
-      - Inbox badge counts pending message_requests + unread chat_messages.
+      - Gender/private/visibility controls.
+      - Inbox badge.
+      - OwnSpace refresh events.
     */
   </script>
 </body>
