@@ -193,7 +193,6 @@
       display:flex;
       gap:5px;
       flex-wrap:wrap;
-      margin-bottom:7px;
     }
 
     .chip{
@@ -222,10 +221,6 @@
       grid-template-columns:1fr 1fr;
       gap:6px;
       align-items:center;
-    }
-
-    .action-row.three{
-      grid-template-columns:repeat(3,1fr);
     }
 
     .action-btn,
@@ -258,7 +253,10 @@
     }
 
     .action-btn:disabled,
-    .mini-btn:disabled{opacity:.65;cursor:not-allowed}
+    .mini-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
 
     .btn-primary{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
     .btn-green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}
@@ -430,6 +428,63 @@
     .check-pill input{
       accent-color:var(--blue);
       transform:scale(1.02);
+    }
+
+    .poll-builder{
+      display:grid;
+      gap:6px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:8px;
+    }
+
+    .poll-builder-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+
+    .poll-builder-title{
+      font-size:11.5px;
+      font-weight:950;
+    }
+
+    .poll-builder-note{
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.35;
+    }
+
+    .poll-option-row{
+      display:grid;
+      grid-template-columns:1fr 34px;
+      gap:6px;
+      align-items:center;
+    }
+
+    .poll-option-row .input{
+      min-height:36px;
+      padding:9px 10px;
+    }
+
+    .remove-option-btn{
+      width:34px;
+      height:34px;
+      border:none;
+      border-radius:11px;
+      background:var(--red-soft);
+      border:1px solid rgba(255,93,115,.20);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:950;
+    }
+
+    .poll-builder-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
     }
 
     .file-box{
@@ -616,22 +671,83 @@
       border:1px solid var(--line);
     }
 
-    .poll-option{
+    .poll-head{
       display:flex;
       justify-content:space-between;
       gap:8px;
       align-items:center;
-      padding:8px;
+      color:var(--muted);
+      font-size:10.5px;
+      font-weight:900;
+      line-height:1.35;
+    }
+
+    .poll-vote-btn{
+      position:relative;
+      overflow:hidden;
+      width:100%;
+      min-height:38px;
+      border:none;
       border-radius:11px;
       background:var(--surface-2);
       border:1px solid var(--line);
-      font-size:11.5px;
-      font-weight:850;
+      color:var(--text);
+      cursor:pointer;
+      text-align:left;
+      padding:0;
     }
 
-    .poll-option span:last-child{
+    .poll-vote-btn.voted{
+      border-color:rgba(76,201,255,.42);
+      box-shadow:0 0 0 2px rgba(76,201,255,.08);
+    }
+
+    .poll-vote-btn:disabled{
+      cursor:not-allowed;
+      opacity:.75;
+    }
+
+    .poll-fill{
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:0%;
+      background:rgba(76,201,255,.14);
+      z-index:0;
+      transition:width .2s ease;
+    }
+
+    .poll-vote-btn.voted .poll-fill{
+      background:rgba(61,220,132,.16);
+    }
+
+    .poll-content{
+      position:relative;
+      z-index:1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      padding:9px 10px;
+      font-size:11.5px;
+      font-weight:900;
+      line-height:1.25;
+    }
+
+    .poll-percent{
       color:var(--muted);
       flex-shrink:0;
+      font-size:10.5px;
+      font-weight:950;
+    }
+
+    .poll-status{
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.35;
+      margin-top:2px;
     }
 
     .post-actions{
@@ -724,7 +840,7 @@
 
     @media(max-width:700px){
       body{padding:6px 6px 82px}
-      .form-grid,.action-row.three{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
       .action-row .action-btn,
       .post-actions .mini-btn{flex:1}
       .share-btn{margin-left:0}
@@ -737,6 +853,7 @@
       .action-btn,.mini-btn{font-size:10.5px;padding:7px 7px}
       .chip{font-size:9.3px}
       .post-title{font-size:13.5px}
+      .poll-content{font-size:11px}
     }
   </style>
 </head>
@@ -777,38 +894,9 @@
       <div class="chip-row">
         <span id="postCountChip" class="chip chip-blue">Posts: -</span>
         <span id="featuredCountChip" class="chip chip-purple">Featured: -</span>
+        <span id="pollCountChip" class="chip chip-green">Polls: -</span>
         <span id="authorChip" class="chip chip-yellow">Author: checking</span>
         <span id="statusChip" class="chip chip-green">Ready</span>
-      </div>
-
-      <div class="action-row three">
-        <button id="refreshHeroBtn" class="action-btn btn-primary" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M20 11a8 8 0 0 0-14.9-3"></path>
-            <path d="M4 4v5h5"></path>
-            <path d="M4 13a8 8 0 0 0 14.9 3"></path>
-            <path d="M20 20v-5h-5"></path>
-          </svg>
-          Refresh
-        </button>
-
-        <a href="feed.html" class="action-btn btn-soft">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 10.5 12 3l9 7.5"></path>
-            <path d="M5 10v10h14V10"></path>
-          </svg>
-          Feed
-        </a>
-
-        <a href="nearby-communities.html" class="action-btn btn-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          Communities
-        </a>
       </div>
     </div>
 
@@ -817,7 +905,7 @@
         <div class="composer-head">
           <div>
             <div class="composer-title">Create Hub Post</div>
-            <div class="composer-sub">Only admins and approved Hub authors can publish here.</div>
+            <div class="composer-sub">Create updates, articles, photo posts, or polls with 2–10 options.</div>
           </div>
 
           <button id="closeComposerBtn" type="button" class="action-btn btn-soft">Hide</button>
@@ -825,8 +913,8 @@
 
         <div class="form-grid">
           <div class="field">
-            <label class="label" for="postTitle">Title</label>
-            <input id="postTitle" class="input" type="text" placeholder="Post title" required />
+            <label class="label" for="postTitle">Title / Poll Question</label>
+            <input id="postTitle" class="input" type="text" placeholder="Post title or poll question" required />
           </div>
 
           <div class="field">
@@ -862,9 +950,23 @@
             <textarea id="postBody" class="textarea" placeholder="Write the full update, article, credit note, etc..."></textarea>
           </div>
 
-          <div class="field full" id="pollOptionsWrap">
-            <label class="label" for="pollOptions">Poll Options</label>
-            <textarea id="pollOptions" class="textarea" placeholder="One option per line. Example:&#10;Yes&#10;No&#10;Maybe"></textarea>
+          <div class="field full hidden" id="pollBuilderWrap">
+            <label class="label">Poll Options</label>
+
+            <div class="poll-builder">
+              <div class="poll-builder-top">
+                <div>
+                  <div class="poll-builder-title">Voting Options</div>
+                  <div id="pollBuilderNote" class="poll-builder-note">Minimum 2 options, maximum 10.</div>
+                </div>
+              </div>
+
+              <div id="pollOptionsList"></div>
+
+              <div class="poll-builder-actions">
+                <button id="addPollOptionBtn" type="button" class="mini-btn btn-primary">+ Add Option</button>
+              </div>
+            </div>
           </div>
 
           <div class="field full">
@@ -999,15 +1101,18 @@
 
     const STORAGE_BUCKET = "media";
     const HUB_SOURCES = ["hub_posts"];
+    const POLL_VOTES_TABLE = "hub_poll_votes";
+    const MIN_POLL_OPTIONS = 2;
+    const MAX_POLL_OPTIONS = 10;
 
     const backBtn = document.getElementById("backBtn");
     const postCountChip = document.getElementById("postCountChip");
     const featuredCountChip = document.getElementById("featuredCountChip");
+    const pollCountChip = document.getElementById("pollCountChip");
     const authorChip = document.getElementById("authorChip");
     const statusChip = document.getElementById("statusChip");
 
     const refreshBtn = document.getElementById("refreshBtn");
-    const refreshHeroBtn = document.getElementById("refreshHeroBtn");
 
     const composerPanel = document.getElementById("composerPanel");
     const hubForm = document.getElementById("hubForm");
@@ -1021,8 +1126,6 @@
     const externalUrl = document.getElementById("externalUrl");
     const postSummary = document.getElementById("postSummary");
     const postBody = document.getElementById("postBody");
-    const pollOptionsWrap = document.getElementById("pollOptionsWrap");
-    const pollOptions = document.getElementById("pollOptions");
     const credits = document.getElementById("credits");
     const imageFile = document.getElementById("imageFile");
     const previewWrap = document.getElementById("previewWrap");
@@ -1032,6 +1135,11 @@
     const isPublishedInput = document.getElementById("isPublishedInput");
     const savePostBtn = document.getElementById("savePostBtn");
     const composerMessage = document.getElementById("composerMessage");
+
+    const pollBuilderWrap = document.getElementById("pollBuilderWrap");
+    const pollOptionsList = document.getElementById("pollOptionsList");
+    const pollBuilderNote = document.getElementById("pollBuilderNote");
+    const addPollOptionBtn = document.getElementById("addPollOptionBtn");
 
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearBtn");
@@ -1051,6 +1159,8 @@
     let canPostHub = false;
     let currentFilter = "all";
     let hubPosts = [];
+    let pollVotesByPost = new Map();
+    let pollVotesTableReady = false;
     let hubChannels = [];
     let refreshTimer = null;
     let badgeRefreshTimer = null;
@@ -1129,12 +1239,16 @@
         scheduleBadgeRefresh(120);
       }
 
-      if (e.key === "ownspace_hub_refresh") {
+      if (
+        e.key === "ownspace_hub_refresh" ||
+        e.key === "ownspace_poll_refresh"
+      ) {
         scheduleRefresh();
       }
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -1152,6 +1266,7 @@
         const value = raw?.[name];
         if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
+
       return fallback;
     }
 
@@ -1159,18 +1274,21 @@
       for (const name of names) {
         if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
       }
+
       return fallback;
     }
 
     function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
+      const msg = String(error?.message || error || "").toLowerCase();
+
       return (
         msg.includes("does not exist") ||
         msg.includes("not found in the schema cache") ||
         msg.includes("could not find the table") ||
         msg.includes("could not find") ||
         msg.includes("schema cache") ||
-        msg.includes("column")
+        msg.includes("column") ||
+        msg.includes("relation")
       );
     }
 
@@ -1235,6 +1353,7 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+
       return {
         uid: getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
@@ -1259,23 +1378,47 @@
         return value
           .map(item => {
             if (typeof item === "string") return { text: item, votes: 0 };
+
             if (item && typeof item === "object") {
               return {
                 text: String(item.text || item.label || item.title || "").trim(),
                 votes: Number(item.votes || item.count || 0) || 0
               };
             }
+
             return null;
           })
-          .filter(item => item && item.text);
+          .filter(item => item && item.text)
+          .slice(0, MAX_POLL_OPTIONS);
       }
 
       if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map(item => {
+                if (typeof item === "string") return { text: item, votes: 0 };
+                if (item && typeof item === "object") {
+                  return {
+                    text: String(item.text || item.label || item.title || "").trim(),
+                    votes: Number(item.votes || item.count || 0) || 0
+                  };
+                }
+                return null;
+              })
+              .filter(item => item && item.text)
+              .slice(0, MAX_POLL_OPTIONS);
+          }
+        } catch {}
+
         return value
           .split("\n")
           .map(x => x.trim())
           .filter(Boolean)
-          .map(text => ({ text, votes: 0 }));
+          .map(text => ({ text, votes: 0 }))
+          .slice(0, MAX_POLL_OPTIONS);
       }
 
       return [];
@@ -1322,6 +1465,26 @@
         order: Number.isFinite(Number(d.order)) ? Number(d.order) : null,
         pollOptions: normalizePollOptions(d)
       };
+    }
+
+    function pollVoteLocalKey(postId) {
+      return `ownspace_hub_poll_vote_${currentUser?.id || "guest"}_${postId}`;
+    }
+
+    function getLocalPollVote(postId) {
+      try {
+        const value = localStorage.getItem(pollVoteLocalKey(postId));
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 0 ? n : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function setLocalPollVote(postId, optionIndex) {
+      try {
+        localStorage.setItem(pollVoteLocalKey(postId), String(optionIndex));
+      } catch {}
     }
 
     async function selectProfileRow(table, uid) {
@@ -1431,9 +1594,11 @@
     function updateCounts() {
       const visible = hubPosts.filter(p => p.published && !p.hidden);
       const featured = visible.filter(p => p.featured || p.pinned);
+      const polls = visible.filter(p => p.postType === "poll");
 
       postCountChip.textContent = `Posts: ${visible.length}`;
       featuredCountChip.textContent = `Featured: ${featured.length}`;
+      pollCountChip.textContent = `Polls: ${polls.length}`;
       statusChip.textContent = visible.length ? "Live" : "Ready";
       statusChip.className = `chip ${visible.length ? "chip-green" : "chip-yellow"}`;
     }
@@ -1483,7 +1648,8 @@
             item.postType,
             item.creatorName,
             item.creatorUsername,
-            item.credits
+            item.credits,
+            ...item.pollOptions.map(o => o.text)
           ].join(" ").toLowerCase();
 
           return text.includes(q);
@@ -1534,6 +1700,7 @@
     function buildShareUrl(postId) {
       const url = new URL(window.location.href);
       url.pathname = url.pathname.replace(/[^/]*$/, "hub.html");
+      url.search = "";
       url.searchParams.set("postId", postId);
       return url.toString();
     }
@@ -1559,24 +1726,69 @@
       }
     }
 
+    function getPollVoteInfo(post) {
+      const optionCount = post.pollOptions.length;
+      const baseCounts = post.pollOptions.map(item => Number(item.votes || 0) || 0);
+
+      if (pollVotesTableReady && pollVotesByPost.has(post.id)) {
+        const saved = pollVotesByPost.get(post.id);
+        const counts = Array.from({ length: optionCount }, (_, i) => Number(saved.counts?.[i] || 0) || 0);
+
+        return {
+          counts,
+          total: counts.reduce((sum, v) => sum + v, 0),
+          userVoteIndex: Number.isInteger(saved.userVoteIndex) ? saved.userVoteIndex : null,
+          source: "table"
+        };
+      }
+
+      return {
+        counts: baseCounts,
+        total: baseCounts.reduce((sum, v) => sum + v, 0),
+        userVoteIndex: getLocalPollVote(post.id),
+        source: "post"
+      };
+    }
+
     function renderPoll(post) {
       if (post.postType !== "poll" || !post.pollOptions.length) return "";
 
-      const total = post.pollOptions.reduce((sum, item) => sum + (Number(item.votes) || 0), 0);
+      const voteInfo = getPollVoteInfo(post);
+      const total = voteInfo.total || 0;
 
       return `
-        <div class="poll-box">
-          ${post.pollOptions.map(item => {
-            const votes = Number(item.votes) || 0;
+        <div class="poll-box" data-poll-post-id="${escapeHtml(post.id)}">
+          <div class="poll-head">
+            <span>${total} vote${total === 1 ? "" : "s"}</span>
+            <span>${voteInfo.userVoteIndex !== null ? "Your vote saved" : "Tap to vote"}</span>
+          </div>
+
+          ${post.pollOptions.map((item, index) => {
+            const votes = Number(voteInfo.counts[index] || 0) || 0;
             const percent = total ? Math.round((votes / total) * 100) : 0;
+            const voted = voteInfo.userVoteIndex === index;
 
             return `
-              <div class="poll-option">
-                <span>${escapeHtml(item.text)}</span>
-                <span>${percent}%</span>
-              </div>
+              <button
+                class="poll-vote-btn ${voted ? "voted" : ""}"
+                type="button"
+                data-post-id="${escapeHtml(post.id)}"
+                data-option-index="${index}"
+              >
+                <span class="poll-fill" style="width:${percent}%"></span>
+                <span class="poll-content">
+                  <span>${escapeHtml(item.text)}</span>
+                  <span class="poll-percent">${percent}% · ${votes}</span>
+                </span>
+              </button>
             `;
           }).join("")}
+
+          <div class="poll-status">
+            ${pollVotesTableReady
+              ? "One vote per account. Tap another option to change your vote."
+              : "Beta fallback voting is active. Add hub_poll_votes table for strongest vote tracking."}
+          </div>
         </div>
       `;
     }
@@ -1601,6 +1813,7 @@
 
       const bodyId = `hubBody_${post.source}_${post.id}`.replace(/[^a-zA-Z0-9_]/g, "_");
       const hasBody = !!String(post.body || "").trim();
+
       const bodyHtml = hasBody
         ? `<div id="${bodyId}" class="post-body hidden">${escapeHtml(post.body)}</div>`
         : "";
@@ -1615,6 +1828,7 @@
             ${ICONS.hide}
             <span>Hide</span>
           </button>
+
           <button class="mini-btn btn-red delete-post-btn" type="button">
             ${ICONS.trash}
             <span>Delete</span>
@@ -1622,12 +1836,14 @@
         `
         : "";
 
+      const summaryText = post.summary || (post.postType === "poll" ? "Vote in this poll." : "Open this Hub post to read more.");
+
       card.innerHTML = `
         ${imageHtml}
         <div class="post-title">${escapeHtml(post.title)}</div>
         <div class="badge-row">${badges.join("")}</div>
 
-        <div class="post-summary">${escapeHtml(post.summary || "Open this Hub post to read more.")}</div>
+        <div class="post-summary">${escapeHtml(summaryText)}</div>
 
         ${renderPoll(post)}
         ${creditHtml}
@@ -1677,6 +1893,13 @@
           readBtn.querySelector("span").textContent = willOpen ? "Hide" : "Read More";
         });
       }
+
+      card.querySelectorAll(".poll-vote-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const optionIndex = Number(btn.getAttribute("data-option-index"));
+          await voteOnPoll(post, optionIndex, btn);
+        });
+      });
 
       const shareBtn = card.querySelector(".share-btn");
       if (shareBtn) {
@@ -1777,7 +2000,7 @@
 
         const postId = new URLSearchParams(window.location.search).get("postId");
         if (postId) {
-          const target = listWrap.querySelector(`[data-post-id="${CSS.escape(postId)}"]`);
+          const target = listWrap.querySelector(`[data-post-id="${postId.replace(/"/g, '\\"')}"]`);
           if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       });
@@ -1801,7 +2024,7 @@
       }
     }
 
-    async function loadHubPosts() {
+    async function loadHubPostsOnly() {
       const map = new Map();
 
       for (const source of HUB_SOURCES) {
@@ -1813,17 +2036,87 @@
       }
 
       hubPosts = Array.from(map.values());
-      renderPosts();
+    }
+
+    function initPollVoteInfo() {
+      pollVotesByPost = new Map();
+
+      hubPosts
+        .filter(post => post.postType === "poll" && post.pollOptions.length)
+        .forEach(post => {
+          pollVotesByPost.set(post.id, {
+            counts: Array.from({ length: post.pollOptions.length }, () => 0),
+            total: 0,
+            userVoteIndex: null
+          });
+        });
+    }
+
+    async function loadPollVotes() {
+      initPollVoteInfo();
+
+      const pollPosts = hubPosts.filter(post => post.postType === "poll" && post.pollOptions.length);
+      const postIds = pollPosts.map(post => post.id).filter(Boolean);
+
+      pollVotesTableReady = false;
+
+      if (!postIds.length) return;
+
+      const attempts = [
+        { postColumn: "post_id", userColumn: "user_id", optionColumn: "option_index" },
+        { postColumn: "postId", userColumn: "userId", optionColumn: "optionIndex" }
+      ];
+
+      for (const attempt of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from(POLL_VOTES_TABLE)
+            .select("*")
+            .in(attempt.postColumn, postIds);
+
+          if (error) throw error;
+
+          pollVotesTableReady = true;
+
+          (data || []).forEach(row => {
+            const postId = String(row[attempt.postColumn] || "");
+            const userId = String(row[attempt.userColumn] || "");
+            const optionIndex = Number(row[attempt.optionColumn]);
+
+            if (!postId || !Number.isInteger(optionIndex)) return;
+
+            const info = pollVotesByPost.get(postId);
+            const post = pollPosts.find(p => p.id === postId);
+
+            if (!info || !post || optionIndex < 0 || optionIndex >= post.pollOptions.length) return;
+
+            info.counts[optionIndex] = Number(info.counts[optionIndex] || 0) + 1;
+            info.total = Number(info.total || 0) + 1;
+
+            if (currentUser?.id && userId === currentUser.id) {
+              info.userVoteIndex = optionIndex;
+            }
+          });
+
+          return;
+        } catch (err) {
+          if (!isMissingSchemaError(err)) {
+            console.warn("Poll votes table load failed:", err?.message || err);
+          }
+        }
+      }
+
+      pollVotesTableReady = false;
     }
 
     async function refreshAll() {
       openLoading();
 
       try {
-        await Promise.all([
-          loadHubPosts(),
-          loadInboxBadge()
-        ]);
+        await loadHubPostsOnly();
+        await loadPollVotes();
+        await loadInboxBadge();
+        renderPosts();
       } catch (err) {
         console.error(err);
         showEmpty("Could not load OwnSpace Hub.");
@@ -1850,7 +2143,7 @@
     function setupRealtime() {
       clearRealtimeChannels();
 
-      HUB_SOURCES.forEach(source => {
+      [...HUB_SOURCES, POLL_VOTES_TABLE].forEach(source => {
         try {
           const channel = supabase
             .channel(`hub-live-${source}-${Math.random().toString(36).slice(2)}`)
@@ -1902,11 +2195,68 @@
       setPreviewFromFile(imageFile.files?.[0] || null);
     });
 
+    function getPollOptionInputValues() {
+      return [...pollOptionsList.querySelectorAll(".poll-option-input")]
+        .map(input => input.value.trim())
+        .filter(Boolean)
+        .slice(0, MAX_POLL_OPTIONS);
+    }
+
+    function renderPollBuilder(values = ["", ""]) {
+      const safeValues = values.length ? values.slice(0, MAX_POLL_OPTIONS) : ["", ""];
+      while (safeValues.length < MIN_POLL_OPTIONS) safeValues.push("");
+
+      pollOptionsList.innerHTML = "";
+
+      safeValues.forEach((value, index) => {
+        const row = document.createElement("div");
+        row.className = "poll-option-row";
+
+        row.innerHTML = `
+          <input class="input poll-option-input" type="text" placeholder="Option ${index + 1}" value="${escapeHtml(value)}" />
+          <button class="remove-option-btn" type="button" aria-label="Remove option">×</button>
+        `;
+
+        const removeBtn = row.querySelector(".remove-option-btn");
+
+        removeBtn.addEventListener("click", () => {
+          const currentValues = [...pollOptionsList.querySelectorAll(".poll-option-input")]
+            .map(input => input.value);
+
+          if (currentValues.length <= MIN_POLL_OPTIONS) return;
+
+          currentValues.splice(index, 1);
+          renderPollBuilder(currentValues);
+        });
+
+        pollOptionsList.appendChild(row);
+      });
+
+      addPollOptionBtn.disabled = safeValues.length >= MAX_POLL_OPTIONS;
+      pollBuilderNote.textContent = `${safeValues.length}/${MAX_POLL_OPTIONS} options. Minimum 2 required.`;
+    }
+
+    addPollOptionBtn.addEventListener("click", () => {
+      const currentValues = [...pollOptionsList.querySelectorAll(".poll-option-input")]
+        .map(input => input.value);
+
+      if (currentValues.length >= MAX_POLL_OPTIONS) return;
+
+      currentValues.push("");
+      renderPollBuilder(currentValues);
+    });
+
     function updatePollVisibility() {
-      pollOptionsWrap.classList.toggle("hidden", postType.value !== "poll");
+      const isPoll = postType.value === "poll";
+      pollBuilderWrap.classList.toggle("hidden", !isPoll);
+
+      if (isPoll && !pollOptionsList.children.length) {
+        renderPollBuilder(["", ""]);
+      }
     }
 
     postType.addEventListener("change", updatePollVisibility);
+    renderPollBuilder(["", ""]);
     updatePollVisibility();
 
     async function uploadHubImage(file, uid) {
@@ -1965,23 +2315,25 @@
       const creditText = credits.value.trim();
       const link = normalizeExternalUrl(externalUrl.value.trim());
       const file = imageFile.files?.[0] || null;
-      const pollRaw = pollOptions.value
-        .split("\n")
-        .map(x => x.trim())
-        .filter(Boolean);
+      const pollRaw = getPollOptionInputValues();
 
       if (!title) {
         setComposerMessage("Title is required.", "error");
         return;
       }
 
-      if (!summary && !body) {
-        setComposerMessage("Add a short description or full post body.", "error");
-        return;
-      }
+      if (type === "poll") {
+        if (pollRaw.length < MIN_POLL_OPTIONS) {
+          setComposerMessage("Poll needs at least 2 options.", "error");
+          return;
+        }
 
-      if (type === "poll" && pollRaw.length < 2) {
-        setComposerMessage("Poll needs at least 2 options.", "error");
+        if (pollRaw.length > MAX_POLL_OPTIONS) {
+          setComposerMessage("Poll can have maximum 10 options.", "error");
+          return;
+        }
+      } else if (!summary && !body && !file) {
+        setComposerMessage("Add a short description, full body, or photo.", "error");
         return;
       }
 
@@ -2007,7 +2359,7 @@
 
         const creatorName = currentProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
         const creatorUsername = currentProfile?.username || "";
-        const pollData = pollRaw.map(text => ({ text, votes: 0 }));
+        const pollData = type === "poll" ? pollRaw.map(text => ({ text, votes: 0 })) : [];
         const createdAt = nowIso();
 
         const snakePayload = {
@@ -2063,6 +2415,7 @@
           post_type: type,
           category,
           image_url: uploadedImageUrl,
+          poll_options: pollData,
           created_by: currentUser.id,
           created_at: createdAt
         };
@@ -2076,6 +2429,7 @@
         hubForm.reset();
         imageFile.value = "";
         setPreviewFromFile(null);
+        renderPollBuilder(["", ""]);
         updatePollVisibility();
 
         try {
@@ -2129,15 +2483,155 @@
           hidden: true
         }
       ]);
+
+      try {
+        localStorage.setItem("ownspace_hub_refresh", String(Date.now()));
+      } catch {}
     }
 
     async function permanentDeletePost(post) {
+      try {
+        await supabase
+          .from(POLL_VOTES_TABLE)
+          .delete()
+          .eq("post_id", post.id);
+      } catch {}
+
       const { error } = await supabase
         .from(post.source || "hub_posts")
         .delete()
         .eq("id", post.id);
 
       if (error) throw error;
+
+      try {
+        localStorage.setItem("ownspace_hub_refresh", String(Date.now()));
+      } catch {}
+    }
+
+    async function upsertPollVoteTable(post, optionIndex) {
+      const createdAt = nowIso();
+
+      const snakePayload = {
+        post_id: post.id,
+        user_id: currentUser.id,
+        option_index: optionIndex,
+        created_at: createdAt,
+        updated_at: createdAt
+      };
+
+      const camelPayload = {
+        postId: post.id,
+        userId: currentUser.id,
+        optionIndex: optionIndex,
+        createdAt,
+        updatedAt: createdAt
+      };
+
+      const attempts = [
+        {
+          payload: snakePayload,
+          conflict: "post_id,user_id"
+        },
+        {
+          payload: camelPayload,
+          conflict: "postId,userId"
+        }
+      ];
+
+      let lastError = null;
+
+      for (const attempt of attempts) {
+        try {
+          const { error } = await supabase
+            .from(POLL_VOTES_TABLE)
+            .upsert(attempt.payload, { onConflict: attempt.conflict });
+
+          if (!error) return true;
+
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not save poll vote.");
+    }
+
+    async function voteUsingPostFallback(post, optionIndex) {
+      const oldIndex = getLocalPollVote(post.id);
+
+      if (oldIndex === optionIndex) return true;
+
+      const updatedOptions = post.pollOptions.map((item, index) => {
+        let votes = Number(item.votes || 0) || 0;
+
+        if (Number.isInteger(oldIndex) && oldIndex === index) {
+          votes = Math.max(0, votes - 1);
+        }
+
+        if (index === optionIndex) {
+          votes += 1;
+        }
+
+        return {
+          text: item.text,
+          votes
+        };
+      });
+
+      const updatedAt = nowIso();
+
+      await updatePostById(post.source || "hub_posts", post.id, [
+        {
+          poll_options: updatedOptions,
+          updated_at: updatedAt
+        },
+        {
+          pollOptions: updatedOptions,
+          updatedAt: updatedAt
+        }
+      ]);
+
+      setLocalPollVote(post.id, optionIndex);
+      post.pollOptions = updatedOptions;
+      return true;
+    }
+
+    async function voteOnPoll(post, optionIndex, btn) {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (!post || post.postType !== "poll") return;
+
+      if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= post.pollOptions.length) {
+        alert("Invalid poll option.");
+        return;
+      }
+
+      btn.disabled = true;
+
+      try {
+        if (pollVotesTableReady) {
+          await upsertPollVoteTable(post, optionIndex);
+          setLocalPollVote(post.id, optionIndex);
+        } else {
+          await voteUsingPostFallback(post, optionIndex);
+        }
+
+        try {
+          localStorage.setItem("ownspace_poll_refresh", String(Date.now()));
+          localStorage.setItem("ownspace_hub_refresh", String(Date.now()));
+        } catch {}
+
+        await refreshAll();
+      } catch (err) {
+        console.error("Poll vote failed:", err);
+        alert(err?.message || "Could not save your vote.");
+        btn.disabled = false;
+      }
     }
 
     showComposerBtn.addEventListener("click", () => {
@@ -2171,7 +2665,6 @@
     });
 
     refreshBtn.addEventListener("click", refreshAll);
-    refreshHeroBtn.addEventListener("click", refreshAll);
 
     backBtn.addEventListener("click", () => {
       if (document.referrer) history.back();
@@ -2446,6 +2939,7 @@
       clearTimeout(refreshTimer);
       clearTimeout(badgeRefreshTimer);
       clearRealtimeChannels();
+
       if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     });
 
@@ -2455,23 +2949,44 @@
     });
 
     /*
-      OWNSPACE HUB COMPACT UPDATE:
+      OPTIONAL BUT RECOMMENDED SUPABASE SQL FOR STRONG POLL VOTING:
 
-      FIXED / UPDATED:
-      - Matched compact Nearby page spacing/topbar/panels/bottom nav.
-      - Removed big settings button from hero actions.
-      - Added clean Communities shortcut instead.
-      - Kept admin/approved Hub author composer.
-      - Kept hub_posts fallback insert payloads.
-      - Kept featured/pinned strip, search, tabs, polls, credits, external link, share, hide/delete.
-      - Fixed clear button to ×.
-      - Fixed inbox badge:
-        pending message_requests + truly unread incoming chat_messages only.
-      - Does not count general notifications.
-      - Does not count old incoming messages before your latest outgoing reply.
-      - Added realtime badge refresh for message_requests, chat_threads, chat_messages.
-      - Added realtime hub refresh for hub_posts.
-      - Light theme remains default with dark theme support.
+      create table if not exists public.hub_poll_votes (
+        id uuid primary key default gen_random_uuid(),
+        post_id uuid not null,
+        user_id uuid not null,
+        option_index int not null,
+        created_at timestamptz not null default now(),
+        updated_at timestamptz not null default now(),
+        unique(post_id, user_id)
+      );
+
+      alter table public.hub_poll_votes enable row level security;
+
+      create policy "Users can read hub poll votes"
+      on public.hub_poll_votes
+      for select
+      using (auth.uid() is not null);
+
+      create policy "Users can insert own hub poll vote"
+      on public.hub_poll_votes
+      for insert
+      with check (auth.uid() = user_id);
+
+      create policy "Users can update own hub poll vote"
+      on public.hub_poll_votes
+      for update
+      using (auth.uid() = user_id)
+      with check (auth.uid() = user_id);
+
+      NOTES:
+      - If hub_poll_votes table exists, voting is one vote per account and users can change vote.
+      - If table is missing, page falls back to updating poll_options votes inside hub_posts.
+      - Fallback works for beta but table voting is safer.
+      - Removed duplicate hero Refresh / Feed / Communities buttons.
+      - Top-right refresh remains.
+      - Poll composer supports 2 to 10 options.
+      - Poll can include photo using the same Photo Upload field.
     */
   </script>
 </body>
