@@ -2,11 +2,17 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>OwnSpace - Inbox</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+      -webkit-tap-highlight-color:transparent;
+    }
 
     :root,
     html[data-theme="light"]{
@@ -14,6 +20,7 @@
       --surface:#ffffff;
       --surface-2:#f7f9fd;
       --surface-3:#edf3ff;
+      --glass:rgba(255,255,255,.88);
       --line:rgba(15,23,42,.09);
       --line-soft:rgba(15,23,42,.05);
       --text:#14213d;
@@ -23,9 +30,16 @@
       --yellow:#d59617;
       --red:#e74c66;
       --purple:#7f63ff;
-      --topbar-bg:rgba(255,255,255,.94);
+      --topbar-bg:rgba(255,255,255,.92);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --shadow:0 18px 38px rgba(20,33,61,.08);
+      --soft-shadow:0 8px 18px rgba(20,33,61,.055);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+      --safe-bottom:env(safe-area-inset-bottom, 0px);
     }
 
     html[data-theme="dark"]{
@@ -33,6 +47,7 @@
       --surface:#0c1630;
       --surface-2:#111d3d;
       --surface-3:#15244a;
+      --glass:rgba(12,22,48,.84);
       --line:rgba(255,255,255,.08);
       --line-soft:rgba(255,255,255,.05);
       --text:#ffffff;
@@ -44,130 +59,213 @@
       --purple:#a78bfa;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --shadow:0 18px 38px rgba(0,0,0,.24);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.16);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+      --safe-bottom:env(safe-area-inset-bottom, 0px);
+    }
+
+    html,body{
+      width:100%;
+      min-height:100%;
     }
 
     body{
       background:
-        radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),
-        radial-gradient(circle at 86% 12%, rgba(61,220,132,.06), transparent 22%),
+        radial-gradient(circle at 12% 8%, rgba(76,201,255,.12), transparent 28%),
+        radial-gradient(circle at 86% 10%, rgba(167,139,250,.10), transparent 26%),
+        radial-gradient(circle at 50% 96%, rgba(61,220,132,.08), transparent 24%),
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:6px 6px 82px;
+      padding:8px 8px calc(84px + var(--safe-bottom));
     }
 
-    .app{max-width:760px;margin:0 auto}
+    .app{
+      max-width:860px;
+      margin:0 auto;
+    }
+
     .hidden{display:none!important}
 
     .topbar{
       position:sticky;
       top:0;
       z-index:30;
-      backdrop-filter:blur(14px);
+      backdrop-filter:blur(18px);
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
-      border-radius:14px;
-      padding:5px 6px;
-      margin-bottom:7px;
+      border-radius:20px;
+      padding:8px;
+      margin-bottom:8px;
       display:grid;
-      grid-template-columns:34px 1fr 34px;
+      grid-template-columns:42px 1fr 42px;
       align-items:center;
-      gap:6px;
+      gap:8px;
       box-shadow:var(--shadow);
     }
 
-    .top-center{text-align:center;min-width:0}
+    .top-center{
+      text-align:center;
+      min-width:0;
+    }
 
     .brand{
-      font-size:15.5px;
+      font-size:16px;
       font-weight:950;
       letter-spacing:-.02em;
       line-height:1;
     }
 
     .brand-sub{
-      font-size:9px;
+      font-size:9.5px;
       color:var(--muted);
-      margin-top:1px;
+      margin-top:3px;
+      font-weight:850;
     }
 
     .top-icon-btn{
-      width:34px;
-      height:34px;
+      width:42px;
+      height:42px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:11px;
+      border-radius:15px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
       text-decoration:none;
+      box-shadow:var(--soft-shadow);
     }
 
-    .top-icon-btn svg{width:17px;height:17px;display:block}
+    .top-icon-btn svg{
+      width:19px;
+      height:19px;
+      display:block;
+    }
 
     .inbox-shell{
-      background:var(--surface);
+      background:var(--glass);
       border:1px solid var(--line);
-      border-radius:18px;
+      border-radius:24px;
       overflow:hidden;
       box-shadow:var(--shadow);
+      backdrop-filter:blur(18px);
     }
 
     .inbox-head{
-      padding:9px;
+      padding:11px;
       border-bottom:1px solid var(--line-soft);
-      background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0));
+      background:
+        radial-gradient(circle at 12% 15%, rgba(76,201,255,.10), transparent 32%),
+        radial-gradient(circle at 82% 12%, rgba(167,139,250,.08), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0));
     }
 
     .inbox-head-top{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:8px;
-      margin-bottom:7px;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
     }
 
     .section-title{
-      font-size:15px;
+      font-size:18px;
       font-weight:950;
       line-height:1.15;
-      letter-spacing:-.01em;
+      letter-spacing:-.04em;
+    }
+
+    .section-sub{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.35;
+      margin-top:3px;
+      font-weight:800;
     }
 
     .head-actions{
       display:flex;
-      gap:5px;
+      gap:6px;
       align-items:center;
       flex-shrink:0;
     }
 
     .mini-icon-btn{
-      width:30px;
-      height:30px;
+      width:34px;
+      height:34px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:10px;
+      border-radius:12px;
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
       text-decoration:none;
+      box-shadow:var(--soft-shadow);
     }
 
-    .mini-icon-btn svg{width:14px;height:14px;display:block}
-    .mini-icon-btn.refresh-btn{background:rgba(61,220,132,.12);border-color:rgba(61,220,132,.20)}
-    .mini-icon-btn.info-btn{background:rgba(76,201,255,.12);border-color:rgba(76,201,255,.20)}
+    .mini-icon-btn svg{
+      width:15px;
+      height:15px;
+      display:block;
+    }
+
+    .mini-icon-btn.refresh-btn{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .mini-icon-btn.info-btn{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:6px;
+      margin-bottom:9px;
+    }
+
+    .summary-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:8px;
+      min-height:54px;
+    }
+
+    .summary-label{
+      color:var(--muted);
+      font-size:9.2px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      line-height:1;
+      margin-bottom:5px;
+    }
+
+    .summary-value{
+      color:var(--text);
+      font-size:15px;
+      font-weight:950;
+      line-height:1;
+    }
 
     .filter-tabs{
       display:grid;
       grid-template-columns:repeat(2,1fr);
-      gap:5px;
+      gap:6px;
     }
 
     .filter-tab{
@@ -175,26 +273,30 @@
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:11px;
-      padding:7px 8px;
-      font-size:11px;
+      border-radius:15px;
+      padding:8px 9px;
+      font-size:11.5px;
       font-weight:950;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
-      min-height:31px;
+      gap:7px;
+      min-height:38px;
+      box-shadow:var(--soft-shadow);
     }
 
-    .filter-tab.active{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
+    .filter-tab.active{
+      background:linear-gradient(135deg, rgba(76,201,255,.16), rgba(167,139,250,.11));
+      border-color:rgba(76,201,255,.24);
+    }
 
     .tab-count{
       color:var(--muted);
       font-size:9.5px;
       font-weight:950;
-      min-width:17px;
-      height:17px;
+      min-width:18px;
+      height:18px;
       padding:0 5px;
       border-radius:999px;
       background:var(--surface);
@@ -207,37 +309,46 @@
 
     .filter-tab.active .tab-count{
       color:var(--text);
-      background:rgba(76,201,255,.16);
+      background:var(--blue-soft);
       border-color:rgba(76,201,255,.18);
     }
 
     .message{
       min-height:0;
       font-size:12px;
-      padding:0 9px;
+      padding:0 11px;
       line-height:1.45;
       color:var(--muted);
     }
 
-    .message:not(:empty){padding-top:7px;padding-bottom:2px}
+    .message:not(:empty){
+      padding-top:8px;
+      padding-bottom:2px;
+    }
+
     .message.ok{color:#16a34a}
     .message.err{color:#e11d48}
     html[data-theme="dark"] .message.ok{color:#9cf0bf}
     html[data-theme="dark"] .message.err{color:#ffb3bd}
 
-    .list{display:block}
+    .list{
+      display:grid;
+      gap:8px;
+      padding:10px;
+    }
 
     .loading-box,
     .empty-box{
       text-align:center;
-      padding:18px 10px;
+      padding:20px 12px;
       color:var(--muted);
       background:var(--surface-2);
-      margin:9px;
-      border-radius:14px;
+      margin:10px;
+      border-radius:18px;
       border:1px dashed var(--line);
       font-size:12.5px;
       line-height:1.5;
+      font-weight:850;
     }
 
     .chat-link{
@@ -247,30 +358,62 @@
     }
 
     .inbox-item{
-      padding:9px;
-      border-bottom:1px solid var(--line-soft);
+      position:relative;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:19px;
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.045), rgba(167,139,250,.035)),
+        var(--surface-2);
+      box-shadow:var(--soft-shadow);
+      overflow:hidden;
     }
 
-    .inbox-item:last-child{border-bottom:none}
+    .inbox-item::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:12px;
+      bottom:12px;
+      width:4px;
+      border-radius:0 999px 999px 0;
+      background:linear-gradient(180deg,var(--blue),var(--purple));
+      opacity:.85;
+    }
+
+    .inbox-item.request-card::before{
+      background:linear-gradient(180deg,var(--yellow),var(--green));
+    }
+
+    .inbox-item.unread-card{
+      background:
+        radial-gradient(circle at 92% 18%, rgba(255,93,115,.08), transparent 26%),
+        linear-gradient(135deg, rgba(76,201,255,.08), rgba(167,139,250,.05)),
+        var(--surface-2);
+      border-color:rgba(255,93,115,.16);
+    }
 
     .row{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:10px;
       min-width:0;
     }
 
     .avatar,
     .avatar-placeholder{
-      width:42px;
-      height:42px;
-      border-radius:50%;
+      width:48px;
+      height:48px;
+      border-radius:17px;
       flex-shrink:0;
       border:1px solid var(--line);
       background:var(--surface-3);
+      box-shadow:var(--soft-shadow);
     }
 
-    .avatar{object-fit:cover}
+    .avatar{
+      object-fit:cover;
+    }
 
     .avatar-placeholder{
       display:flex;
@@ -278,10 +421,14 @@
       justify-content:center;
       text-align:center;
       padding:5px;
-      color:var(--muted);
-      font-size:8.5px;
-      font-weight:900;
-      line-height:1.05;
+      color:var(--text);
+      font-size:15px;
+      font-weight:950;
+      line-height:1;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(76,201,255,.24), transparent 38%),
+        linear-gradient(135deg, rgba(167,139,250,.16), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .content{
@@ -294,11 +441,11 @@
       align-items:center;
       justify-content:space-between;
       gap:8px;
-      margin-bottom:2px;
+      margin-bottom:3px;
     }
 
     .name{
-      font-size:13px;
+      font-size:13.5px;
       font-weight:950;
       line-height:1.2;
       display:flex;
@@ -339,30 +486,70 @@
       font-size:10px;
       flex-shrink:0;
       white-space:nowrap;
+      font-weight:850;
+    }
+
+    .identity-line{
+      display:flex;
+      gap:5px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:4px;
+    }
+
+    .identity-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px 6px;
+      border-radius:999px;
+      background:var(--surface-3);
+      border:1px solid var(--line-soft);
+      color:var(--muted);
+      font-size:9.3px;
+      font-weight:950;
+      line-height:1;
+      max-width:150px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .identity-pill.blue{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.18);
+      color:var(--text);
+    }
+
+    .identity-pill.green{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.18);
+      color:var(--text);
     }
 
     .preview-row{
       display:flex;
       align-items:center;
-      gap:6px;
+      gap:7px;
       min-width:0;
     }
 
     .preview{
       color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
+      font-size:12.3px;
+      line-height:1.38;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       min-width:0;
       flex:1;
+      font-weight:820;
     }
 
     .unread-pill{
-      min-width:17px;
-      height:17px;
-      padding:0 5px;
+      min-width:19px;
+      height:19px;
+      padding:0 6px;
       border-radius:999px;
       background:var(--red);
       color:#fff;
@@ -373,54 +560,72 @@
       justify-content:center;
       flex-shrink:0;
       line-height:1;
+      box-shadow:0 0 0 4px rgba(255,93,115,.12);
     }
 
     .request-note{
       color:var(--muted);
       font-size:11px;
       line-height:1.35;
-      margin-top:3px;
+      margin-top:4px;
+      font-weight:820;
     }
 
     .request-actions{
       display:flex;
-      gap:6px;
+      gap:7px;
       flex-wrap:wrap;
-      margin-top:8px;
-      padding-left:50px;
+      margin-top:9px;
+      padding-left:58px;
     }
 
     .action-btn{
       border:none;
       cursor:pointer;
       font-weight:950;
-      border-radius:10px;
-      padding:7px 9px;
-      font-size:10.5px;
+      border-radius:13px;
+      padding:8px 10px;
+      font-size:10.8px;
       display:inline-flex;
       align-items:center;
-      gap:5px;
+      gap:6px;
       text-decoration:none;
-      background:var(--surface-2);
+      background:var(--surface-3);
       color:var(--text);
       border:1px solid var(--line);
-      min-height:29px;
+      min-height:32px;
     }
 
-    .action-btn svg{width:13px;height:13px;display:block}
-    .action-btn:disabled{opacity:.6;cursor:not-allowed}
-    .btn-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .btn-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .action-btn svg{
+      width:13px;
+      height:13px;
+      display:block;
+    }
+
+    .action-btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .btn-green{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .btn-red{
+      background:var(--red-soft);
+      border-color:rgba(255,93,115,.22);
+    }
 
     .bottom-nav{
       position:fixed;
       left:50%;
       transform:translateX(-50%);
       bottom:8px;
-      width:min(760px, calc(100% - 12px));
+      width:min(860px, calc(100% - 16px));
       background:var(--nav-bg);
       border:1px solid var(--line);
-      border-radius:16px;
+      border-radius:18px;
       padding:5px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
@@ -439,7 +644,7 @@
       justify-content:center;
       gap:2px;
       padding:5px 3px;
-      border-radius:12px;
+      border-radius:13px;
       font-size:9.5px;
       font-weight:850;
       min-height:43px;
@@ -449,7 +654,10 @@
       position:relative;
     }
 
-    .nav-link.active{background:rgba(76,201,255,.14);color:var(--text)}
+    .nav-link.active{
+      background:var(--blue-soft);
+      color:var(--text);
+    }
 
     .icon-svg{
       width:17px;
@@ -460,7 +668,11 @@
       line-height:1;
     }
 
-    .icon-svg svg{width:17px;height:17px;display:block}
+    .icon-svg svg{
+      width:17px;
+      height:17px;
+      display:block;
+    }
 
     .nav-badge{
       position:absolute;
@@ -484,8 +696,8 @@
     .modal-backdrop{
       position:fixed;
       inset:0;
-      background:rgba(0,0,0,.42);
-      backdrop-filter:blur(8px);
+      background:rgba(0,0,0,.44);
+      backdrop-filter:blur(10px);
       z-index:80;
       display:flex;
       align-items:flex-end;
@@ -494,11 +706,11 @@
     }
 
     .modal{
-      width:min(760px,100%);
+      width:min(860px,100%);
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:20px;
-      box-shadow:0 22px 60px rgba(0,0,0,.26);
+      border-radius:24px;
+      box-shadow:0 22px 60px rgba(0,0,0,.28);
       overflow:hidden;
     }
 
@@ -507,33 +719,41 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding:12px 12px 9px;
+      padding:13px 13px 10px;
       border-bottom:1px solid var(--line-soft);
+      background:
+        radial-gradient(circle at 12% 15%, rgba(76,201,255,.09), transparent 32%),
+        var(--surface);
     }
 
     .modal-title{
-      font-size:15px;
+      font-size:16px;
       font-weight:950;
+      letter-spacing:-.02em;
     }
 
     .modal-close{
-      width:32px;
-      height:32px;
+      width:34px;
+      height:34px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      border-radius:11px;
+      border-radius:12px;
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
     }
 
-    .modal-close svg{width:15px;height:15px;display:block}
+    .modal-close svg{
+      width:15px;
+      height:15px;
+      display:block;
+    }
 
     .modal-body{
-      padding:11px;
+      padding:12px;
       display:grid;
       gap:8px;
     }
@@ -541,37 +761,111 @@
     .info-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
+      border-radius:16px;
+      padding:11px;
     }
 
     .info-title{
-      font-size:12px;
+      font-size:12.5px;
       font-weight:950;
-      margin-bottom:4px;
+      margin-bottom:5px;
     }
 
     .info-text{
       color:var(--muted);
       font-size:12px;
-      line-height:1.45;
+      line-height:1.48;
     }
 
     @media(max-width:700px){
-      body{padding:6px 6px 82px}
-      .app{max-width:760px}
-      .brand{font-size:15.5px}
-      .request-actions{padding-left:0}
-      .filter-tab{font-size:10.5px;padding:7px 6px}
-      .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
-      .nav-badge{right:8px}
+      body{
+        padding:6px 6px calc(82px + var(--safe-bottom));
+      }
+
+      .app{
+        max-width:860px;
+      }
+
+      .topbar{
+        border-radius:18px;
+        grid-template-columns:40px 1fr 40px;
+        padding:7px;
+      }
+
+      .top-icon-btn{
+        width:40px;
+        height:40px;
+      }
+
+      .brand{
+        font-size:15.5px;
+      }
+
+      .summary-grid{
+        grid-template-columns:repeat(3,1fr);
+        gap:5px;
+      }
+
+      .summary-card{
+        padding:7px 5px;
+      }
+
+      .summary-label{
+        font-size:8.4px;
+      }
+
+      .summary-value{
+        font-size:13.5px;
+      }
+
+      .request-actions{
+        padding-left:0;
+      }
+
+      .filter-tab{
+        font-size:10.8px;
+        padding:8px 6px;
+      }
+
+      .bottom-nav{
+        width:calc(100% - 12px);
+        padding:5px;
+        gap:4px;
+      }
+
+      .nav-link{
+        font-size:9.2px;
+        padding:5px 2px;
+        min-height:41px;
+      }
+
+      .nav-badge{
+        right:8px;
+      }
     }
 
     @media(max-width:390px){
-      .filter-tab{font-size:10px}
-      .avatar,.avatar-placeholder{width:40px;height:40px}
-      .name{font-size:12.5px}
-      .preview{font-size:11.5px}
+      .filter-tab{
+        font-size:10.2px;
+      }
+
+      .avatar,
+      .avatar-placeholder{
+        width:44px;
+        height:44px;
+      }
+
+      .name{
+        font-size:13px;
+      }
+
+      .preview{
+        font-size:11.8px;
+      }
+
+      .identity-pill{
+        max-width:118px;
+      }
     }
   </style>
 </head>
@@ -587,7 +881,7 @@
 
       <div class="top-center">
         <div class="brand">OwnSpace</div>
-        <div class="brand-sub">Inbox</div>
+        <div class="brand-sub">Private rooms</div>
       </div>
 
       <a href="profile.html" class="top-icon-btn" aria-label="Profile">
@@ -601,7 +895,10 @@
     <div class="inbox-shell">
       <div class="inbox-head">
         <div class="inbox-head-top">
-          <div class="section-title">Messages</div>
+          <div>
+            <div class="section-title">Inbox</div>
+            <div class="section-sub">Accepted rooms and message requests.</div>
+          </div>
 
           <div class="head-actions">
             <button id="infoBtn" class="mini-icon-btn info-btn" type="button" aria-label="Info">
@@ -623,9 +920,26 @@
           </div>
         </div>
 
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Rooms</div>
+            <div id="roomsSummary" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">Unread</div>
+            <div id="unreadSummary" class="summary-value">0</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-label">Requests</div>
+            <div id="requestsSummary" class="summary-value">0</div>
+          </div>
+        </div>
+
         <div class="filter-tabs">
           <button id="chatsTabBtn" class="filter-tab active" type="button">
-            <span>Chats</span>
+            <span>Private Rooms</span>
             <span id="chatsTabCount" class="tab-count">0</span>
           </button>
 
@@ -646,7 +960,7 @@
   <div id="infoModalWrap" class="modal-backdrop hidden">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
       <div class="modal-head">
-        <div id="infoModalTitle" class="modal-title">Inbox Info</div>
+        <div id="infoModalTitle" class="modal-title">Private Room Inbox</div>
         <button id="closeInfoBtn" class="modal-close" type="button" aria-label="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 6L6 18"></path>
@@ -657,17 +971,17 @@
 
       <div class="modal-body">
         <div class="info-card">
-          <div class="info-title">Chats</div>
-          <div class="info-text">Accepted conversations show here. Tap any chat row to open it.</div>
+          <div class="info-title">Private Rooms</div>
+          <div class="info-text">Accepted conversations appear as private rooms. Tap a room to open the new OwnSpace chat design.</div>
         </div>
 
         <div class="info-card">
-          <div class="info-title">Requests</div>
-          <div class="info-text">Message requests stay here until you accept or decline them.</div>
+          <div class="info-title">Message Requests</div>
+          <div class="info-text">New people can send one respectful request message. You can accept or decline before full chat opens.</div>
         </div>
 
         <div class="info-card">
-          <div class="info-title">Badge logic</div>
+          <div class="info-title">Badge Logic</div>
           <div class="info-text">Inbox badge counts pending message requests and unread incoming chat messages only. General notifications are ignored.</div>
         </div>
       </div>
@@ -742,6 +1056,10 @@
     const requestsTabCount = document.getElementById("requestsTabCount");
     const inboxBadge = document.getElementById("inboxBadge");
 
+    const roomsSummary = document.getElementById("roomsSummary");
+    const unreadSummary = document.getElementById("unreadSummary");
+    const requestsSummary = document.getElementById("requestsSummary");
+
     const pageMessage = document.getElementById("pageMessage");
     const loadingBox = document.getElementById("loadingBox");
     const listWrap = document.getElementById("listWrap");
@@ -815,6 +1133,15 @@
       const div = document.createElement("div");
       div.textContent = text == null ? "" : String(text);
       return div.innerHTML;
+    }
+
+    function firstLetters(name) {
+      return String(name || "OS")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(x => x.charAt(0).toUpperCase())
+        .join("") || "OS";
     }
 
     function formatDate(ts) {
@@ -1026,6 +1353,10 @@
       chatsTabCount.textContent = unreadChats > 0 ? String(unreadChats) : String(chats.length);
       requestsTabCount.textContent = String(requests.length);
 
+      roomsSummary.textContent = String(chats.length);
+      unreadSummary.textContent = String(unreadChats);
+      requestsSummary.textContent = String(requests.length);
+
       if (inboxTotal > 0) {
         inboxBadge.textContent = inboxTotal > 99 ? "99+" : String(inboxTotal);
         inboxBadge.classList.remove("hidden");
@@ -1060,7 +1391,7 @@
         return `<img class="avatar" src="${escapeHtml(profile.photoURL)}" alt="User photo">`;
       }
 
-      return `<div class="avatar-placeholder">No photo</div>`;
+      return `<div class="avatar-placeholder">${escapeHtml(firstLetters(profile.displayName))}</div>`;
     }
 
     function buildVerifiedHtml(profile) {
@@ -1080,7 +1411,7 @@
       }
 
       if (thread.starterText) return thread.starterText;
-      return "Open chat";
+      return "Open private room";
     }
 
     async function safeSelect(table, buildQuery) {
@@ -1507,7 +1838,7 @@
         .sort((a, b) => tsMs(b.lastMessageAt || b.createdAt) - tsMs(a.lastMessageAt || a.createdAt));
 
       if (!rows.length) {
-        showEmpty("No chats yet.");
+        showEmpty("No private rooms yet.");
         return;
       }
 
@@ -1518,8 +1849,16 @@
         const unreadCount = unreadByThreadMap.get(thread.id) || 0;
 
         const item = document.createElement("a");
-        item.className = "chat-link inbox-item";
+        item.className = `chat-link inbox-item ${unreadCount > 0 ? "unread-card" : ""}`;
         item.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
+
+        const usernameHtml = profile.username
+          ? `<span class="identity-pill blue">@${escapeHtml(profile.username)}</span>`
+          : `<span class="identity-pill">OwnSpace member</span>`;
+
+        const roomStatus = unreadCount > 0
+          ? `<span class="identity-pill green">Unread</span>`
+          : `<span class="identity-pill">Private room</span>`;
 
         item.innerHTML = `
           <div class="row">
@@ -1532,6 +1871,11 @@
                   ${buildVerifiedHtml(profile)}
                 </div>
                 <div class="time">${escapeHtml(formatDate(thread.lastMessageAt || thread.createdAt))}</div>
+              </div>
+
+              <div class="identity-line">
+                ${usernameHtml}
+                ${roomStatus}
               </div>
 
               <div class="preview-row">
@@ -1559,7 +1903,7 @@
 
         if (img) {
           img.addEventListener("error", () => {
-            img.outerHTML = `<div class="avatar-placeholder">No photo</div>`;
+            img.outerHTML = `<div class="avatar-placeholder">${escapeHtml(firstLetters(profile.displayName))}</div>`;
           });
         }
 
@@ -1583,7 +1927,11 @@
       rows.forEach(requestModel => {
         const profile = getProfile(requestModel.requesterId);
         const item = document.createElement("div");
-        item.className = "inbox-item";
+        item.className = "inbox-item request-card";
+
+        const usernameHtml = profile.username
+          ? `<span class="identity-pill blue">@${escapeHtml(profile.username)}</span>`
+          : `<span class="identity-pill">New request</span>`;
 
         item.innerHTML = `
           <div class="row">
@@ -1598,8 +1946,13 @@
                 <div class="time">${escapeHtml(formatDate(requestModel.createdAt))}</div>
               </div>
 
+              <div class="identity-line">
+                ${usernameHtml}
+                <span class="identity-pill green">Needs review</span>
+              </div>
+
               <div class="preview">${escapeHtml(requestModel.text || "Message request")}</div>
-              <div class="request-note">Accept to start a private chat.</div>
+              <div class="request-note">Accept only if you feel comfortable starting a private room.</div>
             </div>
           </div>
 
@@ -1619,7 +1972,7 @@
 
         if (img) {
           img.addEventListener("error", () => {
-            img.outerHTML = `<div class="avatar-placeholder">No photo</div>`;
+            img.outerHTML = `<div class="avatar-placeholder">${escapeHtml(firstLetters(profile.displayName))}</div>`;
           });
         }
 
@@ -1845,7 +2198,7 @@
         updateCounts();
         announceBadgeRefresh();
 
-        setPageMessage("Request accepted. Opening chat...", "ok");
+        setPageMessage("Request accepted. Opening private room...", "ok");
         window.location.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
       } catch (err) {
         console.error(err);
@@ -1912,7 +2265,7 @@
 
       if (showSpinner) {
         setPageMessage("");
-        showLoading("Loading inbox...");
+        showLoading("Loading private rooms...");
       }
 
       try {
@@ -2073,22 +2426,24 @@
     initPage();
 
     /*
-      OWNSPACE INBOX COMPACT PREMIUM UPDATE:
+      OWNSPACE INBOX PRIVATE ROOM REBUILD:
 
-      UI FIXED:
-      - Slimmed topbar and bottom nav to match Feed/Profile/Member/Post.
-      - Made message rows smaller and more premium.
-      - Made avatar, name, username, time, badges, tabs, and action buttons compact.
-      - Removed heavy spacing from header, loading boxes, empty boxes, modal, and requests.
-      - Inbox badge class now matches the newer pages and hides cleanly when count is 0.
+      UI UPDATED:
+      - Rebuilt inbox to match new chat.html private-room design.
+      - Removed flat WhatsApp-style list feeling.
+      - Added glass shell, premium cards, room accent bars, summary cards.
+      - Chats are now called Private Rooms.
+      - Requests are cleaner and more cautious/respectful.
+      - Avatars now show initials instead of bad “No photo” text.
+      - Bottom nav matches newer OwnSpace pages.
 
       LOGIC PRESERVED:
       - Chats tab shows accepted chat_threads.
       - Requests tab shows pending message_requests.
-      - Opening a chat marks incoming chat_messages as read before redirect.
-      - Opening chat also marks matching notifications as read.
+      - Opening a room marks incoming chat_messages as read before redirect.
+      - Opening a room also marks matching notifications as read.
       - Accepting/declining request marks request notifications as read.
-      - Live refresh still listens to chat_threads, chat_messages, message_requests, notifications, public_profiles, and users.
+      - Live refresh listens to chat_threads, chat_messages, message_requests, notifications, public_profiles, and users.
 
       BADGE RULE:
       - Inbox badge counts ONLY:
