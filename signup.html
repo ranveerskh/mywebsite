@@ -215,6 +215,23 @@
       font-weight:950;
     }
 
+    .beta-box{
+      margin:12px 0;
+      background:var(--yellow-soft);
+      border:1px solid rgba(245,185,66,.24);
+      border-radius:15px;
+      padding:11px;
+      color:var(--text);
+      font-size:12px;
+      line-height:1.48;
+    }
+
+    .beta-box strong{
+      display:block;
+      margin-bottom:5px;
+      font-weight:950;
+    }
+
     .form{
       display:grid;
       gap:11px;
@@ -440,6 +457,11 @@
         You are responsible for what you post, share, message, and create.
       </div>
 
+      <div class="beta-box">
+        <strong>Private beta notice</strong>
+        OwnSpace is currently in private beta. We are still testing and improving the app. Some features may not work perfectly, pages may change, and beta data may be reset, removed, or lost before public release. Please do not store anything important here during beta.
+      </div>
+
       <form id="signupForm" class="form">
         <div class="section-title">Profile</div>
 
@@ -451,7 +473,7 @@
         <div class="field">
           <label for="username">Username</label>
           <input type="text" id="username" placeholder="Example: ranveer_94" required />
-          <div class="field-note">3–20 characters. Letters, numbers, dot and underscore only. If taken, a close variation will be used.</div>
+          <div class="field-note">3â20 characters. Letters, numbers, dot and underscore only. If taken, a close variation will be used.</div>
         </div>
 
         <div class="field">
@@ -520,6 +542,13 @@
         <div class="section-title">Required safety agreements</div>
 
         <div class="check-row">
+          <input type="checkbox" id="betaAccepted" required />
+          <label for="betaAccepted">
+            I understand OwnSpace is in private beta, may not be stable, and my beta account, content, messages, posts, or other data may be changed, reset, removed, or lost before public release.
+          </label>
+        </div>
+
+        <div class="check-row">
           <input type="checkbox" id="isAdult" required />
           <label for="isAdult">I confirm that I am 18 years old or older.</label>
         </div>
@@ -582,6 +611,7 @@
     import { supabase } from "./supabase.js";
 
     const CURRENT_TERMS_VERSION = "2026-04-25";
+    const CURRENT_BETA_VERSION = "private-beta-2026-04-29";
 
     const signupForm = document.getElementById("signupForm");
     const signupBtn = document.getElementById("signupBtn");
@@ -848,6 +878,11 @@
         is_verified: false,
         moderation_status: "active",
 
+        app_stage: "private_beta",
+        beta_notice_accepted: true,
+        beta_notice_accepted_at: acceptedAt,
+        beta_notice_version: CURRENT_BETA_VERSION,
+
         age_confirmed: true,
         age_confirmed_at: acceptedAt,
 
@@ -891,6 +926,11 @@
         city_visible: payload.cityVisible,
         location_visibility: showInNearby ? "city" : "hidden",
         show_in_nearby: showInNearby,
+
+        app_stage: "private_beta",
+        beta_notice_accepted: true,
+        beta_notice_accepted_at: acceptedAt,
+        beta_notice_version: CURRENT_BETA_VERSION,
 
         is_private: payload.isPrivate,
         bio: "",
@@ -954,6 +994,11 @@
         verification_badge: null,
         moderation_status: "active",
 
+        app_stage: "private_beta",
+        beta_notice_accepted: true,
+        beta_notice_accepted_at: acceptedAt,
+        beta_notice_version: CURRENT_BETA_VERSION,
+
         trust_score: 50,
         points_balance: 0,
 
@@ -977,6 +1022,11 @@
         city_visible: payload.cityVisible,
         location_visibility: showInNearby ? "city" : "hidden",
         show_in_nearby: showInNearby,
+
+        app_stage: "private_beta",
+        beta_notice_accepted: true,
+        beta_notice_accepted_at: acceptedAt,
+        beta_notice_version: CURRENT_BETA_VERSION,
 
         is_private: payload.isPrivate,
         bio: "",
@@ -1077,6 +1127,7 @@
 
       const cityVisible = document.getElementById("cityVisible").checked;
 
+      const betaAccepted = document.getElementById("betaAccepted").checked;
       const isAdult = document.getElementById("isAdult").checked;
       const termsAccepted = document.getElementById("termsAccepted").checked;
       const privacyAccepted = document.getElementById("privacyAccepted").checked;
@@ -1093,7 +1144,7 @@
       document.getElementById("username").value = normalizedRequested;
 
       if (!isValidUsername(normalizedRequested)) {
-        setMessage("Username must be 3–20 characters and only use letters, numbers, dot or underscore.", "error");
+        setMessage("Username must be 3â20 characters and only use letters, numbers, dot or underscore.", "error");
         return;
       }
 
@@ -1106,6 +1157,11 @@
 
       if (nearbyVisibility === "on" && !(city && province && country)) {
         setMessage("Nearby Visibility needs city, state/province, and country.", "error");
+        return;
+      }
+
+      if (!betaAccepted) {
+        setMessage("Private beta notice must be accepted.", "error");
         return;
       }
 
@@ -1145,6 +1201,11 @@
               country,
               nearby_visibility: nearbyVisibility,
               show_in_nearby: nearbyVisibility === "on",
+
+              app_stage: "private_beta",
+              beta_notice_accepted: true,
+              beta_notice_accepted_at: acceptedAt,
+              beta_notice_version: CURRENT_BETA_VERSION,
 
               age_confirmed: true,
               age_confirmed_at: acceptedAt,
@@ -1224,18 +1285,26 @@
     redirectIfLoggedIn();
 
     /*
-      OWNSPACE SIGNUP UPDATE:
+      OWNSPACE SIGNUP BETA RELEASE UPDATE:
 
       ADDED:
-      - State / Province field.
-      - Country field.
-      - Nearby Visibility On / Off.
-      - Full location validation when Nearby is On.
-      - Saves city/province/state/country/location_search where columns exist.
-      - Saves show_in_nearby true/false.
-      - Saves nearby_visibility on/off where column exists.
-      - Keeps fallback-safe database writes if some columns do not exist yet.
-      - Light theme default, dark theme still supported.
+      - Private beta notice box near the top of signup.
+      - Required beta acceptance checkbox.
+      - Saves beta_notice_accepted / beta_notice_accepted_at / beta_notice_version in Auth metadata.
+      - Tries to save beta notice fields in users and public_profiles when columns exist.
+      - Message clearly tells beta users:
+        OwnSpace is still being tested.
+        Features/pages may change.
+        App may not be stable until public release.
+        Beta data/content/messages may be reset, removed, changed, or lost before public release.
+        Users should not store important data during beta.
+
+      KEPT:
+      - Same current signup theme.
+      - Same 18+ checkbox.
+      - Same Terms / Privacy / Guidelines / Content Policy checkboxes.
+      - Same Nearby Visibility, city/province/country fields.
+      - Same fallback-safe Supabase writes.
     */
   </script>
 </body>
