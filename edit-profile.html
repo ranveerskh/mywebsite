@@ -685,7 +685,7 @@
         <div class="head">
           <div>
             <div class="head-title">Edit Your Profile</div>
-            <div class="head-sub">Update public info, photo, links, location and nearby visibility.</div>
+            <div class="head-sub">Update public info, account email, photo, links, location and nearby visibility.</div>
           </div>
         </div>
 
@@ -693,7 +693,7 @@
           <span class="chip chip-blue">Photo upload</span>
           <span class="chip chip-green">Profile sync</span>
           <span class="chip chip-purple">2 profile links</span>
-          <span class="chip chip-yellow">Nearby support</span>
+          <span class="chip chip-yellow">Email edit</span>
         </div>
 
         <div class="quick-actions">
@@ -720,6 +720,17 @@
         </div>
 
         <form id="profileForm" class="form">
+          <div class="section">
+            <div class="section-title">Account Email</div>
+            <div class="section-sub">This is your login email. Changing it may require email confirmation.</div>
+
+            <div class="field">
+              <label class="label" for="accountEmail">Email Address</label>
+              <input type="email" id="accountEmail" class="input" placeholder="your@email.com" required />
+              <div class="small-note">If Supabase email confirmation is enabled, check your new email inbox after saving.</div>
+            </div>
+          </div>
+
           <div class="section">
             <div class="section-title">Profile Photo</div>
             <div class="section-sub">Upload a clear profile photo. You can remove or replace it anytime.</div>
@@ -756,7 +767,7 @@
             <div class="field">
               <label class="label" for="username">Username</label>
               <input type="text" id="username" class="input" placeholder="Choose a unique username" required />
-              <div class="username-note">3â20 characters. Use letters, numbers, dot and underscore. Example: member_24</div>
+              <div class="username-note">3–20 characters. Use letters, numbers, dot and underscore. Example: member_24</div>
               <div id="usernameStatus" class="username-status"></div>
             </div>
 
@@ -974,6 +985,7 @@
     const inboxBadge = document.getElementById("inboxBadge");
 
     const emailText = document.getElementById("emailText");
+    const accountEmailInput = document.getElementById("accountEmail");
     const verifiedLink = document.getElementById("verifiedLink");
     const nearbyStatusText = document.getElementById("nearbyStatusText");
 
@@ -1007,6 +1019,7 @@
     let currentUser = null;
     let verifiedStatus = false;
     let originalUsernameLower = "";
+    let originalEmailLower = "";
     let originalLocationKey = "";
     let originalLat = null;
     let originalLng = null;
@@ -1085,6 +1098,14 @@
 
     function normalizeText(value) {
       return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizeEmail(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
     }
 
     function titleText(value) {
@@ -1693,8 +1714,6 @@
       }
 
       currentUser = authData.user;
-      emailText.textContent = currentUser.email || "-";
-      scheduleInboxBadgeRefresh(150);
 
       try {
         const [userRes, publicRes] = await Promise.all([
@@ -1708,6 +1727,13 @@
         const userData = userRes.data || {};
         const publicData = publicRes.data || {};
         const merged = { ...publicData, ...userData };
+
+        const authEmail = currentUser.email || getField(merged, ["email"]) || "";
+        originalEmailLower = normalizeEmail(authEmail);
+        accountEmailInput.value = authEmail;
+        emailText.textContent = authEmail || "-";
+
+        scheduleInboxBadgeRefresh(150);
 
         const links = extractLinksToLoad(merged);
 
@@ -1790,6 +1816,7 @@
 
       if (!currentUser) return;
 
+      const accountEmail = normalizeEmail(accountEmailInput.value);
       const displayName = displayNameInput.value.trim();
       const username = normalizeUsername(usernameInput.value);
       const city = cityInput.value.trim();
@@ -1815,6 +1842,16 @@
 
       if (!link1) link1Label = "";
       if (!link2) link2Label = "";
+
+      if (!accountEmail) {
+        showMessage("Email is required.", "error");
+        return;
+      }
+
+      if (!isValidEmail(accountEmail)) {
+        showMessage("Please enter a valid email address.", "error");
+        return;
+      }
 
       if (!displayName) {
         showMessage("Display name is required.", "error");
@@ -1886,6 +1923,26 @@
           finalPhotoURL = uploadResult.publicUrl;
         }
 
+        const emailChanged = accountEmail && accountEmail !== originalEmailLower;
+
+        if (emailChanged) {
+          showMessage("Requesting email change...", "success");
+
+          const { data: emailUpdateData, error: emailUpdateError } = await supabase.auth.updateUser({
+            email: accountEmail,
+            data: {
+              display_name: displayName,
+              photo_url: finalPhotoURL
+            }
+          });
+
+          if (emailUpdateError) throw emailUpdateError;
+
+          if (emailUpdateData?.user) {
+            currentUser = emailUpdateData.user;
+          }
+        }
+
         if (originalUsernameLower && originalUsernameLower !== username) {
           const { error: deleteOldUsernameError } = await supabase
             .from("usernames")
@@ -1940,7 +1997,8 @@
 
         const userFullPayload = {
           ...basePayload,
-          email: currentUser.email || "",
+          email: accountEmail,
+          pending_email: emailChanged ? accountEmail : "",
           display_name_lower: displayName.toLowerCase(),
           username_lower: username,
           real_name: currentRealName || "",
@@ -1965,6 +2023,7 @@
 
         const compatibilityPayload = {
           uid: currentUser.id,
+          email: accountEmail,
           display_name: displayName,
           username,
           bio,
@@ -1982,6 +2041,7 @@
 
         const minimalPayload = {
           uid: currentUser.id,
+          email: accountEmail,
           display_name: displayName,
           username,
           bio,
@@ -2008,18 +2068,21 @@
           minimalPayload
         ]);
 
-        const { error: authUpdateError } = await supabase.auth.updateUser({
-          data: {
-            display_name: displayName,
-            photo_url: finalPhotoURL
-          }
-        });
+        if (!emailChanged) {
+          const { error: authUpdateError } = await supabase.auth.updateUser({
+            data: {
+              display_name: displayName,
+              photo_url: finalPhotoURL
+            }
+          });
 
-        if (authUpdateError) {
-          console.error("Auth metadata update warning:", authUpdateError);
+          if (authUpdateError) {
+            console.error("Auth metadata update warning:", authUpdateError);
+          }
         }
 
         originalUsernameLower = username;
+        originalEmailLower = accountEmail;
         originalLocationKey = locationKey(city, province, country);
         originalLat = latValue;
         originalLng = lngValue;
@@ -2031,10 +2094,16 @@
         clearSelectedPhotoObjectUrl();
 
         nearbyStatusText.textContent = nearbyStatusLabel(showInNearby, nearbyDiscoveryMode);
-        emailText.textContent = currentUser.email || "-";
+        emailText.textContent = accountEmail || "-";
         showPreview(currentPhotoURL);
         setUsernameStatus("Username saved.", true);
-        showMessage("Profile updated successfully.", "success");
+
+        if (emailChanged) {
+          showMessage("Profile saved. Check your new email inbox to confirm the email change if confirmation is enabled.", "success");
+        } else {
+          showMessage("Profile updated successfully.", "success");
+        }
+
         announceProfileRefresh();
         scheduleInboxBadgeRefresh(120);
       } catch (error) {
@@ -2065,13 +2134,19 @@
     loadProfilePage();
 
     /*
-      OWNSPACE EDIT PROFILE COMPACT UPDATE:
+      OWNSPACE EDIT PROFILE UPDATE:
+
+      ADDED:
+      - Account Email section.
+      - Email validation.
+      - Supabase Auth email update using supabase.auth.updateUser({ email }).
+      - Profile users.email sync.
+      - Confirmation note if Supabase requires email confirmation.
 
       UI:
-      - Matched Settings compact premium style.
-      - Smaller topbar, cards, form sections, photo area, inputs, buttons, and bottom nav.
-      - Kept clean SVG icons and light theme default.
-      - Reduced page height/clutter on mobile.
+      - Compact OwnSpace style preserved.
+      - Light theme default with dark theme support.
+      - Email edit added without changing bottom nav.
 
       LOGIC PRESERVED:
       - Supabase profile load/save.
@@ -2082,11 +2157,7 @@
       - Two profile links.
       - Gender, private profile and visibility toggles.
       - Auth metadata update.
-      - Inbox badge counts only pending message_requests + unread chat_messages.
-
-      EXTRA FIX:
-      - Theme now also reads old bwTheme fallback.
-      - After saving, sends OwnSpace refresh events for profile, nearby and badges.
+      - Inbox badge counts pending message_requests + unread chat_messages.
     */
   </script>
 </body>
