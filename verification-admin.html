@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OwnSpace - Verification Admin</title>
+  <title>OwnSpace - Verification Review</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 
     :root,
     html[data-theme="light"]{
@@ -25,7 +25,13 @@
       --red:#e74c66;
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --soft-shadow:0 6px 14px rgba(20,33,61,.045);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     html[data-theme="dark"]{
@@ -44,20 +50,26 @@
       --red:#ff5d73;
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
+      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.12);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     body{
       background:
-        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
-        radial-gradient(circle at 86% 12%, rgba(167,139,250,.10), transparent 24%),
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.065), transparent 24%),
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:10px 10px 108px;
+      padding:6px 6px 82px;
     }
 
-    .app{max-width:980px;margin:0 auto}
+    .app{max-width:860px;margin:0 auto}
     .hidden{display:none!important}
 
     .topbar{
@@ -67,23 +79,23 @@
       backdrop-filter:blur(14px);
       background:var(--topbar-bg);
       border:1px solid var(--line-soft);
-      border-radius:18px;
-      padding:7px 9px;
-      margin-bottom:10px;
+      border-radius:14px;
+      padding:5px 6px;
+      margin-bottom:7px;
       display:grid;
-      grid-template-columns:42px 1fr 42px;
+      grid-template-columns:34px 1fr 34px;
       align-items:center;
-      gap:8px;
+      gap:6px;
       box-shadow:var(--shadow);
     }
 
     .top-icon-btn{
-      width:42px;
-      height:42px;
+      width:34px;
+      height:34px;
       border:none;
       background:var(--surface-2);
       color:var(--text);
-      border-radius:13px;
+      border-radius:11px;
       cursor:pointer;
       border:1px solid var(--line);
       display:flex;
@@ -93,91 +105,120 @@
       position:relative;
     }
 
+    .top-icon-btn.admin-top{
+      background:var(--purple-soft);
+      border-color:rgba(167,139,250,.22);
+    }
+
     .top-icon-btn svg{
-      width:19px;
-      height:19px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .top-center{text-align:center;min-width:0}
 
     .brand{
-      font-size:18px;
+      font-size:15.5px;
       font-weight:950;
-      line-height:1.05;
+      line-height:1;
       letter-spacing:-.02em;
     }
 
     .brand-sub{
-      font-size:10px;
+      font-size:9px;
       color:var(--muted);
-      margin-top:2px;
+      margin-top:1px;
+      font-weight:800;
     }
 
     .panel{
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:13px;
-      margin-bottom:10px;
+      border-radius:16px;
+      padding:8px;
+      margin-bottom:7px;
       box-shadow:var(--shadow);
     }
 
+    .hero-card{
+      background:
+        radial-gradient(circle at 88% 12%, rgba(167,139,250,.10), transparent 28%),
+        linear-gradient(135deg, rgba(76,201,255,.10), rgba(167,139,250,.06)),
+        var(--surface);
+    }
+
+    .hero-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:start;
+      margin-bottom:7px;
+    }
+
     .hero-title{
-      font-size:20px;
+      font-size:16px;
       font-weight:950;
-      line-height:1.2;
+      line-height:1.15;
       letter-spacing:-.03em;
-      margin-bottom:6px;
+      margin-bottom:2px;
     }
 
     .hero-sub{
       color:var(--muted);
-      font-size:13px;
-      line-height:1.55;
-      margin-bottom:11px;
+      font-size:10.5px;
+      line-height:1.38;
     }
 
-    .chip-row{
-      display:flex;
-      gap:7px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .chip{
+    .mode-pill{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
-      padding:6px 10px;
+      padding:6px 8px;
       border-radius:999px;
-      font-size:11px;
+      font-size:10.2px;
+      font-weight:950;
+      border:1px solid rgba(167,139,250,.22);
+      background:var(--purple-soft);
+      color:var(--text);
+      white-space:nowrap;
+    }
+
+    .chip-row{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:5px;
+      margin-bottom:7px;
+    }
+
+    .chip{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 5px;
+      border-radius:11px;
+      font-size:9.5px;
       font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-2);
       color:var(--text);
       line-height:1;
+      min-height:30px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .chip svg{
-      width:13px;
-      height:13px;
-      display:block;
-      flex-shrink:0;
-    }
-
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .chip-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:var(--red-soft);border-color:rgba(255,93,115,.20)}
 
     .filters{
       display:grid;
-      grid-template-columns:1fr 170px 170px;
-      gap:9px;
-      margin-top:10px;
+      grid-template-columns:1fr 145px 145px;
+      gap:7px;
     }
 
     .input,
@@ -186,32 +227,35 @@
       width:100%;
       border:none;
       outline:none;
-      padding:12px 13px;
-      border-radius:15px;
+      padding:9px 10px;
+      border-radius:12px;
       background:var(--surface-2);
       color:var(--text);
       border:1px solid var(--line);
-      font-size:14px;
+      font-size:12.5px;
+      min-height:36px;
     }
 
     .input::placeholder,
     .textarea::placeholder{color:var(--muted)}
 
     .textarea{
-      min-height:86px;
+      min-height:78px;
       resize:vertical;
-      line-height:1.55;
+      line-height:1.45;
     }
 
     .select option{color:#000}
 
     .message{
-      min-height:18px;
-      font-size:13px;
-      margin-top:8px;
-      line-height:1.5;
+      min-height:0;
+      font-size:11px;
+      margin-top:6px;
+      line-height:1.4;
+      color:var(--muted);
     }
 
+    .message:not(:empty){min-height:16px}
     .message.ok{color:#22b36c}
     .message.err{color:#e74c66}
     html[data-theme="dark"] .message.ok{color:#86efac}
@@ -222,67 +266,68 @@
     .denied-box{
       text-align:center;
       color:var(--muted);
-      padding:24px 12px;
+      padding:18px 8px;
       background:var(--surface-2);
-      border-radius:16px;
+      border-radius:14px;
       border:1px dashed var(--line);
-      line-height:1.6;
-      font-size:14px;
+      font-size:12.5px;
+      line-height:1.45;
+      font-weight:850;
     }
 
     .list{
       display:grid;
-      gap:10px;
+      gap:7px;
     }
 
     .request-card{
       background:var(--surface-2);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:12px;
+      border-radius:15px;
+      padding:8px;
       overflow:hidden;
+      box-shadow:var(--soft-shadow);
     }
 
     .card-head{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      gap:10px;
-      margin-bottom:10px;
-      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:7px;
     }
 
     .card-title{
-      font-size:18px;
+      font-size:14px;
       font-weight:950;
-      line-height:1.35;
+      line-height:1.3;
       word-break:break-word;
       letter-spacing:-.02em;
     }
 
     .card-sub{
       color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
-      margin-top:4px;
+      font-size:10.5px;
+      line-height:1.38;
+      margin-top:2px;
       word-break:break-word;
     }
 
     .badge-row{
       display:flex;
-      gap:7px;
+      gap:5px;
       flex-wrap:wrap;
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .badge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:5px;
-      padding:6px 9px;
+      gap:4px;
+      padding:5px 7px;
       border-radius:999px;
-      font-size:11px;
+      font-size:9.5px;
       font-weight:950;
       border:1px solid var(--line);
       background:var(--surface-3);
@@ -291,47 +336,48 @@
     }
 
     .badge svg{
-      width:12px;
-      height:12px;
+      width:11px;
+      height:11px;
       flex-shrink:0;
     }
 
-    .badge-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .badge-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-    .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .badge-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .badge-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .badge-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+    .badge-red{background:var(--red-soft);border-color:rgba(255,93,115,.20)}
 
     .info-grid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      margin-bottom:10px;
+      gap:6px;
+      margin-bottom:7px;
     }
 
     .info-box{
       background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:15px;
-      padding:10px 11px;
+      border-radius:12px;
+      padding:8px;
       min-width:0;
     }
 
     .info-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:5px;
-      font-size:11px;
+      margin-bottom:3px;
+      font-size:9.4px;
       font-weight:950;
       text-transform:uppercase;
-      letter-spacing:.04em;
+      letter-spacing:.03em;
+      line-height:1;
     }
 
     .info-box div,
     .info-box a{
       color:var(--text);
-      font-size:13px;
-      line-height:1.5;
+      font-size:11.4px;
+      line-height:1.38;
       word-break:break-word;
     }
 
@@ -341,95 +387,94 @@
       font-weight:850;
     }
 
-    .info-box a:hover{text-decoration:underline}
-
     .reason-box{
       background:var(--surface-3);
       border:1px solid var(--line);
-      border-radius:15px;
-      padding:10px 11px;
-      margin-bottom:10px;
+      border-radius:12px;
+      padding:8px;
+      margin-bottom:7px;
     }
 
     .reason-box small{
       display:block;
       color:var(--muted);
-      margin-bottom:5px;
-      font-size:11px;
+      margin-bottom:4px;
+      font-size:9.4px;
       font-weight:950;
       text-transform:uppercase;
-      letter-spacing:.04em;
+      letter-spacing:.03em;
     }
 
     .reason-box div{
       color:var(--text);
-      font-size:13px;
-      line-height:1.6;
+      font-size:11.8px;
+      line-height:1.45;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
     .proof-warning{
-      background:rgba(245,185,66,.10);
+      background:var(--yellow-soft);
       border:1px solid rgba(245,185,66,.20);
-      border-radius:15px;
-      padding:10px 11px;
+      border-radius:12px;
+      padding:8px;
       color:var(--text);
-      font-size:12px;
-      line-height:1.55;
-      margin-bottom:10px;
+      font-size:10.8px;
+      line-height:1.42;
+      margin-bottom:7px;
     }
 
-    .admin-note-block{
+    .review-note-block{
       display:grid;
-      gap:6px;
-      margin-top:10px;
+      gap:5px;
+      margin-top:7px;
     }
 
     .label{
-      font-size:12px;
+      font-size:10.8px;
       font-weight:950;
       color:var(--text);
     }
 
     .actions{
       display:flex;
-      gap:8px;
+      gap:5px;
       flex-wrap:wrap;
       align-items:center;
-      margin-top:10px;
+      margin-top:7px;
     }
 
     .action-btn{
       border:none;
-      border-radius:12px;
-      padding:9px 12px;
-      font-size:12px;
+      border-radius:11px;
+      padding:7px 8px;
+      font-size:10.5px;
       font-weight:950;
       cursor:pointer;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
-      min-height:38px;
+      gap:5px;
+      min-height:31px;
       color:var(--text);
       background:var(--surface-3);
       border:1px solid var(--line);
+      white-space:nowrap;
     }
 
     .action-btn svg{
-      width:15px;
-      height:15px;
+      width:13px;
+      height:13px;
       display:block;
       flex-shrink:0;
     }
 
-    .action-btn.blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.22)}
-    .action-btn.green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.22)}
-    .action-btn.yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.22)}
-    .action-btn.purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.22)}
-    .action-btn.red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.22)}
+    .action-btn.blue{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .action-btn.green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}
+    .action-btn.yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}
+    .action-btn.purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
+    .action-btn.red{background:var(--red-soft);border-color:rgba(255,93,115,.22)}
 
     .action-btn:disabled{
       opacity:.65;
@@ -440,17 +485,17 @@
       position:fixed;
       left:50%;
       transform:translateX(-50%);
-      bottom:10px;
-      width:min(980px, calc(100% - 16px));
+      bottom:8px;
+      width:min(860px, calc(100% - 12px));
       background:var(--nav-bg);
       border:1px solid var(--line);
-      border-radius:20px;
-      padding:8px;
+      border-radius:16px;
+      padding:5px;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:6px;
+      gap:4px;
       z-index:50;
-      box-shadow:0 22px 44px rgba(0,0,0,.22);
+      box-shadow:0 14px 32px rgba(0,0,0,.18);
       overflow:hidden;
     }
 
@@ -461,12 +506,12 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:4px;
-      padding:9px 5px;
-      border-radius:14px;
-      font-size:10.5px;
-      font-weight:800;
-      min-height:56px;
+      gap:2px;
+      padding:5px 3px;
+      border-radius:12px;
+      font-size:9.5px;
+      font-weight:850;
+      min-height:43px;
       border:none;
       background:transparent;
       cursor:pointer;
@@ -474,13 +519,13 @@
     }
 
     .nav-link.active{
-      background:rgba(76,201,255,.14);
+      background:var(--blue-soft);
       color:var(--text);
     }
 
     .icon-svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -488,40 +533,57 @@
     }
 
     .icon-svg svg{
-      width:20px;
-      height:20px;
+      width:17px;
+      height:17px;
       display:block;
     }
 
     .nav-badge{
       position:absolute;
-      top:5px;
-      right:10px;
-      min-width:17px;
-      height:17px;
+      top:2px;
+      right:8px;
+      min-width:15px;
+      height:15px;
       padding:0 4px;
       border-radius:999px;
       background:var(--red);
       color:#fff;
-      font-size:10px;
+      font-size:9px;
       font-weight:950;
-      display:flex;
+      display:none;
       align-items:center;
       justify-content:center;
       line-height:1;
       border:2px solid var(--nav-bg);
     }
 
+    .nav-badge.show{display:flex}
+
     @media(max-width:760px){
-      body{padding:10px 10px 108px}
+      body{padding:6px 6px 82px}
+      .app{max-width:760px}
       .filters{grid-template-columns:1fr}
+      .chip-row{grid-template-columns:repeat(2,1fr)}
       .info-grid{grid-template-columns:1fr}
-      .brand{font-size:17px}
-      .panel{padding:11px;border-radius:20px}
-      .request-card{border-radius:18px}
+      .card-head{display:grid;grid-template-columns:1fr}
       .actions .action-btn{flex:1}
-      .bottom-nav{padding:7px;gap:5px}
-      .nav-link{font-size:10px;padding:8px 3px}
+      .bottom-nav{
+        width:min(760px, calc(100% - 12px));
+        padding:5px;
+        gap:4px;
+      }
+      .nav-link{
+        font-size:9.2px;
+        padding:5px 2px;
+        min-height:41px;
+      }
+      .nav-badge{right:8px}
+    }
+
+    @media(max-width:390px){
+      .chip{font-size:8.8px}
+      .action-btn{font-size:10px;padding:7px}
+      .card-title{font-size:13.5px}
     }
   </style>
 </head>
@@ -537,10 +599,10 @@
 
       <div class="top-center">
         <div class="brand">OwnSpace</div>
-        <div class="brand-sub">Verification Admin</div>
+        <div class="brand-sub">Verification Review</div>
       </div>
 
-      <a href="admin.html" class="top-icon-btn" aria-label="Admin">
+      <a href="admin.html" class="top-icon-btn admin-top" aria-label="Admin">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 3 4 7v6c0 5 3.4 7.7 8 8 4.6-.3 8-3 8-8V7l-8-4z"></path>
           <path d="M9 12l2 2 4-4"></path>
@@ -554,10 +616,15 @@
     </div>
 
     <div id="mainWrap" class="hidden">
-      <div class="panel">
-        <div class="hero-title">Verification Requests</div>
-        <div class="hero-sub">
-          Review Verified Account, Verified Creator, and Verified Business requests. Proof files should be deleted after approval or rejection.
+      <div class="panel hero-card">
+        <div class="hero-row">
+          <div>
+            <div class="hero-title">Verification Requests</div>
+            <div class="hero-sub">
+              Review verified account, creator, and business requests. Proof files should be deleted after approval or rejection.
+            </div>
+          </div>
+          <div class="mode-pill">Admin</div>
         </div>
 
         <div class="chip-row">
@@ -630,13 +697,13 @@
     </a>
 
     <a href="inbox.html" class="nav-link">
+      <span id="inboxBadge" class="nav-badge">0</span>
       <span class="icon-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
         </svg>
       </span>
       <span>Inbox</span>
-      <span id="inboxBadge" class="nav-badge hidden">0</span>
     </a>
 
     <a href="profile.html" class="nav-link active">
@@ -679,47 +746,50 @@
 
     let currentUser = null;
     let allRequests = [];
-    let verificationChannel = null;
+    let liveChannels = [];
     let refreshTimer = null;
+    let badgeRefreshTimer = null;
 
     const ICONS = {
       open: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M7 17 17 7"></path>
           <path d="M9 7h8v8"></path>
           <path d="M19 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path>
         </svg>
       `,
       check: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 6 9 17l-5-5"></path>
         </svg>
       `,
       x: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M18 6 6 18"></path>
           <path d="M6 6l12 12"></path>
         </svg>
       `,
       info: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9"></circle>
           <path d="M12 16v-4"></path>
           <path d="M12 8h.01"></path>
         </svg>
       `,
       save: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <path d="M17 21v-8H7v8"></path>
           <path d="M7 3v5h8"></path>
         </svg>
       `,
       trash: `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 6h18"></path>
           <path d="M8 6V4h8v2"></path>
           <path d="M19 6l-1 14H6L5 6"></path>
+          <path d="M10 11v5"></path>
+          <path d="M14 11v5"></path>
         </svg>
       `
     };
@@ -736,6 +806,7 @@
       if (themeValue === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
+
       return themeValue === "dark" ? "dark" : "light";
     }
 
@@ -747,9 +818,22 @@
 
     window.addEventListener("storage", (e) => {
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+
+      if (
+        e.key === "ownspace_badges_refresh" ||
+        e.key === "ownspace_inbox_refresh" ||
+        e.key === "ownspace_chat_read_refresh"
+      ) {
+        scheduleBadgeRefresh(120);
+      }
+
+      if (e.key === "ownspace_verification_refresh") {
+        scheduleRefresh(180);
+      }
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", () => {
         if (getStoredTheme() === "system") applyTheme("system");
@@ -821,12 +905,13 @@
 
     function formatDate(value) {
       const ms = toMillis(value);
-      if (!ms) return "Just now";
+
+      if (!ms) return "Not added";
 
       try {
         return new Date(ms).toLocaleString();
       } catch {
-        return "Just now";
+        return "Not added";
       }
     }
 
@@ -838,15 +923,18 @@
         msg.includes("not found in the schema cache") ||
         msg.includes("could not find the table") ||
         msg.includes("could not find") ||
-        msg.includes("relation") && msg.includes("does not exist") ||
+        msg.includes("schema cache") ||
+        msg.includes("relation") ||
         msg.includes("column")
       );
     }
 
     function normalizeHref(url) {
       const value = String(url || "").trim();
+
       if (!value) return "";
       if (/^https?:\/\//i.test(value)) return value;
+
       return "https://" + value;
     }
 
@@ -862,6 +950,7 @@
 
       if (value.includes("business")) return "business";
       if (value.includes("creator")) return "creator";
+
       return "account";
     }
 
@@ -887,6 +976,7 @@
 
     function normalizeRequest(row) {
       const d = row || {};
+
       const uid = String(getField(d, [
         "uid",
         "user_id",
@@ -897,7 +987,6 @@
 
       const badgeType = getBadgeType(d);
       const status = normalizeText(getField(d, ["status"], "pending")) || "pending";
-
       const createdAt = d.created_at ?? d.createdAt ?? d.created ?? null;
 
       return {
@@ -921,7 +1010,7 @@
         businessName: String(getField(d, ["business_name", "businessName"], "") || ""),
         businessLink: String(getField(d, ["business_link", "businessLink"], "") || ""),
         reason: String(getField(d, ["reason", "message", "note"], "") || ""),
-        adminNote: String(getField(d, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "") || ""),
+        reviewNote: String(getField(d, ["review_note", "reviewNote", "admin_note", "adminNote", "rejection_reason", "rejectionReason"], "") || ""),
         dailyCode: String(getField(d, ["daily_code", "dailyCode"], "") || ""),
         codeDate: String(getField(d, ["code_date", "codeDate"], "") || ""),
         ageConfirmed: getBool(d, ["age_confirmed", "ageConfirmed", "is_18_plus", "is18Plus"], false),
@@ -978,6 +1067,27 @@
       return false;
     }
 
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
     async function updateByColumnWithPayloads(table, column, value, payloads) {
       let lastError = null;
 
@@ -1002,6 +1112,7 @@
       const targets = [];
 
       if (item.id) targets.push(["id", item.id]);
+
       if (item.uid) {
         targets.push(["uid", item.uid]);
         targets.push(["user_id", item.uid]);
@@ -1042,19 +1153,17 @@
         }
       }
 
-      try {
-        for (const payload of payloads) {
-          const base = { uid, ...payload };
-
+      for (const payload of payloads) {
+        try {
           const { error } = await supabase
             .from(table)
-            .insert(base);
+            .insert({ uid, ...payload });
 
           if (!error) return true;
           lastError = error;
+        } catch (err) {
+          lastError = err;
         }
-      } catch (err) {
-        lastError = err;
       }
 
       if (lastError && !isMissingSchemaError(lastError)) {
@@ -1067,15 +1176,17 @@
     async function updateUserVerification(uid, isVerified, badgeType = "account", status = "approved") {
       if (!uid) throw new Error("Missing user id.");
 
+      const timestamp = nowIso();
+
       const snakePayload = {
         is_verified: isVerified,
         verified: isVerified,
         verification_status: status,
         verification_badge: isVerified ? badgeType : null,
         verification_type: isVerified ? badgeType : null,
-        verified_at: isVerified ? nowIso() : null,
+        verified_at: isVerified ? timestamp : null,
         age_verified: isVerified,
-        updated_at: nowIso()
+        updated_at: timestamp
       };
 
       const camelPayload = {
@@ -1084,9 +1195,9 @@
         verificationStatus: status,
         verificationBadge: isVerified ? badgeType : null,
         verificationType: isVerified ? badgeType : null,
-        verifiedAt: isVerified ? nowIso() : null,
+        verifiedAt: isVerified ? timestamp : null,
         ageVerified: isVerified,
-        updatedAt: nowIso()
+        updatedAt: timestamp
       };
 
       const minimalPayload = {
@@ -1103,6 +1214,7 @@
 
     function cleanStoragePath(value) {
       let path = String(value || "").trim();
+
       if (!path) return "";
 
       if (/^https?:\/\//i.test(path)) {
@@ -1132,6 +1244,7 @@
 
       path = path.split("?")[0];
       path = decodeURIComponent(path);
+
       return path.replace(/^\/+/, "").trim();
     }
 
@@ -1164,6 +1277,7 @@
       }
 
       const path = cleanStoragePath(raw);
+
       if (!path) throw new Error("Proof file path missing.");
 
       const { data, error } = await supabase.storage
@@ -1178,7 +1292,9 @@
     async function openProof(value) {
       try {
         const url = await createSignedProofUrl(value);
+
         if (!url) throw new Error("Could not create proof link.");
+
         window.open(url, "_blank", "noopener,noreferrer");
       } catch (err) {
         console.error("Proof open failed:", err);
@@ -1207,13 +1323,17 @@
     async function createNotificationSafe(targetUid, payload = {}) {
       if (!targetUid || !currentUser || targetUid === currentUser.id) return;
 
+      const timestamp = nowIso();
+
       const snakePayload = {
         type: payload.type || "verification",
         title: payload.title || "",
         text: payload.text || "",
         from_user_id: currentUser.id,
         to_user_id: targetUid,
-        created_at: nowIso(),
+        user_id: targetUid,
+        target_user_id: targetUid,
+        created_at: timestamp,
         is_read: false,
         read: false
       };
@@ -1224,7 +1344,9 @@
         text: snakePayload.text,
         fromUserId: currentUser.id,
         toUserId: targetUid,
-        createdAt: nowIso(),
+        userId: targetUid,
+        targetUserId: targetUid,
+        createdAt: timestamp,
         isRead: false,
         read: false
       };
@@ -1236,8 +1358,9 @@
           {
             type: snakePayload.type,
             text: snakePayload.text,
+            user_id: targetUid,
             to_user_id: targetUid,
-            created_at: nowIso()
+            created_at: timestamp
           }
         ]);
       } catch (err) {
@@ -1245,29 +1368,10 @@
       }
     }
 
-    async function insertWithFallback(table, payloads) {
-      let lastError = null;
-
-      for (const payload of payloads) {
-        try {
-          const { data, error } = await supabase
-            .from(table)
-            .insert(payload)
-            .select()
-            .maybeSingle();
-
-          if (!error) return data || null;
-          lastError = error;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-
-      throw lastError || new Error(`Could not insert into ${table}.`);
-    }
-
     async function logAdminAction(action, payload = {}) {
       if (!currentUser?.id) return;
+
+      const timestamp = nowIso();
 
       const snakePayload = {
         action,
@@ -1279,8 +1383,9 @@
         target_type: payload.targetType || "verification",
         reason: payload.reason || "",
         note: payload.note || "",
-        admin_note: payload.adminNote || "",
-        created_at: nowIso()
+        review_note: payload.reviewNote || "",
+        admin_note: payload.reviewNote || "",
+        created_at: timestamp
       };
 
       const camelPayload = {
@@ -1293,8 +1398,9 @@
         targetType: payload.targetType || "verification",
         reason: payload.reason || "",
         note: payload.note || "",
-        adminNote: payload.adminNote || "",
-        createdAt: nowIso()
+        reviewNote: payload.reviewNote || "",
+        adminNote: payload.reviewNote || "",
+        createdAt: timestamp
       };
 
       try {
@@ -1306,7 +1412,7 @@
             admin_uid: currentUser.id,
             target_id: payload.targetId || "",
             target_user_id: payload.targetUserId || "",
-            created_at: nowIso()
+            created_at: timestamp
           }
         ]);
       } catch (err) {
@@ -1315,13 +1421,17 @@
     }
 
     function sensitiveClearSnake(status, note = "") {
+      const timestamp = nowIso();
+
       return {
         status,
+        review_note: note || "",
         admin_note: note || "",
-        reviewed_at: nowIso(),
+        rejection_reason: status === "rejected" ? note || "" : "",
+        reviewed_at: timestamp,
         reviewed_by: currentUser?.id || "",
         proof_deleted: true,
-        proof_deleted_at: nowIso(),
+        proof_deleted_at: timestamp,
 
         govt_id_path: null,
         govt_id_url: null,
@@ -1342,18 +1452,22 @@
         daily_code: null,
         code_date: null,
 
-        updated_at: nowIso()
+        updated_at: timestamp
       };
     }
 
     function sensitiveClearCamel(status, note = "") {
+      const timestamp = nowIso();
+
       return {
         status,
+        reviewNote: note || "",
         adminNote: note || "",
-        reviewedAt: nowIso(),
+        rejectionReason: status === "rejected" ? note || "" : "",
+        reviewedAt: timestamp,
         reviewedBy: currentUser?.id || "",
         proofDeleted: true,
-        proofDeletedAt: nowIso(),
+        proofDeletedAt: timestamp,
 
         govtIdPath: null,
         govtIdUrl: null,
@@ -1374,7 +1488,7 @@
         dailyCode: null,
         codeDate: null,
 
-        updatedAt: nowIso()
+        updatedAt: timestamp
       };
     }
 
@@ -1388,6 +1502,7 @@
         sensitiveClearCamel("approved", note),
         {
           status: "approved",
+          review_note: note || "",
           admin_note: note || "",
           proof_deleted: true,
           reviewed_at: nowIso(),
@@ -1408,7 +1523,7 @@
         targetId: item.id,
         targetUserId: item.uid,
         targetType: "verification",
-        adminNote: note || ""
+        reviewNote: note || ""
       });
     }
 
@@ -1422,6 +1537,7 @@
         sensitiveClearCamel("rejected", note),
         {
           status: "rejected",
+          review_note: note || "",
           admin_note: note || "",
           rejection_reason: note || "",
           proof_deleted: true,
@@ -1445,31 +1561,37 @@
         targetId: item.id,
         targetUserId: item.uid,
         targetType: "verification",
-        reason: note || ""
+        reason: note || "",
+        reviewNote: note || ""
       });
     }
 
     async function needMoreInfo(item, note) {
       if (!item.uid) throw new Error("Missing request user id.");
-      if (!note.trim()) throw new Error("Admin note is required for Need More Info.");
+      if (!note.trim()) throw new Error("Review note is required for Need More Info.");
+
+      const timestamp = nowIso();
 
       await updateRequestByIdOrUid(item, [
         {
           status: "need_more_info",
+          review_note: note,
           admin_note: note,
-          reviewed_at: nowIso(),
+          reviewed_at: timestamp,
           reviewed_by: currentUser?.id || "",
-          updated_at: nowIso()
+          updated_at: timestamp
         },
         {
           status: "need_more_info",
+          reviewNote: note,
           adminNote: note,
-          reviewedAt: nowIso(),
+          reviewedAt: timestamp,
           reviewedBy: currentUser?.id || "",
-          updatedAt: nowIso()
+          updatedAt: timestamp
         },
         {
           status: "need_more_info",
+          review_note: note,
           admin_note: note
         }
       ]);
@@ -1484,21 +1606,26 @@
         targetId: item.id,
         targetUserId: item.uid,
         targetType: "verification",
-        adminNote: note
+        reviewNote: note
       });
     }
 
-    async function saveAdminNote(item, note) {
+    async function saveReviewNote(item, note) {
+      const timestamp = nowIso();
+
       await updateRequestByIdOrUid(item, [
         {
+          review_note: note || "",
           admin_note: note || "",
-          updated_at: nowIso()
+          updated_at: timestamp
         },
         {
+          reviewNote: note || "",
           adminNote: note || "",
-          updatedAt: nowIso()
+          updatedAt: timestamp
         },
         {
+          review_note: note || "",
           admin_note: note || ""
         }
       ]);
@@ -1507,17 +1634,19 @@
         targetId: item.id,
         targetUserId: item.uid,
         targetType: "verification",
-        adminNote: note || ""
+        reviewNote: note || ""
       });
     }
 
     async function deleteProofOnly(item) {
       await deleteProofFiles(item);
 
+      const timestamp = nowIso();
+
       await updateRequestByIdOrUid(item, [
         {
           proof_deleted: true,
-          proof_deleted_at: nowIso(),
+          proof_deleted_at: timestamp,
 
           govt_id_path: null,
           govt_id_url: null,
@@ -1530,11 +1659,11 @@
           business_proof_path: null,
           business_proof_url: null,
 
-          updated_at: nowIso()
+          updated_at: timestamp
         },
         {
           proofDeleted: true,
-          proofDeletedAt: nowIso(),
+          proofDeletedAt: timestamp,
           govtIdPath: null,
           govtIdUrl: null,
           idPhotoPath: null,
@@ -1545,7 +1674,7 @@
           selfieWithIdURL: null,
           businessProofPath: null,
           businessProofURL: null,
-          updatedAt: nowIso()
+          updatedAt: timestamp
         },
         {
           proof_deleted: true
@@ -1582,7 +1711,7 @@
           item.businessName,
           item.businessLink,
           item.reason,
-          item.adminNote
+          item.reviewNote
         ].join(" ").toLowerCase();
 
         return haystack.includes(q);
@@ -1658,12 +1787,12 @@
           <div class="badge-row">
             <span class="badge badge-blue">${escapeHtml(getBadgeLabel(req.badgeType))}</span>
             ${req.proofDeleted ? `<span class="badge badge-green">${ICONS.check} Proof deleted</span>` : `<span class="badge badge-yellow">Proof stored</span>`}
-            ${req.ageConfirmed ? `<span class="badge badge-green">18+ confirmed</span>` : `<span class="badge badge-red">18+ not confirmed</span>`}
+            ${req.ageConfirmed ? `<span class="badge badge-green">18+ confirmed</span>` : `<span class="badge badge-red">18+ missing</span>`}
             ${req.consentGiven ? `<span class="badge badge-green">Consent yes</span>` : `<span class="badge badge-red">Consent missing</span>`}
           </div>
 
           <div class="proof-warning">
-            Review proofs only for the decision. After approval/rejection, this page deletes proof files and clears sensitive fields where supported.
+            Review proofs only for the verification decision. After approve/reject, proof files are deleted and sensitive fields are cleared where supported.
           </div>
 
           <div class="info-grid">
@@ -1720,9 +1849,9 @@
             <div>${escapeHtml(req.reason || "No reason added.")}</div>
           </div>
 
-          <div class="admin-note-block">
-            <label class="label">Admin Note</label>
-            <textarea class="textarea admin-note-input" data-key="${escapeHtml(key)}" placeholder="Write admin note / rejection reason / info needed...">${escapeHtml(req.adminNote || "")}</textarea>
+          <div class="review-note-block">
+            <label class="label">Review Note</label>
+            <textarea class="textarea review-note-input" data-key="${escapeHtml(key)}" placeholder="Write review note / rejection reason / info needed...">${escapeHtml(req.reviewNote || "")}</textarea>
           </div>
 
           <div class="actions">
@@ -1773,9 +1902,10 @@
           const key = btn.dataset.key || "";
           const action = btn.dataset.action || "";
           const item = allRequests.find(x => String(x.id || x.uid) === String(key));
+
           if (!item) return;
 
-          const noteInput = list.querySelector(`.admin-note-input[data-key="${CSS.escape(key)}"]`);
+          const noteInput = list.querySelector(`.review-note-input[data-key="${CSS.escape(key)}"]`);
           const note = noteInput ? noteInput.value.trim() : "";
 
           btn.disabled = true;
@@ -1783,8 +1913,8 @@
 
           try {
             if (action === "save-note") {
-              await saveAdminNote(item, note);
-              setMessage("Admin note saved.", "ok");
+              await saveReviewNote(item, note);
+              setMessage("Review note saved.", "ok");
             }
 
             if (action === "need-info") {
@@ -1824,6 +1954,12 @@
               await deleteProofOnly(item);
               setMessage("Proof files deleted where possible.", "ok");
             }
+
+            try {
+              localStorage.setItem("ownspace_verification_refresh", String(Date.now()));
+              localStorage.setItem("ownspace_profile_refresh", String(Date.now()));
+              localStorage.setItem("ownspace_notifications_refresh", String(Date.now()));
+            } catch {}
 
             await loadVerificationRequests(false);
           } catch (err) {
@@ -1906,30 +2042,56 @@
       renderList();
     }
 
-    function scheduleRefresh() {
+    function scheduleRefresh(delay = 350) {
       clearTimeout(refreshTimer);
+
       refreshTimer = setTimeout(() => {
         loadVerificationRequests(false).catch(err => console.error("Verification refresh failed:", err));
-      }, 350);
+      }, delay);
+    }
+
+    function clearRealtime() {
+      liveChannels.forEach(channel => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      });
+
+      liveChannels = [];
     }
 
     function setupRealtime() {
-      if (verificationChannel) {
-        try {
-          supabase.removeChannel(verificationChannel);
-        } catch {}
-      }
+      clearRealtime();
 
-      try {
-        verificationChannel = supabase
-          .channel(`verification-admin-live-${currentUser.id}`)
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "verification_requests" },
-            () => scheduleRefresh()
-          )
-          .subscribe();
-      } catch {}
+      ["verification_requests"].forEach(table => {
+        try {
+          const channel = supabase
+            .channel(`ownspace-verification-admin-${table}-${Math.random().toString(36).slice(2)}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table },
+              () => scheduleRefresh(350)
+            )
+            .subscribe();
+
+          liveChannels.push(channel);
+        } catch {}
+      });
+
+      ["message_requests", "chat_threads", "chat_messages"].forEach(table => {
+        try {
+          const channel = supabase
+            .channel(`ownspace-verification-admin-badge-${table}-${Math.random().toString(36).slice(2)}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table },
+              () => scheduleBadgeRefresh(180)
+            )
+            .subscribe();
+
+          liveChannels.push(channel);
+        } catch {}
+      });
     }
 
     async function countRows(table, buildQuery) {
@@ -1947,7 +2109,17 @@
     }
 
     async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
+      const targetColumns = [
+        "target_id",
+        "to_user_id",
+        "receiver_id",
+        "recipient_id",
+        "targetId",
+        "toUserId",
+        "receiverId",
+        "recipientId"
+      ];
+
       const statusColumns = ["status", "request_status", "requestStatus"];
 
       for (const targetColumn of targetColumns) {
@@ -1959,80 +2131,160 @@
           if (count !== null) return count;
         }
 
-        const countWithoutStatus = await countRows("message_requests", q =>
-          q.eq(targetColumn, uid)
-        );
+        try {
+          const { data, error } = await supabase
+            .from("message_requests")
+            .select("*")
+            .eq(targetColumn, uid);
 
-        if (countWithoutStatus !== null) return countWithoutStatus;
+          if (!error) {
+            return (data || []).filter(row => {
+              const status = normalizeText(getField(row, statusColumns, "pending") || "pending");
+              return status === "pending";
+            }).length;
+          }
+        } catch {}
       }
 
       return 0;
     }
 
-    async function countUnreadChatMessages(uid) {
-      try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
 
-        if (Array.isArray(threads) && threads.length) {
-          const threadIds = threads.map(t => t.id).filter(Boolean);
+      return {
+        id: d.id || fallbackId || "",
+        threadId: String(getField(d, ["thread_id", "threadId"], "")),
+        senderId: String(getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"], "")),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenValue,
+        readValue,
+        hasSeenColumn:
+          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
+          Object.prototype.hasOwnProperty.call(d, "read_at") ||
+          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
+          Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn:
+          Object.prototype.hasOwnProperty.call(d, "is_read") ||
+          Object.prototype.hasOwnProperty.call(d, "read") ||
+          Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
 
-          if (threadIds.length) {
-            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
+    function isMessageUnread(msg, uid) {
+      if (!msg || msg.senderId === uid) return false;
 
-            for (const field of seenFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .is(field, null);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-
-            for (const field of ["is_read", "read"]) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .eq(field, false);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-          }
-        }
-      } catch {}
-
-      const receiverColumns = ["receiver_id", "recipient_id", "to_user_id", "target_id", "receiverId", "recipientId", "toUserId"];
-      const seenColumns = ["seen_at", "read_at", "seenAt", "readAt"];
-
-      for (const receiverColumn of receiverColumns) {
-        for (const seenColumn of seenColumns) {
-          const count = await countRows("chat_messages", q =>
-            q.eq(receiverColumn, uid).neq("sender_id", uid).is(seenColumn, null)
-          );
-
-          if (count !== null) return count;
-        }
-
-        for (const boolField of ["is_read", "read"]) {
-          const count = await countRows("chat_messages", q =>
-            q.eq(receiverColumn, uid).neq("sender_id", uid).eq(boolField, false)
-          );
-
-          if (count !== null) return count;
-        }
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
       }
 
-      return 0;
+      if (msg.hasSeenColumn) {
+        return !msg.seenValue;
+      }
+
+      return false;
+    }
+
+    async function fetchChatThreadsForUser(uid) {
+      const map = new Map();
+
+      const attempts = [
+        { a: "participant_a", b: "participant_b" },
+        { a: "participantA", b: "participantB" }
+      ];
+
+      for (const fields of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .or(`${fields.a}.eq.${uid},${fields.b}.eq.${uid}`);
+
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              const status = normalizeText(getField(row, ["status"], "accepted") || "accepted");
+              if (row.id && status === "accepted") map.set(row.id, row);
+            });
+          }
+        } catch {}
+      }
+
+      return Array.from(map.values());
+    }
+
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("thread_id", threadIds)
+          .order("created_at", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .in("threadId", threadIds)
+          .order("createdAt", { ascending: true });
+
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const threads = await fetchChatThreadsForUser(uid);
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+
+        if (!threadIds.length) return 0;
+
+        const messages = await fetchMessagesForThreads(threadIds);
+        const byThread = new Map();
+
+        messages.forEach(msg => {
+          if (!msg.threadId) return;
+          if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+          byThread.get(msg.threadId).push(msg);
+        });
+
+        let total = 0;
+
+        threads.forEach(thread => {
+          const list = byThread.get(thread.id) || [];
+
+          if (!list.length) return;
+
+          const newest = [...list].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))[0];
+
+          if (newest?.senderId === uid) return;
+
+          const lastOutgoingMs = list
+            .filter(msg => msg.senderId === uid)
+            .reduce((max, msg) => Math.max(max, toMillis(msg.createdAt)), 0);
+
+          const unreadInThread = list.filter(msg => {
+            if (msg.senderId === uid) return false;
+            if (toMillis(msg.createdAt) <= lastOutgoingMs) return false;
+            return isMessageUnread(msg, uid);
+          }).length;
+
+          total += unreadInThread;
+        });
+
+        return total;
+      } catch {
+        return 0;
+      }
     }
 
     async function loadInboxBadge() {
@@ -2047,14 +2299,24 @@
         const total = Number(requests || 0) + Number(unreadChats || 0);
 
         if (!total) {
-          inboxBadge.classList.add("hidden");
+          inboxBadge.textContent = "0";
+          inboxBadge.classList.remove("show");
         } else {
           inboxBadge.textContent = total > 99 ? "99+" : String(total);
-          inboxBadge.classList.remove("hidden");
+          inboxBadge.classList.add("show");
         }
       } catch {
-        inboxBadge.classList.add("hidden");
+        inboxBadge.textContent = "0";
+        inboxBadge.classList.remove("show");
       }
+    }
+
+    function scheduleBadgeRefresh(delay = 350) {
+      clearTimeout(badgeRefreshTimer);
+
+      badgeRefreshTimer = setTimeout(() => {
+        loadInboxBadge().catch(() => {});
+      }, delay);
     }
 
     async function initPage() {
@@ -2086,59 +2348,67 @@
 
       setupRealtime();
 
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         if (!session?.user) {
+          clearRealtime();
           window.location.href = "login.html";
         }
       });
     }
 
-    window.addEventListener("beforeunload", () => {
-      if (verificationChannel) {
-        try {
-          supabase.removeChannel(verificationChannel);
-        } catch {}
-      }
+    window.addEventListener("pageshow", () => scheduleBadgeRefresh(120));
+    window.addEventListener("focus", () => scheduleBadgeRefresh(180));
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) scheduleBadgeRefresh(160);
     });
 
-    initPage().catch((error) => {
+    window.addEventListener("ownspace:badges-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:inbox-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:chat-read-refresh", () => scheduleBadgeRefresh(120));
+
+    window.addEventListener("beforeunload", () => {
+      clearTimeout(refreshTimer);
+      clearTimeout(badgeRefreshTimer);
+      clearRealtime();
+    });
+
+    initPage().catch(error => {
       console.error(error);
       accessLoading.classList.add("hidden");
       accessDenied.classList.remove("hidden");
     });
 
     /*
-      OWNSPACE VERIFICATION ADMIN PAGE
+      OWNSPACE VERIFICATION REVIEW ADMIN UPDATE:
 
       FILE:
       - verification-admin.html
 
       UPDATED:
-      - BareWorld renamed to OwnSpace.
-      - Light theme default.
-      - Clean SVG icons.
+      - Compact OwnSpace UI matching latest pages.
       - Admin-only access through admins table.
-      - Supports 3 badge types:
-        1) Verified Account
-        2) Verified Creator
-        3) Verified Business
-      - Opens verification proof with Supabase signed URL when saved as Storage path.
+      - Supports Verified Account, Verified Creator, Verified Business.
+      - Opens proof files using Supabase signed URLs from verification bucket.
       - Approve / Reject deletes proof files where possible.
-      - Approve / Reject clears sensitive request fields where supported:
-        legal name, DOB, daily code, ID proof path/url, selfie path/url, business proof path/url.
+      - Approve / Reject clears sensitive fields where supported:
+        legal name, DOB, daily code, ID proof, selfie proof, business proof.
       - Updates users + public_profiles verification fields.
       - Need More Info keeps proof because the request is not final.
-      - Inbox badge counts only pending message_requests + unread chat_messages.
+      - Review Note used instead of user-facing admin wording.
+      - Inbox badge counts only pending message_requests + unread incoming chat_messages.
+      - Realtime refresh for verification_requests and inbox badge tables.
 
-      TABLES USED:
-      - admins: select
-      - verification_requests: select/update/realtime
-      - users: update/insert fallback
-      - public_profiles: update/insert fallback
-      - notifications: insert fallback
-      - moderation_history: insert fallback
-      - message_requests: inbox badge count
-      - chat_threads/chat_messages: inbox badge count
+      TABLES:
+      - admins
+      - verification_requests
+      - users
+      - public_profiles
+      - notifications
+      - moderation_history
+      - message_requests
+      - chat_threads
+      - chat_messages
 
       STORAGE:
       - Bucket: verification
