@@ -6,802 +6,104 @@
   <title>OwnSpace - Add Place</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 
     :root,
     html[data-theme="light"]{
-      --bg:#f3f6fb;
-      --surface:#ffffff;
-      --surface-2:#f7f9fd;
-      --surface-3:#edf3ff;
-      --line:rgba(15,23,42,.09);
-      --line-soft:rgba(15,23,42,.05);
-      --text:#14213d;
-      --muted:#6b7893;
-      --blue:#1f8fff;
-      --green:#22b36c;
-      --yellow:#d59617;
-      --purple:#7f63ff;
-      --red:#e74c66;
-      --topbar-bg:rgba(255,255,255,.94);
-      --nav-bg:rgba(255,255,255,.98);
-      --shadow:0 16px 30px rgba(20,33,61,.08);
+      --bg:#f3f6fb;--surface:#ffffff;--surface-2:#f7f9fd;--surface-3:#edf3ff;--line:rgba(15,23,42,.09);--line-soft:rgba(15,23,42,.05);--text:#14213d;--muted:#6b7893;--blue:#1f8fff;--green:#22b36c;--yellow:#d59617;--purple:#7f63ff;--red:#e74c66;--topbar-bg:rgba(255,255,255,.94);--nav-bg:rgba(255,255,255,.98);--shadow:0 10px 22px rgba(20,33,61,.06);--soft-shadow:0 6px 14px rgba(20,33,61,.045);--blue-soft:rgba(76,201,255,.13);--green-soft:rgba(61,220,132,.13);--yellow-soft:rgba(245,185,66,.13);--purple-soft:rgba(167,139,250,.13);--red-soft:rgba(255,93,115,.13);
     }
 
     html[data-theme="dark"]{
-      --bg:#07101f;
-      --surface:#0c1630;
-      --surface-2:#111d3d;
-      --surface-3:#15244a;
-      --line:rgba(255,255,255,.08);
-      --line-soft:rgba(255,255,255,.05);
-      --text:#ffffff;
-      --muted:#9aa7c7;
-      --blue:#4cc9ff;
-      --green:#3ddc84;
-      --yellow:#f5b942;
-      --purple:#a78bfa;
-      --red:#ff5d73;
-      --topbar-bg:rgba(9,15,31,.92);
-      --nav-bg:rgba(9,15,31,.98);
-      --shadow:0 20px 40px rgba(0,0,0,.18);
+      --bg:#07101f;--surface:#0c1630;--surface-2:#111d3d;--surface-3:#15244a;--line:rgba(255,255,255,.08);--line-soft:rgba(255,255,255,.05);--text:#ffffff;--muted:#9aa7c7;--blue:#4cc9ff;--green:#3ddc84;--yellow:#f5b942;--purple:#a78bfa;--red:#ff5d73;--topbar-bg:rgba(9,15,31,.92);--nav-bg:rgba(9,15,31,.98);--shadow:0 14px 28px rgba(0,0,0,.16);--soft-shadow:0 8px 18px rgba(0,0,0,.12);--blue-soft:rgba(76,201,255,.13);--green-soft:rgba(61,220,132,.13);--yellow-soft:rgba(245,185,66,.13);--purple-soft:rgba(167,139,250,.13);--red-soft:rgba(255,93,115,.13);
     }
 
-    body{
-      background:
-        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
-        radial-gradient(circle at 86% 12%, rgba(61,220,132,.08), transparent 24%),
-        var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      padding:8px 8px 108px;
-    }
+    body{background:radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),radial-gradient(circle at 86% 12%, rgba(61,220,132,.06), transparent 24%),var(--bg);color:var(--text);min-height:100vh;padding:6px 6px 82px}
+    .app{max-width:760px;margin:0 auto}.hidden{display:none!important}
 
-    .app{max-width:760px;margin:0 auto}
-    .hidden{display:none!important}
-
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:30;
-      backdrop-filter:blur(14px);
-      background:var(--topbar-bg);
-      border:1px solid var(--line-soft);
-      border-radius:18px;
-      padding:7px 9px;
-      margin-bottom:10px;
-      display:grid;
-      grid-template-columns:42px 1fr 42px;
-      align-items:center;
-      gap:8px;
-      box-shadow:var(--shadow);
-    }
-
-    .top-icon-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      background:var(--surface-2);
-      color:var(--text);
-      border-radius:13px;
-      cursor:pointer;
-      border:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-      position:relative;
-    }
-
-    .top-icon-btn svg{
-      width:19px;
-      height:19px;
-      display:block;
-    }
-
-    .top-center{text-align:center;min-width:0}
-
-    .brand{
-      font-size:18px;
-      font-weight:950;
-      line-height:1.05;
-      letter-spacing:-.02em;
-    }
-
-    .brand-sub{
-      font-size:10px;
-      color:var(--muted);
-      margin-top:2px;
-    }
-
-    .panel{
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:12px;
-      margin-bottom:10px;
-      box-shadow:var(--shadow);
-    }
-
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:28px 10px;
-      font-size:14px;
-      background:var(--surface-2);
-      border-radius:16px;
-      border:1px dashed var(--line);
-    }
-
-    .head{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:10px;
-      flex-wrap:wrap;
-    }
-
-    .head-title{
-      font-size:18px;
-      font-weight:950;
-      line-height:1.25;
-      margin-bottom:4px;
-    }
-
-    .head-sub{
-      color:var(--muted);
-      font-size:12.5px;
-      line-height:1.55;
-    }
-
-    .chip-row{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:6px;
-      margin-bottom:10px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:7px 5px;
-      border-radius:12px;
-      font-size:10.5px;
-      font-weight:950;
-      border:1px solid var(--line);
-      background:var(--surface-2);
-      color:var(--text);
-      min-height:32px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .chip-blue{background:rgba(76,201,255,.14);border-color:rgba(76,201,255,.20)}
-    .chip-green{background:rgba(61,220,132,.14);border-color:rgba(61,220,132,.20)}
-    .chip-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
-    .chip-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
-
-    .quick-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:7px;
-      margin-bottom:12px;
-    }
-
-    .quick-btn{
-      border:none;
-      border-radius:12px;
-      padding:9px 10px;
-      font-size:12px;
-      font-weight:950;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      cursor:pointer;
-      min-height:38px;
-      background:var(--surface-2);
-      color:var(--text);
-      border:1px solid var(--line);
-      white-space:nowrap;
-    }
-
-    .quick-btn svg{
-      width:15px;
-      height:15px;
-      display:block;
-      flex-shrink:0;
-    }
-
-    .quick-btn.primary{
-      background:rgba(76,201,255,.14);
-      border-color:rgba(76,201,255,.22);
-    }
-
-    .quick-btn.green{
-      background:rgba(61,220,132,.14);
-      border-color:rgba(61,220,132,.22);
-    }
-
-    .quick-btn.purple{
-      background:rgba(167,139,250,.14);
-      border-color:rgba(167,139,250,.22);
-    }
-
-    .meta-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:8px;
-      margin-bottom:12px;
-    }
-
-    .meta-item{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:11px;
-      min-width:0;
-    }
-
-    .meta-item small{
-      display:block;
-      color:var(--muted);
-      margin-bottom:5px;
-      font-size:11px;
-    }
-
-    .meta-item span{
-      font-weight:950;
-      font-size:13.5px;
-      line-height:1.5;
-      word-break:break-word;
-    }
-
-    .section{
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
-      margin-top:12px;
-    }
-
-    .section-title{
-      font-size:15px;
-      font-weight:950;
-      margin-bottom:4px;
-    }
-
-    .section-sub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-      margin-bottom:10px;
-    }
-
-    .form{
-      display:grid;
-      gap:11px;
-    }
-
-    .field{
-      display:grid;
-      gap:6px;
-    }
-
-    .label{
-      font-size:12px;
-      font-weight:950;
-      color:var(--text);
-    }
-
-    .input,
-    .textarea,
-    .select{
-      width:100%;
-      border:none;
-      outline:none;
-      padding:12px 13px;
-      border-radius:15px;
-      background:var(--surface-3);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-size:14px;
-    }
-
-    .textarea{
-      min-height:110px;
-      resize:vertical;
-      line-height:1.55;
-    }
-
-    .input::placeholder,
-    .textarea::placeholder{
-      color:var(--muted);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:11px;
-    }
-
-    .grid-3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:11px;
-    }
-
-    .small-note,
-    .note{
-      color:var(--muted);
-      line-height:1.45;
-      font-size:11px;
-    }
-
-    .small-note{margin-top:2px}
-    .note{margin-top:10px}
-
-    .btn{
-      border:none;
-      border-radius:12px;
-      padding:10px 13px;
-      cursor:pointer;
-      font-weight:950;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:7px;
-      min-height:40px;
-      font-size:12.5px;
-    }
-
-    .btn svg{
-      width:16px;
-      height:16px;
-      display:block;
-      flex-shrink:0;
-    }
-
-    .btn-save{
-      background:rgba(61,220,132,.14);
-      color:var(--text);
-      border:1px solid rgba(61,220,132,.22);
-      width:100%;
-      font-size:14px;
-      min-height:44px;
-    }
-
-    .btn:disabled,
-    .quick-btn:disabled{
-      opacity:.65;
-      cursor:not-allowed;
-    }
-
-    .file-box{
-      border:1px dashed var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:var(--surface-3);
-    }
-
-    .file-input{
-      width:100%;
-      color:var(--text);
-      font-size:13px;
-    }
-
-    .file-input::file-selector-button{
-      border:none;
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-      border:1px solid rgba(76,201,255,.20);
-      border-radius:10px;
-      padding:8px 10px;
-      margin-right:10px;
-      cursor:pointer;
-      font-weight:950;
-    }
-
-    .preview-wrap{
-      margin-top:10px;
-      display:none;
-    }
-
-    .preview-wrap.show{display:block}
-
-    .preview-img{
-      width:100%;
-      max-height:280px;
-      object-fit:cover;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:var(--surface-2);
-      display:block;
-    }
-
-    .message{
-      margin-top:2px;
-      min-height:18px;
-      font-size:13px;
-      text-align:left;
-      line-height:1.45;
-      color:var(--muted);
-    }
-
-    .success{color:#22b36c}
-    .error{color:#e74c66}
-    html[data-theme="dark"] .success{color:#9cf0bf}
-    html[data-theme="dark"] .error{color:#ffb3bd}
-
-    .bottom-nav{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:10px;
-      width:min(760px, calc(100% - 16px));
-      background:var(--nav-bg);
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:8px;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:6px;
-      z-index:50;
-      box-shadow:0 22px 44px rgba(0,0,0,.22);
-      overflow:hidden;
-    }
-
-    .nav-link{
-      text-decoration:none;
-      color:var(--muted);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      padding:9px 5px;
-      border-radius:14px;
-      font-size:10.5px;
-      font-weight:800;
-      min-height:56px;
-      border:none;
-      background:transparent;
-      cursor:pointer;
-      position:relative;
-    }
-
-    .nav-link.active{
-      background:rgba(76,201,255,.14);
-      color:var(--text);
-    }
-
-    .icon-svg{
-      width:20px;
-      height:20px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      line-height:1;
-    }
-
-    .icon-svg svg{
-      width:20px;
-      height:20px;
-      display:block;
-    }
-
-    .nav-badge{
-      position:absolute;
-      top:5px;
-      right:10px;
-      min-width:17px;
-      height:17px;
-      padding:0 4px;
-      border-radius:999px;
-      background:var(--red);
-      color:#fff;
-      font-size:10px;
-      font-weight:950;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      line-height:1;
-      border:2px solid var(--nav-bg);
-    }
-
-    @media (max-width:700px){
-      .brand{font-size:17px}
-
-      .chip-row{
-        grid-template-columns:repeat(2,1fr);
-        gap:5px;
-      }
-
-      .chip{font-size:10px}
-
-      .quick-actions,
-      .meta-grid,
-      .grid,
-      .grid-3{
-        grid-template-columns:1fr;
-      }
-
-      .bottom-nav{
-        padding:7px;
-        gap:5px;
-      }
-
-      .nav-link{
-        font-size:10px;
-        padding:8px 3px;
-      }
-    }
-
-    @media(max-width:390px){
-      .quick-btn,
-      .btn{
-        font-size:11.5px;
-        padding:8px 9px;
-      }
-    }
+    .topbar{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);background:var(--topbar-bg);border:1px solid var(--line-soft);border-radius:14px;padding:5px 6px;margin-bottom:7px;display:grid;grid-template-columns:34px 1fr 34px;align-items:center;gap:6px;box-shadow:var(--shadow)}
+    .top-icon-btn{width:34px;height:34px;border:none;background:var(--surface-2);color:var(--text);border-radius:11px;cursor:pointer;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;position:relative}
+    .top-icon-btn.list-top{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .top-icon-btn svg{width:17px;height:17px;display:block}.top-center{text-align:center;min-width:0}
+    .brand{font-size:15.5px;font-weight:950;line-height:1;letter-spacing:-.02em}.brand-sub{font-size:9px;color:var(--muted);margin-top:1px;font-weight:800}
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;margin-bottom:7px;box-shadow:var(--shadow)}
+    .loading-box{text-align:center;color:var(--muted);padding:18px 8px;background:var(--surface-2);border-radius:14px;border:1px dashed var(--line);font-size:12.5px;line-height:1.45;font-weight:850}
+    .page-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin-bottom:8px}.page-title{font-size:16px;font-weight:950;line-height:1.15;letter-spacing:-.03em}.page-sub{color:var(--muted);font-size:10.5px;line-height:1.35;margin-top:2px}.mode-pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 8px;border-radius:999px;font-size:10.2px;font-weight:950;border:1px solid rgba(167,139,250,.22);background:var(--purple-soft);color:var(--text);white-space:nowrap}
+    .form{display:grid;gap:7px}.section{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:9px;display:grid;gap:8px}.section-title{font-size:13px;font-weight:950;line-height:1.25;letter-spacing:-.01em}.section-sub{color:var(--muted);font-size:10.5px;line-height:1.35;margin-top:-4px}
+    .field{display:grid;gap:5px}.label{font-size:10.8px;font-weight:950;color:var(--text)}.required{color:var(--red)}
+    .input,.textarea,.select{width:100%;border:none;outline:none;padding:10px 11px;border-radius:13px;background:var(--surface-3);color:var(--text);border:1px solid var(--line);font-size:12.5px;min-height:38px}.textarea{min-height:88px;resize:vertical;line-height:1.48}.input::placeholder,.textarea::placeholder{color:var(--muted)}.select option{color:#111}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}.mini-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .check-row{display:flex;align-items:flex-start;gap:8px;padding:8px 9px;border-radius:12px;background:var(--surface-3);border:1px solid var(--line)}.check-row input{width:auto;transform:scale(1.02);accent-color:var(--blue);margin-top:2px;flex-shrink:0}.check-row label,.check-row span{margin:0;font-size:11.5px;line-height:1.35;color:var(--text);font-weight:800}
+    .small-note{color:var(--muted);line-height:1.35;font-size:10px;margin-top:-2px}.file-box{border:1px dashed var(--line);border-radius:13px;padding:9px;background:var(--surface-3)}.file-input{width:100%;color:var(--text);font-size:12px}.file-input::file-selector-button{border:none;background:var(--blue-soft);color:var(--text);border:1px solid rgba(76,201,255,.20);border-radius:10px;padding:7px 9px;margin-right:8px;cursor:pointer;font-weight:950}
+    .preview-wrap{margin-top:8px;display:none}.preview-wrap.show{display:block}.preview-img{width:100%;max-height:240px;object-fit:cover;border-radius:13px;border:1px solid var(--line);background:var(--surface-2);display:block}.preview-caption{color:var(--muted);font-size:10px;line-height:1.35;margin-top:5px}
+    .action-btn{border:none;border-radius:12px;padding:9px 10px;font-size:12px;font-weight:950;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;min-height:38px;background:var(--surface-3);color:var(--text);border:1px solid var(--line);white-space:nowrap;min-width:0}.action-btn svg{width:15px;height:15px;display:block;flex-shrink:0}.btn-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}.btn-green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}.btn-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}.btn-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}.btn-red{background:var(--red-soft);border-color:rgba(255,93,115,.22)}.action-btn:disabled,.btn-green:disabled{opacity:.65;cursor:not-allowed}
+    .message{min-height:0;font-size:11px;margin-top:0;line-height:1.4;color:var(--muted)}.message:not(:empty){min-height:16px}.success{color:#22b36c}.error{color:#e74c66}html[data-theme="dark"] .success{color:#9cf0bf}html[data-theme="dark"] .error{color:#ffb3bd}
+    .bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;width:min(760px, calc(100% - 12px));background:var(--nav-bg);border:1px solid var(--line);border-radius:16px;padding:5px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;z-index:50;box-shadow:0 14px 32px rgba(0,0,0,.18);overflow:hidden}.nav-link{text-decoration:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 3px;border-radius:12px;font-size:9.5px;font-weight:850;min-height:43px;border:none;background:transparent;cursor:pointer;position:relative}.nav-link.active{background:var(--blue-soft);color:var(--text)}.icon-svg{width:17px;height:17px;display:flex;align-items:center;justify-content:center;line-height:1}.icon-svg svg{width:17px;height:17px;display:block}.nav-badge{position:absolute;top:2px;right:8px;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--red);color:#fff;font-size:9px;font-weight:950;display:none;align-items:center;justify-content:center;line-height:1;border:2px solid var(--nav-bg)}.nav-badge.show{display:flex}
+    @media(max-width:700px){body{padding:6px 6px 82px}.grid,.grid-3,.mini-actions{grid-template-columns:1fr}.bottom-nav{padding:5px;gap:4px}.nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}.nav-badge{right:8px}}
+    @media(max-width:390px){.action-btn{font-size:11.5px;padding:8px 8px}.section{padding:8px}.check-row label,.check-row span{font-size:11px}}
   </style>
 </head>
 
 <body>
   <div class="app">
     <div class="topbar">
-      <a href="nearby-places.html" class="top-icon-btn" aria-label="Back">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-      </a>
-
-      <div class="top-center">
-        <div class="brand">OwnSpace</div>
-        <div class="brand-sub">Add place</div>
-      </div>
-
-      <a href="nearby-places.html" class="top-icon-btn" aria-label="Places">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
-          <circle cx="12" cy="9" r="2.5"></circle>
-        </svg>
-      </a>
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      <div class="top-center"><div class="brand">OwnSpace</div><div class="brand-sub">Add place</div></div>
+      <a href="nearby-places.html" class="top-icon-btn list-top" aria-label="Places list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg></a>
     </div>
 
     <div class="panel">
-      <div id="loading" class="loading">Loading profile...</div>
-
+      <div id="loadingBox" class="loading-box">Loading profile...</div>
       <div id="content" class="hidden">
-        <div class="head">
-          <div>
-            <div class="head-title">Add New Place</div>
-            <div class="head-sub">
-              Add a real place with clear location details. Places are saved as public so people can open them from Nearby and Search.
-            </div>
-          </div>
-        </div>
-
-        <div class="chip-row">
-          <span class="chip chip-blue">Location required</span>
-          <span class="chip chip-green">Public place</span>
-          <span class="chip chip-purple">Photo optional</span>
-          <span class="chip chip-yellow">GPS optional</span>
-        </div>
-
-        <div class="quick-actions">
-          <button id="useProfileLocationBtn" type="button" class="quick-btn primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
-              <circle cx="12" cy="9" r="2.5"></circle>
-            </svg>
-            <span>Use Profile Location</span>
-          </button>
-
-          <button id="useGpsBtn" type="button" class="quick-btn green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 2v3"></path>
-              <path d="M12 19v3"></path>
-              <path d="M2 12h3"></path>
-              <path d="M19 12h3"></path>
-            </svg>
-            <span>Use GPS</span>
-          </button>
-
-          <a href="nearby-places.html" class="quick-btn purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M9 18l6-6-6-6"></path>
-            </svg>
-            <span>All Places</span>
-          </a>
-        </div>
-
-        <div class="meta-grid">
-          <div class="meta-item">
-            <small>Profile City</small>
-            <span id="profileCityText">-</span>
-          </div>
-
-          <div class="meta-item">
-            <small>Profile Province</small>
-            <span id="profileProvinceText">-</span>
-          </div>
-
-          <div class="meta-item">
-            <small>Profile Country</small>
-            <span id="profileCountryText">-</span>
-          </div>
-        </div>
+        <div class="page-head"><div><div class="page-title">Add Place</div><div class="page-sub">Add a real place with clean location details, photo, and search-friendly info.</div></div><div class="mode-pill">2 free</div></div>
 
         <form id="placeForm" class="form">
           <div class="section">
             <div class="section-title">Basic Info</div>
-            <div class="section-sub">Use a clear name and description so people understand what this place is.</div>
-
+            <div class="section-sub">This appears on Nearby Places and the place detail page.</div>
             <div class="grid">
-              <div class="field">
-                <label class="label" for="name">Place Name</label>
-                <input type="text" id="name" class="input" placeholder="Example: Meadowview Park" required />
-              </div>
-
-              <div class="field">
-                <label class="label" for="category">Category</label>
-                <select id="category" class="select">
-                  <option value="General">General</option>
-                  <option value="Park">Park</option>
-                  <option value="Beach">Beach</option>
-                  <option value="Club">Club</option>
-                  <option value="Retreat">Retreat</option>
-                  <option value="Private Spot">Private Spot</option>
-                  <option value="Wellness">Wellness</option>
-                  <option value="Community">Community</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              <div class="field"><label class="label" for="name">Place Name <span class="required">*</span></label><input type="text" id="name" class="input" maxlength="90" placeholder="Example: Meadowview Park" required /></div>
+              <div class="field"><label class="label" for="category">Category</label><select id="category" class="select"><option value="General">General</option><option value="Park">Park</option><option value="Beach">Beach</option><option value="Club">Club</option><option value="Retreat">Retreat</option><option value="Private Spot">Private Spot</option><option value="Wellness">Wellness</option><option value="Community">Community</option><option value="Other">Other</option></select></div>
             </div>
-
-            <div class="field">
-              <label class="label" for="description">Description</label>
-              <textarea id="description" class="textarea" placeholder="Describe the place, why it is useful, what people should know..." required></textarea>
-            </div>
+            <div class="field"><label class="label" for="description">Description <span class="required">*</span></label><textarea id="description" class="textarea" maxlength="1200" placeholder="Describe the place, why it is useful, and what people should know..." required></textarea></div>
           </div>
 
           <div class="section">
             <div class="section-title">Location</div>
-            <div class="section-sub">City, province/state, and country are required so Nearby and Search work properly.</div>
-
+            <div class="section-sub">City, province/state, and country are required for Nearby and Search.</div>
+            <div class="mini-actions">
+              <button id="useProfileLocationBtn" type="button" class="action-btn btn-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg><span>Use Profile Location</span></button>
+              <button id="useGpsBtn" type="button" class="action-btn btn-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M2 12h3"></path><path d="M19 12h3"></path></svg><span>Use GPS</span></button>
+            </div>
             <div class="grid-3">
-              <div class="field">
-                <label class="label" for="city">City</label>
-                <input type="text" id="city" class="input" placeholder="London" required />
-              </div>
-
-              <div class="field">
-                <label class="label" for="province">Province / State</label>
-                <input type="text" id="province" class="input" placeholder="Ontario" required />
-              </div>
-
-              <div class="field">
-                <label class="label" for="country">Country</label>
-                <input type="text" id="country" class="input" placeholder="Canada" required />
-              </div>
+              <div class="field"><label class="label" for="city">City <span class="required">*</span></label><input type="text" id="city" class="input" list="citySuggestions" placeholder="London" required /><datalist id="citySuggestions"></datalist></div>
+              <div class="field"><label class="label" for="province">Province / State <span class="required">*</span></label><input type="text" id="province" class="input" list="provinceSuggestions" placeholder="Ontario" required /><datalist id="provinceSuggestions"></datalist></div>
+              <div class="field"><label class="label" for="country">Country <span class="required">*</span></label><input type="text" id="country" class="input" list="countrySuggestions" placeholder="Canada" required /><datalist id="countrySuggestions"></datalist></div>
             </div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="address">Address</label>
-                <input type="text" id="address" class="input" placeholder="Optional address or area" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="website">Website / Link</label>
-                <input type="text" id="website" class="input" placeholder="example.com" />
-              </div>
-            </div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="lat">Latitude</label>
-                <input type="text" id="lat" class="input" placeholder="Optional" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="lng">Longitude</label>
-                <input type="text" id="lng" class="input" placeholder="Optional" />
-              </div>
-            </div>
-
-            <div class="small-note">GPS coordinates help with distance sorting. City/province/country still remain the main search fields.</div>
+            <div class="grid"><div class="field"><label class="label" for="address">Address / Area</label><input type="text" id="address" class="input" maxlength="180" placeholder="Optional address or area" /></div><div class="field"><label class="label" for="website">Website / Link</label><input type="text" id="website" class="input" maxlength="180" placeholder="example.com" /></div></div>
+            <div class="grid"><div class="field"><label class="label" for="lat">Latitude</label><input type="text" id="lat" class="input" placeholder="Optional" /></div><div class="field"><label class="label" for="lng">Longitude</label><input type="text" id="lng" class="input" placeholder="Optional" /></div></div>
+            <div class="small-note">GPS fills coordinates only. City, province/state, and country still need to be correct.</div>
           </div>
 
           <div class="section">
-            <div class="section-title">Photo Upload</div>
-            <div class="section-sub">Optional photo for the place. Use a clean and relevant image.</div>
-
-            <div class="file-box">
-              <input id="imageFile" class="file-input" type="file" accept="image/*" />
-
-              <div id="previewWrap" class="preview-wrap">
-                <img id="previewImg" class="preview-img" alt="Preview" />
-              </div>
-            </div>
+            <div class="section-title">Photo</div><div class="section-sub">Optional place cover photo.</div>
+            <div class="file-box"><input id="imageFile" class="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" /><div id="previewWrap" class="preview-wrap"><img id="previewImg" class="preview-img" alt="Place photo preview" /><div id="previewCaption" class="preview-caption">Image preview.</div></div></div>
           </div>
 
-          <button type="submit" class="btn btn-save" id="saveBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
-            <span>Add Place</span>
-          </button>
+          <div class="check-row"><input type="checkbox" id="safetyCheck" required /><label for="safetyCheck">I confirm this place is real or clearly described, safe to share, and does not include private/dangerous information, scams, illegal activity, or non-consensual content.</label></div>
 
+          <button type="submit" class="action-btn btn-green" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Add Place</span></button>
           <div id="message" class="message"></div>
         </form>
-
-        <div class="note">
-          Your place will be saved as public and can be opened by other users.
-        </div>
       </div>
     </div>
   </div>
 
   <nav class="bottom-nav">
-    <a href="feed.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 10.5 12 3l9 7.5"></path>
-          <path d="M5 10v10h14V10"></path>
-          <path d="M9 20v-6h6v6"></path>
-        </svg>
-      </span>
-      <span>Feed</span>
-    </a>
-
-    <a href="nearby.html" class="nav-link active">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
-          <circle cx="12" cy="9" r="2.5"></circle>
-        </svg>
-      </span>
-      <span>Nearby</span>
-    </a>
-
-    <a href="search.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="6"></circle>
-          <path d="M20 20l-4.2-4.2"></path>
-        </svg>
-      </span>
-      <span>Search</span>
-    </a>
-
-    <a href="inbox.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-        </svg>
-      </span>
-      <span>Inbox</span>
-      <span id="inboxBadge" class="nav-badge hidden">0</span>
-    </a>
-
-    <a href="profile.html" class="nav-link">
-      <span class="icon-svg" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21a8 8 0 0 0-16 0"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </span>
-      <span>Profile</span>
-    </a>
+    <a href="feed.html" class="nav-link"><span class="icon-svg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg></span><span>Feed</span></a>
+    <a href="nearby.html" class="nav-link active"><span class="icon-svg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg></span><span>Nearby</span></a>
+    <a href="search.html" class="nav-link"><span class="icon-svg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.2-4.2"></path></svg></span><span>Search</span></a>
+    <a href="inbox.html" class="nav-link"><span id="inboxBadge" class="nav-badge">0</span><span class="icon-svg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg></span><span>Inbox</span></a>
+    <a href="profile.html" class="nav-link"><span class="icon-svg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></span><span>Profile</span></a>
   </nav>
 
   <script type="module">
@@ -809,18 +111,14 @@
 
     const STORAGE_BUCKET = "media";
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    const MIN_TRUST_TO_CREATE = 25;
 
-    const loading = document.getElementById("loading");
+    const backBtn = document.getElementById("backBtn");
+    const loadingBox = document.getElementById("loadingBox");
     const content = document.getElementById("content");
     const placeForm = document.getElementById("placeForm");
     const saveBtn = document.getElementById("saveBtn");
     const message = document.getElementById("message");
-    const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
-    const useGpsBtn = document.getElementById("useGpsBtn");
-
-    const profileCityText = document.getElementById("profileCityText");
-    const profileProvinceText = document.getElementById("profileProvinceText");
-    const profileCountryText = document.getElementById("profileCountryText");
 
     const nameInput = document.getElementById("name");
     const categoryInput = document.getElementById("category");
@@ -835,63 +133,91 @@
     const imageFileInput = document.getElementById("imageFile");
     const previewWrap = document.getElementById("previewWrap");
     const previewImg = document.getElementById("previewImg");
+    const previewCaption = document.getElementById("previewCaption");
+    const safetyCheck = document.getElementById("safetyCheck");
+    const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
+    const useGpsBtn = document.getElementById("useGpsBtn");
+    const citySuggestions = document.getElementById("citySuggestions");
+    const provinceSuggestions = document.getElementById("provinceSuggestions");
+    const countrySuggestions = document.getElementById("countrySuggestions");
     const inboxBadge = document.getElementById("inboxBadge");
 
     let currentUser = null;
     let currentProfile = null;
     let previewObjectUrl = "";
+    let badgeRefreshTimer = null;
+    let liveChannels = [];
 
-    function nowIso() {
-      return new Date().toISOString();
+    rememberNearbyTab();
+
+    function rememberNearbyTab() {
+      try {
+        localStorage.setItem("ownspace_nearby_tab", "places");
+        localStorage.setItem("ownspace_nearby_last_tab", "places");
+      } catch {}
     }
 
-    function getStoredTheme() {
-      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    function nowIso() { return new Date().toISOString(); }
+
+    function generateId() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+      return "place_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     }
+
+    function getStoredTheme() { return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light"; }
 
     function resolveTheme(themeValue) {
-      if (themeValue === "system") {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-
+      if (themeValue === "system") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       return themeValue === "dark" ? "dark" : "light";
     }
 
-    function applyTheme(themeValue = getStoredTheme()) {
-      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
-    }
-
+    function applyTheme(themeValue = getStoredTheme()) { document.documentElement.setAttribute("data-theme", resolveTheme(themeValue)); }
     applyTheme();
 
     window.addEventListener("storage", (e) => {
       if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+      if (e.key === "ownspace_badges_refresh" || e.key === "ownspace_inbox_refresh" || e.key === "ownspace_chat_read_refresh") scheduleBadgeRefresh(120);
     });
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", () => {
-        if (getStoredTheme() === "system") applyTheme("system");
-      });
+      mediaQuery.addEventListener("change", () => { if (getStoredTheme() === "system") applyTheme("system"); });
     }
 
-    function showMessage(text = "", type = "") {
-      message.textContent = text;
-      message.className = `message ${type}`;
+    function showMessage(text = "", type = "") { message.textContent = text; message.className = `message ${type}`; }
+
+    function setButtonDefault() {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span>Add Place</span>`;
     }
 
-    function num(v) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
+    function getField(raw, names) {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value != null && String(value).trim()) return String(value).trim();
+      }
+      return "";
     }
 
-    function titleText(value) {
-      return String(value || "").trim();
+    function normalizeText(value) { return String(value || "").trim().toLowerCase(); }
+    function titleText(value) { return String(value || "").trim(); }
+
+    function toMillis(value) {
+      if (!value) return 0;
+      if (typeof value === "object" && typeof value.toDate === "function") return value.toDate().getTime();
+      if (typeof value === "object" && typeof value.seconds === "number") return value.seconds * 1000;
+      const ms = new Date(value).getTime();
+      return Number.isFinite(ms) ? ms : 0;
     }
 
-    function normalizeText(value) {
-      return String(value || "").trim().toLowerCase();
+    function isSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return msg.includes("schema cache") || msg.includes("column") || msg.includes("does not exist") || msg.includes("could not find") || msg.includes("relation");
     }
+
+    function readNumber(value) { const n = Number(value); return Number.isFinite(n) ? n : null; }
+    function readLat(raw) { return readNumber(raw?.lat ?? raw?.latitude ?? raw?.location?.lat ?? raw?.location?.latitude ?? raw?.coords?.lat ?? raw?.coords?.latitude); }
+    function readLng(raw) { return readNumber(raw?.lng ?? raw?.lon ?? raw?.long ?? raw?.longitude ?? raw?.location?.lng ?? raw?.location?.lon ?? raw?.location?.long ?? raw?.location?.longitude ?? raw?.coords?.lng ?? raw?.coords?.longitude); }
 
     function normalizeHref(url) {
       const value = String(url || "").trim();
@@ -900,26 +226,131 @@
       return "https://" + value;
     }
 
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+      return {
+        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
+        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
+        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
+        lat: readLat(d),
+        lng: readLng(d),
+        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
+        trustScore: Number(d.trust_score ?? d.trustScore ?? 50) || 50,
+        earnedPoints: Number(d.earned_points ?? d.earnedPoints ?? 0) || 0,
+        freePlacesUsed: Number(d.free_places_used ?? d.freePlacesUsed ?? 0) || 0,
+        suspended: !!d.suspended,
+        banned: !!(d.banned || d.soft_deleted || d.softDeleted || d.is_hidden_by_admin || d.isHiddenByAdmin)
+      };
+    }
+
+    async function fetchProfileRowByUidOrId(table, uid) {
+      const columns = ["uid", "id", "user_id", "userId"];
+      for (const column of columns) {
+        try {
+          const { data, error } = await supabase.from(table).select("*").eq(column, uid).maybeSingle();
+          if (!error && data) return data;
+        } catch {}
+      }
+      return null;
+    }
+
+    async function loadProfile() {
+      const [publicRow, userRow] = await Promise.all([
+        fetchProfileRowByUidOrId("public_profiles", currentUser.id),
+        fetchProfileRowByUidOrId("users", currentUser.id)
+      ]);
+      currentProfile = normalizeProfile({ ...(publicRow || {}), ...(userRow || {}), uid: currentUser.id }, currentUser.id);
+    }
+
+    function canAddPlace() {
+      const status = normalizeText(currentProfile?.moderationStatus);
+      if (currentProfile?.banned || status === "banned") return "Your account cannot add places right now.";
+      if (currentProfile?.suspended || status === "suspended") return "Your account is suspended and cannot add places right now.";
+      if (["warned", "warning_active", "blocked"].includes(status)) return "Your account has an active warning. Place creation is blocked for now.";
+      if ((currentProfile?.trustScore || 50) < MIN_TRUST_TO_CREATE) return "Your Trust Bar is too low to add places right now.";
+      return "";
+    }
+
+    function fillProfileLocation(silent = false) {
+      if (!currentProfile) return;
+      cityInput.value = currentProfile.city || cityInput.value;
+      provinceInput.value = currentProfile.province || provinceInput.value;
+      countryInput.value = currentProfile.country || countryInput.value;
+      if (currentProfile.lat !== null && currentProfile.lat !== undefined) latInput.value = String(currentProfile.lat);
+      if (currentProfile.lng !== null && currentProfile.lng !== undefined) lngInput.value = String(currentProfile.lng);
+      if (!silent) showMessage("Profile location filled.", "success");
+    }
+
+    useProfileLocationBtn.addEventListener("click", () => fillProfileLocation(false));
+
+    useGpsBtn.addEventListener("click", () => {
+      if (!navigator.geolocation) { showMessage("GPS is not supported on this device.", "error"); return; }
+      useGpsBtn.disabled = true;
+      showMessage("Checking GPS...", "success");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          latInput.value = String(position.coords.latitude);
+          lngInput.value = String(position.coords.longitude);
+          showMessage("GPS coordinates filled.", "success");
+          useGpsBtn.disabled = false;
+        },
+        () => {
+          showMessage("Could not get GPS permission/location.", "error");
+          useGpsBtn.disabled = false;
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    });
+
+    function clearPreview() {
+      if (previewObjectUrl) { URL.revokeObjectURL(previewObjectUrl); previewObjectUrl = ""; }
+      previewWrap.classList.remove("show");
+      previewImg.removeAttribute("src");
+      previewCaption.textContent = "Image preview.";
+    }
+
+    function setPreviewFromFile(file) {
+      clearPreview();
+      if (!file) return;
+      if (!file.type || !file.type.startsWith("image/")) { imageFileInput.value = ""; showMessage("Please upload image file only.", "error"); return; }
+      if (file.size > MAX_IMAGE_BYTES) { imageFileInput.value = ""; showMessage("Image is too large. Please upload under 5 MB.", "error"); return; }
+      previewObjectUrl = URL.createObjectURL(file);
+      previewImg.src = previewObjectUrl;
+      previewCaption.textContent = `${file.name} â¢ ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      previewWrap.classList.add("show");
+      showMessage("");
+    }
+
+    imageFileInput.addEventListener("change", () => setPreviewFromFile(imageFileInput.files?.[0] || null));
+
+    async function uploadPlaceImage(file, placeId) {
+      const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `places/${currentUser.id}/${placeId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+      const { error: uploadError } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || "image/jpeg" });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      return { path, publicUrl: data?.publicUrl || "" };
+    }
+
     function countryAliases(country) {
       const c = normalizeText(country);
       if (!c) return "";
-
       const aliases = [c];
-
       if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain", "england");
+      if (c === "united kingdom") aliases.push("uk", "britain");
       if (c === "canada") aliases.push("ca");
       if (c === "india") aliases.push("bharat", "hindustan");
-
       return aliases.join(" ");
     }
 
     function provinceAliases(province) {
       const p = normalizeText(province);
       if (!p) return "";
-
       const aliases = [p];
-
       if (p === "ontario") aliases.push("on", "ont");
       if (p === "british columbia") aliases.push("bc", "b.c.");
       if (p === "alberta") aliases.push("ab");
@@ -931,468 +362,63 @@
       if (p === "newfoundland and labrador") aliases.push("nl");
       if (p === "prince edward island") aliases.push("pei", "pe");
       if (p === "yukon") aliases.push("yt");
-
       return aliases.join(" ");
     }
 
     function buildLocationSearch(city, province, country) {
-      return [
-        titleText(city),
-        titleText(province),
-        titleText(country),
-        provinceAliases(province),
-        countryAliases(country)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
+      return [titleText(city), titleText(province), titleText(country), provinceAliases(province), countryAliases(country)].filter(Boolean).join(" ").trim().toLowerCase();
     }
 
-    function buildFullSearchText({ name, category, description, city, province, country, address, website, creatorName }) {
-      return [
-        name,
-        category,
-        description,
-        city,
-        province,
-        country,
-        address,
-        website,
-        creatorName,
-        buildLocationSearch(city, province, country)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
+    function buildSearchText(data) {
+      return [data.name, data.category, data.description, data.city, data.province, data.country, data.address, data.website, data.creatorName, buildLocationSearch(data.city, data.province, data.country)].filter(Boolean).join(" ").trim().toLowerCase();
     }
 
-    function readLat(obj) {
-      return num(
-        obj?.lat ??
-        obj?.latitude ??
-        obj?.location?.lat ??
-        obj?.location?.latitude ??
-        obj?.coords?.lat ??
-        obj?.coords?.latitude
-      );
-    }
-
-    function readLng(obj) {
-      return num(
-        obj?.lng ??
-        obj?.lon ??
-        obj?.long ??
-        obj?.longitude ??
-        obj?.location?.lng ??
-        obj?.location?.lon ??
-        obj?.location?.long ??
-        obj?.location?.longitude ??
-        obj?.coords?.lng ??
-        obj?.coords?.longitude
-      );
-    }
-
-    function getField(raw, names) {
-      for (const name of names) {
-        const value = raw?.[name];
-
-        if (value != null && String(value).trim()) {
-          return String(value).trim();
-        }
-      }
-
-      return "";
-    }
-
-    function isMissingSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-
-      return (
-        msg.includes("schema cache") ||
-        msg.includes("could not find") ||
-        msg.includes("column") ||
-        msg.includes("does not exist") ||
-        msg.includes("relation")
-      );
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-
-      return {
-        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "user_name", "userName"]),
-        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
-        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
-        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
-        lat: readLat(d),
-        lng: readLng(d)
-      };
-    }
-
-    function applyProfileInfo() {
-      profileCityText.textContent = currentProfile?.city || "-";
-      profileProvinceText.textContent = currentProfile?.province || "-";
-      profileCountryText.textContent = currentProfile?.country || "-";
-    }
-
-    function useProfileLocation(showFilledMessage = true) {
-      if (!currentProfile) return;
-
-      cityInput.value = currentProfile.city || "";
-      provinceInput.value = currentProfile.province || "";
-      countryInput.value = currentProfile.country || "";
-
-      if (currentProfile.lat !== null && currentProfile.lat !== undefined) {
-        latInput.value = String(currentProfile.lat);
-      }
-
-      if (currentProfile.lng !== null && currentProfile.lng !== undefined) {
-        lngInput.value = String(currentProfile.lng);
-      }
-
-      if (showFilledMessage) showMessage("Profile location filled.", "success");
-    }
-
-    async function useBrowserGps() {
-      if (!navigator.geolocation) {
-        showMessage("Browser GPS is not supported on this device.", "error");
-        return;
-      }
-
-      showMessage("Checking browser GPS...", "success");
-      useGpsBtn.disabled = true;
-
-      await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            latInput.value = String(position.coords.latitude);
-            lngInput.value = String(position.coords.longitude);
-            showMessage("GPS coordinates filled. City/province/country still need to be correct.", "success");
-            resolve();
-          },
-          () => {
-            showMessage("Could not get browser GPS.", "error");
-            resolve();
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 10000,
-            maximumAge: 60000
-          }
-        );
-      });
-
-      useGpsBtn.disabled = false;
-    }
-
-    function setPreviewFromFile(file) {
-      if (previewObjectUrl) {
-        URL.revokeObjectURL(previewObjectUrl);
-        previewObjectUrl = "";
-      }
-
-      if (!file) {
-        previewWrap.classList.remove("show");
-        previewImg.removeAttribute("src");
-        return;
-      }
-
-      previewObjectUrl = URL.createObjectURL(file);
-      previewImg.src = previewObjectUrl;
-      previewWrap.classList.add("show");
-    }
-
-    imageFileInput.addEventListener("change", () => {
-      const file = imageFileInput.files?.[0] || null;
-
-      if (!file) {
-        setPreviewFromFile(null);
-        return;
-      }
-
-      if (!file.type.startsWith("image/")) {
-        imageFileInput.value = "";
-        setPreviewFromFile(null);
-        showMessage("Please choose an image file.", "error");
-        return;
-      }
-
-      if (file.size > MAX_IMAGE_BYTES) {
-        imageFileInput.value = "";
-        setPreviewFromFile(null);
-        showMessage("Image must be under 5 MB.", "error");
-        return;
-      }
-
-      setPreviewFromFile(file);
-      showMessage("Photo selected.", "success");
-    });
-
-    useProfileLocationBtn.addEventListener("click", () => useProfileLocation(true));
-    useGpsBtn.addEventListener("click", useBrowserGps);
-
-    async function fetchProfileRowByUidOrId(table, uid) {
-      const columns = ["uid", "id", "user_id", "userId"];
-
-      for (const column of columns) {
-        try {
-          const { data, error } = await supabase
-            .from(table)
-            .select("*")
-            .eq(column, uid)
-            .maybeSingle();
-
-          if (!error && data) return data;
-        } catch {}
-      }
-
-      return null;
-    }
-
-    async function countRows(table, buildQuery) {
+    async function loadPlaceSuggestions() {
       try {
-        const query = supabase
-          .from(table)
-          .select("id", { count: "exact", head: true });
-
-        const { count, error } = await buildQuery(query);
-
-        if (!error) return count || 0;
-      } catch {}
-
-      return null;
-    }
-
-    async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId"];
-      const statusColumns = ["status", "request_status", "requestStatus"];
-
-      for (const targetColumn of targetColumns) {
-        for (const statusColumn of statusColumns) {
-          const count = await countRows("message_requests", q =>
-            q.eq(targetColumn, uid).eq(statusColumn, "pending")
-          );
-
-          if (count !== null) return count;
-        }
-
-        const countWithoutStatus = await countRows("message_requests", q =>
-          q.eq(targetColumn, uid)
-        );
-
-        if (countWithoutStatus !== null) return countWithoutStatus;
-      }
-
-      return 0;
-    }
-
-    async function countUnreadChatMessages(uid) {
-      try {
-        const { data: threads } = await supabase
-          .from("chat_threads")
-          .select("id")
-          .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
-
-        if (Array.isArray(threads) && threads.length) {
-          const threadIds = threads.map(t => t.id).filter(Boolean);
-
-          if (threadIds.length) {
-            const seenFields = ["seen_at", "read_at", "seenAt", "readAt"];
-
-            for (const field of seenFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .is(field, null);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-
-            const boolFields = ["is_read", "read"];
-
-            for (const field of boolFields) {
-              try {
-                const { count, error } = await supabase
-                  .from("chat_messages")
-                  .select("id", { count: "exact", head: true })
-                  .in("thread_id", threadIds)
-                  .neq("sender_id", uid)
-                  .eq(field, false);
-
-                if (!error) return count || 0;
-              } catch {}
-            }
-          }
-        }
-      } catch {}
-
-      return 0;
-    }
-
-    async function loadInboxBadge() {
-      if (!currentUser) return;
-
-      try {
-        const [requests, unreadMessages] = await Promise.all([
-          countPendingMessageRequests(currentUser.id),
-          countUnreadChatMessages(currentUser.id)
-        ]);
-
-        const total = Number(requests || 0) + Number(unreadMessages || 0);
-
-        if (!total) {
-          inboxBadge.classList.add("hidden");
-        } else {
-          inboxBadge.textContent = total > 99 ? "99+" : String(total);
-          inboxBadge.classList.remove("hidden");
-        }
-      } catch {
-        inboxBadge.classList.add("hidden");
-      }
-    }
-
-    async function loadCurrentUser() {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data?.user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      currentUser = data.user;
-
-      const [publicRow, userRow] = await Promise.all([
-        fetchProfileRowByUidOrId("public_profiles", currentUser.id),
-        fetchProfileRowByUidOrId("users", currentUser.id)
-      ]);
-
-      currentProfile = normalizeProfile({
-        ...(publicRow || {}),
-        ...(userRow || {}),
-        uid: currentUser.id
-      }, currentUser.id);
-
-      applyProfileInfo();
-      useProfileLocation(false);
-      await loadInboxBadge();
-
-      loading.classList.add("hidden");
-      content.classList.remove("hidden");
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (!session?.user) {
-          window.location.href = "login.html";
-        }
-      });
-    }
-
-    async function uploadPlaceImage(file, userId) {
-      if (!file) {
-        return {
-          path: "",
-          publicUrl: ""
-        };
-      }
-
-      if (!file.type.startsWith("image/")) {
-        throw new Error("Please choose an image file.");
-      }
-
-      if (file.size > MAX_IMAGE_BYTES) {
-        throw new Error("Image must be under 5 MB.");
-      }
-
-      const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `places/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type || "image/jpeg"
+        const { data, error } = await supabase.from("nearby_places").select("city,province,state,country").limit(150);
+        if (error || !Array.isArray(data)) return;
+        const cities = new Set(), provinces = new Set(), countries = new Set();
+        data.forEach(row => {
+          const city = titleText(row.city);
+          const province = titleText(row.province || row.state);
+          const country = titleText(row.country);
+          if (city) cities.add(city);
+          if (province) provinces.add(province);
+          if (country) countries.add(country);
         });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(path);
-
-      return {
-        path,
-        publicUrl: data?.publicUrl || ""
-      };
+        citySuggestions.innerHTML = Array.from(cities).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
+        provinceSuggestions.innerHTML = Array.from(provinces).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
+        countrySuggestions.innerHTML = Array.from(countries).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
+      } catch {}
     }
 
-    async function insertOnePlace(payload) {
-      try {
-        const { error } = await supabase
-          .from("nearby_places")
-          .insert(payload);
-
-        if (!error) {
-          return {
-            ok: true,
-            id: payload.id || ""
-          };
-        }
-
-        return {
-          ok: false,
-          error
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          error
-        };
-      }
-    }
-
-    async function insertPlaceWithFallback(variants) {
+    async function insertPlaceWithFallback(payloadVariants) {
       let lastError = null;
-
-      for (const payload of variants) {
-        const result = await insertOnePlace(payload);
-
-        if (result.ok) return result;
-
-        lastError = result.error || lastError;
-
-        if (result.error && !isMissingSchemaError(result.error)) {
-          console.warn("Place insert attempt failed:", result.error?.message || result.error);
-        }
+      for (const payload of payloadVariants) {
+        try {
+          const { error } = await supabase.from("nearby_places").insert(payload);
+          if (!error) return { id: payload.id || "" };
+          lastError = error || lastError;
+          if (error && !isSchemaError(error)) console.warn("Place insert attempt failed:", error.message || error);
+        } catch (err) { lastError = err; }
       }
-
       throw lastError || new Error("Could not save place.");
     }
 
-    function resetSaveButton() {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
-        </svg>
-        <span>Add Place</span>
-      `;
+    async function updateCreatorCounters() {
+      const newValue = (currentProfile.freePlacesUsed || 0) + 1;
+      const variants = [
+        { table: "users", match: "id", payload: { free_places_used: newValue, updated_at: nowIso() } },
+        { table: "users", match: "uid", payload: { free_places_used: newValue, updated_at: nowIso() } },
+        { table: "public_profiles", match: "uid", payload: { free_places_used: newValue, updated_at: nowIso() } },
+        { table: "public_profiles", match: "id", payload: { free_places_used: newValue, updated_at: nowIso() } }
+      ];
+      for (const item of variants) {
+        try { await supabase.from(item.table).update(item.payload).eq(item.match, currentUser.id); } catch {}
+      }
     }
 
-    placeForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!currentUser || !currentProfile) return;
-
+    function validatePlaceForm() {
       const name = nameInput.value.trim();
       const category = categoryInput.value || "General";
       const description = descriptionInput.value.trim();
@@ -1404,341 +430,314 @@
       const latText = latInput.value.trim();
       const lngText = lngInput.value.trim();
       const imageFile = imageFileInput.files?.[0] || null;
-
-      if (!name) {
-        showMessage("Place name is required.", "error");
-        return;
-      }
-
-      if (!description) {
-        showMessage("Description is required.", "error");
-        return;
-      }
-
-      if (!city || !province || !country) {
-        showMessage("City, province/state and country are required.", "error");
-        return;
-      }
-
+      if (!name) throw new Error("Place name is required.");
+      if (name.length < 3) throw new Error("Place name should be at least 3 characters.");
+      if (!description) throw new Error("Description is required.");
+      if (!city || !province || !country) throw new Error("City, province/state and country are required.");
+      if (!safetyCheck.checked) throw new Error("Please confirm the place safety rule.");
       const lat = latText ? Number(latText) : null;
       const lng = lngText ? Number(lngText) : null;
-
-      if (latText && !Number.isFinite(lat)) {
-        showMessage("Latitude must be a valid number.", "error");
-        return;
+      if (latText && !Number.isFinite(lat)) throw new Error("Latitude must be a valid number.");
+      if (lngText && !Number.isFinite(lng)) throw new Error("Longitude must be a valid number.");
+      if (lat !== null && (lat < -90 || lat > 90)) throw new Error("Latitude must be between -90 and 90.");
+      if (lng !== null && (lng < -180 || lng > 180)) throw new Error("Longitude must be between -180 and 180.");
+      if (imageFile) {
+        if (!imageFile.type || !imageFile.type.startsWith("image/")) throw new Error("Please upload image file only.");
+        if (imageFile.size > MAX_IMAGE_BYTES) throw new Error("Image is too large. Please upload under 5 MB.");
       }
+      return { name, category, description, city, province, country, address, website, lat, lng, imageFile };
+    }
 
-      if (lngText && !Number.isFinite(lng)) {
-        showMessage("Longitude must be a valid number.", "error");
-        return;
-      }
-
-      if (lat !== null && (lat < -90 || lat > 90)) {
-        showMessage("Latitude must be between -90 and 90.", "error");
-        return;
-      }
-
-      if (lng !== null && (lng < -180 || lng > 180)) {
-        showMessage("Longitude must be between -180 and 180.", "error");
-        return;
-      }
-
+    placeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || !currentProfile) return;
+      const blockReason = canAddPlace();
+      if (blockReason) { showMessage(blockReason, "error"); return; }
+      let formData;
+      try { formData = validatePlaceForm(); } catch (err) { showMessage(err?.message || "Please check the form.", "error"); return; }
       saveBtn.disabled = true;
-      saveBtn.innerHTML = "Saving...";
+      saveBtn.innerHTML = "<span>Saving...</span>";
       showMessage("");
-
       try {
-        let uploadedImageUrl = "";
-        let uploadedImagePath = "";
-
-        if (imageFile) {
-          showMessage("Uploading image...", "success");
-
-          const uploadResult = await uploadPlaceImage(imageFile, currentUser.id);
+        const generatedId = generateId();
+        const createdAt = nowIso();
+        const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || currentUser.email || "Member";
+        const creatorUsername = currentProfile.username || "";
+        let uploadedImageUrl = "", uploadedImagePath = "";
+        if (formData.imageFile) {
+          saveBtn.innerHTML = "<span>Uploading...</span>";
+          showMessage("Uploading place photo...", "success");
+          const uploadResult = await uploadPlaceImage(formData.imageFile, generatedId);
           uploadedImageUrl = uploadResult.publicUrl;
           uploadedImagePath = uploadResult.path;
         }
-
-        const createdAt = nowIso();
-        const generatedId = crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || currentUser.email || "Member";
-        const creatorUsername = currentProfile.username || "";
-        const locationSearch = buildLocationSearch(city, province, country);
-        const searchText = buildFullSearchText({
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          address,
-          website,
-          creatorName
-        });
-
-        /*
-          IMPORTANT:
-          New places are saved as public/active/approved from the start.
-          This prevents place.html from showing "This place is not public yet"
-          when another user opens the place.
-        */
+        saveBtn.innerHTML = "<span>Saving...</span>";
+        const locationSearch = buildLocationSearch(formData.city, formData.province, formData.country);
+        const searchText = buildSearchText({ ...formData, creatorName });
 
         const fullSnakePayload = {
-          id: generatedId,
-          name,
-          place_name: name,
-          category,
-          description,
-          city,
-          province,
-          state: province,
-          region: province,
-          country,
-          location_search: locationSearch,
-          search_text: searchText,
-          keywords: searchText,
-          address,
-          website,
-          url: website,
-          link: website,
-          image_url: uploadedImageUrl,
-          image_path: uploadedImagePath,
-          lat,
-          lng,
-          created_by: currentUser.id,
-          user_id: currentUser.id,
-          creator_id: currentUser.id,
-          creator_name: creatorName,
-          creator_username: creatorUsername,
-          status: "active",
-          visibility: "public",
-          approval_status: "approved",
-          review_status: "approved",
-          approved: true,
-          is_approved: true,
-          public: true,
-          is_public: true,
-          verified: false,
-          is_verified: false,
-          pending: false,
-          rejected: false,
-          hidden: false,
-          hidden_by_admin: false,
-          soft_deleted: false,
-          source: "nearby_places",
-          created_at: createdAt,
-          updated_at: createdAt
+          id: generatedId, name: formData.name, place_name: formData.name, title: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, state: formData.province, region: formData.province, country: formData.country, location_search: locationSearch, search_text: searchText, keywords: searchText,
+          address: formData.address, website: formData.website, url: formData.website, link: formData.website,
+          image_url: uploadedImageUrl, photo_url: uploadedImageUrl, cover_url: uploadedImageUrl, media_url: uploadedImageUrl, image_path: uploadedImagePath,
+          lat: formData.lat, lng: formData.lng,
+          created_by: currentUser.id, user_id: currentUser.id, creator_id: currentUser.id, owner_id: currentUser.id, creator_name: creatorName, creator_username: creatorUsername,
+          status: "active", visibility: "public", approval_status: "approved", review_status: "approved", approved: true, is_approved: true, public: true, is_public: true, verified: false, is_verified: false, pending: false, rejected: false, hidden: false, hidden_by_admin: false, soft_deleted: false, source: "nearby_places",
+          created_at: createdAt, updated_at: createdAt
         };
 
         const publicSnakePayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          location_search: locationSearch,
-          search_text: searchText,
-          address,
-          website,
-          image_url: uploadedImageUrl,
-          image_path: uploadedImagePath,
-          lat,
-          lng,
-          created_by: currentUser.id,
-          user_id: currentUser.id,
-          creator_name: creatorName,
-          creator_username: creatorUsername,
-          status: "active",
-          visibility: "public",
-          approved: true,
-          is_public: true,
-          rejected: false,
-          hidden: false,
-          hidden_by_admin: false,
-          soft_deleted: false,
-          created_at: createdAt,
-          updated_at: createdAt
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, location_search: locationSearch, search_text: searchText,
+          address: formData.address, website: formData.website, image_url: uploadedImageUrl, image_path: uploadedImagePath,
+          lat: formData.lat, lng: formData.lng, created_by: currentUser.id, user_id: currentUser.id, creator_name: creatorName, creator_username: creatorUsername,
+          status: "active", visibility: "public", approved: true, is_public: true, rejected: false, hidden: false, hidden_by_admin: false, soft_deleted: false,
+          created_at: createdAt, updated_at: createdAt
         };
 
         const commonSnakePayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          location_search: locationSearch,
-          search_text: searchText,
-          address,
-          website,
-          image_url: uploadedImageUrl,
-          lat,
-          lng,
-          created_by: currentUser.id,
-          creator_name: creatorName,
-          creator_username: creatorUsername,
-          status: "active",
-          approved: true,
-          hidden: false,
-          created_at: createdAt,
-          updated_at: createdAt
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, location_search: locationSearch, search_text: searchText,
+          address: formData.address, website: formData.website, image_url: uploadedImageUrl,
+          lat: formData.lat, lng: formData.lng, created_by: currentUser.id, creator_name: creatorName, creator_username: creatorUsername,
+          status: "active", approved: true, hidden: false, created_at: createdAt, updated_at: createdAt
         };
 
         const userIdPayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          location_search: locationSearch,
-          address,
-          website,
-          image_url: uploadedImageUrl,
-          lat,
-          lng,
-          user_id: currentUser.id,
-          creator_name: creatorName,
-          status: "active",
-          approved: true,
-          hidden: false,
-          created_at: createdAt
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, location_search: locationSearch,
+          address: formData.address, website: formData.website, image_url: uploadedImageUrl,
+          lat: formData.lat, lng: formData.lng, user_id: currentUser.id, creator_name: creatorName,
+          status: "active", approved: true, hidden: false, created_at: createdAt
         };
 
         const camelPayload = {
-          id: generatedId,
-          name,
-          placeName: name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          locationSearch,
-          searchText,
-          address,
-          website,
-          url: website,
-          link: website,
-          imageURL: uploadedImageUrl,
-          imagePath: uploadedImagePath,
-          lat,
-          lng,
-          createdBy: currentUser.id,
-          userId: currentUser.id,
-          creatorId: currentUser.id,
-          creatorName,
-          creatorUsername,
-          status: "active",
-          visibility: "public",
-          approvalStatus: "approved",
-          reviewStatus: "approved",
-          approved: true,
-          isApproved: true,
-          public: true,
-          isPublic: true,
-          pending: false,
-          rejected: false,
-          hidden: false,
-          hiddenByAdmin: false,
-          softDeleted: false,
-          source: "nearby_places",
-          createdAt,
-          updatedAt: createdAt
+          id: generatedId, name: formData.name, placeName: formData.name, title: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, state: formData.province, region: formData.province, country: formData.country, locationSearch, searchText,
+          address: formData.address, website: formData.website, url: formData.website, link: formData.website,
+          imageURL: uploadedImageUrl, photoURL: uploadedImageUrl, coverURL: uploadedImageUrl, mediaURL: uploadedImageUrl, imagePath: uploadedImagePath,
+          lat: formData.lat, lng: formData.lng, createdBy: currentUser.id, userId: currentUser.id, creatorId: currentUser.id, ownerId: currentUser.id, creatorName, creatorUsername,
+          status: "active", visibility: "public", approvalStatus: "approved", reviewStatus: "approved", approved: true, isApproved: true, public: true, isPublic: true, pending: false, rejected: false, hidden: false, hiddenByAdmin: false, softDeleted: false, source: "nearby_places",
+          createdAt, updatedAt: createdAt
         };
 
         const minimalCreatedByPublicPayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          address,
-          website,
-          lat,
-          lng,
-          created_by: currentUser.id,
-          status: "active",
-          approved: true,
-          created_at: createdAt
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, address: formData.address, website: formData.website, lat: formData.lat, lng: formData.lng,
+          created_by: currentUser.id, status: "active", approved: true, created_at: createdAt
         };
 
         const minimalUserIdPublicPayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          address,
-          website,
-          lat,
-          lng,
-          user_id: currentUser.id,
-          status: "active",
-          approved: true,
-          created_at: createdAt
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, address: formData.address, website: formData.website, lat: formData.lat, lng: formData.lng,
+          user_id: currentUser.id, status: "active", approved: true, created_at: createdAt
         };
 
         const ultraMinimalPayload = {
-          id: generatedId,
-          name,
-          category,
-          description,
-          city,
-          province,
-          country,
-          address,
-          website,
-          lat,
-          lng,
+          id: generatedId, name: formData.name, category: formData.category, description: formData.description,
+          city: formData.city, province: formData.province, country: formData.country, address: formData.address, website: formData.website, lat: formData.lat, lng: formData.lng,
           created_by: currentUser.id
         };
 
-        const inserted = await insertPlaceWithFallback([
-          fullSnakePayload,
-          publicSnakePayload,
-          commonSnakePayload,
-          userIdPayload,
-          camelPayload,
-          minimalCreatedByPublicPayload,
-          minimalUserIdPublicPayload,
-          ultraMinimalPayload
-        ]);
-
-        showMessage("Place added publicly.", "success");
-
+        const inserted = await insertPlaceWithFallback([fullSnakePayload, publicSnakePayload, commonSnakePayload, userIdPayload, camelPayload, minimalCreatedByPublicPayload, minimalUserIdPublicPayload, ultraMinimalPayload]);
+        updateCreatorCounters().catch(() => {});
+        showMessage("Place added successfully.", "success");
+        try { localStorage.setItem("ownspace_places_refresh", String(Date.now())); localStorage.setItem("ownspace_nearby_refresh", String(Date.now())); } catch {}
         const placeId = inserted.id || generatedId;
-
-        if (placeId) {
-          window.location.href = `place.html?placeId=${encodeURIComponent(placeId)}&source=nearby_places`;
-        } else {
-          window.location.href = "nearby-places.html";
-        }
+        window.location.href = placeId ? `place.html?placeId=${encodeURIComponent(placeId)}&source=nearby_places` : "nearby-places.html";
       } catch (err) {
         console.error(err);
         showMessage(err?.message || "Could not add place.", "error");
-        resetSaveButton();
+        setButtonDefault();
       }
     });
 
+    async function countRows(table, buildQuery) {
+      try {
+        const query = supabase.from(table).select("id", { count: "exact", head: true });
+        const { count, error } = await buildQuery(query);
+        if (!error) return count || 0;
+      } catch {}
+      return null;
+    }
+
+    async function countPendingMessageRequests(uid) {
+      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
+      const statusColumns = ["status", "request_status", "requestStatus"];
+      for (const targetColumn of targetColumns) {
+        for (const statusColumn of statusColumns) {
+          const count = await countRows("message_requests", q => q.eq(targetColumn, uid).eq(statusColumn, "pending"));
+          if (count !== null) return count;
+        }
+        try {
+          const { data, error } = await supabase.from("message_requests").select("*").eq(targetColumn, uid);
+          if (!error) return (data || []).filter(row => normalizeText(getField(row, ["status", "request_status", "requestStatus"]) || "pending") === "pending").length;
+        } catch {}
+      }
+      return 0;
+    }
+
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
+      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getField(d, ["thread_id", "threadId"]),
+        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenValue, readValue,
+        hasSeenColumn: Object.prototype.hasOwnProperty.call(d, "seen_at") || Object.prototype.hasOwnProperty.call(d, "read_at") || Object.prototype.hasOwnProperty.call(d, "seenAt") || Object.prototype.hasOwnProperty.call(d, "readAt"),
+        hasReadColumn: Object.prototype.hasOwnProperty.call(d, "is_read") || Object.prototype.hasOwnProperty.call(d, "read") || Object.prototype.hasOwnProperty.call(d, "isRead")
+      };
+    }
+
+    function isMessageUnread(msg) {
+      if (!msg || msg.senderId === currentUser.id) return false;
+      if (msg.hasReadColumn) {
+        if (msg.readValue === true) return false;
+        if (msg.readValue === false) return true;
+      }
+      if (msg.hasSeenColumn) return !msg.seenValue;
+      return false;
+    }
+
+    async function fetchChatThreadsForUser(uid) {
+      const map = new Map();
+      const attempts = [{ a: "participant_a", b: "participant_b" }, { a: "participantA", b: "participantB" }];
+      for (const fields of attempts) {
+        try {
+          const { data, error } = await supabase.from("chat_threads").select("*").or(`${fields.a}.eq.${uid},${fields.b}.eq.${uid}`);
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              const status = normalizeText(getField(row, ["status"]) || "accepted");
+              if (row.id && status === "accepted") map.set(row.id, row);
+            });
+          }
+        } catch {}
+      }
+      return Array.from(map.values());
+    }
+
+    async function fetchMessagesForThreads(threadIds) {
+      if (!threadIds.length) return [];
+      try {
+        const { data, error } = await supabase.from("chat_messages").select("*").in("thread_id", threadIds).order("created_at", { ascending: true });
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+      try {
+        const { data, error } = await supabase.from("chat_messages").select("*").in("threadId", threadIds).order("createdAt", { ascending: true });
+        if (!error) return (data || []).map(row => normalizeMessage(row, row.id));
+      } catch {}
+      return [];
+    }
+
+    async function countUnreadChatMessages(uid) {
+      try {
+        const threads = await fetchChatThreadsForUser(uid);
+        const threadIds = threads.map(t => t.id).filter(Boolean);
+        if (!threadIds.length) return 0;
+        const messages = await fetchMessagesForThreads(threadIds);
+        const byThread = new Map();
+        messages.forEach(msg => {
+          if (!msg.threadId) return;
+          if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
+          byThread.get(msg.threadId).push(msg);
+        });
+        let total = 0;
+        threads.forEach(thread => {
+          const list = byThread.get(thread.id) || [];
+          if (!list.length) return;
+          const newest = [...list].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))[0];
+          if (newest?.senderId === uid) return;
+          const lastOutgoingMs = list.filter(msg => msg.senderId === uid).reduce((max, msg) => Math.max(max, toMillis(msg.createdAt)), 0);
+          total += list.filter(msg => msg.senderId !== uid && toMillis(msg.createdAt) > lastOutgoingMs && isMessageUnread(msg)).length;
+        });
+        return total;
+      } catch (err) {
+        console.warn("Unread chat count failed:", err?.message || err);
+        return 0;
+      }
+    }
+
+    async function loadInboxBadgeCount(uid) {
+      if (!inboxBadge) return;
+      try {
+        const [requests, messages] = await Promise.all([countPendingMessageRequests(uid), countUnreadChatMessages(uid)]);
+        const unreadTotal = Number(requests || 0) + Number(messages || 0);
+        if (!unreadTotal) {
+          inboxBadge.textContent = "0";
+          inboxBadge.classList.remove("show");
+        } else {
+          inboxBadge.textContent = unreadTotal > 99 ? "99+" : String(unreadTotal);
+          inboxBadge.classList.add("show");
+        }
+      } catch {
+        inboxBadge.textContent = "0";
+        inboxBadge.classList.remove("show");
+      }
+    }
+
+    function scheduleBadgeRefresh(delay = 350) {
+      clearTimeout(badgeRefreshTimer);
+      badgeRefreshTimer = setTimeout(() => { if (currentUser) loadInboxBadgeCount(currentUser.id).catch(() => {}); }, delay);
+    }
+
+    function setupRealtime() {
+      clearRealtime();
+      ["message_requests", "chat_threads", "chat_messages"].forEach(table => {
+        try {
+          const channel = supabase.channel(`ownspace-add-place-badge-${table}-${Math.random().toString(36).slice(2)}`).on("postgres_changes", { event: "*", schema: "public", table }, () => scheduleBadgeRefresh()).subscribe();
+          liveChannels.push(channel);
+        } catch {}
+      });
+    }
+
+    function clearRealtime() {
+      liveChannels.forEach(ch => { try { supabase.removeChannel(ch); } catch {} });
+      liveChannels = [];
+    }
+
+    backBtn.addEventListener("click", () => {
+      rememberNearbyTab();
+      if (document.referrer) history.back();
+      else window.location.href = "nearby-places.html";
+    });
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) { window.location.href = "login.html"; return; }
+      currentUser = data.user;
+      try {
+        await Promise.all([loadProfile(), loadInboxBadgeCount(currentUser.id), loadPlaceSuggestions()]);
+        const blockReason = canAddPlace();
+        if (blockReason) { loadingBox.textContent = blockReason; content.classList.add("hidden"); return; }
+        fillProfileLocation(true);
+        setupRealtime();
+        loadingBox.classList.add("hidden");
+        content.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        loadingBox.textContent = "Could not load profile.";
+      }
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (!session?.user) { clearRealtime(); window.location.href = "login.html"; }
+      });
+    }
+
+    window.addEventListener("pageshow", () => scheduleBadgeRefresh(120));
+    window.addEventListener("focus", () => scheduleBadgeRefresh(180));
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleBadgeRefresh(160); });
+    window.addEventListener("ownspace:badges-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:inbox-refresh", () => scheduleBadgeRefresh(120));
+    window.addEventListener("ownspace:chat-read-refresh", () => scheduleBadgeRefresh(120));
     window.addEventListener("beforeunload", () => {
-      if (previewObjectUrl) {
-        URL.revokeObjectURL(previewObjectUrl);
-      }
+      clearTimeout(badgeRefreshTimer);
+      clearRealtime();
+      if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     });
 
-    loadCurrentUser().catch(err => {
-      console.error(err);
-      loading.textContent = "Could not load profile.";
-    });
+    initPage();
   </script>
 </body>
 </html>
