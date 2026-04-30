@@ -32,6 +32,7 @@
       --yellow-soft:rgba(245,185,66,.13);
       --purple-soft:rgba(167,139,250,.13);
       --red-soft:rgba(255,93,115,.13);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
     html[data-theme="dark"]{
@@ -57,6 +58,7 @@
       --yellow-soft:rgba(245,185,66,.13);
       --purple-soft:rgba(167,139,250,.13);
       --red-soft:rgba(255,93,115,.13);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
     body{
@@ -66,7 +68,7 @@
         var(--bg);
       color:var(--text);
       min-height:100vh;
-      padding:6px 6px 82px;
+      padding:6px 6px calc(82px + var(--safe-bottom));
     }
 
     .app{max-width:760px;margin:0 auto}
@@ -253,6 +255,10 @@
       font-size:24px;
       font-weight:950;
       color:var(--blue);
+      background:
+        radial-gradient(circle at 28% 20%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .hero-body{padding:36px 9px 9px}
@@ -592,6 +598,10 @@
       font-size:11px;
       font-weight:950;
       color:var(--blue);
+      background:
+        radial-gradient(circle at 28% 20%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .person-main{min-width:0;flex:1}
@@ -632,13 +642,41 @@
       width:15px;
       height:15px;
       border-radius:999px;
-      background:#20c76f;
       color:#fff;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      box-shadow:0 0 0 2px rgba(32,199,111,.13);
+      border:1.4px solid rgba(255,255,255,.92);
       flex:0 0 auto;
+    }
+
+    /* FINAL OwnSpace badge color logic:
+       Verified Account = green tick
+       Verified Creator = blue tick
+       Verified Business = gold tick
+    */
+    .verified.verified-account,
+    .verified.badge-account,
+    .verified.account{
+      background:linear-gradient(135deg,var(--green),#15975a);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(61,220,132,.14),0 6px 12px rgba(34,179,108,.14);
+    }
+
+    .verified.verified-creator,
+    .verified.badge-creator,
+    .verified.creator{
+      background:linear-gradient(135deg,var(--blue),#1474d4);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(76,201,255,.14),0 6px 12px rgba(31,143,255,.14);
+    }
+
+    .verified.verified-business,
+    .verified.badge-business,
+    .verified.business{
+      background:linear-gradient(135deg,#f7c957,var(--yellow));
+      color:#3f2a00;
+      box-shadow:0 0 0 2px rgba(245,185,66,.18),0 6px 12px rgba(213,150,23,.16);
     }
 
     .verified svg{width:9px;height:9px;stroke-width:3}
@@ -868,7 +906,7 @@
     }
 
     @media(max-width:700px){
-      body{padding:6px 6px 82px}
+      body{padding:6px 6px calc(82px + var(--safe-bottom))}
       .bottom-nav{padding:5px;gap:4px}
       .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
       .nav-badge{right:8px}
@@ -1379,12 +1417,148 @@
       return fallback;
     }
 
+    function getFirstFilled(obj, names, fallback = "") {
+      for (const name of names) {
+        const value = obj?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+
+      return fallback;
+    }
+
     function getBool(obj, names, fallback = false) {
       for (const name of names) {
         if (obj?.[name] !== undefined && obj?.[name] !== null) return !!obj[name];
       }
 
       return fallback;
+    }
+
+    function cleanKey(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function truthyVerification(value) {
+      if (value === true) return true;
+
+      const clean = cleanKey(value);
+
+      return [
+        "true",
+        "yes",
+        "1",
+        "verified",
+        "approved",
+        "account",
+        "creator",
+        "business",
+        "green_tick",
+        "blue_tick",
+        "gold_tick"
+      ].includes(clean);
+    }
+
+    function normalizeVerificationType(row = {}, isVerifiedFallback = false) {
+      const rawType = getFirstFilled(row, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "verified_type",
+        "verifiedType",
+        "account_badge",
+        "accountBadge"
+      ], "");
+
+      const clean = cleanKey(rawType);
+
+      // FINAL OwnSpace mapping:
+      // account = green, creator = blue, business = gold.
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified", "standard", "approved"].includes(clean)) return "account";
+
+      const verifiedFlag = getFirstFilled(row, [
+        "is_verified",
+        "isVerified",
+        "verified",
+        "author_verified",
+        "authorVerified",
+        "user_verified",
+        "userVerified"
+      ], "");
+
+      return truthyVerification(verifiedFlag) || isVerifiedFallback ? "account" : "";
+    }
+
+    function strongestVerificationType(...types) {
+      const cleaned = types.map(cleanKey).filter(Boolean);
+
+      if (cleaned.includes("business")) return "business";
+      if (cleaned.includes("creator")) return "creator";
+      if (cleaned.includes("account")) return "account";
+
+      return "";
+    }
+
+    function mergeProfileRows(existing = {}, incoming = {}) {
+      const existingType = normalizeVerificationType(existing);
+      const incomingType = normalizeVerificationType(incoming);
+      const strongest = strongestVerificationType(existingType, incomingType);
+
+      const merged = {
+        ...(existing || {}),
+        ...(incoming || {})
+      };
+
+      if (strongest) {
+        merged.verified = true;
+        merged.is_verified = true;
+        merged.isVerified = true;
+        merged.verification_badge = strongest;
+        merged.verification_type = strongest;
+        merged.badge_type = strongest;
+      }
+
+      return merged;
+    }
+
+    function getVerificationLabel(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "Verified Business";
+      if (clean === "creator") return "Verified Creator";
+      if (clean === "account") return "Verified Account";
+
+      return "Verified";
+    }
+
+    function getVerificationClass(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "verified-business";
+      if (clean === "creator") return "verified-creator";
+
+      return "verified-account";
+    }
+
+    function verifiedHtml(profile) {
+      const type = profile?.verificationType || normalizeVerificationType(profile || {});
+
+      if (!type) return "";
+
+      const label = getVerificationLabel(type);
+      const cls = getVerificationClass(type);
+
+      return `<span class="verified ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${ICON.check}</span>`;
     }
 
     function nowIso() {
@@ -1450,13 +1624,16 @@
     }
 
     function normalizeProfile(row = {}, fallbackUid = "") {
+      const verificationType = normalizeVerificationType(row);
+
       return {
         uid: getField(row, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid,
         displayName: getField(row, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member",
         username: getField(row, ["username", "handle", "user_name", "userName"]),
         photoURL: getField(row, ["photo_url", "photoURL", "avatar_url", "avatarUrl", "avatar", "user_photo_url", "userPhotoURL"]),
         bio: getField(row, ["bio", "about", "description"]),
-        verified: getBool(row, ["verified", "is_verified", "isVerified"]),
+        verified: !!verificationType,
+        verificationType,
         isAdmin: getBool(row, ["is_admin", "isAdmin"]) || getField(row, ["role"]) === "admin"
       };
     }
@@ -1553,40 +1730,48 @@
 
     async function fetchProfiles(uids) {
       const clean = [...new Set((uids || []).filter(Boolean))];
-      const map = new Map();
+      const rawMap = new Map();
 
-      if (!clean.length) return map;
+      if (!clean.length) return new Map();
 
       const attempts = [
         { table:"public_profiles", col:"uid" },
         { table:"public_profiles", col:"id" },
         { table:"public_profiles", col:"user_id" },
+        { table:"public_profiles", col:"userId" },
         { table:"users", col:"uid" },
         { table:"users", col:"id" },
-        { table:"users", col:"user_id" }
+        { table:"users", col:"user_id" },
+        { table:"users", col:"userId" }
       ];
 
       for (const attempt of attempts) {
         try {
-          const missing = clean.filter(uid => !map.has(uid));
-          if (!missing.length) break;
-
-          const { data, error } = await supabase.from(attempt.table).select("*").in(attempt.col, missing);
+          const { data, error } = await supabase.from(attempt.table).select("*").in(attempt.col, clean);
 
           if (!error && Array.isArray(data)) {
             data.forEach(row => {
-              const profile = normalizeProfile(row, row?.[attempt.col]);
-              if (profile.uid) map.set(profile.uid, profile);
+              const uid = String(row?.[attempt.col] || row?.uid || row?.id || row?.user_id || row?.userId || "").trim();
+
+              if (!uid) return;
+
+              rawMap.set(uid, mergeProfileRows(rawMap.get(uid) || {}, {
+                ...row,
+                uid
+              }));
             });
           }
         } catch {}
       }
 
+      const finalMap = new Map();
+
       clean.forEach(uid => {
-        if (!map.has(uid)) map.set(uid, normalizeProfile({ uid }, uid));
+        const raw = rawMap.get(uid) || { uid };
+        finalMap.set(uid, normalizeProfile(raw, uid));
       });
 
-      return map;
+      return finalMap;
     }
 
     async function loadCurrentUserProfile() {
@@ -1750,6 +1935,7 @@
       const attempts = [
         { table:"community_join_requests", c:"community_id", u:"requester_id" },
         { table:"community_join_requests", c:"community_id", u:"user_id" },
+        { table:"community_join_requests", c:"communityId", u:"requesterId" },
         { table:"community_requests", c:"community_id", u:"requester_id" },
         { table:"join_requests", c:"community_id", u:"user_id" }
       ];
@@ -2007,18 +2193,14 @@
       rows.forEach(member => els.membersList.appendChild(memberCard(member)));
     }
 
-    function profileAvatar(profile, className = "person") {
+    function profileAvatar(profile) {
       const letter = firstLetter(profile?.displayName || profile?.username || "M", "M");
 
       if (profile?.photoURL) {
-        return `<img class="${className}-pic person-pic" src="${escapeHtml(profile.photoURL)}" alt="Profile photo" loading="lazy">`;
+        return `<img class="person-pic" src="${escapeHtml(profile.photoURL)}" alt="Profile photo" loading="lazy">`;
       }
 
       return `<div class="person-fallback">${escapeHtml(letter)}</div>`;
-    }
-
-    function verifiedHtml(profile) {
-      return profile?.verified ? `<span class="verified" title="Verified">${ICON.check}</span>` : "";
     }
 
     function memberCard(member) {
@@ -3312,6 +3494,7 @@
 
         const displayName = currentUserProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
         const username = currentUserProfile?.username || "";
+        const authorVerificationType = currentUserProfile?.verificationType || "";
         const createdAt = nowIso();
 
         const commonSnake = {
@@ -3323,6 +3506,9 @@
           author_name:displayName,
           display_name:displayName,
           username,
+          author_verified:!!authorVerificationType,
+          author_verification_type:authorVerificationType,
+          author_verification_badge:authorVerificationType,
           title,
           text,
           body:text,
@@ -3351,6 +3537,9 @@
           authorName:displayName,
           displayName,
           username,
+          authorVerified:!!authorVerificationType,
+          authorVerificationType:authorVerificationType,
+          authorVerificationBadge:authorVerificationType,
           title,
           text,
           body:text,
@@ -3518,23 +3707,23 @@
     init();
 
     /*
-      OWNSPACE COMMUNITY PAGE UPDATE:
+      OWNSPACE COMMUNITY PAGE FIXED VERSION
 
-      ADDED:
-      - Creator-only Requests link aligned inside existing top action row.
-      - It links to community-requests.html?communityId=...
-      - Shows pending count as Requests (1), Requests (2), etc.
-      - Pending request chip appears only for creator when count is above 0.
-      - No new floating button or extra separate section added.
-
-      KEPT:
-      - Compact Nearby-style topbar, hero, tabs and bottom nav.
-      - community_posts + posts fallback.
-      - post.html links with source.
-      - source-aware like/comment/share/report/pin/hide logic.
-      - private/request/join/community owner/admin logic.
-      - inbox badge still counts only pending message_requests + unread incoming chat_messages.
-      - realtime community, member, post, request and inbox badge refresh.
+      Fixed:
+      - Verified Account = green tick.
+      - Verified Creator = blue tick.
+      - Verified Business = gold tick.
+      - Owner card, member list, and post author row now use the same badge resolver.
+      - Reads verification_badge, verification_type, badge_type,
+        verified_badge, verified_type, account_badge, camelCase versions,
+        and old is_verified / verified booleans.
+      - If users and public_profiles disagree, strongest badge wins:
+        business > creator > account.
+      - New community posts now attempt to save author verification fields too.
+      - Kept compact community UI, post composer, private/request logic,
+        owner requests button, community_posts + posts fallback,
+        source-aware post URLs, like/comment/share/report/pin/hide,
+        and inbox badge counting only message_requests + unread chat_messages.
     */
   </script>
 </body>
