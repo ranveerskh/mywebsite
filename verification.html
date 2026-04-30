@@ -1755,26 +1755,22 @@
     async function upsertRequest(payloadVariants) {
       let lastError = null;
 
-      const status = normalizeText(currentRequest?.status || "");
-      const shouldUpdateExisting =
-        currentRequest?.id &&
-        (
-          ["pending", "need_more_info", "more_info", "rejected"].includes(status) ||
-          newRequestMode
-        );
+      /*
+        IMPORTANT FIX:
+        Some Supabase projects have a unique uid in verification_requests, and some allow many rows.
+        Some RLS policies also allow update but block duplicate insert.
+        So we try this order:
+        1) update the latest existing row if it exists
+        2) upsert by uid if uid is unique
+        3) insert as a new row if duplicates are allowed
+      */
 
-      if (shouldUpdateExisting) {
+      if (currentRequest?.id) {
         try {
           return await updateRequestById(currentRequest.id, payloadVariants);
         } catch (err) {
           lastError = err;
         }
-      }
-
-      try {
-        return await insertRequest(payloadVariants);
-      } catch (err) {
-        lastError = err;
       }
 
       for (const payload of payloadVariants) {
@@ -1788,6 +1784,12 @@
         } catch (err) {
           lastError = err;
         }
+      }
+
+      try {
+        return await insertRequest(payloadVariants);
+      } catch (err) {
+        lastError = err;
       }
 
       throw lastError || new Error("Could not save verification request.");
@@ -2014,12 +2016,28 @@
           updated_at: updatedAt
         };
 
+        const ultraSafePayload = {
+          uid: currentUser.id,
+          user_id: currentUser.id,
+          badge_type: type,
+          full_legal_name: legalName,
+          username: usernameValue,
+          email: emailValue,
+          dob: dobValue,
+          govt_id_path: govtPath,
+          selfie_code_path: selfiePath,
+          status: "pending",
+          created_at: createdAt,
+          updated_at: updatedAt
+        };
+
         await upsertRequest([
-          snakeWithReviewPayload,
+          ultraSafePayload,
+          minimalPayload,
           snakePayload,
-          camelWithReviewPayload,
+          snakeWithReviewPayload,
           camelPayload,
-          minimalPayload
+          camelWithReviewPayload
         ]);
 
         clearFileInputs();
@@ -2398,13 +2416,13 @@
         Golden Tick = Verified Business
       - Last verification request is now collapsed in a details box.
       - Rejected users can tap Retry Verification and choose badge type again.
-      - Approved users can tap Request Different Badge and submit a new review request.
+      - Approved users can tap Request Different Badge and submit another pending review request using the same latest row when needed.
       - New / retry / switch mode clears old sensitive fields from the form and requires fresh proof uploads.
       - Pending / need more info requests can still be updated before final decision.
       - Approved badge on profile should remain until admin approves the new badge type.
       - Proof uploads accept JPG, PNG, WEBP only and max 1 MB.
       - Uses Supabase storage bucket: verification.
-      - Uses fallback payloads to avoid breaking if optional columns like review_note/admin_note do not exist.
+      - Uses ultra-safe payload first so missing optional columns like review_note/admin_note/business_proof_path do not block the request.
       - Inbox badge counts only pending message requests + unread incoming chat messages.
 
       IMPORTANT PROFILE FIELDS FOR TICKS:
