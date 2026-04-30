@@ -2153,7 +2153,32 @@
     }
 
     function mergeProfiles(a, b, uid = "") {
-      return normalizeProfile({ ...(a || {}), ...(b || {}), uid: uid || b?.uid || a?.uid || "" }, uid || b?.uid || a?.uid || "");
+      const finalUid = uid || b?.uid || a?.uid || "";
+      const publicType = normalizeText(a?.verificationType || "");
+      const userType = normalizeText(b?.verificationType || "");
+      const finalType = userType || publicType;
+      const finalVerified = !!finalType || !!a?.verified || !!b?.verified;
+
+      const mergedRaw = {
+        ...(a || {}),
+        ...(b || {}),
+        uid: finalUid
+      };
+
+      if (finalType) {
+        mergedRaw.verificationType = finalType;
+        mergedRaw.verification_type = finalType;
+        mergedRaw.verification_badge = finalType;
+        mergedRaw.badge_type = finalType;
+      }
+
+      if (finalVerified) {
+        mergedRaw.verified = true;
+        mergedRaw.is_verified = true;
+        mergedRaw.isVerified = true;
+      }
+
+      return normalizeProfile(mergedRaw, finalUid);
     }
 
     function formatDate(value) {
