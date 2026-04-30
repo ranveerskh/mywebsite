@@ -181,6 +181,7 @@
       height:36px;
       background:var(--surface-2);
       font-size:15px;
+      flex-shrink:0;
     }
 
     .chip-btn{
@@ -192,6 +193,11 @@
     .chip-primary{
       background:var(--blue-soft);
       border-color:rgba(76,201,255,.22);
+    }
+
+    .chip-hub{
+      background:var(--purple-soft);
+      border-color:rgba(167,139,250,.24);
     }
 
     .page{
@@ -289,6 +295,11 @@
       border-color:rgba(167,139,250,.24);
     }
 
+    .btn-yellow{
+      background:var(--yellow-soft);
+      border-color:rgba(245,185,66,.24);
+    }
+
     .quick-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -383,6 +394,33 @@
     .dot.purple{background:var(--purple)}
     .dot.yellow{background:var(--yellow)}
 
+    .preview-panel{
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.10), rgba(167,139,250,.08)),
+        var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+    }
+
+    .preview-title{
+      font-size:16px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      margin-bottom:4px;
+    }
+
+    .preview-text{
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.48;
+    }
+
     .bottom-strip{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -448,11 +486,13 @@
       .top-actions{
         width:100%;
         display:grid;
-        grid-template-columns:36px 1fr 1fr;
+        grid-template-columns:36px 1fr 1fr 1fr;
       }
 
       .chip-btn{
         width:100%;
+        padding:0 7px;
+        font-size:10.2px;
       }
 
       .hero-main,
@@ -490,6 +530,24 @@
 
       .quick-card{
         min-height:0;
+      }
+
+      .preview-panel{
+        grid-template-columns:1fr;
+      }
+
+      .preview-panel .btn{
+        width:100%;
+      }
+    }
+
+    @media(max-width:430px){
+      .top-actions{
+        grid-template-columns:36px 1fr 1fr;
+      }
+
+      .top-actions .chip-hub{
+        grid-column:1/-1;
       }
     }
 
@@ -543,9 +601,10 @@
       </div>
 
       <div class="top-actions">
-        <button id="themeBtn" class="icon-btn" type="button" aria-label="Theme">◐</button>
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Theme">â</button>
         <a href="login.html" class="chip-btn">Login</a>
         <a href="signup.html" class="chip-btn chip-primary">Create Account</a>
+        <a href="public-hub.html" class="chip-btn chip-hub">Hub Preview</a>
       </div>
     </div>
 
@@ -553,7 +612,7 @@
       <section class="hero-card">
         <div class="hero">
           <div class="hero-main">
-            <div class="badge">Respect • Privacy • Body acceptance</div>
+            <div class="badge">Respect â¢ Privacy â¢ Body acceptance</div>
 
             <h1>A private space for real nudist connection.</h1>
 
@@ -566,7 +625,7 @@
             <div class="actions">
               <a href="signup.html" class="btn btn-signup">Create Account</a>
               <a href="login.html" class="btn btn-login">Login</a>
-              <a href="hub.html" class="btn btn-ghost">Read OwnSpace Hub</a>
+              <a href="public-hub.html" class="btn btn-ghost">Read Hub Preview</a>
             </div>
 
             <div class="quick-grid">
@@ -611,12 +670,24 @@
 
               <div class="mini-list">
                 <div class="mini-item"><span class="dot yellow"></span><span>Signup/login keeps the community member-based.</span></div>
-                <div class="mini-item"><span class="dot blue"></span><span>Hub explains rules, safety, education, and updates.</span></div>
+                <div class="mini-item"><span class="dot blue"></span><span>Public Hub gives visitors a safe preview before joining.</span></div>
                 <div class="mini-item"><span class="dot"></span><span>Reports, moderation, and privacy tools help keep it cleaner.</span></div>
               </div>
             </div>
           </aside>
         </div>
+      </section>
+
+      <section class="preview-panel">
+        <div>
+          <div class="preview-title">Preview OwnSpace before creating an account</div>
+          <div class="preview-text">
+            Visitors can read selected Hub previews first. Full posts, profiles, comments, messages,
+            communities, and private features stay locked until signup.
+          </div>
+        </div>
+
+        <a href="public-hub.html" class="btn btn-yellow">Open Hub Preview</a>
       </section>
 
       <section class="bottom-strip">
@@ -746,22 +817,18 @@
       OWNSPACE LANDING PAGE UPDATE:
 
       UPDATED:
-      - Removed repetitive generic social app wording.
-      - Landing page now explains:
-        nudism meaning,
-        why OwnSpace exists,
-        how the website helps,
-        privacy/community/safety purpose.
-      - Strong Login and Create Account buttons.
-      - OwnSpace Hub button included for education/rules/updates.
+      - Added Hub Preview button in topbar.
+      - Changed old private hub.html link to public-hub.html for visitors.
+      - Added public preview section explaining that visitors can read selected Hub previews before signup.
+      - Full Hub, profiles, comments, messaging, communities, and private features remain login-only.
+      - Landing still redirects logged-in users to feed.html.
       - Light theme remains default.
       - Keeps no-infinite-loader fallback.
-      - Logged-in users redirect to feed.html.
       - Theme supports osTheme and bwTheme.
 
-      SUPABASE:
-      - supabase.auth.getUser()
-      - supabase.auth.onAuthStateChange()
+      IMPORTANT:
+      - public-hub.html should read from public_hub_posts view.
+      - index.html should NOT link visitors directly to private hub.html.
     */
   </script>
 </body>
