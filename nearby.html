@@ -381,11 +381,15 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      color:var(--muted);
-      font-size:9px;
+      color:var(--text);
+      font-size:15px;
       text-align:center;
       padding:5px;
-      font-weight:900;
+      font-weight:950;
+      background:
+        radial-gradient(circle at 28% 20%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .person-body{min-width:0;flex:1}
@@ -424,11 +428,38 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      background:#20c76f;
       color:#ffffff;
-      border:2px solid rgba(255,255,255,.92);
-      box-shadow:0 0 0 3px rgba(32,199,111,.14);
+      border:1.5px solid rgba(255,255,255,.92);
       flex-shrink:0;
+    }
+
+    /* FINAL OwnSpace badge color logic:
+       Verified Account = green tick
+       Verified Creator = blue tick
+       Verified Business = gold tick
+    */
+    .verified-badge.verified-account,
+    .verified-badge.badge-account,
+    .verified-badge.account{
+      background:linear-gradient(135deg,var(--green),#15975a);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(61,220,132,.14),0 6px 12px rgba(34,179,108,.14);
+    }
+
+    .verified-badge.verified-creator,
+    .verified-badge.badge-creator,
+    .verified-badge.creator{
+      background:linear-gradient(135deg,var(--blue),#1474d4);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(76,201,255,.14),0 6px 12px rgba(31,143,255,.14);
+    }
+
+    .verified-badge.verified-business,
+    .verified-badge.badge-business,
+    .verified-badge.business{
+      background:linear-gradient(135deg,#f7c957,var(--yellow));
+      color:#3f2a00;
+      box-shadow:0 0 0 2px rgba(245,185,66,.18),0 6px 12px rgba(213,150,23,.16);
     }
 
     .verified-badge svg{
@@ -743,12 +774,10 @@
     let badgeRefreshTimer = null;
 
     const ICONS = {
-      verified: `
-        <span class="verified-badge" title="Verified">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M20 6 9 17l-5-5"></path>
-          </svg>
-        </span>
+      check: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
       `
     };
 
@@ -833,6 +862,101 @@
       return String(value || "").trim();
     }
 
+    function cleanKey(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function truthyVerification(value) {
+      if (value === true) return true;
+
+      const clean = cleanKey(value);
+
+      return [
+        "true",
+        "yes",
+        "1",
+        "verified",
+        "approved",
+        "account",
+        "creator",
+        "business",
+        "green_tick",
+        "blue_tick",
+        "gold_tick"
+      ].includes(clean);
+    }
+
+    function normalizeVerificationType(raw = {}, isVerifiedFallback = false) {
+      const rawType = getFirstFilled(raw, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "verified_type",
+        "verifiedType",
+        "account_badge",
+        "accountBadge"
+      ], "");
+
+      const clean = cleanKey(rawType);
+
+      // FINAL OwnSpace badge mapping:
+      // account = green, creator = blue, business = gold.
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified", "standard", "approved"].includes(clean)) return "account";
+
+      const verifiedFlag = getFirstFilled(raw, [
+        "is_verified",
+        "isVerified",
+        "verified",
+        "author_verified",
+        "authorVerified",
+        "user_verified",
+        "userVerified"
+      ], "");
+
+      return truthyVerification(verifiedFlag) || isVerifiedFallback ? "account" : "";
+    }
+
+    function getVerificationLabel(type) {
+      const clean = cleanKey(type);
+      if (clean === "business") return "Verified Business";
+      if (clean === "creator") return "Verified Creator";
+      if (clean === "account") return "Verified Account";
+      return "Verified";
+    }
+
+    function getVerificationClass(type) {
+      const clean = cleanKey(type);
+      if (clean === "business") return "verified-business";
+      if (clean === "creator") return "verified-creator";
+      return "verified-account";
+    }
+
+    function buildVerifiedBadge(raw = {}) {
+      const type = normalizeVerificationType(raw);
+
+      if (!type) return "";
+
+      const label = getVerificationLabel(type);
+      const cls = getVerificationClass(type);
+
+      return `
+        <span class="verified-badge ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
+          ${ICONS.check}
+        </span>
+      `;
+    }
+
     function num(v) {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
@@ -845,6 +969,15 @@
         if (value != null && String(value).trim()) {
           return String(value).trim();
         }
+      }
+
+      return fallback;
+    }
+
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
       }
 
       return fallback;
@@ -885,6 +1018,15 @@
         obj?.coords?.lng ??
         obj?.coords?.longitude
       );
+    }
+
+    function firstLetters(name) {
+      return String(name || "OS")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part.charAt(0).toUpperCase())
+        .join("") || "OS";
     }
 
     function normalizeLocationVisibility(value) {
@@ -1005,6 +1147,8 @@
         ? d.blockedUsers
         : [];
 
+      const verificationType = normalizeVerificationType(d);
+
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "fullName", "full_name", "username"]) || "Member",
@@ -1014,7 +1158,8 @@
         gender: getField(d, ["gender_custom", "genderCustom", "gender"]),
         keywords: getField(d, ["keywords", "interests", "tags", "search_keywords", "searchKeywords"]),
         isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        verified: !!verificationType,
+        verificationType,
         moderationStatus: normalizeText(getField(d, ["moderation_status", "moderationStatus", "status"])),
         isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin ?? d.hidden_by_admin ?? d.hiddenByAdmin),
         softDeleted: !!(d.soft_deleted ?? d.softDeleted ?? d.deactivated),
@@ -1029,6 +1174,32 @@
         lat: readLat(d),
         lng: readLng(d)
       };
+    }
+
+    function mergeRawProfile(existing = {}, incoming = {}) {
+      const merged = {
+        ...(existing || {}),
+        ...(incoming || {})
+      };
+
+      const existingType = normalizeVerificationType(existing || {});
+      const incomingType = normalizeVerificationType(incoming || {});
+      const types = [existingType, incomingType].filter(Boolean);
+
+      let strongest = "";
+      if (types.includes("business")) strongest = "business";
+      else if (types.includes("creator")) strongest = "creator";
+      else if (types.includes("account")) strongest = "account";
+
+      if (strongest) {
+        merged.is_verified = true;
+        merged.verified = true;
+        merged.verification_badge = strongest;
+        merged.verification_type = strongest;
+        merged.badge_type = strongest;
+      }
+
+      return merged;
     }
 
     function normalizeMessage(raw, fallbackId = "") {
@@ -1653,7 +1824,7 @@
       rows.forEach(row => {
         const avatarHtml = row.photoURL
           ? `<img class="person-avatar" src="${escapeHtml(row.photoURL)}" alt="Profile photo">`
-          : `<div class="person-avatar-placeholder">No photo</div>`;
+          : `<div class="person-avatar-placeholder">${escapeHtml(firstLetters(row.displayName))}</div>`;
 
         const locationText = row.placeLabel || "Location not added";
         const distanceText = row.distanceLabel ? `${row.distanceLabel} away` : "";
@@ -1671,7 +1842,7 @@
                 <div class="person-main">
                   <div class="person-name">
                     <span>${escapeHtml(row.displayName)}</span>
-                    ${row.verified ? ICONS.verified : ""}
+                    ${buildVerifiedBadge(row)}
                   </div>
 
                   ${row.username ? `<div class="person-username">@${escapeHtml(row.username)}</div>` : ""}
@@ -1688,7 +1859,7 @@
 
         if (img) {
           img.addEventListener("error", () => {
-            img.outerHTML = `<div class="person-avatar-placeholder">No photo</div>`;
+            img.outerHTML = `<div class="person-avatar-placeholder">${escapeHtml(firstLetters(row.displayName))}</div>`;
           });
         }
 
@@ -1722,11 +1893,10 @@
         selectProfileRow("public_profiles", uid)
       ]);
 
-      viewerProfile = normalizeProfile({
-        ...(publicRow || {}),
-        ...(userRow || {}),
+      viewerProfile = normalizeProfile(
+        mergeRawProfile(publicRow || {}, { ...(userRow || {}), uid }),
         uid
-      }, uid);
+      );
 
       viewerBlockedUsers = viewerProfile.blockedUsers || [];
       renderViewerMeta(0);
@@ -1745,22 +1915,20 @@
         const uid = row.uid || row.id || row.user_id || row.userId || "";
         if (!uid) return;
 
-        byUid.set(uid, {
-          ...(byUid.get(uid) || {}),
+        byUid.set(uid, mergeRawProfile(byUid.get(uid) || {}, {
           ...row,
           uid
-        });
+        }));
       });
 
       userRows.forEach(row => {
         const uid = row.uid || row.id || row.user_id || row.userId || "";
         if (!uid) return;
 
-        byUid.set(uid, {
-          ...(byUid.get(uid) || {}),
+        byUid.set(uid, mergeRawProfile(byUid.get(uid) || {}, {
           ...row,
           uid
-        });
+        }));
       });
 
       peopleData = Array.from(byUid.values()).map(row =>
@@ -1917,28 +2085,24 @@
     initPage();
 
     /*
-      OWNSPACE NEARBY PEOPLE COMPACT UPDATE:
+      OWNSPACE NEARBY PEOPLE FIXED VERSION
 
-      UI:
-      - Compact premium style matching Settings/Edit Profile.
-      - Removed duplicate top GPS button. Topbar now has Back + Refresh.
+      Fixed:
+      - Verified Account = green tick.
+      - Verified Creator = blue tick.
+      - Verified Business = gold tick.
+      - Reads verification_badge, verification_type, badge_type,
+        verified_badge, verified_type, account_badge, camelCase versions,
+        and old is_verified / verified booleans.
+      - If users and public_profiles disagree, strongest badge wins:
+        business > creator > account.
       - Fixed broken characters: clear button is Ã and row separator is â¢.
-      - Bottom nav compact style.
-      - People tiles stay simple: photo, name, username, location, distance.
-
-      NEARBY LOGIC:
-      - Search works across name, username, bio, city, province/state, country and keywords.
-      - When search text exists, only matching keyword results show.
-      - City Mode uses same city/province/country fallback.
-      - GPS Mode sorts by distance and includes nearby/same-region people.
-      - Everywhere mode shows all visible Nearby profiles.
-      - Hidden, deleted, banned, blocked users are not shown.
-      - Supports current_city/current_province/current_country fallback columns too.
-
-      BADGE LOGIC:
-      - Inbox badge counts only pending message_requests + unread incoming chat_messages.
+      - Improved no-photo avatar initials instead of ugly "No photo" text.
+      - Inbox badge still counts only pending message_requests + unread incoming chat_messages.
       - General notifications do not trigger the Inbox red dot.
-      - Refreshes on realtime changes and localStorage refresh events.
+      - Search stays keyword-only when search text exists.
+      - Hidden, deleted, banned, blocked users are not shown.
+      - Preserved compact Nearby People UI, GPS mode, City mode, and location fallback logic.
     */
   </script>
 </body>
