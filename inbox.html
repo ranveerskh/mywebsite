@@ -478,11 +478,26 @@
       width:16px;
       height:16px;
       border-radius:999px;
-      background:#20c76f;
+      background:var(--blue);
       color:#fff;
       border:1.5px solid rgba(255,255,255,.92);
-      box-shadow:0 0 0 2px rgba(32,199,111,.13);
+      box-shadow:0 0 0 2px rgba(76,201,255,.13),0 6px 12px rgba(31,143,255,.15);
       flex-shrink:0;
+    }
+
+    .verified-badge.badge-account{
+      background:linear-gradient(135deg,var(--blue),#1474d4);
+      box-shadow:0 0 0 2px rgba(76,201,255,.14),0 6px 12px rgba(31,143,255,.16);
+    }
+
+    .verified-badge.badge-creator{
+      background:linear-gradient(135deg,var(--green),#15975a);
+      box-shadow:0 0 0 2px rgba(61,220,132,.14),0 6px 12px rgba(34,179,108,.16);
+    }
+
+    .verified-badge.badge-business{
+      background:linear-gradient(135deg,#f7c957,var(--yellow));
+      box-shadow:0 0 0 2px rgba(245,185,66,.18),0 6px 12px rgba(213,150,23,.18);
     }
 
     .verified-badge svg{
@@ -1416,16 +1431,65 @@
       return String(value || fallback || "").trim().toLowerCase();
     }
 
+    function normalizeVerificationTypeFromRaw(raw, isVerified = false) {
+      const d = raw || {};
+      const rawType = getField(d, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge"
+      ]);
+
+      const clean = String(rawType || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) {
+        return "business";
+      }
+
+      if (["creator", "verified_creator", "creator_verified", "green", "green_tick", "green_badge"].includes(clean)) {
+        return "creator";
+      }
+
+      if (["account", "verified_account", "account_verified", "blue", "blue_tick", "blue_badge", "verified", "standard"].includes(clean)) {
+        return "account";
+      }
+
+      return isVerified ? "account" : "";
+    }
+
+    function getVerificationLabel(type) {
+      if (type === "business") return "Verified Business";
+      if (type === "creator") return "Verified Creator";
+      if (type === "account") return "Verified Account";
+      return "Verified";
+    }
+
+    function getVerificationClass(type) {
+      if (type === "business") return "badge-business";
+      if (type === "creator") return "badge-creator";
+      return "badge-account";
+    }
+
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const isVerified = !!(d.is_verified ?? d.verified ?? d.isVerified);
+      const verificationType = normalizeVerificationTypeFromRaw(d, isVerified);
 
       return {
         uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
         displayName: getField(d, ["display_name", "displayName", "name", "fullName", "full_name", "username"], "Member") || "Member",
         username: getField(d, ["username", "handle", "userName", "user_name"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "avatar_url", "user_photo_url", "userPhotoURL"]),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
+        verified: !!verificationType || isVerified,
+        verificationType,
+        verificationLabel: getVerificationLabel(verificationType),
         bio: getField(d, ["bio", "about"])
       };
     }
@@ -1668,10 +1732,14 @@
     }
 
     function buildVerifiedHtml(profile) {
-      if (!profile.verified) return "";
+      if (!profile?.verified) return "";
+
+      const type = profile.verificationType || "account";
+      const label = profile.verificationLabel || getVerificationLabel(type);
+      const badgeClass = getVerificationClass(type);
 
       return `
-        <span class="verified-badge" title="${escapeHtml(profile.verificationType || "Verified")}">
+        <span class="verified-badge ${badgeClass}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
           ${ICONS.check}
         </span>
       `;
