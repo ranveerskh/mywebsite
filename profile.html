@@ -217,13 +217,13 @@
     }
 
     .verified-badge.badge-account{
-      background:var(--blue);
-      box-shadow:0 0 0 2px rgba(31,143,255,.16);
+      background:var(--green);
+      box-shadow:0 0 0 2px rgba(34,179,108,.16);
     }
 
     .verified-badge.badge-creator{
-      background:var(--green);
-      box-shadow:0 0 0 2px rgba(34,179,108,.16);
+      background:var(--blue);
+      box-shadow:0 0 0 2px rgba(31,143,255,.16);
     }
 
     .verified-badge.badge-business{
@@ -1536,7 +1536,7 @@
           <div id="trustCardTitle" class="trust-card-title">Trust Card</div>
           <div class="trust-card-sub">Your quick safety and reputation snapshot.</div>
         </div>
-        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">×</button>
+        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">Ã</button>
       </div>
 
       <div class="trust-score-box">
@@ -1857,8 +1857,8 @@
       ], ""));
 
       if (["business", "verified_business", "verified business", "gold"].includes(rawType)) return "business";
-      if (["creator", "verified_creator", "verified creator", "green"].includes(rawType)) return "creator";
-      if (["account", "verified_account", "verified account", "blue"].includes(rawType)) return "account";
+      if (["creator", "verified_creator", "verified creator", "blue"].includes(rawType)) return "creator";
+      if (["account", "verified_account", "verified account", "green"].includes(rawType)) return "account";
 
       const verifiedValue = getField(raw, ["is_verified", "isVerified", "verified"], "");
       return truthyVerification(verifiedValue) ? "account" : "";
@@ -2375,7 +2375,7 @@
 
       if (cleanStatus === "banned") {
         moderationBadge.className = "moderation-badge moderation-ban";
-        moderationBadge.textContent = "×";
+        moderationBadge.textContent = "Ã";
         return;
       }
 
@@ -2839,8 +2839,8 @@
 
       list.forEach(event => {
         const locationText = locationTextFrom(event);
-        const dateTime = [event.date, event.time].filter(Boolean).join(" • ");
-        const meta = [locationText, dateTime].filter(Boolean).join(" • ");
+        const dateTime = [event.date, event.time].filter(Boolean).join(" â¢ ");
+        const meta = [locationText, dateTime].filter(Boolean).join(" â¢ ");
 
         const chips = [
           `<span class="compact-chip ${typeLabel === "Created" ? "chip-green" : "chip-purple"}">${escapeHtml(typeLabel)}</span>`,
@@ -3462,78 +3462,4 @@
 
       await loadInboxBadgeCount(uid);
 
-      loading.classList.add("hidden");
-      content.classList.remove("hidden");
-      openTab("dashboardTab");
-      closeNetwork();
-    }
-
-    async function initProfilePage() {
-      try {
-        const { data, error } = await withTimeout(supabase.auth.getUser(), 10000, "Login check timed out.");
-
-        if (error) throw error;
-
-        const uid = data?.user?.id || "";
-
-        if (!uid) {
-          window.location.href = "login.html";
-          return;
-        }
-
-        currentUserId = uid;
-
-        await detectOptionalPostTables();
-        await withTimeout(loadEverything(uid), 18000, "Profile took too long to load.");
-
-        supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "SIGNED_OUT" || !session?.user) {
-            window.location.href = "login.html";
-          }
-        });
-      } catch (err) {
-        console.error("Profile load error:", err);
-        loading.textContent = err?.message || "Error loading profile.";
-      }
-    }
-
-    initProfilePage();
-
-    /*
-      OWNSPACE PROFILE PAGE UPDATE:
-
-      ADDED:
-      - Trust Bar is now clickable/tappable on own profile.
-      - Opens a clean Trust Card popup.
-      - Trust Card shows score, label, short meaning, trust-improving actions, trust-drop reasons, and separate Points note.
-      - Does not reveal the full Trust algorithm so users cannot game the system.
-
-      PRESERVED:
-      - Light theme default.
-      - Dashboard posts are clickable; action row now shows Like + Comments + Share instead of an extra Open button.
-      - Photos grid.
-      - Compact Events, Places, and Communities tiles.
-      - Network stays hidden until Followers / Following is clicked.
-      - Privacy toggle, Edit, Share Profile, Trust Bar, Points, Inbox badge.
-      - Inbox badge = pending message_requests + unread incoming chat_messages only.
-
-      FIXED:
-      - Green / blue / gold verification tick logic added.
-      - Blue = Verified Account, Green = Verified Creator, Gold = Verified Business.
-      - Removed text encoding glitches from × and • symbols.
-      - Added keyboard support for Trust Card.
-      - Escape key closes Trust Card.
-    */
-
-    /*
-      OWNSPACE COMPACT PREMIUM UPDATE:
-      - Slimmed sticky topbar and bottom navigation.
-      - Made profile header, avatar, display name, username, badges, and action buttons smaller.
-      - Converted Trust/Points area into a sleek low-height strip.
-      - Tightened tabs, cards, network rows, and empty/loading boxes.
-      - Removed text encoding glitches from × and • symbols.
-      - Kept existing Supabase logic and page features intact.
-    */
-  </script>
-</body>
-</html>
+      load
