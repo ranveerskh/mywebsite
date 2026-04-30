@@ -6,7 +6,7 @@
   <title>OwnSpace - Event</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 
     :root,
     html[data-theme="light"]{
@@ -26,6 +26,11 @@
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
       --shadow:0 16px 30px rgba(20,33,61,.08);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     html[data-theme="dark"]{
@@ -45,6 +50,11 @@
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
       --shadow:0 20px 40px rgba(0,0,0,.18);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     body{
@@ -205,6 +215,9 @@
     .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-account{background:var(--green-soft);border-color:rgba(61,220,132,.22);color:var(--green)}
+    .badge-creator{background:var(--blue-soft);border-color:rgba(76,201,255,.22);color:var(--blue)}
+    .badge-business{background:var(--yellow-soft);border-color:rgba(245,185,66,.24);color:var(--yellow)}
 
     .quick-links{
       display:flex;
@@ -320,6 +333,10 @@
       font-size:10px;
       text-align:center;
       padding:6px;
+      background:
+        radial-gradient(circle at 26% 18%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .host-body,
@@ -355,6 +372,11 @@
       text-decoration:underline;
     }
 
+    /* FINAL OwnSpace badge color logic:
+       Verified Account = green tick
+       Verified Creator = blue tick
+       Verified Business = gold tick
+    */
     .verified-dot{
       width:20px;
       height:20px;
@@ -362,16 +384,36 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      background:#20c76f;
       color:#ffffff;
       border:2px solid rgba(255,255,255,.92);
-      box-shadow:
-        0 0 0 3px rgba(32,199,111,.18),
-        0 8px 18px rgba(32,199,111,.22);
-      font-size:12px;
       font-weight:950;
       line-height:1;
       flex-shrink:0;
+    }
+
+    .verified-dot svg{
+      width:11px;
+      height:11px;
+      display:block;
+      stroke-width:3;
+    }
+
+    .verified-dot.verified-account{
+      background:linear-gradient(135deg,var(--green),#15975a);
+      color:#ffffff;
+      box-shadow:0 0 0 3px rgba(61,220,132,.16),0 8px 18px rgba(34,179,108,.14);
+    }
+
+    .verified-dot.verified-creator{
+      background:linear-gradient(135deg,var(--blue),#1474d4);
+      color:#ffffff;
+      box-shadow:0 0 0 3px rgba(76,201,255,.16),0 8px 18px rgba(31,143,255,.14);
+    }
+
+    .verified-dot.verified-business{
+      background:linear-gradient(135deg,#f7c957,var(--yellow));
+      color:#3f2a00;
+      box-shadow:0 0 0 3px rgba(245,185,66,.18),0 8px 18px rgba(213,150,23,.16);
     }
 
     .host-username,
@@ -1203,6 +1245,172 @@
       return "";
     }
 
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+
+      return fallback;
+    }
+
+    function cleanKey(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function truthyVerification(value) {
+      if (value === true) return true;
+
+      const clean = cleanKey(value);
+
+      return [
+        "true",
+        "yes",
+        "1",
+        "verified",
+        "approved",
+        "account",
+        "creator",
+        "business",
+        "green_tick",
+        "blue_tick",
+        "gold_tick"
+      ].includes(clean);
+    }
+
+    function normalizeVerificationType(row = {}, isVerifiedFallback = false) {
+      const rawType = getFirstFilled(row, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "verified_type",
+        "verifiedType",
+        "account_badge",
+        "accountBadge",
+        "host_verification_type",
+        "hostVerificationType",
+        "host_verification_badge",
+        "hostVerificationBadge",
+        "member_verification_type",
+        "memberVerificationType",
+        "member_verification_badge",
+        "memberVerificationBadge",
+        "commenter_verification_type",
+        "commenterVerificationType",
+        "commenter_verification_badge",
+        "commenterVerificationBadge",
+        "user_verification_type",
+        "userVerificationType"
+      ], "");
+
+      const clean = cleanKey(rawType);
+
+      // FINAL OwnSpace mapping:
+      // account = green, creator = blue, business = gold.
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified", "standard", "approved"].includes(clean)) return "account";
+
+      const verifiedFlag = getFirstFilled(row, [
+        "is_verified",
+        "isVerified",
+        "verified",
+        "host_verified",
+        "hostVerified",
+        "member_verified",
+        "memberVerified",
+        "user_verified",
+        "userVerified",
+        "commenter_verified",
+        "commenterVerified"
+      ], "");
+
+      return truthyVerification(verifiedFlag) || isVerifiedFallback ? "account" : "";
+    }
+
+    function strongestVerificationType(...types) {
+      const cleaned = types.map(cleanKey).filter(Boolean);
+
+      if (cleaned.includes("business")) return "business";
+      if (cleaned.includes("creator")) return "creator";
+      if (cleaned.includes("account")) return "account";
+
+      return "";
+    }
+
+    function mergeProfileRows(existing = {}, incoming = {}) {
+      const existingType = normalizeVerificationType(existing);
+      const incomingType = normalizeVerificationType(incoming);
+      const strongest = strongestVerificationType(existingType, incomingType);
+
+      const merged = {
+        ...(existing || {}),
+        ...(incoming || {})
+      };
+
+      if (strongest) {
+        merged.verified = true;
+        merged.is_verified = true;
+        merged.isVerified = true;
+        merged.verification_badge = strongest;
+        merged.verification_type = strongest;
+        merged.badge_type = strongest;
+      }
+
+      return merged;
+    }
+
+    function getVerificationLabel(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "Verified Business";
+      if (clean === "creator") return "Verified Creator";
+      if (clean === "account") return "Verified Account";
+
+      return "Verified";
+    }
+
+    function getVerificationClass(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "verified-business";
+      if (clean === "creator") return "verified-creator";
+
+      return "verified-account";
+    }
+
+    function verificationDotHtml(profile) {
+      const type = profile?.verificationType || normalizeVerificationType(profile || {});
+
+      if (!type) return "";
+
+      const label = getVerificationLabel(type);
+      const cls = getVerificationClass(type);
+
+      return `<span class="verified-dot ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${ICONS.check}</span>`;
+    }
+
+    function verificationBadgeHtml(profile) {
+      const type = profile?.verificationType || normalizeVerificationType(profile || {});
+
+      if (!type) return "";
+
+      const clean = cleanKey(type);
+      const label = getVerificationLabel(type);
+
+      return `<span class="badge badge-${escapeHtml(clean || "account")}">${escapeHtml(label)}</span>`;
+    }
+
     function toMillis(value) {
       if (!value) return 0;
 
@@ -1340,6 +1548,7 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const verificationType = normalizeVerificationType(d);
 
       return {
         uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
@@ -1347,8 +1556,8 @@
         username: getField(d, ["username", "handle", "user_name", "userName"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
         bio: getField(d, ["bio", "about", "description"]),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
+        verified: !!verificationType,
+        verificationType,
         moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
         isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
         softDeleted: !!(d.soft_deleted ?? d.softDeleted)
@@ -1373,6 +1582,8 @@
         creatorId: getField(d, ["creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName", "host_name", "hostName"]) || "Member",
         creatorUsername: getField(d, ["creator_username", "creatorUsername"]),
+        creatorVerified: truthyVerification(getFirstFilled(d, ["creator_verified", "creatorVerified", "host_verified", "hostVerified"], "")),
+        creatorVerificationType: normalizeVerificationType(d),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
         lat: num(d.lat ?? d.latitude),
         lng: num(d.lng ?? d.lon ?? d.longitude),
@@ -1383,6 +1594,7 @@
     function normalizeComment(raw, fallbackId = "") {
       const d = raw || {};
       const createdAt = d.created_at ?? d.createdAt ?? null;
+      const verificationType = normalizeVerificationType(d);
 
       return {
         id: getField(d, ["id"]) || fallbackId || "",
@@ -1392,13 +1604,16 @@
         displayName: getField(d, ["display_name", "displayName", "name"]) || "Member",
         username: getField(d, ["username"]),
         createdAt,
-        createdAtMs: toMillis(createdAt)
+        createdAtMs: toMillis(createdAt),
+        verified: !!verificationType,
+        verificationType
       };
     }
 
     function normalizeMember(raw, fallbackUid = "") {
       const d = raw || {};
       const joinedAt = d.joined_at ?? d.joinedAt ?? d.created_at ?? d.createdAt ?? null;
+      const verificationType = normalizeVerificationType(d);
 
       return {
         id: getField(d, ["id"]),
@@ -1407,7 +1622,9 @@
         username: getField(d, ["username"]),
         joinedAt,
         joinedAtMs: toMillis(joinedAt),
-        creatorHost: !!(d.creator_host ?? d.creatorHost ?? d.is_host ?? d.isHost ?? String(d.role || "").toLowerCase() === "host")
+        creatorHost: !!(d.creator_host ?? d.creatorHost ?? d.is_host ?? d.isHost ?? String(d.role || "").toLowerCase() === "host"),
+        verified: !!verificationType,
+        verificationType
       };
     }
 
@@ -1655,11 +1872,24 @@
           selectProfileRow("public_profiles", uid)
         ]);
 
-        const merged = normalizeProfile({
-          ...(publicRow || {}),
-          ...(userRow || {}),
+        const eventFallback = currentEvent && currentEvent.creatorId === uid
+          ? {
+              uid,
+              display_name: currentEvent.creatorName,
+              username: currentEvent.creatorUsername,
+              verified: currentEvent.creatorVerified,
+              verification_type: currentEvent.creatorVerificationType,
+              verification_badge: currentEvent.creatorVerificationType
+            }
+          : { uid };
+
+        const merged = normalizeProfile(
+          mergeProfileRows(
+            mergeProfileRows(eventFallback, publicRow || {}),
+            userRow || {}
+          ),
           uid
-        }, uid);
+        );
 
         profileCache.set(uid, merged);
         return merged;
@@ -1787,9 +2017,11 @@
         text: payload.text || "",
         from_user_id: payload.from_user_id || payload.fromUserId || currentUser?.id || "",
         to_user_id: targetUid,
+        user_id: targetUid,
         event_id: payload.event_id || payload.eventId || currentEventId || "",
         created_at: createdAt,
-        is_read: false
+        is_read: false,
+        read: false
       };
 
       const camelPayload = {
@@ -1798,9 +2030,11 @@
         text: payload.text || "",
         fromUserId: snakePayload.from_user_id,
         toUserId: targetUid,
+        userId: targetUid,
         eventId: snakePayload.event_id,
         createdAt: createdAt,
-        isRead: false
+        isRead: false,
+        read: false
       };
 
       try {
@@ -1811,7 +2045,9 @@
             type: snakePayload.type,
             text: snakePayload.text,
             to_user_id: targetUid,
-            created_at: createdAt
+            user_id: targetUid,
+            created_at: createdAt,
+            is_read: false
           }
         ]);
       } catch (err) {
@@ -1846,6 +2082,7 @@
     async function addEventMember(eventId, uid, isHost = false) {
       const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || currentUser?.email || "Member";
       const username = currentUserProfile?.username || "";
+      const verificationType = currentUserProfile?.verificationType || "";
       const createdAt = nowIso();
 
       const already = await memberExists(eventId, uid);
@@ -1857,6 +2094,9 @@
           user_id: uid,
           display_name: displayName,
           username,
+          member_verified: !!verificationType,
+          member_verification_type: verificationType,
+          member_verification_badge: verificationType,
           role: isHost ? "host" : "member",
           creator_host: !!isHost,
           joined_at: createdAt,
@@ -1868,6 +2108,9 @@
           userId: uid,
           displayName,
           username,
+          memberVerified: !!verificationType,
+          memberVerificationType: verificationType,
+          memberVerificationBadge: verificationType,
           role: isHost ? "host" : "member",
           creatorHost: !!isHost,
           joinedAt: createdAt,
@@ -1936,13 +2179,15 @@
           rows.map(async (row) => {
             const base = normalizeMember(row);
             const profile = await loadMergedProfile(base.uid);
+            const type = strongestVerificationType(base.verificationType, profile.verificationType);
 
             return {
               uid: base.uid,
               displayName: profile.displayName || base.displayName || "Member",
               username: profile.username || base.username || "",
               photoURL: profile.photoURL || "",
-              verified: !!profile.verified,
+              verified: !!type,
+              verificationType: type,
               joinedAt: base.joinedAt,
               joinedAtMs: base.joinedAtMs,
               creatorHost: !!base.creatorHost || base.uid === currentEvent?.creatorId
@@ -1959,10 +2204,14 @@
             uniqueMap.set(row.uid, row);
           } else {
             const existing = uniqueMap.get(row.uid);
+            const type = strongestVerificationType(existing.verificationType, row.verificationType);
+
             uniqueMap.set(row.uid, {
               ...existing,
               ...row,
-              creatorHost: existing.creatorHost || row.creatorHost
+              creatorHost: existing.creatorHost || row.creatorHost,
+              verified: !!type,
+              verificationType: type
             });
           }
         });
@@ -2001,7 +2250,7 @@
           <div class="member-body">
             <div class="member-name">
               <a href="member.html?uid=${encodeURIComponent(member.uid)}">${escapeHtml(member.displayName)}</a>
-              ${member.verified ? `<span class="verified-dot">✓</span>` : ""}
+              ${verificationDotHtml(member)}
               ${member.creatorHost ? `<span class="badge badge-purple">Host</span>` : ""}
             </div>
 
@@ -2032,13 +2281,15 @@
           rows.map(async (row) => {
             const base = normalizeComment(row, row.id);
             const profile = await loadMergedProfile(base.userId);
+            const type = strongestVerificationType(base.verificationType, profile.verificationType);
 
             return {
               ...base,
               displayName: profile.displayName || base.displayName || "Member",
               username: profile.username || base.username || "",
               photoURL: profile.photoURL || "",
-              verified: !!profile.verified
+              verified: !!type,
+              verificationType: type
             };
           })
         );
@@ -2079,7 +2330,7 @@
               <div>
                 <div class="comment-name">
                   <a href="member.html?uid=${encodeURIComponent(comment.userId)}">${escapeHtml(comment.displayName)}</a>
-                  ${comment.verified ? `<span class="verified-dot">✓</span>` : ""}
+                  ${verificationDotHtml(comment)}
                 </div>
 
                 ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
@@ -2143,6 +2394,10 @@
           ${currentEvent.visibility === "private" ? "Private" : "Public"}
         </span>
       `);
+
+      if (currentHostProfile?.verified) {
+        badges.push(verificationBadgeHtml(currentHostProfile));
+      }
 
       if (isCreator) {
         badges.push(`<span class="badge badge-purple">Your Event</span>`);
@@ -2218,7 +2473,7 @@
         <div class="host-body">
           <div class="host-name">
             <a href="member.html?uid=${encodeURIComponent(currentEvent.creatorId)}">${escapeHtml(profile.displayName || currentEvent.creatorName || "Member")}</a>
-            ${profile.verified ? `<span class="verified-dot">✓</span>` : ""}
+            ${verificationDotHtml(profile)}
           </div>
 
           ${profile.username ? `<div class="host-username">@${escapeHtml(profile.username)}</div>` : ""}
@@ -2427,7 +2682,7 @@
       cityText.textContent = currentEvent.city || "-";
       provinceText.textContent = currentEvent.province || "-";
       countryText.textContent = currentEvent.country || "-";
-      venueText.textContent = [currentEvent.venue, currentEvent.address].filter(Boolean).join(" • ") || "-";
+      venueText.textContent = [currentEvent.venue, currentEvent.address].filter(Boolean).join(" â¢ ") || "-";
       creatorText.textContent = currentHostProfile?.displayName || currentEvent.creatorName || "-";
       descText.textContent = currentEvent.description || "No description added.";
       statusText.textContent = isExpired ? "Expired" : "Upcoming";
@@ -2712,6 +2967,7 @@
       try {
         const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || currentUser?.email || "Member";
         const username = currentUserProfile?.username || "";
+        const verificationType = currentUserProfile?.verificationType || "";
         const createdAt = nowIso();
 
         await insertWithFallback("event_comments", [
@@ -2720,6 +2976,9 @@
             user_id: currentUser.id,
             display_name: displayName,
             username,
+            commenter_verified: !!verificationType,
+            commenter_verification_type: verificationType,
+            commenter_verification_badge: verificationType,
             text,
             created_at: createdAt
           },
@@ -2728,12 +2987,17 @@
             userId: currentUser.id,
             displayName,
             username,
+            commenterVerified: !!verificationType,
+            commenterVerificationType: verificationType,
+            commenterVerificationBadge: verificationType,
             text,
             createdAt: createdAt
           },
           {
             event_id: currentEventId,
             user_id: currentUser.id,
+            display_name: displayName,
+            username,
             text,
             created_at: createdAt
           },
@@ -2852,6 +3116,33 @@
     }
 
     initPage();
+
+    /*
+      OWNSPACE EVENT PAGE BADGE UPDATE:
+
+      FIXED:
+      - Verified Account = green tick.
+      - Verified Creator = blue tick.
+      - Verified Business = gold tick.
+      - Host card now uses final badge resolver.
+      - People Going list now uses final badge resolver.
+      - Event comments now use final badge resolver.
+      - New event comments now attempt to save commenter verification fields.
+      - New event member rows now attempt to save member verification fields.
+      - Reads verification_badge, verification_type, badge_type,
+        verified_badge, verified_type, account_badge,
+        host/member/commenter/user verification fields,
+        camelCase versions, and old is_verified / verified booleans.
+      - If users and public_profiles disagree, strongest badge wins:
+        business > creator > account.
+
+      KEPT:
+      - Event detail UI and actions.
+      - Host card, edit event, join/leave, delete, share, report.
+      - Members list and comments.
+      - Private event lock.
+      - Inbox badge count logic.
+    */
   </script>
 </body>
 </html>
