@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OwnSpace - Public Hub</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial,sans-serif;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    :root,
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --soft-shadow:0 6px 14px rgba(20,33,61,.045);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+    }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.12);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.09), transparent 24%),
+        radial-gradient(circle at 50% 90%, rgba(61,220,132,.07), transparent 26%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:6px 6px 26px;
+    }
+
+    .app{
+      max-width:860px;
+      margin:0 auto;
+    }
+
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:14px;
+      padding:5px 6px;
+      margin-bottom:7px;
+      display:grid;
+      grid-template-columns:34px 1fr auto;
+      align-items:center;
+      gap:6px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:34px;
+      height:34px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:11px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      flex-shrink:0;
+    }
+
+    .top-icon-btn svg{
+      width:17px;
+      height:17px;
+      display:block;
+    }
+
+    .top-center{
+      text-align:center;
+      min-width:0;
+    }
+
+    .brand{
+      font-size:15.5px;
+      font-weight:950;
+      line-height:1;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:9px;
+      color:var(--muted);
+      margin-top:1px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:5px;
+      align-items:center;
+    }
+
+    .top-link{
+      min-height:34px;
+      padding:0 10px;
+      border-radius:11px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10.5px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+
+    .top-link.primary{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.22);
+      color:var(--text);
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      margin-bottom:7px;
+      overflow:hidden;
+    }
+
+    .pad{padding:9px}
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:16px 10px 10px;
+      background:
+        radial-gradient(circle at 90% 8%, rgba(167,139,250,.16), transparent 28%),
+        linear-gradient(135deg, rgba(76,201,255,.13), rgba(61,220,132,.08)),
+        var(--surface);
+    }
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      right:-110px;
+      bottom:-140px;
+      background:rgba(255,255,255,.22);
+      pointer-events:none;
+    }
+
+    html[data-theme="dark"] .hero:after{
+      background:rgba(255,255,255,.035);
+    }
+
+    .hero-inner{
+      position:relative;
+      z-index:2;
+    }
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 9px;
+      border-radius:999px;
+      background:var(--purple-soft);
+      border:1px solid rgba(167,139,250,.22);
+      color:var(--text);
+      font-size:10px;
+      font-weight:950;
+      margin-bottom:9px;
+    }
+
+    .hero-title{
+      font-size:25px;
+      font-weight:950;
+      line-height:1.08;
+      letter-spacing:-.045em;
+      margin-bottom:6px;
+    }
+
+    .hero-sub{
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.5;
+      max-width:720px;
+      font-weight:750;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .btn{
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      min-height:36px;
+      padding:0 11px;
+      font-size:11.2px;
+      font-weight:950;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      white-space:nowrap;
+    }
+
+    .btn svg{
+      width:14px;
+      height:14px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .btn.primary{
+      background:var(--text);
+      color:var(--surface);
+      border-color:transparent;
+    }
+
+    .btn.blue{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.22);
+    }
+
+    .btn.green{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .btn.purple{
+      background:var(--purple-soft);
+      border-color:rgba(167,139,250,.22);
+    }
+
+    .btn.yellow{
+      background:var(--yellow-soft);
+      border-color:rgba(245,185,66,.22);
+    }
+
+    .info-strip{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:6px;
+      margin-top:12px;
+    }
+
+    .info-card{
+      background:rgba(255,255,255,.55);
+      border:1px solid var(--line-soft);
+      border-radius:14px;
+      padding:9px 7px;
+      min-width:0;
+    }
+
+    html[data-theme="dark"] .info-card{
+      background:rgba(255,255,255,.035);
+    }
+
+    .info-card b{
+      display:block;
+      font-size:14px;
+      font-weight:950;
+      line-height:1;
+      margin-bottom:4px;
+    }
+
+    .info-card span{
+      display:block;
+      color:var(--muted);
+      font-size:9.5px;
+      font-weight:850;
+      line-height:1.25;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:7px;
+      align-items:center;
+    }
+
+    .search-wrap{
+      position:relative;
+      min-width:0;
+    }
+
+    .search-input{
+      width:100%;
+      min-height:37px;
+      border:none;
+      outline:none;
+      border-radius:12px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      padding:9px 34px 9px 11px;
+      font-size:12.5px;
+      font-weight:750;
+    }
+
+    .search-input::placeholder{color:var(--muted)}
+
+    .clear-btn{
+      position:absolute;
+      top:50%;
+      right:5px;
+      transform:translateY(-50%);
+      width:25px;
+      height:25px;
+      border:none;
+      border-radius:8px;
+      background:var(--surface-3);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:pointer;
+      font-size:13px;
+      font-weight:950;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .select{
+      min-height:37px;
+      border:none;
+      outline:none;
+      border-radius:12px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:900;
+      min-width:138px;
+    }
+
+    .select option{color:#111}
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+    }
+
+    .section-title{
+      font-size:15px;
+      font-weight:950;
+      letter-spacing:-.03em;
+    }
+
+    .count-pill{
+      font-size:10px;
+      font-weight:950;
+      padding:5px 7px;
+      border-radius:999px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .list{
+      display:grid;
+      gap:7px;
+    }
+
+    .post-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:8px;
+      box-shadow:var(--soft-shadow);
+      overflow:hidden;
+    }
+
+    .post-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      margin-bottom:7px;
+    }
+
+    .post-title{
+      font-size:15px;
+      line-height:1.28;
+      font-weight:950;
+      letter-spacing:-.025em;
+      word-break:break-word;
+    }
+
+    .post-date{
+      color:var(--muted);
+      font-size:9.6px;
+      font-weight:850;
+      white-space:nowrap;
+      line-height:1.3;
+      padding-top:2px;
+    }
+
+    .badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:5px;
+      margin-bottom:7px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 7px;
+      border-radius:999px;
+      font-size:9.5px;
+      font-weight:950;
+      line-height:1;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      color:var(--text);
+      white-space:nowrap;
+    }
+
+    .badge.blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .badge.green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .badge.yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .badge.purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+
+    .post-img{
+      width:100%;
+      max-height:320px;
+      object-fit:cover;
+      display:block;
+      border-radius:13px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      margin-bottom:8px;
+    }
+
+    .post-summary{
+      color:var(--text);
+      font-size:12.7px;
+      line-height:1.5;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .post-author{
+      color:var(--muted);
+      font-size:10.7px;
+      font-weight:850;
+      margin-top:7px;
+      line-height:1.35;
+    }
+
+    .post-actions{
+      display:flex;
+      gap:5px;
+      flex-wrap:wrap;
+      margin-top:9px;
+      align-items:center;
+    }
+
+    .mini-btn{
+      border:none;
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:999px;
+      min-height:30px;
+      padding:0 9px;
+      font-size:10.4px;
+      font-weight:950;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      white-space:nowrap;
+    }
+
+    .mini-btn svg{
+      width:13px;
+      height:13px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .empty-box,
+    .loading-box{
+      text-align:center;
+      color:var(--muted);
+      padding:21px 10px;
+      background:var(--surface-2);
+      border-radius:14px;
+      border:1px dashed var(--line);
+      font-size:12.5px;
+      line-height:1.5;
+      font-weight:850;
+    }
+
+    .empty-box strong,
+    .loading-box strong{
+      display:block;
+      color:var(--text);
+      font-size:15px;
+      margin-bottom:4px;
+      font-weight:950;
+    }
+
+    .message{
+      min-height:0;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.35;
+      margin-top:6px;
+    }
+
+    .message:not(:empty){min-height:15px}
+    .message.ok{color:var(--green)}
+    .message.err{color:var(--red)}
+
+    .signup-panel{
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.12), rgba(167,139,250,.10)),
+        var(--surface);
+    }
+
+    .signup-title{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.03em;
+      margin-bottom:5px;
+    }
+
+    .signup-text{
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.5;
+      font-weight:750;
+    }
+
+    .footer-note{
+      text-align:center;
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.45;
+      padding:7px 8px 4px;
+      font-weight:800;
+    }
+
+    @media(max-width:700px){
+      body{padding:6px 6px 24px}
+
+      .topbar{
+        grid-template-columns:34px 1fr auto;
+        margin-bottom:6px;
+      }
+
+      .top-link{
+        padding:0 8px;
+        font-size:10px;
+      }
+
+      .top-actions{
+        gap:4px;
+      }
+
+      .hero{
+        padding:14px 9px 9px;
+      }
+
+      .hero-title{
+        font-size:23px;
+      }
+
+      .hero-sub{
+        font-size:12.2px;
+      }
+
+      .info-strip{
+        grid-template-columns:repeat(3,1fr);
+        gap:5px;
+      }
+
+      .info-card{
+        padding:8px 5px;
+      }
+
+      .info-card b{
+        font-size:13px;
+      }
+
+      .info-card span{
+        font-size:8.8px;
+      }
+
+      .controls{
+        grid-template-columns:1fr;
+      }
+
+      .select{
+        width:100%;
+      }
+
+      .post-title{
+        font-size:14.5px;
+      }
+
+      .post-summary{
+        font-size:12.5px;
+      }
+    }
+
+    @media(max-width:420px){
+      .topbar{
+        grid-template-columns:34px 1fr 84px;
+      }
+
+      .top-actions{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+
+      .top-link{
+        min-height:26px;
+        border-radius:9px;
+        font-size:9.2px;
+        padding:0 6px;
+      }
+
+      .hero-title{
+        font-size:22px;
+      }
+
+      .info-strip{
+        grid-template-columns:1fr;
+      }
+
+      .info-card{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:8px;
+      }
+
+      .info-card b{
+        margin:0;
+      }
+
+      .info-card span{
+        text-align:right;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a href="index.html" class="top-icon-btn" aria-label="Back to home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Public Hub Preview</div>
+      </div>
+
+      <div id="topActions" class="top-actions">
+        <a href="login.html" class="top-link">Login</a>
+        <a href="signup.html" class="top-link primary">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel hero">
+        <div class="hero-inner">
+          <div class="kicker">Public Preview</div>
+
+          <h1 class="hero-title">See what OwnSpace is building.</h1>
+
+          <p class="hero-sub">
+            OwnSpace Hub shares selected public previews, community updates, safety notes, and featured stories.
+            Full posts, member profiles, comments, messages, and private community features are available after signup.
+          </p>
+
+          <div class="hero-actions">
+            <a id="mainSignupBtn" href="signup.html" class="btn primary">Join OwnSpace</a>
+            <a id="mainLoginBtn" href="login.html" class="btn blue">Already have account</a>
+            <button id="shareBtn" class="btn purple" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <path d="m8.6 13.5 6.8 4"></path>
+                <path d="m15.4 6.5-6.8 4"></path>
+              </svg>
+              Share
+            </button>
+          </div>
+
+          <div class="info-strip">
+            <div class="info-card">
+              <b id="previewCount">0</b>
+              <span>Public previews</span>
+            </div>
+
+            <div class="info-card">
+              <b>Safe</b>
+              <span>No private profiles shown</span>
+            </div>
+
+            <div class="info-card">
+              <b>Join</b>
+              <span>Unlock full community</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel pad">
+        <div class="controls">
+          <div class="search-wrap">
+            <input id="searchInput" class="search-input" type="text" placeholder="Search public Hub previews..." />
+            <button id="clearSearchBtn" class="clear-btn hidden" type="button" aria-label="Clear search">×</button>
+          </div>
+
+          <select id="categoryFilter" class="select">
+            <option value="all">All categories</option>
+          </select>
+        </div>
+
+        <div id="pageMessage" class="message"></div>
+      </section>
+
+      <section class="panel pad">
+        <div class="section-head">
+          <div class="section-title">Latest Public Hub</div>
+          <div id="countPill" class="count-pill">0 posts</div>
+        </div>
+
+        <div id="loadingBox" class="loading-box">
+          <strong>Loading Hub</strong>
+          Getting public previews...
+        </div>
+
+        <div id="postList" class="list hidden"></div>
+
+        <div id="emptyBox" class="empty-box hidden">
+          <strong>No public previews yet</strong>
+          Check again later.
+        </div>
+      </section>
+
+      <section class="panel pad signup-panel">
+        <div class="signup-title">Want the full OwnSpace experience?</div>
+        <div class="signup-text">
+          Sign up to open full Hub posts, view profiles, join communities, message members, follow trusted creators, and access private features.
+        </div>
+
+        <div class="hero-actions">
+          <a href="signup.html" class="btn primary">Create Account</a>
+          <a href="login.html" class="btn green">Login</a>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        Public Hub only shows selected safe previews. Member profiles and private activity stay protected behind login.
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      topActions: $("topActions"),
+      mainSignupBtn: $("mainSignupBtn"),
+      mainLoginBtn: $("mainLoginBtn"),
+      shareBtn: $("shareBtn"),
+      searchInput: $("searchInput"),
+      clearSearchBtn: $("clearSearchBtn"),
+      categoryFilter: $("categoryFilter"),
+      pageMessage: $("pageMessage"),
+      previewCount: $("previewCount"),
+      countPill: $("countPill"),
+      loadingBox: $("loadingBox"),
+      postList: $("postList"),
+      emptyBox: $("emptyBox")
+    };
+
+    let currentUser = null;
+    let allPosts = [];
+    let filteredPosts = [];
+    let refreshTimer = null;
+
+    const ICONS = {
+      open: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      `,
+      share: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <path d="m8.6 13.5 6.8 4"></path>
+          <path d="m15.4 6.5-6.8 4"></path>
+        </svg>
+      `,
+      lock: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+        </svg>
+      `
+    };
+
+    function setTheme() {
+      const stored = localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+      const theme = stored === "system"
+        ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : (stored === "dark" ? "dark" : "light");
+
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+
+    setTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") setTheme();
+    });
+
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = value == null ? "" : String(value);
+      return div.innerHTML;
+    }
+
+    function getField(obj, names, fallback = "") {
+      for (const name of names) {
+        const value = obj?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return String(value).trim();
+        }
+      }
+
+      return fallback;
+    }
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function formatDate(value) {
+      const ms = toMillis(value);
+
+      if (!ms) return "Recently";
+
+      const diff = Date.now() - ms;
+      const minute = 60000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+
+      if (diff < minute) return "Now";
+      if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+      if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+      if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
+
+      return new Date(ms).toLocaleDateString([], { month:"short", day:"numeric" });
+    }
+
+    function pretty(value) {
+      return String(value || "")
+        .replaceAll("_", " ")
+        .replaceAll("-", " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function setMessage(text = "", type = "") {
+      els.pageMessage.textContent = text;
+      els.pageMessage.className = `message ${type}`;
+    }
+
+    function normalizePost(row = {}) {
+      const createdAt = row.created_at ?? row.createdAt ?? row.updated_at ?? row.updatedAt ?? null;
+
+      return {
+        id: getField(row, ["id"]),
+        title: getField(row, ["title"], "OwnSpace Hub"),
+        trailerSummary: getField(row, ["trailer_summary", "trailerSummary", "summary"], ""),
+        category: getField(row, ["category"], "General"),
+        postType: getField(row, ["post_type", "postType", "type"], "update"),
+        imageURL: getField(row, ["image_url", "imageURL", "cover_image_url", "coverImageUrl"], ""),
+        publicAuthorName: getField(row, ["public_author_name", "publicAuthorName", "creator_name", "creatorName"], "OwnSpace"),
+        publicSlug: getField(row, ["public_slug", "publicSlug"], ""),
+        featured: !!(row.featured || row.is_featured || row.isFeatured),
+        pinned: !!(row.pinned || row.is_pinned || row.isPinned),
+        createdAt,
+        createdAtMs: toMillis(createdAt)
+      };
+    }
+
+    function getPublicPostShareUrl(post) {
+      const url = new URL(window.location.href);
+
+      if (post.publicSlug) {
+        url.searchParams.set("post", post.publicSlug);
+      } else if (post.id) {
+        url.searchParams.set("id", post.id);
+      }
+
+      return url.toString();
+    }
+
+    function getFullPostUrl(post) {
+      if (currentUser) {
+        const url = new URL("hub.html", window.location.href);
+
+        if (post.id) url.searchParams.set("postId", post.id);
+        if (post.publicSlug) url.searchParams.set("slug", post.publicSlug);
+
+        return url.toString();
+      }
+
+      const signup = new URL("signup.html", window.location.href);
+      signup.searchParams.set("from", "public-hub");
+      if (post.publicSlug) signup.searchParams.set("post", post.publicSlug);
+      else if (post.id) signup.searchParams.set("postId", post.id);
+
+      return signup.toString();
+    }
+
+    function renderTopActions() {
+      if (currentUser) {
+        els.topActions.innerHTML = `
+          <a href="hub.html" class="top-link primary">Full Hub</a>
+          <a href="profile.html" class="top-link">Profile</a>
+        `;
+
+        els.mainSignupBtn.textContent = "Open Full Hub";
+        els.mainSignupBtn.href = "hub.html";
+        els.mainLoginBtn.textContent = "Go to Feed";
+        els.mainLoginBtn.href = "feed.html";
+      } else {
+        els.topActions.innerHTML = `
+          <a href="login.html" class="top-link">Login</a>
+          <a href="signup.html" class="top-link primary">Sign Up</a>
+        `;
+
+        els.mainSignupBtn.textContent = "Join OwnSpace";
+        els.mainSignupBtn.href = "signup.html";
+        els.mainLoginBtn.textContent = "Already have account";
+        els.mainLoginBtn.href = "login.html";
+      }
+    }
+
+    function updateCategoryFilter() {
+      const current = els.categoryFilter.value || "all";
+      const categories = [...new Set(allPosts.map(p => p.category || "General"))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+
+      els.categoryFilter.innerHTML = `<option value="all">All categories</option>`;
+
+      categories.forEach(category => {
+        const option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        els.categoryFilter.appendChild(option);
+      });
+
+      if ([...els.categoryFilter.options].some(option => option.value === current)) {
+        els.categoryFilter.value = current;
+      }
+    }
+
+    function filterPosts() {
+      const q = String(els.searchInput.value || "").trim().toLowerCase();
+      const category = els.categoryFilter.value || "all";
+
+      filteredPosts = allPosts.filter(post => {
+        if (category !== "all" && post.category !== category) return false;
+
+        if (!q) return true;
+
+        const haystack = [
+          post.title,
+          post.trailerSummary,
+          post.category,
+          post.postType,
+          post.publicAuthorName
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+      filteredPosts.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (b.pinned && !a.pinned) return 1;
+        if (a.featured && !b.featured) return -1;
+        if (b.featured && !a.featured) return 1;
+        return b.createdAtMs - a.createdAtMs;
+      });
+    }
+
+    function renderPosts() {
+      filterPosts();
+
+      els.previewCount.textContent = String(allPosts.length);
+      els.countPill.textContent = `${filteredPosts.length} post${filteredPosts.length === 1 ? "" : "s"}`;
+
+      els.postList.innerHTML = "";
+      els.loadingBox.classList.add("hidden");
+
+      if (!filteredPosts.length) {
+        els.postList.classList.add("hidden");
+        els.emptyBox.classList.remove("hidden");
+        return;
+      }
+
+      els.emptyBox.classList.add("hidden");
+      els.postList.classList.remove("hidden");
+
+      filteredPosts.forEach(post => {
+        els.postList.appendChild(postCard(post));
+      });
+    }
+
+    function postCard(post) {
+      const card = document.createElement("article");
+      card.className = "post-card";
+
+      const fullUrl = getFullPostUrl(post);
+
+      card.innerHTML = `
+        <div class="post-top">
+          <div class="post-title">${escapeHtml(post.title || "OwnSpace Hub")}</div>
+          <div class="post-date">${escapeHtml(formatDate(post.createdAt))}</div>
+        </div>
+
+        <div class="badge-row">
+          <span class="badge blue">${escapeHtml(post.category || "General")}</span>
+          <span class="badge purple">${escapeHtml(pretty(post.postType || "Update"))}</span>
+          ${post.featured ? `<span class="badge green">Featured</span>` : ""}
+          ${post.pinned ? `<span class="badge yellow">Pinned</span>` : ""}
+        </div>
+
+        ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Hub preview image" loading="lazy">` : ""}
+
+        <div class="post-summary">
+          ${escapeHtml(post.trailerSummary || "This OwnSpace Hub preview is available publicly. Sign up to view more community features.")}
+        </div>
+
+        <div class="post-author">
+          Shared by ${escapeHtml(post.publicAuthorName || "OwnSpace")}
+        </div>
+
+        <div class="post-actions">
+          <a class="mini-btn" href="${escapeHtml(fullUrl)}">
+            ${currentUser ? ICONS.open : ICONS.lock}
+            <span>${currentUser ? "Open Full Post" : "Sign up to open"}</span>
+          </a>
+
+          <button class="mini-btn share-post-btn" type="button">
+            ${ICONS.share}
+            <span>Share</span>
+          </button>
+        </div>
+      `;
+
+      const img = card.querySelector(".post-img");
+      if (img) {
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+        });
+      }
+
+      card.querySelector(".share-post-btn")?.addEventListener("click", () => sharePost(post));
+
+      return card;
+    }
+
+    async function sharePost(post) {
+      const url = getPublicPostShareUrl(post);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: post.title || "OwnSpace Hub",
+            text: post.trailerSummary || "Check this OwnSpace Hub preview.",
+            url
+          });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          setMessage("Post link copied.", "ok");
+        } else {
+          prompt("Copy this link:", url);
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          setMessage("Could not share this preview.", "err");
+        }
+      }
+    }
+
+    async function sharePage() {
+      const url = window.location.href.split("?")[0];
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: "OwnSpace Hub Preview",
+            text: "See public previews from OwnSpace Hub.",
+            url
+          });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          setMessage("Public Hub link copied.", "ok");
+        } else {
+          prompt("Copy this link:", url);
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          setMessage("Could not share public Hub.", "err");
+        }
+      }
+    }
+
+    async function loadPublicHub() {
+      els.loadingBox.classList.remove("hidden");
+      els.postList.classList.add("hidden");
+      els.emptyBox.classList.add("hidden");
+      setMessage("");
+
+      try {
+        const { data, error } = await supabase
+          .from("public_hub_posts")
+          .select("*")
+          .order("pinned", { ascending:false })
+          .order("featured", { ascending:false })
+          .order("created_at", { ascending:false })
+          .limit(60);
+
+        if (error) throw error;
+
+        allPosts = (data || []).map(normalizePost);
+        updateCategoryFilter();
+        renderPosts();
+      } catch (err) {
+        console.error("Public Hub load failed:", err);
+        allPosts = [];
+        els.loadingBox.classList.add("hidden");
+        els.postList.classList.add("hidden");
+        els.emptyBox.classList.remove("hidden");
+        els.emptyBox.innerHTML = `
+          <strong>Could not load Public Hub</strong>
+          Make sure the SQL view <b>public_hub_posts</b> exists and has public select access.
+        `;
+        setMessage(err?.message || "Could not load public Hub.", "err");
+      }
+    }
+
+    function handleDeepLinkHighlight() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("post") || "";
+      const id = params.get("id") || "";
+
+      if (!slug && !id) return;
+
+      const match = allPosts.find(post => {
+        if (slug && post.publicSlug === slug) return true;
+        if (id && post.id === id) return true;
+        return false;
+      });
+
+      if (!match) return;
+
+      const index = filteredPosts.findIndex(post => post.id === match.id);
+
+      if (index > -1) {
+        setTimeout(() => {
+          const card = els.postList.children[index];
+          if (card) card.scrollIntoView({ behavior:"smooth", block:"center" });
+        }, 300);
+      }
+    }
+
+    function scheduleRefresh(delay = 350) {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadPublicHub().catch(console.warn);
+      }, delay);
+    }
+
+    els.searchInput.addEventListener("input", () => {
+      els.clearSearchBtn.classList.toggle("hidden", !els.searchInput.value.trim());
+      renderPosts();
+    });
+
+    els.clearSearchBtn.addEventListener("click", () => {
+      els.searchInput.value = "";
+      els.clearSearchBtn.classList.add("hidden");
+      renderPosts();
+      els.searchInput.focus();
+    });
+
+    els.categoryFilter.addEventListener("change", renderPosts);
+    els.shareBtn.addEventListener("click", sharePage);
+
+    window.addEventListener("focus", () => scheduleRefresh(250));
+
+    window.addEventListener("pageshow", () => {
+      scheduleRefresh(220);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) scheduleRefresh(250);
+    });
+
+    window.addEventListener("beforeunload", () => {
+      clearTimeout(refreshTimer);
+    });
+
+    async function initPage() {
+      try {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+      } catch {
+        currentUser = null;
+      }
+
+      renderTopActions();
+
+      await loadPublicHub();
+
+      handleDeepLinkHighlight();
+
+      try {
+        supabase
+          .channel(`public-hub-preview-${Math.random().toString(36).slice(2)}`)
+          .on(
+            "postgres_changes",
+            { event:"*", schema:"public", table:"hub_posts" },
+            () => scheduleRefresh(500)
+          )
+          .subscribe();
+      } catch {}
+
+      try {
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          renderTopActions();
+          renderPosts();
+        });
+      } catch {}
+    }
+
+    initPage();
+
+    /*
+      OWNSPACE PUBLIC HUB PAGE
+
+      FILE:
+      - public-hub.html
+
+      PURPOSE:
+      - Public preview page for logged-out visitors.
+      - Safe trailer-style Hub posts shown before signup.
+      - Reads from public_hub_posts view only.
+      - Does not expose profiles, comments, private posts, member pages, or private data.
+      - Logged-out users clicking full post are sent to signup.html.
+      - Logged-in users clicking full post are sent to hub.html.
+
+      REQUIRED SUPABASE:
+      - public.public_hub_posts view
+      - anon SELECT access on public.public_hub_posts
+
+      NEXT PAGE TO UPDATE:
+      - index.html
+      Add a Hub button/link pointing to public-hub.html.
+    */
+  </script>
+</body>
+</html>
