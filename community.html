@@ -1232,6 +1232,7 @@
     let ownerProfile = null;
     let userMember = null;
     let joinRequestPending = false;
+    let pendingJoinRequestCount = 0;
     let approvedAuthor = false;
     let isOwner = false;
     let isAdmin = false;
@@ -1312,6 +1313,14 @@
           <path d="M12 17h.01"></path>
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
         </svg>
+      `,
+      users:`
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
       `
     };
 
@@ -1348,7 +1357,8 @@
 
       if (
         e.key === "ownspace_communities_refresh" ||
-        e.key === "ownspace_nearby_refresh"
+        e.key === "ownspace_nearby_refresh" ||
+        e.key === "ownspace_join_requests_refresh"
       ) {
         scheduleRefresh(180);
       }
@@ -1644,6 +1654,47 @@
       return null;
     }
 
+    async function countPendingJoinRequestsSafe() {
+      if (!communityId) return 0;
+
+      const attempts = [
+        { table:"community_join_requests", c:"community_id", s:"status" },
+        { table:"community_join_requests", c:"communityId", s:"status" },
+        { table:"community_requests", c:"community_id", s:"status" },
+        { table:"join_requests", c:"community_id", s:"status" }
+      ];
+
+      for (const a of attempts) {
+        try {
+          const { count, error } = await supabase
+            .from(a.table)
+            .select("id", { count:"exact", head:true })
+            .eq(a.c, communityId)
+            .eq(a.s, "pending");
+
+          if (!error) return count || 0;
+        } catch {}
+      }
+
+      for (const a of attempts) {
+        try {
+          const { data, error } = await supabase
+            .from(a.table)
+            .select("*")
+            .eq(a.c, communityId);
+
+          if (!error && Array.isArray(data)) {
+            return data.filter(row => {
+              const status = String(row.status || "pending").toLowerCase();
+              return ["pending", "requested"].includes(status);
+            }).length;
+          }
+        } catch {}
+      }
+
+      return 0;
+    }
+
     async function loadCounts() {
       const postCount = await countAcrossPostTables();
       totalPostCount = postCount !== null ? postCount : allLoadedPosts.length;
@@ -1654,6 +1705,9 @@
 
       const memberCount = await countMembersSafe();
       totalMemberCount = memberCount !== null ? memberCount : Math.max(community.memberCount || 0, userMember?.approved ? 1 : 0);
+
+      if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+      else pendingJoinRequestCount = 0;
 
       els.postsStat.textContent = String(totalPostCount);
       els.photosStat.textContent = String(totalPhotoCount);
@@ -2040,6 +2094,10 @@
       else if (userMember?.approved) chips.push(`<span class="chip green">Member</span>`);
       else if (joinRequestPending) chips.push(`<span class="chip yellow">Request Sent</span>`);
 
+      if (isOwner && pendingJoinRequestCount > 0) {
+        chips.push(`<span class="chip yellow">${pendingJoinRequestCount} Pending Request${pendingJoinRequestCount === 1 ? "" : "s"}</span>`);
+      }
+
       if (community.featured) chips.push(`<span class="chip purple">Featured</span>`);
       if (community.pinned) chips.push(`<span class="chip blue">${ICON.pin} Pinned</span>`);
 
@@ -2051,6 +2109,15 @@
 
       if (isOwner || isAdmin) {
         actions.push(`<a class="btn primary" href="edit-community.html?communityId=${encodeURIComponent(communityId)}">${ICON.edit} Edit</a>`);
+
+        if (isOwner) {
+          const requestText = pendingJoinRequestCount > 0
+            ? `Requests (${pendingJoinRequestCount > 99 ? "99+" : pendingJoinRequestCount})`
+            : "Requests";
+
+          actions.push(`<a class="btn yellow" href="community-requests.html?communityId=${encodeURIComponent(communityId)}">${ICON.users} ${requestText}</a>`);
+        }
+
         actions.push(`<button id="hideCommunityBtn" class="btn red" type="button">${ICON.trash} Hide</button>`);
       } else if (userMember?.approved) {
         actions.push(`<button id="leaveCommunityBtn" class="btn red" type="button">Leave</button>`);
@@ -2657,6 +2724,13 @@
             text:`${currentUserProfile?.displayName || "Someone"} requested to join ${community.name}.`
           });
 
+          try {
+            const stamp = String(Date.now());
+            localStorage.setItem("ownspace_join_requests_refresh", stamp);
+            localStorage.setItem("ownspace_communities_refresh", stamp);
+            localStorage.setItem("ownspace_nearby_refresh", stamp);
+          } catch {}
+
           renderChips();
           renderTopActions();
           renderLockedActions();
@@ -2836,6 +2910,8 @@
 
     async function refreshPostsOnly() {
       await loadCounts();
+      renderChips();
+      renderTopActions();
       await loadPostsPage(true);
       photosLoaded = false;
     }
@@ -2856,12 +2932,17 @@
 
       evaluateAccess();
 
+      if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+      else pendingJoinRequestCount = 0;
+
       if (!canView) return renderLocked();
 
       renderHero();
       showMain();
 
       await loadCounts();
+      renderChips();
+      renderTopActions();
       await loadPostsPage(true);
 
       if (aboutLoaded) loadAboutData().catch(() => {});
@@ -3382,16 +3463,19 @@
 
         evaluateAccess();
 
+        if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+        else pendingJoinRequestCount = 0;
+
         if (!canView) {
           await updateInboxBadge();
           return renderLocked();
         }
 
+        await loadCounts();
         renderHero();
         renderAboutBase();
         showMain();
 
-        await loadCounts();
         await loadPostsPage(true);
 
         setupRealtime();
@@ -3434,19 +3518,23 @@
     init();
 
     /*
-      OWNSPACE COMMUNITY PAGE COMPACT UPDATE:
+      OWNSPACE COMMUNITY PAGE UPDATE:
 
-      FIXED / UPDATED:
-      - UI now matches Nearby pages better: compact topbar, smaller margins, smaller bottom nav.
-      - Top-right settings icon replaced with clean refresh button.
-      - Hero is smaller and more profile-like.
-      - Tabs, composer, posts, photos, about, owner, and members are more compact.
-      - Kept community_posts + posts fallback.
-      - Kept post.html links with source.
-      - Kept source-aware like/comment/share/report/pin/hide logic.
-      - Kept private/request/join/community owner/admin logic.
-      - Inbox badge still counts only pending message_requests + unread incoming chat_messages.
-      - Realtime includes community, member, post, request, and inbox badge refresh.
+      ADDED:
+      - Creator-only Requests link aligned inside existing top action row.
+      - It links to community-requests.html?communityId=...
+      - Shows pending count as Requests (1), Requests (2), etc.
+      - Pending request chip appears only for creator when count is above 0.
+      - No new floating button or extra separate section added.
+
+      KEPT:
+      - Compact Nearby-style topbar, hero, tabs and bottom nav.
+      - community_posts + posts fallback.
+      - post.html links with source.
+      - source-aware like/comment/share/report/pin/hide logic.
+      - private/request/join/community owner/admin logic.
+      - inbox badge still counts only pending message_requests + unread incoming chat_messages.
+      - realtime community, member, post, request and inbox badge refresh.
     */
   </script>
 </body>
