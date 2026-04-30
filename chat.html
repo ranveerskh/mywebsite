@@ -36,6 +36,11 @@
       --composer-bg:rgba(255,255,255,.94);
       --shadow:0 18px 38px rgba(20,33,61,.08);
       --soft-shadow:0 8px 18px rgba(20,33,61,.055);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
     }
@@ -61,6 +66,11 @@
       --composer-bg:rgba(9,15,31,.94);
       --shadow:0 18px 38px rgba(0,0,0,.24);
       --soft-shadow:0 8px 18px rgba(0,0,0,.16);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
     }
@@ -106,6 +116,9 @@
       grid-template-columns:42px 1fr 42px;
       gap:8px;
       align-items:center;
+      overflow:visible;
+      position:relative;
+      z-index:60;
     }
 
     .top-icon-btn{
@@ -123,12 +136,87 @@
       text-decoration:none;
       position:relative;
       flex-shrink:0;
+      box-shadow:var(--soft-shadow);
     }
 
     .top-icon-btn svg{
       width:19px;
       height:19px;
       display:block;
+    }
+
+    .top-icon-btn.active{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.26);
+    }
+
+    .top-menu-wrap{
+      width:42px;
+      height:42px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .room-menu{
+      position:absolute;
+      top:49px;
+      right:0;
+      width:218px;
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 20px 46px rgba(0,0,0,.24);
+      overflow:hidden;
+      display:none;
+      z-index:200;
+    }
+
+    .room-menu.open{
+      display:block;
+    }
+
+    .menu-item{
+      width:100%;
+      border:none;
+      background:transparent;
+      color:var(--text);
+      min-height:39px;
+      padding:9px 11px;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      cursor:pointer;
+      font-size:11.5px;
+      font-weight:900;
+      text-align:left;
+      border-bottom:1px solid var(--line-soft);
+    }
+
+    .menu-item:last-child{
+      border-bottom:none;
+    }
+
+    .menu-item:hover{
+      background:var(--surface-2);
+    }
+
+    .menu-item svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .menu-item.danger{
+      color:var(--red);
+      background:rgba(255,93,115,.04);
+    }
+
+    .menu-item.warning{
+      color:var(--yellow);
     }
 
     .chat-head{
@@ -281,6 +369,7 @@
       position:relative;
       display:grid;
       grid-template-rows:1fr;
+      z-index:10;
     }
 
     .room-panel{
@@ -344,6 +433,16 @@
       padding:6px 9px;
       white-space:nowrap;
       line-height:1;
+    }
+
+    .toolbar-chip.muted{
+      background:var(--yellow-soft);
+      border-color:rgba(245,185,66,.22);
+    }
+
+    .toolbar-chip.archived{
+      background:var(--purple-soft);
+      border-color:rgba(167,139,250,.22);
     }
 
     .messages-body{
@@ -568,6 +667,7 @@
       border-radius:22px;
       padding:8px;
       min-height:62px;
+      z-index:20;
     }
 
     .composer{
@@ -672,6 +772,17 @@
         height:40px;
       }
 
+      .top-menu-wrap{
+        width:40px;
+        height:40px;
+      }
+
+      .room-menu{
+        top:47px;
+        right:0;
+        width:212px;
+      }
+
       .chat-avatar,
       .chat-avatar-placeholder{
         width:41px;
@@ -729,6 +840,10 @@
         font-size:9.8px;
         padding:5px 7px;
       }
+
+      .room-menu{
+        width:202px;
+      }
     }
   </style>
 </head>
@@ -764,12 +879,80 @@
         </div>
       </div>
 
-      <a id="profileBtn" href="profile.html" class="top-icon-btn" aria-label="View profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </a>
+      <div class="top-menu-wrap">
+        <button id="roomMenuBtn" class="top-icon-btn" type="button" aria-label="Room options">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </button>
+
+        <div id="roomMenu" class="room-menu">
+          <button id="menuViewProfile" class="menu-item" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            View Profile
+          </button>
+
+          <button id="menuMarkRead" class="menu-item" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h16v16H4z"></path>
+              <path d="m22 6-10 7L2 6"></path>
+            </svg>
+            <span id="menuMarkReadText">Mark as Unread</span>
+          </button>
+
+          <button id="menuArchive" class="menu-item" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 7h18"></path>
+              <path d="M5 7v13h14V7"></path>
+              <path d="M8 7V4h8v3"></path>
+              <path d="M10 12h4"></path>
+            </svg>
+            <span id="menuArchiveText">Archive Chat</span>
+          </button>
+
+          <button id="menuMute" class="menu-item" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4V5z"></path>
+              <path d="m22 9-6 6"></path>
+              <path d="m16 9 6 6"></path>
+            </svg>
+            <span id="menuMuteText">Mute Chat</span>
+          </button>
+
+          <button id="menuReport" class="menu-item warning" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 9v4"></path>
+              <path d="M12 17h.01"></path>
+              <path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+            </svg>
+            Report Chat
+          </button>
+
+          <button id="menuBlock" class="menu-item danger" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M5.7 5.7 18.3 18.3"></path>
+            </svg>
+            <span id="menuBlockText">Block User</span>
+          </button>
+
+          <button id="menuDelete" class="menu-item danger" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18"></path>
+              <path d="M8 6V4h8v2"></path>
+              <path d="M19 6l-1 14H6L5 6"></path>
+              <path d="M10 11v5"></path>
+              <path d="M14 11v5"></path>
+            </svg>
+            Delete Chat
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="pageMessage" class="page-message"></div>
@@ -778,6 +961,7 @@
       <span id="modeChip">Chat</span>
       <span id="statusChip">Loading</span>
       <a id="memberProfileBtn" href="#">Profile</a>
+      <a id="profileBtn" href="#">Profile</a>
       <div id="targetBio"></div>
     </div>
 
@@ -855,6 +1039,20 @@
     const toolbarChip = document.getElementById("toolbarChip");
     const profileBtn = document.getElementById("profileBtn");
 
+    const roomMenuBtn = document.getElementById("roomMenuBtn");
+    const roomMenu = document.getElementById("roomMenu");
+    const menuViewProfile = document.getElementById("menuViewProfile");
+    const menuMarkRead = document.getElementById("menuMarkRead");
+    const menuArchive = document.getElementById("menuArchive");
+    const menuMute = document.getElementById("menuMute");
+    const menuReport = document.getElementById("menuReport");
+    const menuBlock = document.getElementById("menuBlock");
+    const menuDelete = document.getElementById("menuDelete");
+    const menuMarkReadText = document.getElementById("menuMarkReadText");
+    const menuArchiveText = document.getElementById("menuArchiveText");
+    const menuMuteText = document.getElementById("menuMuteText");
+    const menuBlockText = document.getElementById("menuBlockText");
+
     const avatar = document.getElementById("avatar");
     const avatarPlaceholder = document.getElementById("avatarPlaceholder");
     const targetNameLink = document.getElementById("targetNameLink");
@@ -895,6 +1093,7 @@
     let currentTargetProfile = null;
     let currentThreadId = "";
     let currentThreadData = null;
+    let currentChatState = null;
     let currentMode = "loading";
     let requestDocModel = null;
 
@@ -1103,6 +1302,210 @@
       throw lastError || new Error(`Could not insert into ${table}.`);
     }
 
+    function normalizeProfile(raw, fallbackUid = "") {
+      const d = raw || {};
+
+      return {
+        uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"]),
+        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
+        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
+        bio: getField(d, ["bio", "about"]),
+        blockedUsers: Array.isArray(d.blocked_users)
+          ? d.blocked_users
+          : Array.isArray(d.blockedUsers)
+          ? d.blockedUsers
+          : [],
+        moderationStatus: normalizeStatus(getField(d, ["moderation_status", "moderationStatus", "status"])),
+        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
+        softDeleted: !!(d.soft_deleted ?? d.softDeleted)
+      };
+    }
+
+    function normalizeThread(raw, fallbackId = "") {
+      const d = raw || {};
+
+      return {
+        id: d.id || fallbackId || "",
+        type: getField(d, ["type"]) || "direct",
+        status: normalizeStatus(getField(d, ["status"]), "accepted"),
+        participantA: getField(d, ["participant_a", "participantA"]),
+        participantB: getField(d, ["participant_b", "participantB"]),
+        createdBy: getField(d, ["created_by", "createdBy"]),
+        acceptedFromRequestId: getField(d, ["accepted_from_request_id", "acceptedFromRequestId"]),
+        starterText: getField(d, ["starter_text", "starterText"]),
+        starterFrom: getField(d, ["starter_from", "starterFrom"]),
+        lastMessageText: getField(d, ["last_message_text", "lastMessageText"]),
+        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.created_at ?? d.createdAt ?? null,
+        lastSenderId: getField(d, ["last_sender_id", "lastSenderId"]),
+        createdAt: d.created_at ?? d.createdAt ?? null
+      };
+    }
+
+    function normalizeRequest(raw, fallbackId = "") {
+      const d = raw || {};
+
+      return {
+        id: d.id || fallbackId || "",
+        requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "sender_id", "senderId"]),
+        targetId: getField(d, ["target_id", "targetId", "to_user_id", "toUserId", "receiver_id", "receiverId", "recipient_id", "recipientId"]),
+        text: getField(d, ["text", "message", "starter_text", "starterText"]),
+        status: normalizeStatus(getField(d, ["status", "request_status", "requestStatus"]), "pending"),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null
+      };
+    }
+
+    function normalizeMessage(raw, fallbackId = "") {
+      const d = raw || {};
+
+      return {
+        id: d.id || fallbackId || "",
+        threadId: getField(d, ["thread_id", "threadId"]),
+        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
+        text: getField(d, ["text", "message", "body"]),
+        createdAt: d.created_at ?? d.createdAt ?? null,
+        seenAt: d.seen_at ?? d.seenAt ?? null,
+        readAt: d.read_at ?? d.readAt ?? null,
+        isRead: d.is_read ?? d.isRead ?? null,
+        read: d.read ?? null
+      };
+    }
+
+    function normalizeChatState(raw) {
+      const d = raw || {};
+
+      return {
+        id: d.id || "",
+        uid: d.uid || d.user_id || d.userId || "",
+        threadId: d.thread_id || d.threadId || "",
+        archivedAt: d.archived_at ?? d.archivedAt ?? null,
+        deletedAt: d.deleted_at ?? d.deletedAt ?? null,
+        mutedAt: d.muted_at ?? d.mutedAt ?? null,
+        markedUnreadAt: d.marked_unread_at ?? d.markedUnreadAt ?? null,
+        pinnedAt: d.pinned_at ?? d.pinnedAt ?? null,
+        blockedAt: d.blocked_at ?? d.blockedAt ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null
+      };
+    }
+
+    async function selectMaybeSingle(table, column, value) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch {}
+
+      return null;
+    }
+
+    async function loadChatUserState(threadId) {
+      if (!currentUser?.id || !threadId) return null;
+
+      try {
+        const { data, error } = await supabase
+          .from("chat_user_states")
+          .select("*")
+          .eq("uid", currentUser.id)
+          .eq("thread_id", threadId)
+          .maybeSingle();
+
+        if (error) {
+          if (isColumnOrSchemaError(error)) return null;
+          return null;
+        }
+
+        return data ? normalizeChatState(data) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function upsertChatState(threadId, patch) {
+      if (!currentUser?.id || !threadId) {
+        throw new Error("This option is available after a private room exists.");
+      }
+
+      const payload = {
+        uid: currentUser.id,
+        thread_id: threadId,
+        ...patch,
+        updated_at: nowIso()
+      };
+
+      const { data, error } = await supabase
+        .from("chat_user_states")
+        .upsert(payload, { onConflict: "uid,thread_id" })
+        .select("*")
+        .maybeSingle();
+
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+
+        if (
+          msg.includes("chat_user_states") ||
+          msg.includes("does not exist") ||
+          msg.includes("schema cache") ||
+          msg.includes("could not find")
+        ) {
+          throw new Error("Run the chat_user_states SQL first, then try again.");
+        }
+
+        throw error;
+      }
+
+      currentChatState = normalizeChatState(data || payload);
+      refreshRoomMenuLabels();
+      return currentChatState;
+    }
+
+    function closeRoomMenu() {
+      roomMenu.classList.remove("open");
+      roomMenuBtn.classList.remove("active");
+    }
+
+    function toggleRoomMenu() {
+      const open = roomMenu.classList.contains("open");
+
+      if (open) closeRoomMenu();
+      else {
+        refreshRoomMenuLabels();
+        roomMenu.classList.add("open");
+        roomMenuBtn.classList.add("active");
+      }
+    }
+
+    function refreshRoomMenuLabels() {
+      const archived = !!currentChatState?.archivedAt;
+      const muted = !!currentChatState?.mutedAt;
+      const blocked = !!currentChatState?.blockedAt;
+      const manualUnread = !!currentChatState?.markedUnreadAt;
+
+      menuMarkReadText.textContent = manualUnread ? "Mark as Read" : "Mark as Unread";
+      menuArchiveText.textContent = archived ? "Unarchive Chat" : "Archive Chat";
+      menuMuteText.textContent = muted ? "Unmute Chat" : "Mute Chat";
+      menuBlockText.textContent = blocked ? "Blocked" : "Block User";
+
+      toolbarChip.classList.toggle("muted", muted);
+      toolbarChip.classList.toggle("archived", archived);
+
+      if (blocked) {
+        toolbarChip.textContent = "Blocked";
+      } else if (muted) {
+        toolbarChip.textContent = "Muted room";
+      } else if (archived) {
+        toolbarChip.textContent = "Archived room";
+      } else if (currentMode === "chat") {
+        toolbarChip.textContent = "Direct room";
+      }
+    }
+
     async function markThreadNotificationsReadFast(threadId) {
       if (!currentUser?.id || !threadId) return;
 
@@ -1208,92 +1611,6 @@
           markMessagesSeenFast(currentThreadId).catch(() => {});
         }
       }, delay);
-    }
-
-    function normalizeProfile(raw, fallbackUid = "") {
-      const d = raw || {};
-
-      return {
-        uid: d.uid || d.id || d.user_id || d.userId || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "user_name", "userName"]),
-        photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
-        bio: getField(d, ["bio", "about"]),
-        blockedUsers: Array.isArray(d.blocked_users)
-          ? d.blocked_users
-          : Array.isArray(d.blockedUsers)
-          ? d.blockedUsers
-          : [],
-        moderationStatus: normalizeStatus(getField(d, ["moderation_status", "moderationStatus", "status"])),
-        isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
-        softDeleted: !!(d.soft_deleted ?? d.softDeleted)
-      };
-    }
-
-    function normalizeThread(raw, fallbackId = "") {
-      const d = raw || {};
-
-      return {
-        id: d.id || fallbackId || "",
-        type: getField(d, ["type"]) || "direct",
-        status: normalizeStatus(getField(d, ["status"]), "accepted"),
-        participantA: getField(d, ["participant_a", "participantA"]),
-        participantB: getField(d, ["participant_b", "participantB"]),
-        createdBy: getField(d, ["created_by", "createdBy"]),
-        acceptedFromRequestId: getField(d, ["accepted_from_request_id", "acceptedFromRequestId"]),
-        starterText: getField(d, ["starter_text", "starterText"]),
-        starterFrom: getField(d, ["starter_from", "starterFrom"]),
-        lastMessageText: getField(d, ["last_message_text", "lastMessageText"]),
-        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.created_at ?? d.createdAt ?? null,
-        lastSenderId: getField(d, ["last_sender_id", "lastSenderId"]),
-        createdAt: d.created_at ?? d.createdAt ?? null
-      };
-    }
-
-    function normalizeRequest(raw, fallbackId = "") {
-      const d = raw || {};
-
-      return {
-        id: d.id || fallbackId || "",
-        requesterId: getField(d, ["requester_id", "requesterId", "from_user_id", "fromUserId", "sender_id", "senderId"]),
-        targetId: getField(d, ["target_id", "targetId", "to_user_id", "toUserId", "receiver_id", "receiverId", "recipient_id", "recipientId"]),
-        text: getField(d, ["text", "message", "starter_text", "starterText"]),
-        status: normalizeStatus(getField(d, ["status", "request_status", "requestStatus"]), "pending"),
-        createdAt: d.created_at ?? d.createdAt ?? null,
-        updatedAt: d.updated_at ?? d.updatedAt ?? null
-      };
-    }
-
-    function normalizeMessage(raw, fallbackId = "") {
-      const d = raw || {};
-
-      return {
-        id: d.id || fallbackId || "",
-        threadId: getField(d, ["thread_id", "threadId"]),
-        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
-        text: getField(d, ["text", "message", "body"]),
-        createdAt: d.created_at ?? d.createdAt ?? null,
-        seenAt: d.seen_at ?? d.seenAt ?? null,
-        readAt: d.read_at ?? d.readAt ?? null,
-        isRead: d.is_read ?? d.isRead ?? null,
-        read: d.read ?? null
-      };
-    }
-
-    async function selectMaybeSingle(table, column, value) {
-      try {
-        const { data, error } = await supabase
-          .from(table)
-          .select("*")
-          .eq(column, value)
-          .maybeSingle();
-
-        if (!error && data) return data;
-      } catch {}
-
-      return null;
     }
 
     async function loadFullProfile(uid) {
@@ -1405,6 +1722,7 @@
       requestInfoPanel.classList.add("hidden");
       composerPanel.classList.add("hidden");
       topSub.textContent = "Unavailable";
+      refreshRoomMenuLabels();
     }
 
     function hideBlocked() {
@@ -1451,6 +1769,7 @@
       if (mode === "request_compose") {
         modeChip.textContent = "Request";
         statusChip.textContent = "One message";
+        toolbarChip.textContent = "Request";
         requestInfoPanel.classList.remove("hidden");
         composerPanel.classList.remove("hidden");
         requestInfoBox.textContent = "Send one respectful request message. Full chat opens only if they accept.";
@@ -1462,6 +1781,7 @@
       if (mode === "request_outgoing_pending") {
         modeChip.textContent = "Request";
         statusChip.textContent = "Pending";
+        toolbarChip.textContent = "Pending";
         requestInfoPanel.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
         requestPreviewBox.textContent = requestDocModel?.text
@@ -1474,6 +1794,7 @@
       if (mode === "request_incoming_pending") {
         modeChip.textContent = "Request";
         statusChip.textContent = "Incoming";
+        toolbarChip.textContent = "Incoming";
         requestInfoPanel.classList.remove("hidden");
         requestActionRow.classList.remove("hidden");
         requestPreviewBox.classList.remove("hidden");
@@ -1487,10 +1808,13 @@
       if (mode === "request_declined") {
         modeChip.textContent = "Request";
         statusChip.textContent = "Declined";
+        toolbarChip.textContent = "Declined";
         requestInfoPanel.classList.remove("hidden");
         requestInfoBox.textContent = "This message request was declined.";
         topSub.textContent = "Request declined";
       }
+
+      refreshRoomMenuLabels();
     }
 
     function scrollMessagesToBottom() {
@@ -1768,6 +2092,7 @@
       currentThreadId = threadModel.id;
       currentThreadData = threadModel;
       currentTargetUid = threadModel.participantA === currentUser.id ? threadModel.participantB : threadModel.participantA;
+      currentChatState = await loadChatUserState(currentThreadId);
 
       setTemporaryHeader(currentTargetUid);
       setModeUI("chat");
@@ -1783,6 +2108,12 @@
         currentTargetProfile.moderationStatus === "banned"
       ) {
         showBlocked("This account is not available for chat.");
+        return;
+      }
+
+      if (currentChatState?.blockedAt) {
+        iBlockedTarget = true;
+        showBlocked("You blocked this member. Unblock them later from settings/admin tools to chat again.");
         return;
       }
 
@@ -1872,6 +2203,11 @@
       clearAllListeners();
 
       currentTargetUid = targetUid;
+      currentThreadId = "";
+      currentThreadData = null;
+      currentChatState = null;
+      refreshRoomMenuLabels();
+
       setTemporaryHeader(targetUid);
 
       currentTargetProfile = await loadFullProfile(targetUid);
@@ -1927,6 +2263,7 @@
       if (iFollowTarget) {
         currentThreadId = "";
         currentThreadData = null;
+        currentChatState = null;
         setModeUI("direct_new");
         return;
       }
@@ -1955,6 +2292,8 @@
       if (existing) {
         currentThreadId = existing.id;
         currentThreadData = existing;
+        currentChatState = await loadChatUserState(existing.id);
+        refreshRoomMenuLabels();
         return existing;
       }
 
@@ -1985,6 +2324,8 @@
       const thread = normalizeThread(created, created?.id || "");
       currentThreadId = thread.id;
       currentThreadData = thread;
+      currentChatState = await loadChatUserState(thread.id);
+      refreshRoomMenuLabels();
       return thread;
     }
 
@@ -2052,6 +2393,8 @@
 
       currentThreadId = thread.id;
       currentThreadData = thread;
+      currentChatState = await loadChatUserState(thread.id);
+
       setModeUI("chat");
       listenToMessages(thread.id);
       notifyBadgeRefresh();
@@ -2282,6 +2625,173 @@
       messageInput.focus();
     }
 
+    async function handleRoomMenuAction(action) {
+      closeRoomMenu();
+
+      try {
+        setPageMessage("");
+
+        if (action === "profile") {
+          if (currentTargetUid) {
+            window.location.href = `member.html?uid=${encodeURIComponent(currentTargetUid)}`;
+            return;
+          }
+
+          setPageMessage("Profile is not loaded yet.", "err");
+          return;
+        }
+
+        if (action === "mark_read") {
+          if (!currentThreadId) {
+            setPageMessage("This option is available after a private room exists.", "err");
+            return;
+          }
+
+          await markMessagesSeenFast(currentThreadId);
+          await upsertChatState(currentThreadId, { marked_unread_at: null });
+          setPageMessage("Chat marked as read.", "ok");
+          notifyBadgeRefresh();
+          return;
+        }
+
+        if (action === "mark_unread") {
+          if (!currentThreadId) {
+            setPageMessage("This option is available after a private room exists.", "err");
+            return;
+          }
+
+          await upsertChatState(currentThreadId, { marked_unread_at: nowIso() });
+          setPageMessage("Chat marked as unread.", "ok");
+          notifyBadgeRefresh();
+          return;
+        }
+
+        if (action === "archive") {
+          if (!currentThreadId) {
+            setPageMessage("This option is available after a private room exists.", "err");
+            return;
+          }
+
+          const archived = !!currentChatState?.archivedAt;
+
+          await upsertChatState(currentThreadId, {
+            archived_at: archived ? null : nowIso(),
+            deleted_at: null
+          });
+
+          setPageMessage(archived ? "Chat moved back to inbox." : "Chat archived.", "ok");
+          notifyBadgeRefresh();
+          return;
+        }
+
+        if (action === "mute") {
+          if (!currentThreadId) {
+            setPageMessage("This option is available after a private room exists.", "err");
+            return;
+          }
+
+          const muted = !!currentChatState?.mutedAt;
+
+          await upsertChatState(currentThreadId, {
+            muted_at: muted ? null : nowIso()
+          });
+
+          setPageMessage(muted ? "Chat unmuted." : "Chat muted.", "ok");
+          notifyBadgeRefresh();
+          return;
+        }
+
+        if (action === "report") {
+          try {
+            sessionStorage.setItem("ownspace_report_draft", JSON.stringify({
+              type: "chat",
+              thread_id: currentThreadId || "",
+              reported_user_id: currentTargetUid || "",
+              reported_user_name: currentTargetProfile?.displayName || "Member",
+              created_at: nowIso()
+            }));
+          } catch {}
+
+          setPageMessage("Report draft saved. Next we should connect this to the admin reports page.", "err");
+          return;
+        }
+
+        if (action === "block") {
+          if (!currentThreadId) {
+            setPageMessage("Block from chat menu works after a private room exists. Later we should add global block_user table.", "err");
+            return;
+          }
+
+          if (currentChatState?.blockedAt) {
+            setPageMessage("This user is already blocked locally in this room.", "err");
+            return;
+          }
+
+          const ok = confirm(`Block ${currentTargetProfile?.displayName || "this user"}? This will archive the room and stop chat on your side.`);
+          if (!ok) return;
+
+          await upsertChatState(currentThreadId, {
+            blocked_at: nowIso(),
+            archived_at: nowIso()
+          });
+
+          iBlockedTarget = true;
+          showBlocked("You blocked this member. This room is archived on your side.");
+          setPageMessage("User blocked locally and chat archived.", "ok");
+          notifyBadgeRefresh();
+          return;
+        }
+
+        if (action === "delete") {
+          if (!currentThreadId) {
+            setPageMessage("This option is available after a private room exists.", "err");
+            return;
+          }
+
+          const ok = confirm("Delete this chat from your inbox only? The other person will still have their copy.");
+          if (!ok) return;
+
+          await upsertChatState(currentThreadId, {
+            deleted_at: nowIso(),
+            archived_at: null,
+            marked_unread_at: null
+          });
+
+          notifyBadgeRefresh();
+          window.location.href = "inbox.html";
+        }
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not update this chat.", "err");
+      }
+    }
+
+    roomMenuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleRoomMenu();
+    });
+
+    menuViewProfile.addEventListener("click", () => handleRoomMenuAction("profile"));
+
+    menuMarkRead.addEventListener("click", () => {
+      const manualUnread = !!currentChatState?.markedUnreadAt;
+      handleRoomMenuAction(manualUnread ? "mark_read" : "mark_unread");
+    });
+
+    menuArchive.addEventListener("click", () => handleRoomMenuAction("archive"));
+    menuMute.addEventListener("click", () => handleRoomMenuAction("mute"));
+    menuReport.addEventListener("click", () => handleRoomMenuAction("report"));
+    menuBlock.addEventListener("click", () => handleRoomMenuAction("block"));
+    menuDelete.addEventListener("click", () => handleRoomMenuAction("delete"));
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".top-menu-wrap")) closeRoomMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeRoomMenu();
+    });
+
     sendBtn.addEventListener("click", handleSend);
     acceptRequestBtn.addEventListener("click", acceptIncomingRequest);
     declineRequestBtn.addEventListener("click", declineIncomingRequest);
@@ -2453,27 +2963,6 @@
     });
 
     initPage();
-
-    /*
-      OWNSPACE CHAT ROOM REBUILD:
-
-      UI:
-      - Rebuilt from scratch visually.
-      - Removed WhatsApp-style green bubble feeling.
-      - New glass/private-room design.
-      - Premium profile header.
-      - Message cards use subtle OwnSpace gradient accents.
-      - Request and blocked states are cleaner.
-      - Composer is bigger, calmer, more OwnSpace-style.
-
-      LOGIC PRESERVED / IMPROVED:
-      - Opens by threadId or uid.
-      - Direct chat, new chat, outgoing request, incoming request, accept, decline.
-      - Realtime chat_messages listener filtered by thread_id.
-      - Realtime message request listener.
-      - Read cleanup and inbox badge refresh keys preserved.
-      - Viewer profile now loads before chat logic, avoiding timing bugs.
-    */
   </script>
 </body>
 </html>
