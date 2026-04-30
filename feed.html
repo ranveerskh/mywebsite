@@ -3410,20 +3410,22 @@
         const displayName = currentUserProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
         const userPhotoURL = currentUserProfile?.photoURL || "";
         const username = currentUserProfile?.username || "";
-        const verificationType = currentUserProfile?.verificationType || "";
 
-        const payloads = [
-          {
+        /*
+          IMPORTANT:
+          Keep the main feed post insert aligned with the working Supabase posts schema.
+          Do NOT send Firebase/camelCase fields like authorId / authorName here.
+          Those fields caused: "Could not find the 'authorName' column of 'posts' in the schema cache".
+        */
+        const { error } = await supabase
+          .from("posts")
+          .insert({
             user_id: currentUser.id,
             author_id: currentUser.id,
             display_name: displayName,
             author_name: displayName,
             username,
             user_photo_url: userPhotoURL,
-            is_verified: !!verificationType,
-            verification_badge: verificationType,
-            verification_type: verificationType,
-            badge_type: verificationType,
             caption,
             text: caption,
             body: caption,
@@ -3438,36 +3440,9 @@
             soft_deleted: false,
             created_at: nowIso(),
             updated_at: nowIso()
-          },
-          {
-            userId: currentUser.id,
-            authorId: currentUser.id,
-            displayName,
-            authorName: displayName,
-            username,
-            userPhotoURL,
-            isVerified: !!verificationType,
-            verificationBadge: verificationType,
-            verificationType,
-            badgeType: verificationType,
-            caption,
-            text: caption,
-            body: caption,
-            content: caption,
-            imageURL: uploadedImageUrl,
-            photoURL: uploadedImageUrl,
-            mediaURL: uploadedImageUrl,
-            source: "feed",
-            postType: "post",
-            hidden: false,
-            hiddenByAdmin: false,
-            softDeleted: false,
-            createdAt: nowIso(),
-            updatedAt: nowIso()
-          }
-        ];
+          });
 
-        await insertWithFallback("posts", payloads);
+        if (error) throw error;
 
         captionInput.value = "";
         selectedImageFile = null;
