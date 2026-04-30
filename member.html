@@ -252,14 +252,14 @@
 
     .verified-badge.account,
     .verified-badge.badge-account{
-      background:linear-gradient(135deg, #49b8ff, #1f8fff);
-      box-shadow:0 0 0 2px rgba(31,143,255,.18);
+      background:linear-gradient(135deg, #38e68c, #16a765);
+      box-shadow:0 0 0 2px rgba(34,179,108,.18);
     }
 
     .verified-badge.creator,
     .verified-badge.badge-creator{
-      background:linear-gradient(135deg, #38e68c, #16a765);
-      box-shadow:0 0 0 2px rgba(34,179,108,.18);
+      background:linear-gradient(135deg, #49b8ff, #1f8fff);
+      box-shadow:0 0 0 2px rgba(31,143,255,.18);
     }
 
     .verified-badge.business,
@@ -1701,11 +1701,11 @@
         return "business";
       }
 
-      if (["creator", "verified_creator", "creator_verified", "green", "green_tick", "green_badge"].includes(value)) {
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(value)) {
         return "creator";
       }
 
-      if (["account", "verified_account", "account_verified", "blue", "blue_tick", "blue_badge", "verified"].includes(value)) {
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified"].includes(value)) {
         return "account";
       }
 
@@ -1773,6 +1773,34 @@
           merged[key] = publicValue;
         }
       });
+
+      const verificationFields = [
+        "verification_badge", "verificationBadge",
+        "verification_type", "verificationType",
+        "badge_type", "badgeType",
+        "verified_badge", "verifiedBadge",
+        "verified_type", "verifiedType",
+        "account_badge", "accountBadge"
+      ];
+
+      const publicType = getField(publicRow, verificationFields, "");
+      const userType = getField(userRow, verificationFields, "");
+      const finalType = userType || publicType;
+      const publicVerified = getBool(publicRow, ["is_verified", "isVerified", "verified"], false);
+      const userVerified = getBool(userRow, ["is_verified", "isVerified", "verified"], false);
+      const finalVerified = !!finalType || publicVerified || userVerified;
+
+      if (finalType) {
+        merged.verification_badge = finalType;
+        merged.verification_type = finalType;
+        merged.badge_type = finalType;
+      }
+
+      if (finalVerified) {
+        merged.is_verified = true;
+        merged.verified = true;
+        merged.isVerified = true;
+      }
 
       return merged;
     }
