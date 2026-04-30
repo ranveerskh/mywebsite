@@ -160,6 +160,22 @@
       min-width:0;
     }
 
+    .summary-link{
+      display:block;
+      color:inherit;
+      text-decoration:none;
+      cursor:pointer;
+      transition:transform .15s ease,border-color .15s ease,background .15s ease;
+    }
+
+    .summary-link:hover,
+    .summary-link:focus-visible{
+      transform:translateY(-1px);
+      border-color:rgba(76,201,255,.32);
+      background:linear-gradient(135deg, rgba(76,201,255,.08), rgba(167,139,250,.05)), var(--surface-2);
+      outline:none;
+    }
+
     .summary-label{
       color:var(--muted);
       font-size:11px;
@@ -194,6 +210,16 @@
       cursor:pointer;
       min-height:42px;
       white-space:nowrap;
+    }
+
+    .tab-link{
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      background:rgba(61,220,132,.14);
+      border-color:rgba(61,220,132,.22);
     }
 
     .tab-btn.active{
@@ -682,10 +708,10 @@
             <div class="summary-label">Open Reports</div>
             <div id="sumReports" class="summary-value">0</div>
           </div>
-          <div class="summary-card">
+          <a href="verification-admin.html" class="summary-card summary-link" aria-label="Open verification review page">
             <div class="summary-label">Verification</div>
             <div id="sumVerification" class="summary-value">0</div>
-          </div>
+          </a>
           <div class="summary-card">
             <div class="summary-label">Communities</div>
             <div id="sumCommunities" class="summary-value">0</div>
@@ -702,7 +728,7 @@
           <button class="tab-btn active" data-tab="dashboard" type="button">Dashboard</button>
           <button class="tab-btn" data-tab="users" type="button">Users</button>
           <button class="tab-btn" data-tab="reports" type="button">Reports</button>
-          <button class="tab-btn" data-tab="verification" type="button">Verification</button>
+          <a class="tab-btn tab-link" href="verification-admin.html">Verification</a>
           <button class="tab-btn" data-tab="communities" type="button">Communities</button>
           <button class="tab-btn" data-tab="hub" type="button">Hub</button>
           <button class="tab-btn" data-tab="places" type="button">Places</button>
@@ -802,7 +828,6 @@
       usersFilter: "all",
       usersSearch: "",
       reportsFilter: "open",
-      verificationFilter: "pending",
       communitiesFilter: "active",
       placesFilter: "pending",
       hubFilter: "published",
@@ -813,8 +838,6 @@
       default: 50,
       min: 0,
       max: 100,
-      verificationApproved: 25,
-      verificationRejected: -5,
       communityApproved: 8,
       communityHidden: -10,
       placeApproved: 6,
@@ -1347,13 +1370,6 @@
       };
     }
 
-    function getBadgeLabel(type){
-      const t = normalizeStatus(type);
-      if (t === "creator") return "Verified Creator";
-      if (t === "business") return "Verified Business";
-      return "Verified Account";
-    }
-
     async function loadInboxBadge(){
       if (!currentUser?.id || !inboxBadge) return;
       let count = 0;
@@ -1393,11 +1409,11 @@
 
     function setActiveTab(tab){
       currentTab = tab;
-      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+      document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
       loadSection(tab, true);
     }
 
-    document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
+    document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
 
     async function loadSummary(){
       const [usersRows, publicRows, reports, verifications, communitiesRaw] = await Promise.all([
@@ -1430,11 +1446,11 @@
         if (tab === "dashboard") await loadDashboard();
         else if (tab === "users") await loadUsers();
         else if (tab === "reports") await loadReports();
-        else if (tab === "verification") await loadVerification();
         else if (tab === "communities") await loadCommunities();
         else if (tab === "hub") await loadHub();
         else if (tab === "places") await loadPlaces();
         else if (tab === "history") await loadHistory();
+        else await loadDashboard();
         if (refreshSummary) await loadSummary();
       } catch (err) {
         console.error(err);
@@ -1498,9 +1514,9 @@
           <div class="quick-card">
             <div class="card-title">Verification</div>
             ${quickLines(pendingVerification, "No pending verification.", item => `
-              <div class="quick-line"><span>${escapeHtml(val(item, ["username", "email", "full_name", "full_legal_name"], "Request"))}</span><strong>${escapeHtml(getBadgeLabel(val(item, ["badge_type", "verification_type"], "account")))}</strong></div>
+              <div class="quick-line"><span>${escapeHtml(val(item, ["username", "email", "full_name", "full_legal_name"], "Request"))}</span><strong>${escapeHtml(val(item, ["badge_type", "verification_type"], "account"))}</strong></div>
             `)}
-            <div class="inline-actions"><button class="action-btn green dash-go" data-tab="verification" type="button">Open Verification</button></div>
+            <div class="inline-actions"><a class="action-btn green" href="verification-admin.html">Open Verification</a></div>
           </div>
 
           <div class="quick-card">
@@ -1898,220 +1914,6 @@
           setMessage(`Could not ${action} report.`, "err");
           btn.disabled = false;
         }
-      }));
-    }
-
-    function getProofPaths(req){
-      return [
-        val(req, ["govt_id_path", "government_id_path", "id_path"], ""),
-        val(req, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], ""),
-        val(req, ["business_proof_path", "business_path"], "")
-      ].filter(Boolean);
-    }
-
-    function cleanStoragePath(path){
-      let cleanPath = String(path || "").trim();
-      if (cleanPath.includes("/storage/v1/object/")) {
-        const markers = ["/object/sign/verification/", "/object/public/verification/", "/verification/"];
-        for (const marker of markers) {
-          if (cleanPath.includes(marker)) {
-            cleanPath = cleanPath.split(marker)[1].split("?")[0];
-            break;
-          }
-        }
-      }
-      if (cleanPath.startsWith("verification/")) cleanPath = cleanPath.replace("verification/", "");
-      try { cleanPath = decodeURIComponent(cleanPath); } catch {}
-      return cleanPath;
-    }
-
-    async function createSignedProofUrl(path){
-      const cleanPath = cleanStoragePath(path);
-      if (!cleanPath) throw new Error("Proof file missing.");
-      const { data, error } = await supabase.storage.from(VERIFICATION_BUCKET).createSignedUrl(cleanPath, 300);
-      if (error) throw error;
-      return data.signedUrl;
-    }
-
-    async function openProof(path){
-      try {
-        const signedUrl = await createSignedProofUrl(path);
-        window.open(signedUrl, "_blank", "noopener,noreferrer");
-      } catch (err) {
-        console.error("Proof open failed:", err);
-        setMessage("Could not open proof file: " + (err.message || "Unknown error"), "err");
-      }
-    }
-
-    async function deleteVerificationProofFiles(req){
-      const paths = getProofPaths(req).map(cleanStoragePath).filter(Boolean);
-      if (!paths.length) return;
-      const { error } = await supabase.storage.from(VERIFICATION_BUCKET).remove(paths);
-      if (error) console.warn("Proof delete failed:", error.message || error);
-    }
-
-    async function updateVerificationUser(uid, approved, badgeType){
-      await updateUserTables(uid, [
-        { is_verified: approved, verified: approved, verification_status: approved ? "approved" : "rejected", verification_badge: approved ? badgeType : null, verified_at: approved ? nowIso() : null, age_verified: approved, legal_name_checked: approved, updated_at: nowIso() },
-        { isVerified: approved, verified: approved, verificationStatus: approved ? "approved" : "rejected", verificationBadge: approved ? badgeType : null, verifiedAt: approved ? nowIso() : null, ageVerified: approved, legalNameChecked: approved, updatedAt: nowIso() },
-        { is_verified: approved },
-        { isVerified: approved }
-      ]);
-
-      if (approved) await changeTrustScore(uid, TRUST.verificationApproved, "verification_approved");
-      else await changeTrustScore(uid, TRUST.verificationRejected, "verification_rejected");
-    }
-
-    async function approveVerification(req){
-      const uid = val(req, ["uid", "user_id", "userId"], "");
-      const requestId = val(req, ["id"], "");
-      const badgeType = val(req, ["badge_type", "verification_type"], "account");
-      const note = prompt("Admin note for approval? Optional:", "") || "";
-      if (!uid || !requestId) throw new Error("Missing verification user/request id.");
-
-      await deleteVerificationProofFiles(req);
-      await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        { status:"approved", admin_note: note, reviewed_at: nowIso(), reviewed_by: currentUser.id, age_verified:true, proof_deleted:true, proof_deleted_at: nowIso(), govt_id_path:null, govt_id_url:null, selfie_code_path:null, selfie_with_id_url:null, business_proof_path:null, business_proof_url:null, full_legal_name:null, full_name:null, dob:null, updated_at: nowIso() },
-        { status:"approved", adminNote: note, reviewedAt: nowIso(), reviewedBy: currentUser.id, ageVerified:true, proofDeleted:true, proofDeletedAt: nowIso(), updatedAt: nowIso() },
-        { status:"approved", proof_deleted:true }
-      ]);
-      await updateVerificationUser(uid, true, badgeType);
-      await createNotification(uid, { type:"verification", title:"Verification approved", message:`Your ${getBadgeLabel(badgeType)} request was approved.`, link:"verification.html" });
-      await logAdminAction("verification_approved", { targetUserId: uid, targetId: requestId, targetType:"verification", adminNote: note });
-    }
-
-    async function rejectVerification(req){
-      const uid = val(req, ["uid", "user_id", "userId"], "");
-      const requestId = val(req, ["id"], "");
-      const reason = prompt("Reason for rejection / admin note:", "") || "";
-      if (!uid || !requestId) throw new Error("Missing verification user/request id.");
-
-      await deleteVerificationProofFiles(req);
-      await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        { status:"rejected", admin_note: reason, rejection_reason: reason, reviewed_at: nowIso(), reviewed_by: currentUser.id, proof_deleted:true, proof_deleted_at: nowIso(), govt_id_path:null, govt_id_url:null, selfie_code_path:null, selfie_with_id_url:null, business_proof_path:null, business_proof_url:null, full_legal_name:null, full_name:null, dob:null, updated_at: nowIso() },
-        { status:"rejected", adminNote: reason, rejectionReason: reason, reviewedAt: nowIso(), reviewedBy: currentUser.id, proofDeleted:true, proofDeletedAt: nowIso(), updatedAt: nowIso() },
-        { status:"rejected", proof_deleted:true }
-      ]);
-      await updateVerificationUser(uid, false, "");
-      await createNotification(uid, { type:"verification", title:"Verification rejected", message: reason ? `Your verification was rejected: ${reason}` : "Your verification request was rejected.", link:"verification.html" });
-      await logAdminAction("verification_rejected", { targetUserId: uid, targetId: requestId, targetType:"verification", reason });
-    }
-
-    async function needMoreInfoVerification(req){
-      const uid = val(req, ["uid", "user_id", "userId"], "");
-      const requestId = val(req, ["id"], "");
-      const note = prompt("What more information is needed?", "") || "";
-      if (!uid || !requestId) throw new Error("Missing verification user/request id.");
-      if (!note.trim()) throw new Error("Admin note is required for Need More Info.");
-
-      await updateByColumnWithFallback("verification_requests", "id", requestId, [
-        { status:"need_more_info", admin_note: note, reviewed_at: nowIso(), reviewed_by: currentUser.id, updated_at: nowIso() },
-        { status:"need_more_info", adminNote: note, reviewedAt: nowIso(), reviewedBy: currentUser.id, updatedAt: nowIso() },
-        { status:"need_more_info", admin_note: note }
-      ]);
-      await createNotification(uid, { type:"verification", title:"Verification needs more info", message: note, link:"verification.html" });
-      await logAdminAction("verification_need_more_info", { targetUserId: uid, targetId: requestId, targetType:"verification", adminNote: note });
-    }
-
-    async function loadVerification(){
-      const docs = (await selectAllSafe("verification_requests")).map(d => ({...d})).sort((a,b) => createdMs(b) - createdMs(a));
-      const filtered = docs.filter(item => {
-        const s = normalizeStatus(val(item, ["status"], "pending"));
-        if (state.verificationFilter === "pending") return s === "pending" || s === "need_more_info";
-        if (state.verificationFilter === "approved") return s === "approved";
-        if (state.verificationFilter === "rejected") return s === "rejected";
-        return true;
-      });
-
-      sectionContent.innerHTML = `
-        <div class="section-title">Verification</div>
-        <div class="section-note">Review verification requests. Approval increases Trust Bar. Rejection slightly lowers Trust Bar. Proof files are deleted after approval/rejection.</div>
-        <div class="proof-warning">Personal verification proof must not be kept longer than needed. Open proof files only for review, then approve/reject so files can be removed.</div>
-
-        <div class="toolbar">
-          <button class="action-btn ${state.verificationFilter === "pending" ? "yellow" : ""} verification-filter" data-filter="pending" type="button">Pending</button>
-          <button class="action-btn ${state.verificationFilter === "approved" ? "green" : ""} verification-filter" data-filter="approved" type="button">Approved</button>
-          <button class="action-btn ${state.verificationFilter === "rejected" ? "red" : ""} verification-filter" data-filter="rejected" type="button">Rejected</button>
-          <button class="action-btn ${state.verificationFilter === "all" ? "purple" : ""} verification-filter" data-filter="all" type="button">All</button>
-        </div>
-
-        <div class="list">
-          ${filtered.length ? filtered.map(item => {
-            const id = val(item, ["id"], "");
-            const uid = val(item, ["uid", "user_id", "userId"], "");
-            const status = normalizeStatus(val(item, ["status"], "pending"));
-            const badgeType = val(item, ["badge_type", "verification_type"], "account");
-            const govtPath = val(item, ["govt_id_path", "government_id_path", "id_path"], "");
-            const selfiePath = val(item, ["selfie_code_path", "selfie_path", "selfie_with_code_path"], "");
-            const businessProofPath = val(item, ["business_proof_path", "business_path"], "");
-            return `
-              <div class="card">
-                <div class="card-top">
-                  <div class="card-title">${escapeHtml(getBadgeLabel(badgeType))}</div>
-                  <div class="card-time">${escapeHtml(fmtDate(val(item, ["created_at", "createdAt"], "")))}</div>
-                </div>
-                <div class="badge-row">
-                  <span class="badge ${badgeClass(status)}">${escapeHtml(status || "pending")}</span>
-                  <span class="badge blue">${escapeHtml(val(item, ["username", "email"], "No username"))}</span>
-                  <span class="badge ${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "green" : "yellow"}">${boolVal(item, ["proof_deleted", "proofDeleted"], false) ? "Proof deleted" : "Proof stored"}</span>
-                </div>
-                <details class="more-box" open>
-                  <summary>Verification details</summary>
-                  <div class="more-inner">
-                    <div class="meta-grid">
-                      <div class="meta-item"><strong>User ID</strong>${escapeHtml(uid || "Missing")}</div>
-                      <div class="meta-item"><strong>Full Legal Name</strong>${escapeHtml(val(item, ["full_legal_name", "full_name"], "Cleared / not available"))}</div>
-                      <div class="meta-item"><strong>Email</strong>${escapeHtml(val(item, ["email"], "Not added"))}</div>
-                      <div class="meta-item"><strong>DOB</strong>${escapeHtml(val(item, ["dob"], "Cleared / not available"))}</div>
-                      <div class="meta-item"><strong>18+ Confirmed</strong>${boolVal(item, ["age_confirmed", "ageConfirmed"], false) ? "Yes" : "No"}</div>
-                      <div class="meta-item"><strong>Daily Code</strong>${escapeHtml(val(item, ["daily_code", "dailyCode"], "Not added"))}</div>
-                      <div class="meta-item"><strong>Social Link</strong>${escapeHtml(val(item, ["social_link", "socialLink"], "Not required / not added"))}</div>
-                      <div class="meta-item"><strong>Business</strong>${escapeHtml(val(item, ["business_name", "businessName", "business_link", "businessLink"], "Not required / not added"))}</div>
-                      <div class="meta-item"><strong>Admin Note</strong>${escapeHtml(val(item, ["admin_note", "adminNote", "rejection_reason", "rejectionReason"], "No note"))}</div>
-                    </div>
-                  </div>
-                </details>
-                <div class="inline-actions">
-                  ${govtPath ? `<button class="action-btn blue open-proof-btn" data-path="${escapeHtml(govtPath)}" type="button">Open ID</button>` : ""}
-                  ${selfiePath ? `<button class="action-btn purple open-proof-btn" data-path="${escapeHtml(selfiePath)}" type="button">Open Selfie</button>` : ""}
-                  ${businessProofPath ? `<button class="action-btn yellow open-proof-btn" data-path="${escapeHtml(businessProofPath)}" type="button">Open Business Proof</button>` : ""}
-                  <button class="action-btn green approve-verification-btn" data-id="${escapeHtml(id)}" type="button">Approve</button>
-                  <button class="action-btn purple more-info-verification-btn" data-id="${escapeHtml(id)}" type="button">Need More Info</button>
-                  <button class="action-btn red reject-verification-btn" data-id="${escapeHtml(id)}" type="button">Reject</button>
-                </div>
-              </div>
-            `;
-          }).join("") : `<div class="empty-box">No verification requests found.</div>`}
-        </div>
-      `;
-
-      sectionContent.querySelectorAll(".verification-filter").forEach(btn => btn.addEventListener("click", () => {
-        state.verificationFilter = btn.dataset.filter;
-        loadVerification();
-      }));
-      sectionContent.querySelectorAll(".open-proof-btn").forEach(btn => btn.addEventListener("click", () => openProof(btn.dataset.path)));
-      sectionContent.querySelectorAll(".approve-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
-        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-        if (!req) return;
-        if (!confirm("Approve this verification? Proof files will be deleted after approval and Trust Bar will increase.")) return;
-        btn.disabled = true;
-        try { await approveVerification(req); await loadSummary(); await loadVerification(); setMessage("Verification approved, proof files deleted, user notified, and Trust Bar updated.", "ok"); }
-        catch (err) { console.error(err); setMessage(err?.message || "Could not approve verification.", "err"); btn.disabled = false; }
-      }));
-      sectionContent.querySelectorAll(".reject-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
-        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-        if (!req) return;
-        if (!confirm("Reject this verification? Proof files will be deleted after rejection.")) return;
-        btn.disabled = true;
-        try { await rejectVerification(req); await loadSummary(); await loadVerification(); setMessage("Verification rejected, proof files deleted, user notified, and Trust Bar updated.", "ok"); }
-        catch (err) { console.error(err); setMessage(err?.message || "Could not reject verification.", "err"); btn.disabled = false; }
-      }));
-      sectionContent.querySelectorAll(".more-info-verification-btn").forEach(btn => btn.addEventListener("click", async () => {
-        const req = docs.find(x => String(x.id) === String(btn.dataset.id));
-        if (!req) return;
-        btn.disabled = true;
-        try { await needMoreInfoVerification(req); await loadSummary(); await loadVerification(); setMessage("Marked as Need More Info and user notified.", "ok"); }
-        catch (err) { console.error(err); setMessage(err?.message || "Could not update verification request.", "err"); btn.disabled = false; }
       }));
     }
 
