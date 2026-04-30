@@ -154,7 +154,7 @@
       background:var(--glass);
       border:1px solid var(--line);
       border-radius:24px;
-      overflow:hidden;
+      overflow:visible;
       box-shadow:var(--shadow);
       backdrop-filter:blur(18px);
     }
@@ -166,6 +166,7 @@
         radial-gradient(circle at 12% 15%, rgba(76,201,255,.10), transparent 32%),
         radial-gradient(circle at 82% 12%, rgba(167,139,250,.08), transparent 28%),
         linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0));
+      border-radius:24px 24px 0 0;
     }
 
     .inbox-head-top{
@@ -264,7 +265,7 @@
 
     .filter-tabs{
       display:grid;
-      grid-template-columns:repeat(2,1fr);
+      grid-template-columns:repeat(3,1fr);
       gap:6px;
     }
 
@@ -274,16 +275,17 @@
       color:var(--text);
       border:1px solid var(--line);
       border-radius:15px;
-      padding:8px 9px;
-      font-size:11.5px;
+      padding:8px 7px;
+      font-size:11px;
       font-weight:950;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:7px;
+      gap:6px;
       min-height:38px;
       box-shadow:var(--soft-shadow);
+      white-space:nowrap;
     }
 
     .filter-tab.active{
@@ -335,6 +337,7 @@
       display:grid;
       gap:8px;
       padding:10px;
+      position:relative;
     }
 
     .loading-box,
@@ -351,12 +354,6 @@
       font-weight:850;
     }
 
-    .chat-link{
-      display:block;
-      text-decoration:none;
-      color:inherit;
-    }
-
     .inbox-item{
       position:relative;
       padding:10px;
@@ -366,7 +363,7 @@
         linear-gradient(135deg, rgba(76,201,255,.045), rgba(167,139,250,.035)),
         var(--surface-2);
       box-shadow:var(--soft-shadow);
-      overflow:hidden;
+      overflow:visible;
     }
 
     .inbox-item::before{
@@ -385,12 +382,26 @@
       background:linear-gradient(180deg,var(--yellow),var(--green));
     }
 
+    .inbox-item.archived-card::before{
+      background:linear-gradient(180deg,var(--muted),var(--purple));
+    }
+
     .inbox-item.unread-card{
       background:
         radial-gradient(circle at 92% 18%, rgba(255,93,115,.08), transparent 26%),
         linear-gradient(135deg, rgba(76,201,255,.08), rgba(167,139,250,.05)),
         var(--surface-2);
       border-color:rgba(255,93,115,.16);
+    }
+
+    .chat-card-main{
+      cursor:pointer;
+      padding-right:39px;
+      border-radius:15px;
+    }
+
+    .chat-card-main:active{
+      opacity:.74;
     }
 
     .row{
@@ -527,6 +538,18 @@
       color:var(--text);
     }
 
+    .identity-pill.yellow{
+      background:var(--yellow-soft);
+      border-color:rgba(245,185,66,.22);
+      color:var(--text);
+    }
+
+    .identity-pill.red{
+      background:var(--red-soft);
+      border-color:rgba(255,93,115,.22);
+      color:var(--text);
+    }
+
     .preview-row{
       display:flex;
       align-items:center;
@@ -561,6 +584,98 @@
       flex-shrink:0;
       line-height:1;
       box-shadow:0 0 0 4px rgba(255,93,115,.12);
+    }
+
+    .chat-menu-wrap{
+      position:absolute;
+      top:9px;
+      right:9px;
+      z-index:10;
+    }
+
+    .chat-menu-btn{
+      width:33px;
+      height:33px;
+      border-radius:13px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:var(--soft-shadow);
+    }
+
+    .chat-menu-btn svg{
+      width:17px;
+      height:17px;
+      display:block;
+    }
+
+    .chat-menu-btn.active{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.24);
+    }
+
+    .chat-menu{
+      position:absolute;
+      top:38px;
+      right:0;
+      width:210px;
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:17px;
+      box-shadow:0 18px 40px rgba(0,0,0,.20);
+      overflow:hidden;
+      display:none;
+      z-index:100;
+    }
+
+    .chat-menu.open{
+      display:block;
+    }
+
+    .menu-item{
+      width:100%;
+      border:none;
+      background:transparent;
+      color:var(--text);
+      min-height:38px;
+      padding:9px 11px;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      cursor:pointer;
+      font-size:11.5px;
+      font-weight:900;
+      text-align:left;
+      border-bottom:1px solid var(--line-soft);
+    }
+
+    .menu-item:last-child{
+      border-bottom:none;
+    }
+
+    .menu-item:hover{
+      background:var(--surface-2);
+    }
+
+    .menu-item svg{
+      width:15px;
+      height:15px;
+      display:block;
+      flex-shrink:0;
+    }
+
+    .menu-item.danger{
+      color:var(--red);
+      background:rgba(255,93,115,.04);
+    }
+
+    .menu-item.warning{
+      color:var(--yellow);
     }
 
     .request-note{
@@ -782,10 +897,6 @@
         padding:6px 6px calc(82px + var(--safe-bottom));
       }
 
-      .app{
-        max-width:860px;
-      }
-
       .topbar{
         border-radius:18px;
         grid-template-columns:40px 1fr 40px;
@@ -822,9 +933,15 @@
         padding-left:0;
       }
 
+      .filter-tabs{
+        grid-template-columns:1fr 1fr 1fr;
+        gap:5px;
+      }
+
       .filter-tab{
-        font-size:10.8px;
-        padding:8px 6px;
+        font-size:10px;
+        padding:8px 4px;
+        gap:4px;
       }
 
       .bottom-nav{
@@ -842,11 +959,16 @@
       .nav-badge{
         right:8px;
       }
+
+      .chat-menu{
+        width:205px;
+        right:-2px;
+      }
     }
 
     @media(max-width:390px){
       .filter-tab{
-        font-size:10.2px;
+        font-size:9.4px;
       }
 
       .avatar,
@@ -865,6 +987,14 @@
 
       .identity-pill{
         max-width:118px;
+      }
+
+      .chat-card-main{
+        padding-right:36px;
+      }
+
+      .chat-menu{
+        width:198px;
       }
     }
   </style>
@@ -897,7 +1027,7 @@
         <div class="inbox-head-top">
           <div>
             <div class="section-title">Inbox</div>
-            <div class="section-sub">Accepted rooms and message requests.</div>
+            <div class="section-sub">Accepted rooms, archived rooms, and message requests.</div>
           </div>
 
           <div class="head-actions">
@@ -939,13 +1069,18 @@
 
         <div class="filter-tabs">
           <button id="chatsTabBtn" class="filter-tab active" type="button">
-            <span>Private Rooms</span>
+            <span>Rooms</span>
             <span id="chatsTabCount" class="tab-count">0</span>
           </button>
 
           <button id="requestsTabBtn" class="filter-tab" type="button">
             <span>Requests</span>
             <span id="requestsTabCount" class="tab-count">0</span>
+          </button>
+
+          <button id="archivedTabBtn" class="filter-tab" type="button">
+            <span>Archived</span>
+            <span id="archivedTabCount" class="tab-count">0</span>
           </button>
         </div>
       </div>
@@ -972,12 +1107,17 @@
       <div class="modal-body">
         <div class="info-card">
           <div class="info-title">Private Rooms</div>
-          <div class="info-text">Accepted conversations appear as private rooms. Tap a room to open the new OwnSpace chat design.</div>
+          <div class="info-text">Accepted conversations appear as private rooms. Tap the room body to open chat.</div>
         </div>
 
         <div class="info-card">
-          <div class="info-title">Message Requests</div>
-          <div class="info-text">New people can send one respectful request message. You can accept or decline before full chat opens.</div>
+          <div class="info-title">3-dot room menu</div>
+          <div class="info-text">Use the 3-dot button to view profile, mark unread, archive, mute, report, block, or delete the room from your inbox only.</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-title">Archive / Delete</div>
+          <div class="info-text">Archive hides a room from the main inbox. Delete hides it only for you. It does not delete the other person’s copy.</div>
         </div>
 
         <div class="info-card">
@@ -1052,8 +1192,11 @@
 
     const chatsTabBtn = document.getElementById("chatsTabBtn");
     const requestsTabBtn = document.getElementById("requestsTabBtn");
+    const archivedTabBtn = document.getElementById("archivedTabBtn");
+
     const chatsTabCount = document.getElementById("chatsTabCount");
     const requestsTabCount = document.getElementById("requestsTabCount");
+    const archivedTabCount = document.getElementById("archivedTabCount");
     const inboxBadge = document.getElementById("inboxBadge");
 
     const roomsSummary = document.getElementById("roomsSummary");
@@ -1071,6 +1214,7 @@
     let threadMap = new Map();
     let requestDocsMap = new Map();
     let unreadByThreadMap = new Map();
+    let chatStateMap = new Map();
     let realtimeChannels = [];
     let refreshTimer = null;
 
@@ -1084,6 +1228,72 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M18 6 6 18"></path>
           <path d="m6 6 12 12"></path>
+        </svg>
+      `,
+      more: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="5" r="1"></circle>
+          <circle cx="12" cy="12" r="1"></circle>
+          <circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      `,
+      user: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      `,
+      unread: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 4h16v16H4z"></path>
+          <path d="m22 6-10 7L2 6"></path>
+        </svg>
+      `,
+      archive: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7h18"></path>
+          <path d="M5 7v13h14V7"></path>
+          <path d="M8 7V4h8v3"></path>
+          <path d="M10 12h4"></path>
+        </svg>
+      `,
+      unarchive: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7h18"></path>
+          <path d="M5 7v13h14V7"></path>
+          <path d="M8 7V4h8v3"></path>
+          <path d="m12 16-3-3"></path>
+          <path d="m12 16 3-3"></path>
+          <path d="M12 11v5"></path>
+        </svg>
+      `,
+      mute: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4V5z"></path>
+          <path d="m22 9-6 6"></path>
+          <path d="m16 9 6 6"></path>
+        </svg>
+      `,
+      report: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 9v4"></path>
+          <path d="M12 17h.01"></path>
+          <path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+        </svg>
+      `,
+      block: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M5.7 5.7 18.3 18.3"></path>
+        </svg>
+      `,
+      trash: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4h8v2"></path>
+          <path d="M19 6l-1 14H6L5 6"></path>
+          <path d="M10 11v5"></path>
+          <path d="M14 11v5"></path>
         </svg>
       `
     };
@@ -1278,6 +1488,23 @@
       };
     }
 
+    function normalizeChatState(raw) {
+      const d = raw || {};
+
+      return {
+        id: d.id || "",
+        uid: d.uid || d.user_id || d.userId || "",
+        threadId: d.thread_id || d.threadId || "",
+        archivedAt: d.archived_at ?? d.archivedAt ?? null,
+        deletedAt: d.deleted_at ?? d.deletedAt ?? null,
+        mutedAt: d.muted_at ?? d.mutedAt ?? null,
+        markedUnreadAt: d.marked_unread_at ?? d.markedUnreadAt ?? null,
+        pinnedAt: d.pinned_at ?? d.pinnedAt ?? null,
+        blockedAt: d.blocked_at ?? d.blockedAt ?? null,
+        updatedAt: d.updated_at ?? d.updatedAt ?? null
+      };
+    }
+
     function isMessageUnread(msg) {
       if (!msg || msg.senderId === currentUser.id) return false;
 
@@ -1294,6 +1521,39 @@
       return Array.from(threadMap.values())
         .filter(thread => (thread.status || "accepted") === "accepted")
         .filter(thread => thread.participantA === currentUser.id || thread.participantB === currentUser.id);
+    }
+
+    function getThreadState(threadId) {
+      return chatStateMap.get(threadId) || null;
+    }
+
+    function isThreadDeletedForMe(thread) {
+      const state = getThreadState(thread.id);
+      if (!state?.deletedAt) return false;
+
+      const lastActivity = tsMs(thread.lastMessageAt || thread.createdAt);
+      const deletedAt = tsMs(state.deletedAt);
+
+      if (!lastActivity || !deletedAt) return true;
+
+      return lastActivity <= deletedAt;
+    }
+
+    function isThreadArchivedForMe(thread) {
+      const state = getThreadState(thread.id);
+      return !!state?.archivedAt && !isThreadDeletedForMe(thread);
+    }
+
+    function getVisibleThreads() {
+      return getAcceptedThreads()
+        .filter(thread => !isThreadDeletedForMe(thread))
+        .filter(thread => !isThreadArchivedForMe(thread));
+    }
+
+    function getArchivedThreads() {
+      return getAcceptedThreads()
+        .filter(thread => !isThreadDeletedForMe(thread))
+        .filter(thread => isThreadArchivedForMe(thread));
     }
 
     function getPendingRequests() {
@@ -1325,10 +1585,18 @@
       try { window.dispatchEvent(new CustomEvent("ownspace:inbox-refresh")); } catch {}
     }
 
+    function closeAllMenus() {
+      document.querySelectorAll(".chat-menu.open").forEach(menu => menu.classList.remove("open"));
+      document.querySelectorAll(".chat-menu-btn.active").forEach(btn => btn.classList.remove("active"));
+    }
+
     function setTab(tab) {
       currentTab = tab;
+      closeAllMenus();
+
       chatsTabBtn.classList.toggle("active", tab === "chats");
       requestsTabBtn.classList.toggle("active", tab === "requests");
+      archivedTabBtn.classList.toggle("active", tab === "archived");
 
       renderCurrentTab().catch(err => {
         console.error(err);
@@ -1336,24 +1604,29 @@
       });
     }
 
+    function getThreadUnreadCount(thread) {
+      const normalUnread = Number(unreadByThreadMap.get(thread.id) || 0);
+      const state = getThreadState(thread.id);
+      const manualUnread = state?.markedUnreadAt ? 1 : 0;
+      return Math.max(normalUnread, manualUnread);
+    }
+
     function getTotalUnreadChats() {
-      let total = 0;
-      unreadByThreadMap.forEach(count => {
-        total += Number(count || 0);
-      });
-      return total;
+      return getVisibleThreads().reduce((total, thread) => total + getThreadUnreadCount(thread), 0);
     }
 
     function updateCounts() {
-      const chats = getAcceptedThreads();
+      const activeChats = getVisibleThreads();
+      const archivedChats = getArchivedThreads();
       const requests = getPendingRequests();
       const unreadChats = getTotalUnreadChats();
       const inboxTotal = unreadChats + requests.length;
 
-      chatsTabCount.textContent = unreadChats > 0 ? String(unreadChats) : String(chats.length);
+      chatsTabCount.textContent = unreadChats > 0 ? String(unreadChats) : String(activeChats.length);
       requestsTabCount.textContent = String(requests.length);
+      archivedTabCount.textContent = String(archivedChats.length);
 
-      roomsSummary.textContent = String(chats.length);
+      roomsSummary.textContent = String(activeChats.length);
       unreadSummary.textContent = String(unreadChats);
       requestsSummary.textContent = String(requests.length);
 
@@ -1465,6 +1738,42 @@
       throw lastError || new Error(`Could not insert into ${table}.`);
     }
 
+    async function upsertChatState(threadId, patch) {
+      if (!currentUser?.id || !threadId) return null;
+
+      const payload = {
+        uid: currentUser.id,
+        thread_id: threadId,
+        ...patch,
+        updated_at: nowIso()
+      };
+
+      const { data, error } = await supabase
+        .from("chat_user_states")
+        .upsert(payload, { onConflict: "uid,thread_id" })
+        .select("*")
+        .maybeSingle();
+
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+
+        if (
+          msg.includes("chat_user_states") ||
+          msg.includes("does not exist") ||
+          msg.includes("schema cache") ||
+          msg.includes("could not find")
+        ) {
+          throw new Error("Run the chat_user_states SQL first, then try again.");
+        }
+
+        throw error;
+      }
+
+      const state = normalizeChatState(data || payload);
+      if (state.threadId) chatStateMap.set(state.threadId, state);
+      return state;
+    }
+
     async function loadThreadsForCurrentUser() {
       const map = new Map();
 
@@ -1484,6 +1793,17 @@
       }
 
       threadMap = map;
+    }
+
+    async function loadChatUserStates() {
+      chatStateMap = new Map();
+
+      const rows = await safeSelect("chat_user_states", q => q.eq("uid", currentUser.id));
+
+      rows.forEach(row => {
+        const state = normalizeChatState(row);
+        if (state.threadId) chatStateMap.set(state.threadId, state);
+      });
     }
 
     async function loadPendingRequestsForCurrentUser() {
@@ -1826,78 +2146,309 @@
       await Promise.allSettled(jobs);
       await markThreadNotificationsRead(thread);
 
+      try {
+        await upsertChatState(threadId, { marked_unread_at: null });
+      } catch {}
+
       unreadByThreadMap.set(threadId, 0);
+      const state = getThreadState(threadId);
+      if (state) state.markedUnreadAt = null;
+
       updateCounts();
       announceBadgeRefresh();
     }
 
-    function renderChats() {
+    async function openThread(thread, item) {
+      const href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
+      if (item) item.style.opacity = ".72";
+
+      try {
+        await markThreadReadBeforeOpen(thread);
+      } catch {}
+
+      window.location.href = href;
+    }
+
+    function buildRoomPills(thread, profile, unreadCount, archivedMode = false) {
+      const state = getThreadState(thread.id);
+
+      const pills = [];
+
+      if (profile.username) {
+        pills.push(`<span class="identity-pill blue">@${escapeHtml(profile.username)}</span>`);
+      } else {
+        pills.push(`<span class="identity-pill">OwnSpace member</span>`);
+      }
+
+      if (unreadCount > 0) {
+        pills.push(`<span class="identity-pill green">Unread</span>`);
+      } else if (archivedMode) {
+        pills.push(`<span class="identity-pill">Archived</span>`);
+      } else {
+        pills.push(`<span class="identity-pill">Private room</span>`);
+      }
+
+      if (state?.mutedAt) {
+        pills.push(`<span class="identity-pill yellow">Muted</span>`);
+      }
+
+      if (state?.blockedAt) {
+        pills.push(`<span class="identity-pill red">Blocked</span>`);
+      }
+
+      return pills.join("");
+    }
+
+    function buildChatMenuHtml(thread, profile, archivedMode = false) {
+      const state = getThreadState(thread.id);
+      const unreadCount = getThreadUnreadCount(thread);
+      const isMuted = !!state?.mutedAt;
+
+      return `
+        <div class="chat-menu-wrap">
+          <button class="chat-menu-btn" type="button" aria-label="Chat options">
+            ${ICONS.more}
+          </button>
+
+          <div class="chat-menu">
+            <button class="menu-item" type="button" data-action="profile">
+              ${ICONS.user}
+              View Profile
+            </button>
+
+            <button class="menu-item" type="button" data-action="${unreadCount > 0 ? "read" : "unread"}">
+              ${ICONS.unread}
+              ${unreadCount > 0 ? "Mark as Read" : "Mark as Unread"}
+            </button>
+
+            <button class="menu-item" type="button" data-action="${archivedMode ? "unarchive" : "archive"}">
+              ${archivedMode ? ICONS.unarchive : ICONS.archive}
+              ${archivedMode ? "Unarchive Chat" : "Archive Chat"}
+            </button>
+
+            <button class="menu-item" type="button" data-action="${isMuted ? "unmute" : "mute"}">
+              ${ICONS.mute}
+              ${isMuted ? "Unmute Chat" : "Mute Chat"}
+            </button>
+
+            <button class="menu-item warning" type="button" data-action="report">
+              ${ICONS.report}
+              Report Chat
+            </button>
+
+            <button class="menu-item danger" type="button" data-action="block">
+              ${ICONS.block}
+              Block User
+            </button>
+
+            <button class="menu-item danger" type="button" data-action="delete">
+              ${ICONS.trash}
+              Delete Chat
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachRoomMenuEvents(item, thread, profile, archivedMode = false) {
+      const menuBtn = item.querySelector(".chat-menu-btn");
+      const menu = item.querySelector(".chat-menu");
+
+      menuBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const wasOpen = menu.classList.contains("open");
+        closeAllMenus();
+
+        if (!wasOpen) {
+          menu.classList.add("open");
+          menuBtn.classList.add("active");
+        }
+      });
+
+      item.querySelectorAll(".menu-item").forEach(button => {
+        button.addEventListener("click", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const action = button.dataset.action;
+          closeAllMenus();
+
+          await handleRoomAction(action, thread, profile, item, archivedMode);
+        });
+      });
+    }
+
+    async function handleRoomAction(action, thread, profile, item, archivedMode = false) {
+      if (!thread?.id) return;
+
+      try {
+        setPageMessage("");
+
+        if (action === "profile") {
+          const uid = getOtherUidFromThread(thread);
+          if (uid) window.location.href = `member.html?uid=${encodeURIComponent(uid)}`;
+          return;
+        }
+
+        if (action === "read") {
+          await markThreadReadBeforeOpen(thread);
+          await renderCurrentTab();
+          setPageMessage("Room marked as read.", "ok");
+          return;
+        }
+
+        if (action === "unread") {
+          await upsertChatState(thread.id, { marked_unread_at: nowIso() });
+          unreadByThreadMap.set(thread.id, Math.max(1, unreadByThreadMap.get(thread.id) || 0));
+          updateCounts();
+          await renderCurrentTab();
+          announceBadgeRefresh();
+          setPageMessage("Room marked as unread.", "ok");
+          return;
+        }
+
+        if (action === "archive") {
+          await upsertChatState(thread.id, {
+            archived_at: nowIso(),
+            deleted_at: null
+          });
+
+          await fetchInboxData(false);
+          setPageMessage("Chat archived.", "ok");
+          return;
+        }
+
+        if (action === "unarchive") {
+          await upsertChatState(thread.id, { archived_at: null });
+          await fetchInboxData(false);
+          setPageMessage("Chat moved back to Rooms.", "ok");
+          return;
+        }
+
+        if (action === "mute") {
+          await upsertChatState(thread.id, { muted_at: nowIso() });
+          await fetchInboxData(false);
+          setPageMessage("Chat muted.", "ok");
+          return;
+        }
+
+        if (action === "unmute") {
+          await upsertChatState(thread.id, { muted_at: null });
+          await fetchInboxData(false);
+          setPageMessage("Chat unmuted.", "ok");
+          return;
+        }
+
+        if (action === "report") {
+          const uid = getOtherUidFromThread(thread);
+          setPageMessage("Report page is not connected yet. Next we should connect this to admin reports.", "err");
+
+          try {
+            sessionStorage.setItem("ownspace_report_draft", JSON.stringify({
+              type: "chat",
+              thread_id: thread.id,
+              reported_user_id: uid,
+              reported_user_name: profile.displayName || "Member",
+              created_at: nowIso()
+            }));
+          } catch {}
+
+          return;
+        }
+
+        if (action === "block") {
+          const ok = confirm(`Block ${profile.displayName || "this user"}? This will hide the room from your main inbox for now.`);
+          if (!ok) return;
+
+          await upsertChatState(thread.id, {
+            blocked_at: nowIso(),
+            archived_at: nowIso()
+          });
+
+          await fetchInboxData(false);
+          setPageMessage("User blocked locally and chat archived. Later we should connect this to a global blocked_users table.", "ok");
+          return;
+        }
+
+        if (action === "delete") {
+          const ok = confirm("Delete this chat from your inbox only? The other person will still have their copy.");
+          if (!ok) return;
+
+          await upsertChatState(thread.id, {
+            deleted_at: nowIso(),
+            archived_at: null,
+            marked_unread_at: null
+          });
+
+          if (item) item.remove();
+
+          await fetchInboxData(false);
+          setPageMessage("Chat deleted from your inbox only.", "ok");
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setPageMessage(err?.message || "Could not update this chat.", "err");
+      }
+    }
+
+    function renderRoomList(rows, archivedMode = false) {
       listWrap.innerHTML = "";
 
-      const rows = getAcceptedThreads()
+      const sortedRows = rows
         .sort((a, b) => tsMs(b.lastMessageAt || b.createdAt) - tsMs(a.lastMessageAt || a.createdAt));
 
-      if (!rows.length) {
-        showEmpty("No private rooms yet.");
+      if (!sortedRows.length) {
+        showEmpty(archivedMode ? "No archived chats yet." : "No private rooms yet.");
         return;
       }
 
-      rows.forEach(thread => {
+      sortedRows.forEach(thread => {
         const otherUid = getOtherUidFromThread(thread);
         const profile = getProfile(otherUid);
         const previewText = buildChatPreview(thread);
-        const unreadCount = unreadByThreadMap.get(thread.id) || 0;
+        const unreadCount = getThreadUnreadCount(thread);
 
-        const item = document.createElement("a");
-        item.className = `chat-link inbox-item ${unreadCount > 0 ? "unread-card" : ""}`;
-        item.href = `chat.html?threadId=${encodeURIComponent(thread.id)}`;
-
-        const usernameHtml = profile.username
-          ? `<span class="identity-pill blue">@${escapeHtml(profile.username)}</span>`
-          : `<span class="identity-pill">OwnSpace member</span>`;
-
-        const roomStatus = unreadCount > 0
-          ? `<span class="identity-pill green">Unread</span>`
-          : `<span class="identity-pill">Private room</span>`;
+        const item = document.createElement("div");
+        item.className = `inbox-item ${archivedMode ? "archived-card" : ""} ${unreadCount > 0 ? "unread-card" : ""}`;
 
         item.innerHTML = `
-          <div class="row">
-            ${buildAvatarHtml(profile)}
+          <div class="chat-card-main">
+            <div class="row">
+              ${buildAvatarHtml(profile)}
 
-            <div class="content">
-              <div class="line1">
-                <div class="name">
-                  <span class="name-text">${escapeHtml(profile.displayName || "Member")}</span>
-                  ${buildVerifiedHtml(profile)}
+              <div class="content">
+                <div class="line1">
+                  <div class="name">
+                    <span class="name-text">${escapeHtml(profile.displayName || "Member")}</span>
+                    ${buildVerifiedHtml(profile)}
+                  </div>
+                  <div class="time">${escapeHtml(formatDate(thread.lastMessageAt || thread.createdAt))}</div>
                 </div>
-                <div class="time">${escapeHtml(formatDate(thread.lastMessageAt || thread.createdAt))}</div>
-              </div>
 
-              <div class="identity-line">
-                ${usernameHtml}
-                ${roomStatus}
-              </div>
+                <div class="identity-line">
+                  ${buildRoomPills(thread, profile, unreadCount, archivedMode)}
+                </div>
 
-              <div class="preview-row">
-                <div class="preview">${escapeHtml(previewText)}</div>
-                ${unreadCount > 0 ? `<span class="unread-pill">${unreadCount > 99 ? "99+" : unreadCount}</span>` : ""}
+                <div class="preview-row">
+                  <div class="preview">${escapeHtml(previewText)}</div>
+                  ${unreadCount > 0 ? `<span class="unread-pill">${unreadCount > 99 ? "99+" : unreadCount}</span>` : ""}
+                </div>
               </div>
             </div>
           </div>
+
+          ${buildChatMenuHtml(thread, profile, archivedMode)}
         `;
 
-        item.addEventListener("click", async (event) => {
-          event.preventDefault();
-
-          const href = item.href;
-          item.style.opacity = ".72";
-
-          try {
-            await markThreadReadBeforeOpen(thread);
-          } catch {}
-
-          window.location.href = href;
+        const main = item.querySelector(".chat-card-main");
+        main.addEventListener("click", async () => {
+          await openThread(thread, item);
         });
+
+        attachRoomMenuEvents(item, thread, profile, archivedMode);
 
         const img = item.querySelector(".avatar");
 
@@ -1911,6 +2462,14 @@
       });
 
       showList();
+    }
+
+    function renderChats() {
+      renderRoomList(getVisibleThreads(), false);
+    }
+
+    function renderArchived() {
+      renderRoomList(getArchivedThreads(), true);
     }
 
     function renderRequests() {
@@ -1998,6 +2557,7 @@
       updateCounts();
 
       if (currentTab === "requests") renderRequests();
+      else if (currentTab === "archived") renderArchived();
       else renderChats();
     }
 
@@ -2272,6 +2832,7 @@
         await withTimeout(
           (async () => {
             await loadThreadsForCurrentUser();
+            await loadChatUserStates();
             await loadPendingRequestsForCurrentUser();
             await loadUnreadCounts();
             await renderCurrentTab();
@@ -2317,7 +2878,8 @@
         "message_requests",
         "notifications",
         "public_profiles",
-        "users"
+        "users",
+        "chat_user_states"
       ];
 
       tables.forEach(table => {
@@ -2337,6 +2899,7 @@
     }
 
     function openInfoModal() {
+      closeAllMenus();
       infoModalWrap.classList.remove("hidden");
     }
 
@@ -2351,8 +2914,15 @@
       if (e.target === infoModalWrap) closeInfoModal();
     });
 
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".chat-menu-wrap")) closeAllMenus();
+    });
+
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeInfoModal();
+      if (e.key === "Escape") {
+        closeInfoModal();
+        closeAllMenus();
+      }
     });
 
     backBtn.addEventListener("click", () => {
@@ -2362,6 +2932,7 @@
 
     refreshBtn.addEventListener("click", async () => {
       try {
+        closeAllMenus();
         await fetchInboxData(true);
         setPageMessage("Inbox refreshed.", "ok");
       } catch {
@@ -2371,6 +2942,7 @@
 
     chatsTabBtn.addEventListener("click", () => setTab("chats"));
     requestsTabBtn.addEventListener("click", () => setTab("requests"));
+    archivedTabBtn.addEventListener("click", () => setTab("archived"));
 
     window.addEventListener("ownspace:badges-refresh", () => scheduleRefresh(80));
     window.addEventListener("ownspace:inbox-refresh", () => scheduleRefresh(80));
@@ -2424,33 +2996,6 @@
     window.addEventListener("beforeunload", clearLiveListeners);
 
     initPage();
-
-    /*
-      OWNSPACE INBOX PRIVATE ROOM REBUILD:
-
-      UI UPDATED:
-      - Rebuilt inbox to match new chat.html private-room design.
-      - Removed flat WhatsApp-style list feeling.
-      - Added glass shell, premium cards, room accent bars, summary cards.
-      - Chats are now called Private Rooms.
-      - Requests are cleaner and more cautious/respectful.
-      - Avatars now show initials instead of bad “No photo” text.
-      - Bottom nav matches newer OwnSpace pages.
-
-      LOGIC PRESERVED:
-      - Chats tab shows accepted chat_threads.
-      - Requests tab shows pending message_requests.
-      - Opening a room marks incoming chat_messages as read before redirect.
-      - Opening a room also marks matching notifications as read.
-      - Accepting/declining request marks request notifications as read.
-      - Live refresh listens to chat_threads, chat_messages, message_requests, notifications, public_profiles, and users.
-
-      BADGE RULE:
-      - Inbox badge counts ONLY:
-        1) pending message_requests for current user
-        2) unread incoming chat_messages
-      - General notifications are ignored.
-    */
   </script>
 </body>
 </html>
