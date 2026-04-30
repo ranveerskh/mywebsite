@@ -6,7 +6,7 @@
   <title>OwnSpace - Place</title>
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
 
     :root,
     html[data-theme="light"]{
@@ -26,6 +26,11 @@
       --topbar-bg:rgba(255,255,255,.94);
       --nav-bg:rgba(255,255,255,.98);
       --shadow:0 16px 30px rgba(20,33,61,.08);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     html[data-theme="dark"]{
@@ -45,6 +50,11 @@
       --topbar-bg:rgba(9,15,31,.92);
       --nav-bg:rgba(9,15,31,.98);
       --shadow:0 20px 40px rgba(0,0,0,.18);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
     }
 
     body{
@@ -188,6 +198,9 @@
     .badge-yellow{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.20)}
     .badge-purple{background:rgba(167,139,250,.14);border-color:rgba(167,139,250,.20)}
     .badge-red{background:rgba(255,93,115,.14);border-color:rgba(255,93,115,.20)}
+    .badge-account{background:var(--green-soft);border-color:rgba(61,220,132,.22);color:var(--green)}
+    .badge-creator{background:var(--blue-soft);border-color:rgba(76,201,255,.22);color:var(--blue)}
+    .badge-business{background:var(--yellow-soft);border-color:rgba(245,185,66,.24);color:var(--yellow)}
 
     .meta-grid{
       display:grid;
@@ -256,6 +269,10 @@
       font-size:10px;
       text-align:center;
       padding:6px;
+      background:
+        radial-gradient(circle at 26% 18%, rgba(76,201,255,.22), transparent 36%),
+        linear-gradient(135deg, rgba(167,139,250,.14), rgba(61,220,132,.10)),
+        var(--surface-3);
     }
 
     .submitter-body{min-width:0;flex:1}
@@ -278,6 +295,11 @@
 
     .submitter-name a:hover{text-decoration:underline}
 
+    /* FINAL OwnSpace badge color logic:
+       Verified Account = green tick
+       Verified Creator = blue tick
+       Verified Business = gold tick
+    */
     .verified-badge{
       width:21px;
       height:21px;
@@ -285,20 +307,34 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      background:#20c76f;
       color:#ffffff;
       border:2px solid rgba(255,255,255,.92);
-      box-shadow:
-        0 0 0 3px rgba(32,199,111,.18),
-        0 8px 18px rgba(32,199,111,.22);
       flex-shrink:0;
     }
 
     .verified-badge svg{
-      width:13px;
-      height:13px;
+      width:12px;
+      height:12px;
       display:block;
       stroke-width:3;
+    }
+
+    .verified-badge.verified-account{
+      background:linear-gradient(135deg,var(--green),#15975a);
+      color:#ffffff;
+      box-shadow:0 0 0 3px rgba(61,220,132,.16),0 8px 18px rgba(34,179,108,.14);
+    }
+
+    .verified-badge.verified-creator{
+      background:linear-gradient(135deg,var(--blue),#1474d4);
+      color:#ffffff;
+      box-shadow:0 0 0 3px rgba(76,201,255,.16),0 8px 18px rgba(31,143,255,.14);
+    }
+
+    .verified-badge.verified-business{
+      background:linear-gradient(135deg,#f7c957,var(--yellow));
+      color:#3f2a00;
+      box-shadow:0 0 0 3px rgba(245,185,66,.18),0 8px 18px rgba(213,150,23,.16);
     }
 
     .submitter-username{
@@ -1049,6 +1085,166 @@
       return fallback;
     }
 
+    function getFirstFilled(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+
+      return fallback;
+    }
+
+    function cleanKey(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function truthyVerification(value) {
+      if (value === true) return true;
+
+      const clean = cleanKey(value);
+
+      return [
+        "true",
+        "yes",
+        "1",
+        "verified",
+        "approved",
+        "account",
+        "creator",
+        "business",
+        "green_tick",
+        "blue_tick",
+        "gold_tick"
+      ].includes(clean);
+    }
+
+    function normalizeVerificationType(row = {}, isVerifiedFallback = false) {
+      const rawType = getFirstFilled(row, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "verified_type",
+        "verifiedType",
+        "account_badge",
+        "accountBadge",
+        "creator_verification_type",
+        "creatorVerificationType",
+        "creator_verification_badge",
+        "creatorVerificationBadge",
+        "submitter_verification_type",
+        "submitterVerificationType",
+        "submitter_verification_badge",
+        "submitterVerificationBadge",
+        "user_verification_type",
+        "userVerificationType"
+      ], "");
+
+      const clean = cleanKey(rawType);
+
+      // FINAL OwnSpace mapping:
+      // account = green, creator = blue, business = gold.
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified", "standard", "approved"].includes(clean)) return "account";
+
+      const verifiedFlag = getFirstFilled(row, [
+        "is_verified",
+        "isVerified",
+        "verified",
+        "creator_verified",
+        "creatorVerified",
+        "submitter_verified",
+        "submitterVerified",
+        "user_verified",
+        "userVerified"
+      ], "");
+
+      return truthyVerification(verifiedFlag) || isVerifiedFallback ? "account" : "";
+    }
+
+    function strongestVerificationType(...types) {
+      const cleaned = types.map(cleanKey).filter(Boolean);
+
+      if (cleaned.includes("business")) return "business";
+      if (cleaned.includes("creator")) return "creator";
+      if (cleaned.includes("account")) return "account";
+
+      return "";
+    }
+
+    function mergeProfileRows(existing = {}, incoming = {}) {
+      const existingType = normalizeVerificationType(existing);
+      const incomingType = normalizeVerificationType(incoming);
+      const strongest = strongestVerificationType(existingType, incomingType);
+
+      const merged = {
+        ...(existing || {}),
+        ...(incoming || {})
+      };
+
+      if (strongest) {
+        merged.verified = true;
+        merged.is_verified = true;
+        merged.isVerified = true;
+        merged.verification_badge = strongest;
+        merged.verification_type = strongest;
+        merged.badge_type = strongest;
+      }
+
+      return merged;
+    }
+
+    function getVerificationLabel(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "Verified Business";
+      if (clean === "creator") return "Verified Creator";
+      if (clean === "account") return "Verified Account";
+
+      return "Verified";
+    }
+
+    function getVerificationClass(type) {
+      const clean = cleanKey(type);
+
+      if (clean === "business") return "verified-business";
+      if (clean === "creator") return "verified-creator";
+
+      return "verified-account";
+    }
+
+    function verificationDotHtml(profile) {
+      const type = profile?.verificationType || normalizeVerificationType(profile || {});
+
+      if (!type) return "";
+
+      const label = getVerificationLabel(type);
+      const cls = getVerificationClass(type);
+
+      return `<span class="verified-badge ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${ICONS.check}</span>`;
+    }
+
+    function verificationBadgeHtml(profile) {
+      const type = profile?.verificationType || normalizeVerificationType(profile || {});
+
+      if (!type) return "";
+
+      const clean = cleanKey(type);
+      const label = getVerificationLabel(type);
+
+      return `<span class="badge badge-${escapeHtml(clean || "account")}">${escapeHtml(label)}</span>`;
+    }
+
     function readLat(obj) {
       return num(
         obj?.lat ??
@@ -1090,6 +1286,7 @@
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
+      const verificationType = normalizeVerificationType(d);
 
       return {
         uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
@@ -1097,8 +1294,8 @@
         username: getField(d, ["username", "handle", "user_name", "userName"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"]),
         bio: getField(d, ["bio", "about", "description"]),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
-        verificationType: getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"]),
+        verified: !!verificationType,
+        verificationType,
         moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
         isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin),
         softDeleted: !!(d.soft_deleted ?? d.softDeleted)
@@ -1181,6 +1378,8 @@
         createdBy: getField(d, ["created_by", "createdBy", "user_id", "userId", "uid", "owner_id", "ownerId", "creator_id", "creatorId"]),
         creatorName: getField(d, ["creator_name", "creatorName", "display_name", "displayName"]) || "Member",
         creatorUsername: getField(d, ["creator_username", "creatorUsername"]),
+        creatorVerified: truthyVerification(getFirstFilled(d, ["creator_verified", "creatorVerified", "submitter_verified", "submitterVerified"], "")),
+        creatorVerificationType: normalizeVerificationType(d),
         approved,
         pending,
         rejected,
@@ -1217,11 +1416,24 @@
           selectProfileRow("users", uid)
         ]);
 
-        return normalizeProfile({
-          ...(publicRow || {}),
-          ...(userRow || {}),
+        const placeFallback = currentPlace && currentPlace.createdBy === uid
+          ? {
+              uid,
+              display_name: currentPlace.creatorName,
+              username: currentPlace.creatorUsername,
+              verified: currentPlace.creatorVerified,
+              verification_type: currentPlace.creatorVerificationType,
+              verification_badge: currentPlace.creatorVerificationType
+            }
+          : { uid };
+
+        return normalizeProfile(
+          mergeProfileRows(
+            mergeProfileRows(placeFallback, publicRow || {}),
+            userRow || {}
+          ),
           uid
-        }, uid);
+        );
       } catch {
         return normalizeProfile({ uid }, uid);
       }
@@ -1633,6 +1845,10 @@
         </span>
       `);
 
+      if (currentSubmitterProfile?.verified) {
+        badges.push(verificationBadgeHtml(currentSubmitterProfile));
+      }
+
       if (hasVisited) {
         badges.push(`
           <span class="badge badge-green">
@@ -1671,21 +1887,13 @@
         ? `<img class="submitter-avatar" src="${escapeHtml(currentSubmitterProfile.photoURL)}" alt="Submitter photo">`
         : `<div class="submitter-avatar-placeholder">No photo</div>`;
 
-      const verifiedHtml = currentSubmitterProfile?.verified
-        ? `
-          <span class="verified-badge" title="${escapeHtml(currentSubmitterProfile.verificationType || "Verified")}">
-            ${ICONS.check}
-          </span>
-        `
-        : "";
-
       submitterCard.innerHTML = `
         ${avatarHtml}
 
         <div class="submitter-body">
           <div class="submitter-name">
             <a href="${profileUrl}">${escapeHtml(currentSubmitterProfile?.displayName || currentPlace.creatorName || "Member")}</a>
-            ${verifiedHtml}
+            ${verificationDotHtml(currentSubmitterProfile)}
           </div>
 
           ${currentSubmitterProfile?.username ? `<div class="submitter-username">@${escapeHtml(currentSubmitterProfile.username)}</div>` : ""}
@@ -2124,12 +2332,24 @@
     initPage();
 
     /*
-      OWNSPACE PLACE UPDATE:
+      OWNSPACE PLACE PAGE BADGE UPDATE:
 
-      - Been There now uses Supabase RPC:
+      FIXED:
+      - Verified Account = green tick.
+      - Verified Creator = blue tick.
+      - Verified Business = gold tick.
+      - Submitted By card now uses the final badge resolver.
+      - Top place badges can show submitter verification status.
+      - Reads verification_badge, verification_type, badge_type,
+        verified_badge, verified_type, account_badge,
+        creator/submitter/user verification fields,
+        camelCase versions, and old is_verified / verified booleans.
+      - If users and public_profiles disagree, strongest badge wins:
+        business > creator > account.
+
+      KEPT:
+      - Been There Supabase RPC logic:
         public.toggle_place_visit(p_place_id, p_source, p_place_name, p_city)
-      - Removed old direct multi-table insert/delete fallback that was causing:
-        "Could not update visited state"
       - Visit state checks public.place_visits using uid/user_id + place_id + source.
       - Existing page UI, edit, delete, report, share, map, submitter card, and inbox badge are preserved.
     */
