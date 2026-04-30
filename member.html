@@ -243,11 +243,29 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      background:#20c76f;
       color:#ffffff;
       border:2px solid rgba(255,255,255,.92);
-      box-shadow:0 0 0 2px rgba(32,199,111,.14);
       flex-shrink:0;
+      background:var(--blue);
+      box-shadow:0 0 0 2px rgba(31,143,255,.16);
+    }
+
+    .verified-badge.account,
+    .verified-badge.badge-account{
+      background:linear-gradient(135deg, #49b8ff, #1f8fff);
+      box-shadow:0 0 0 2px rgba(31,143,255,.18);
+    }
+
+    .verified-badge.creator,
+    .verified-badge.badge-creator{
+      background:linear-gradient(135deg, #38e68c, #16a765);
+      box-shadow:0 0 0 2px rgba(34,179,108,.18);
+    }
+
+    .verified-badge.business,
+    .verified-badge.badge-business{
+      background:linear-gradient(135deg, #ffd76a, #d59617);
+      box-shadow:0 0 0 2px rgba(213,150,23,.20);
     }
 
     .verified-badge svg{
@@ -1143,7 +1161,7 @@
         <div class="profile-main">
           <div class="name-line">
             <div id="displayName" class="display-name">Member</div>
-            <span id="verifiedDot" class="verified-badge hidden" title="Verified">
+            <span id="verifiedDot" class="verified-badge hidden" title="Verified Account">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 6 9 17l-5-5"></path>
               </svg>
@@ -1247,7 +1265,7 @@
           <div id="trustCardTitle" class="trust-card-title">Trust Card</div>
           <div class="trust-card-sub">A quick safety snapshot for this OwnSpace member.</div>
         </div>
-        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">Ã</button>
+        <button id="trustCloseBtn" class="trust-close" type="button" aria-label="Close">×</button>
       </div>
 
       <div class="trust-score-box">
@@ -1296,7 +1314,7 @@
           <div id="networkModalSub" class="network-sub">People connected with this member.</div>
         </div>
 
-        <button id="networkCloseBtn" class="network-close" type="button" aria-label="Close">Ã</button>
+        <button id="networkCloseBtn" class="network-close" type="button" aria-label="Close">×</button>
       </div>
 
       <input id="networkSearchInput" class="network-search" type="text" placeholder="Search people..." />
@@ -1676,8 +1694,106 @@
       return null;
     }
 
+    function normalizeVerificationType(rawType, isVerified = false) {
+      const value = normalizeText(rawType);
+
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(value)) {
+        return "business";
+      }
+
+      if (["creator", "verified_creator", "creator_verified", "green", "green_tick", "green_badge"].includes(value)) {
+        return "creator";
+      }
+
+      if (["account", "verified_account", "account_verified", "blue", "blue_tick", "blue_badge", "verified"].includes(value)) {
+        return "account";
+      }
+
+      return isVerified ? "account" : "";
+    }
+
+    function getVerificationLabel(type) {
+      if (type === "business") return "Verified Business";
+      if (type === "creator") return "Verified Creator";
+      if (type === "account") return "Verified Account";
+      return "Verified";
+    }
+
+    function isProfileVerified(profile) {
+      return !!(profile?.isVerified || profile?.verificationType);
+    }
+
+    function verifiedBadgeHtml(profile, size = 15) {
+      if (!isProfileVerified(profile)) return "";
+
+      const type = normalizeVerificationType(profile.verificationType, profile.isVerified);
+      const label = getVerificationLabel(type);
+      const cleanType = type || "account";
+
+      return `<span class="verified-badge ${cleanType}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" style="width:${size}px;height:${size}px;border-width:1px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </span>`;
+    }
+
+    function applyVerifiedBadge(element, profile) {
+      if (!element) return;
+
+      const type = normalizeVerificationType(profile?.verificationType, profile?.isVerified);
+      const visible = !!type;
+
+      element.classList.toggle("hidden", !visible);
+      element.classList.remove("account", "creator", "business", "badge-account", "badge-creator", "badge-business");
+
+      if (visible) {
+        element.classList.add(type);
+        element.title = getVerificationLabel(type);
+        element.setAttribute("aria-label", getVerificationLabel(type));
+      } else {
+        element.removeAttribute("aria-label");
+      }
+    }
+
+    function mergeProfileRows(publicRow = {}, userRow = {}, uid = "") {
+      const merged = { uid };
+      const keys = new Set([...Object.keys(publicRow || {}), ...Object.keys(userRow || {})]);
+
+      keys.forEach(key => {
+        const userValue = userRow?.[key];
+        const publicValue = publicRow?.[key];
+
+        if (userValue !== undefined && userValue !== null && String(userValue).trim() !== "") {
+          merged[key] = userValue;
+        } else if (publicValue !== undefined && publicValue !== null && String(publicValue).trim() !== "") {
+          merged[key] = publicValue;
+        } else if (userValue !== undefined) {
+          merged[key] = userValue;
+        } else {
+          merged[key] = publicValue;
+        }
+      });
+
+      return merged;
+    }
+
     function normalizeProfile(raw = {}, fallbackUid = "") {
       const d = raw || {};
+      const rawVerificationType = String(getField(d, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "account_badge",
+        "accountBadge"
+      ], "") || "");
+
+      const verifiedFlag = getBool(d, ["is_verified", "isVerified", "verified"], false) || !!rawVerificationType;
+      const verificationType = normalizeVerificationType(rawVerificationType, verifiedFlag);
 
       return {
         uid: String(getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || ""),
@@ -1688,8 +1804,8 @@
         link1: String(getField(d, ["link1", "link_1", "website1", "url1", "social1", "bio_link_1", "bioLink1"], "") || ""),
         link2: String(getField(d, ["link2", "link_2", "website2", "url2", "social2", "bio_link_2", "bioLink2"], "") || ""),
         isPrivate: getBool(d, ["is_private", "isPrivate", "private_profile", "privateProfile", "private", "account_private", "accountPrivate"], false),
-        isVerified: getBool(d, ["is_verified", "isVerified", "verified"], false),
-        verificationType: String(getField(d, ["verification_type", "verificationType", "badge_type", "badgeType"], "") || ""),
+        isVerified: verifiedFlag,
+        verificationType,
         trustScore: clampNumber(getField(d, ["trust_score", "trustScore"], 50), 0, 100, 50),
         pointsBalance: clampNumber(getField(d, ["points_balance", "pointsBalance", "earned_points", "earnedPoints"], 0), 0, 999999999, 0),
         moderationStatus: String(getField(d, ["moderation_status", "moderationStatus", "status"], "") || ""),
@@ -2010,15 +2126,7 @@
           <div>
             <div class="network-name">
               <span>${escapeHtml(profile.displayName || "Member")}</span>
-              ${
-                profile.isVerified
-                  ? `<span class="verified-badge" style="width:15px;height:15px;border-width:1px;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5"></path>
-                      </svg>
-                    </span>`
-                  : ""
-              }
+              ${verifiedBadgeHtml(profile, 15)}
             </div>
 
             ${profile.username ? `<div class="network-username">@${escapeHtml(profile.username)}</div>` : ""}
@@ -2177,7 +2285,7 @@
       const publicRow = lookups[0] || lookups[1] || lookups[2] || lookups[3] || {};
       const userRow = lookups[4] || lookups[5] || lookups[6] || lookups[7] || {};
 
-      return normalizeProfile({ ...publicRow, ...userRow, uid }, uid);
+      return normalizeProfile(mergeProfileRows(publicRow, userRow, uid), uid);
     }
 
     async function refreshBlockState() {
@@ -2382,7 +2490,7 @@
       const blockedMe = targetBlockedViewer();
 
       displayNameEl.textContent = targetProfile.displayName || "Member";
-      verifiedDot.classList.toggle("hidden", !targetProfile.isVerified);
+      applyVerifiedBadge(verifiedDot, targetProfile);
 
       if (targetProfile.username) {
         usernameEl.textContent = "@" + targetProfile.username;
@@ -3167,7 +3275,7 @@
                 <span class="badge ${event.creatorId === targetUid ? "badge-green" : "badge-purple"}">${event.creatorId === targetUid ? "Created" : "Joined"}</span>
                 <span class="badge ${normalizeText(event.visibility) === "private" ? "badge-yellow" : "badge-blue"}">${normalizeText(event.visibility) === "private" ? "Private" : "Public"}</span>
               </div>
-              <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" â¢ ") || "Event")}</div>
+              <div class="mini-meta">${escapeHtml([event.city, event.date, event.time].filter(Boolean).join(" • ") || "Event")}</div>
               ${event.description ? `<div class="desc">${escapeHtml(event.description)}</div>` : ""}
             </div>
             <span class="compact-arrow">${ICONS.open}</span>
@@ -3198,7 +3306,7 @@
                 <span class="badge badge-green">Added</span>
                 ${place.category ? `<span class="badge badge-purple">${escapeHtml(place.category)}</span>` : ""}
               </div>
-              <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" â¢ ") || "Place")}</div>
+              <div class="mini-meta">${escapeHtml([place.category, place.city].filter(Boolean).join(" • ") || "Place")}</div>
               ${place.description ? `<div class="desc">${escapeHtml(place.description)}</div>` : ""}
             </div>
             <span class="compact-arrow">${ICONS.open}</span>
@@ -3569,6 +3677,8 @@
       - Dashboard, photos, events, places, communities tabs.
       - Post like / comments / share / report.
       - Inbox badge count.
+      - Green / blue / gold verification tick logic:
+        account = blue, creator = green, business = gold.
       - Light theme default with dark theme support.
     */
   </script>
