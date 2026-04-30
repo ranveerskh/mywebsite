@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OwnSpace - Create Event</title>
+  <title>OwnSpace - Create Community</title>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -106,7 +106,7 @@
       position:relative;
     }
 
-    .top-icon-btn.list-top{
+    .top-icon-btn.open-top{
       background:var(--blue-soft);
       border-color:rgba(76,201,255,.22);
     }
@@ -142,7 +142,8 @@
       box-shadow:var(--shadow);
     }
 
-    .loading-box{
+    .loading-box,
+    .empty-box{
       text-align:center;
       color:var(--muted);
       padding:18px 8px;
@@ -157,7 +158,7 @@
     .page-head{
       display:grid;
       grid-template-columns:1fr auto;
-      align-items:center;
+      align-items:start;
       gap:8px;
       margin-bottom:8px;
     }
@@ -184,11 +185,38 @@
       border-radius:999px;
       font-size:10.2px;
       font-weight:950;
-      border:1px solid rgba(167,139,250,.22);
-      background:var(--purple-soft);
+      border:1px solid rgba(61,220,132,.22);
+      background:var(--green-soft);
       color:var(--text);
       white-space:nowrap;
     }
+
+    .chip-row{
+      display:flex;
+      gap:5px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 7px;
+      border-radius:999px;
+      font-size:9.8px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .chip-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
 
     .form{display:grid;gap:7px}
 
@@ -199,6 +227,7 @@
       padding:9px;
       display:grid;
       gap:8px;
+      box-shadow:var(--soft-shadow);
     }
 
     .section-title{
@@ -223,8 +252,6 @@
       color:var(--text);
     }
 
-    .required{color:var(--red)}
-
     .input,
     .textarea,
     .select{
@@ -248,7 +275,6 @@
 
     .input::placeholder,
     .textarea::placeholder{color:var(--muted)}
-    .select option{color:#111}
 
     .grid{
       display:grid;
@@ -262,11 +288,7 @@
       gap:7px;
     }
 
-    .mini-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:6px;
-    }
+    .toggle-list{display:grid;gap:6px}
 
     .check-row{
       display:flex;
@@ -286,8 +308,7 @@
       flex-shrink:0;
     }
 
-    .check-row label,
-    .check-row span{
+    .check-row label{
       margin:0;
       font-size:11.5px;
       line-height:1.35;
@@ -344,11 +365,11 @@
       display:block;
     }
 
-    .preview-caption{
-      color:var(--muted);
-      font-size:10px;
-      line-height:1.35;
-      margin-top:5px;
+    .action-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+      align-items:center;
     }
 
     .action-btn{
@@ -378,17 +399,15 @@
       flex-shrink:0;
     }
 
-    .btn-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .action-btn:disabled{opacity:.65;cursor:not-allowed}
+
+    .btn-primary{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
     .btn-green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}
-    .btn-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
     .btn-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}
+    .btn-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
     .btn-red{background:var(--red-soft);border-color:rgba(255,93,115,.22)}
 
-    .action-btn:disabled,
-    .btn-green:disabled{
-      opacity:.65;
-      cursor:not-allowed;
-    }
+    .save-btn{width:100%}
 
     .message{
       min-height:0;
@@ -484,7 +503,7 @@
 
     @media(max-width:700px){
       body{padding:6px 6px 82px}
-      .grid,.grid-3,.mini-actions{grid-template-columns:1fr}
+      .grid,.grid-3,.action-row{grid-template-columns:1fr}
       .bottom-nav{padding:5px;gap:4px}
       .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
       .nav-badge{right:8px}
@@ -493,8 +512,7 @@
     @media(max-width:390px){
       .action-btn{font-size:11.5px;padding:8px 8px}
       .section{padding:8px}
-      .check-row label,
-      .check-row span{font-size:11px}
+      .check-row label{font-size:11px}
     }
   </style>
 </head>
@@ -510,172 +528,176 @@
 
       <div class="top-center">
         <div class="brand">OwnSpace</div>
-        <div class="brand-sub">Create event</div>
+        <div class="brand-sub">Create community</div>
       </div>
 
-      <a href="nearby-events.html" class="top-icon-btn list-top" aria-label="Events list">
+      <a href="nearby-communities.html" class="top-icon-btn open-top" aria-label="Communities">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="16" rx="2"></rect>
-          <path d="M16 3v4"></path>
-          <path d="M8 3v4"></path>
-          <path d="M3 11h18"></path>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
       </a>
     </div>
 
     <div class="panel">
-      <div id="loadingBox" class="loading-box">Loading profile...</div>
+      <div id="loadingBox" class="loading-box">Checking account...</div>
+
+      <div id="notAllowedBox" class="empty-box hidden">
+        You cannot create a community right now.
+      </div>
 
       <div id="content" class="hidden">
         <div class="page-head">
           <div>
-            <div class="page-title">Create Event</div>
-            <div class="page-sub">Add a clean event with date, location, image, and safety confirmation.</div>
+            <div class="page-title">Create Community</div>
+            <div class="page-sub">Start a group for people, places, events, learning, support, or local updates.</div>
           </div>
-          <div class="mode-pill">2 free</div>
+          <div class="mode-pill">New</div>
         </div>
 
-        <form id="eventForm" class="form">
+        <div class="chip-row">
+          <span class="chip chip-blue">Public or private</span>
+          <span class="chip chip-green">Members</span>
+          <span class="chip chip-purple">Rules</span>
+          <span class="chip chip-yellow">Optional location</span>
+        </div>
+
+        <form id="communityForm" class="form">
           <div class="section">
             <div class="section-title">Basic Info</div>
-            <div class="section-sub">This appears on Nearby Events and the event detail page.</div>
+            <div class="section-sub">This appears on the community list and community profile page.</div>
 
             <div class="grid">
               <div class="field">
-                <label class="label" for="title">Event Title <span class="required">*</span></label>
-                <input type="text" id="title" class="input" maxlength="90" placeholder="Example: London meetup" required />
+                <label class="label" for="name">Community Name</label>
+                <input type="text" id="name" class="input" placeholder="Community name" required />
               </div>
 
               <div class="field">
-                <label class="label" for="visibility">Visibility</label>
-                <select id="visibility" class="select">
-                  <option value="public">Public</option>
-                  <option value="private">Private</option>
-                  <option value="request">Request to Join</option>
+                <label class="label" for="category">Category</label>
+                <select id="category" class="select">
+                  <option value="General">General</option>
+                  <option value="Local Group">Local Group</option>
+                  <option value="Learning">Learning</option>
+                  <option value="Updates">Updates</option>
+                  <option value="Events">Events</option>
+                  <option value="Places">Places</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Support">Support</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
 
             <div class="field">
-              <label class="label" for="description">Description <span class="required">*</span></label>
-              <textarea id="description" class="textarea" maxlength="1200" placeholder="Explain what this event is about..." required></textarea>
+              <label class="label" for="description">Description</label>
+              <textarea id="description" class="textarea" placeholder="Explain what this community is about..." required></textarea>
             </div>
           </div>
 
           <div class="section">
-            <div class="section-title">Date & Time</div>
-            <div class="section-sub">Required so the event can sort properly.</div>
+            <div class="section-title">Privacy & Posting</div>
+            <div class="section-sub">Choose how people join and who can post.</div>
 
             <div class="grid">
               <div class="field">
-                <label class="label" for="date">Date <span class="required">*</span></label>
-                <input type="date" id="date" class="input" required />
+                <label class="label" for="privacy">Privacy</label>
+                <select id="privacy" class="select">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                  <option value="request">Request to Join</option>
+                </select>
               </div>
 
               <div class="field">
-                <label class="label" for="time">Time <span class="required">*</span></label>
-                <input type="time" id="time" class="input" required />
+                <label class="label" for="postingMode">Who Can Post?</label>
+                <select id="postingMode" class="select">
+                  <option value="owner">Only owner</option>
+                  <option value="approved_authors">Approved authors only</option>
+                  <option value="members">All joined members</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="toggle-list">
+              <div class="check-row">
+                <input type="checkbox" id="allowMemberRequests" checked />
+                <label for="allowMemberRequests">Allow people to request joining this community</label>
+              </div>
+
+              <div class="check-row">
+                <input type="checkbox" id="allowPinnedPosts" checked />
+                <label for="allowPinnedPosts">Allow pinned posts inside this community</label>
               </div>
             </div>
           </div>
 
           <div class="section">
             <div class="section-title">Location</div>
-            <div class="section-sub">City, province/state, and country are required for Nearby and search.</div>
-
-            <div class="mini-actions">
-              <button id="useProfileLocationBtn" type="button" class="action-btn btn-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12z"></path>
-                  <circle cx="12" cy="9" r="2.5"></circle>
-                </svg>
-                <span>Use Profile Location</span>
-              </button>
-
-              <button id="useGpsBtn" type="button" class="action-btn btn-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 2v3"></path>
-                  <path d="M12 19v3"></path>
-                  <path d="M2 12h3"></path>
-                  <path d="M19 12h3"></path>
-                </svg>
-                <span>Use GPS</span>
-              </button>
-            </div>
+            <div class="section-sub">Optional. Use this only if the community is connected to a city or local area.</div>
 
             <div class="grid-3">
               <div class="field">
-                <label class="label" for="city">City <span class="required">*</span></label>
-                <input type="text" id="city" class="input" list="citySuggestions" placeholder="London" required />
-                <datalist id="citySuggestions"></datalist>
+                <label class="label" for="city">City</label>
+                <input type="text" id="city" class="input" placeholder="London" />
               </div>
 
               <div class="field">
-                <label class="label" for="province">Province / State <span class="required">*</span></label>
-                <input type="text" id="province" class="input" list="provinceSuggestions" placeholder="Ontario" required />
-                <datalist id="provinceSuggestions"></datalist>
+                <label class="label" for="province">Province / State</label>
+                <input type="text" id="province" class="input" placeholder="Ontario" />
               </div>
 
               <div class="field">
-                <label class="label" for="country">Country <span class="required">*</span></label>
-                <input type="text" id="country" class="input" list="countrySuggestions" placeholder="Canada" required />
-                <datalist id="countrySuggestions"></datalist>
+                <label class="label" for="country">Country</label>
+                <input type="text" id="country" class="input" placeholder="Canada" />
               </div>
             </div>
 
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="venue">Venue / Spot</label>
-                <input type="text" id="venue" class="input" maxlength="120" placeholder="Park, beach, cafe, hall..." />
-              </div>
+            <div class="small-note">If you add any location field, fill all three: city, province/state and country.</div>
+          </div>
 
-              <div class="field">
-                <label class="label" for="address">Address</label>
-                <input type="text" id="address" class="input" maxlength="180" placeholder="Optional full address" />
-              </div>
+          <div class="section">
+            <div class="section-title">Rules</div>
+            <div class="section-sub">Rules help keep the community clean and safe.</div>
+
+            <div class="field">
+              <label class="label" for="rules">Rules / Guidelines</label>
+              <textarea id="rules" class="textarea" placeholder="Example: Be respectful. No spam. Follow OwnSpace rules."></textarea>
             </div>
-
-            <div class="grid">
-              <div class="field">
-                <label class="label" for="lat">Latitude</label>
-                <input type="text" id="lat" class="input" placeholder="Optional" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="lng">Longitude</label>
-                <input type="text" id="lng" class="input" placeholder="Optional" />
-              </div>
-            </div>
-
-            <div class="small-note">GPS fills coordinates only. City, province/state, and country still need to be correct.</div>
           </div>
 
           <div class="section">
             <div class="section-title">Photo</div>
-            <div class="section-sub">Optional event cover photo.</div>
+            <div class="section-sub">Optional cover photo for the community.</div>
 
             <div class="file-box">
-              <input id="eventImageFile" class="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+              <input id="imageFile" class="file-input" type="file" accept="image/*" />
+              <div class="small-note">Recommended under 5 MB.</div>
+
               <div id="previewWrap" class="preview-wrap">
-                <img id="previewImg" class="preview-img" alt="Event photo preview" />
-                <div id="previewCaption" class="preview-caption">Image preview.</div>
+                <img id="previewImg" class="preview-img" alt="Community photo preview" />
               </div>
             </div>
           </div>
 
-          <div class="check-row">
-            <input type="checkbox" id="safetyCheck" required />
-            <label for="safetyCheck">I confirm this event follows OwnSpace rules and does not involve minors, harassment, scams, illegal activity, or non-consensual content.</label>
-          </div>
-
-          <button type="submit" class="action-btn btn-green" id="saveBtn">
+          <button type="submit" class="action-btn btn-green save-btn" id="saveBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
+              <path d="M20 6 9 17l-5-5"></path>
             </svg>
-            <span>Create Event</span>
+            <span>Create Community</span>
           </button>
+
+          <div class="action-row">
+            <a href="nearby-communities.html" class="action-btn btn-primary">
+              <span>View Communities</span>
+            </a>
+
+            <a href="profile.html" class="action-btn btn-purple">
+              <span>My Profile</span>
+            </a>
+          </div>
 
           <div id="message" class="message"></div>
         </form>
@@ -740,43 +762,35 @@
     import { supabase } from "./supabase.js";
 
     const STORAGE_BUCKET = "media";
-    const MIN_TRUST_TO_CREATE = 25;
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
     const backBtn = document.getElementById("backBtn");
     const loadingBox = document.getElementById("loadingBox");
+    const notAllowedBox = document.getElementById("notAllowedBox");
     const content = document.getElementById("content");
-    const eventForm = document.getElementById("eventForm");
+
+    const communityForm = document.getElementById("communityForm");
     const saveBtn = document.getElementById("saveBtn");
     const message = document.getElementById("message");
 
-    const titleInput = document.getElementById("title");
-    const visibilityInput = document.getElementById("visibility");
+    const nameInput = document.getElementById("name");
+    const categoryInput = document.getElementById("category");
     const descriptionInput = document.getElementById("description");
-    const dateInput = document.getElementById("date");
-    const timeInput = document.getElementById("time");
+    const privacyInput = document.getElementById("privacy");
+    const postingModeInput = document.getElementById("postingMode");
+    const allowMemberRequestsInput = document.getElementById("allowMemberRequests");
+    const allowPinnedPostsInput = document.getElementById("allowPinnedPosts");
     const cityInput = document.getElementById("city");
     const provinceInput = document.getElementById("province");
     const countryInput = document.getElementById("country");
-    const venueInput = document.getElementById("venue");
-    const addressInput = document.getElementById("address");
-    const latInput = document.getElementById("lat");
-    const lngInput = document.getElementById("lng");
-    const eventImageFile = document.getElementById("eventImageFile");
+    const rulesInput = document.getElementById("rules");
+    const imageFileInput = document.getElementById("imageFile");
     const previewWrap = document.getElementById("previewWrap");
     const previewImg = document.getElementById("previewImg");
-    const previewCaption = document.getElementById("previewCaption");
-    const safetyCheck = document.getElementById("safetyCheck");
-
-    const useProfileLocationBtn = document.getElementById("useProfileLocationBtn");
-    const useGpsBtn = document.getElementById("useGpsBtn");
-
-    const citySuggestions = document.getElementById("citySuggestions");
-    const provinceSuggestions = document.getElementById("provinceSuggestions");
-    const countrySuggestions = document.getElementById("countrySuggestions");
     const inboxBadge = document.getElementById("inboxBadge");
 
     let currentUser = null;
-    let currentProfile = null;
+    let currentProfile = {};
     let previewObjectUrl = "";
     let badgeRefreshTimer = null;
     let liveChannels = [];
@@ -785,21 +799,13 @@
 
     function rememberNearbyTab() {
       try {
-        localStorage.setItem("ownspace_nearby_tab", "events");
-        localStorage.setItem("ownspace_nearby_last_tab", "events");
+        localStorage.setItem("ownspace_nearby_tab", "communities");
+        localStorage.setItem("ownspace_nearby_last_tab", "communities");
       } catch {}
     }
 
     function nowIso() {
       return new Date().toISOString();
-    }
-
-    function generateId() {
-      if (window.crypto && typeof window.crypto.randomUUID === "function") {
-        return window.crypto.randomUUID();
-      }
-
-      return "event_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     }
 
     function getStoredTheme() {
@@ -840,40 +846,27 @@
       });
     }
 
-    function setMinDate() {
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      dateInput.min = `${yyyy}-${mm}-${dd}`;
-    }
-
-    setMinDate();
-
     function showMessage(text = "", type = "") {
       message.textContent = text;
       message.className = `message ${type}`;
     }
 
-    function setButtonDefault() {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
-        </svg>
-        <span>Create Event</span>
-      `;
-    }
-
-    function getField(raw, names) {
+    function getField(raw, names, fallback = "") {
       for (const name of names) {
         const value = raw?.[name];
 
         if (value != null && String(value).trim()) return String(value).trim();
       }
 
-      return "";
+      return fallback;
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+
+      return fallback;
     }
 
     function normalizeText(value) {
@@ -882,6 +875,19 @@
 
     function titleText(value) {
       return String(value || "").trim();
+    }
+
+    function isSchemaError(error) {
+      const msg = String(error?.message || error || "").toLowerCase();
+
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("not found in the schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("schema cache") ||
+        msg.includes("column") ||
+        msg.includes("relation")
+      );
     }
 
     function toMillis(value) {
@@ -894,66 +900,67 @@
       return Number.isFinite(ms) ? ms : 0;
     }
 
-    function isSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-      return (
-        msg.includes("schema cache") ||
-        msg.includes("column") ||
-        msg.includes("does not exist") ||
-        msg.includes("could not find") ||
-        msg.includes("relation")
-      );
+    function countryAliases(country) {
+      const c = normalizeText(country);
+
+      if (!c) return "";
+
+      const aliases = [c];
+
+      if (c === "united states") aliases.push("usa", "us", "america");
+      if (c === "united kingdom") aliases.push("uk", "britain", "england");
+      if (c === "canada") aliases.push("ca");
+      if (c === "india") aliases.push("bharat", "hindustan");
+
+      return aliases.join(" ");
     }
 
-    function readNumber(value) {
-      const n = Number(value);
-      return Number.isFinite(n) ? n : null;
+    function provinceAliases(province) {
+      const p = normalizeText(province);
+
+      if (!p) return "";
+
+      const aliases = [p];
+
+      if (p === "ontario") aliases.push("on", "ont");
+      if (p === "british columbia") aliases.push("bc", "b.c.");
+      if (p === "alberta") aliases.push("ab");
+      if (p === "quebec") aliases.push("qc");
+      if (p === "manitoba") aliases.push("mb");
+      if (p === "saskatchewan") aliases.push("sk");
+      if (p === "nova scotia") aliases.push("ns");
+      if (p === "new brunswick") aliases.push("nb");
+      if (p === "newfoundland and labrador") aliases.push("nl");
+      if (p === "prince edward island") aliases.push("pei", "pe");
+      if (p === "yukon") aliases.push("yt");
+
+      return aliases.join(" ");
     }
 
-    function readLat(raw) {
-      return readNumber(
-        raw?.lat ??
-        raw?.latitude ??
-        raw?.location?.lat ??
-        raw?.location?.latitude ??
-        raw?.coords?.lat ??
-        raw?.coords?.latitude
-      );
-    }
-
-    function readLng(raw) {
-      return readNumber(
-        raw?.lng ??
-        raw?.lon ??
-        raw?.long ??
-        raw?.longitude ??
-        raw?.location?.lng ??
-        raw?.location?.lon ??
-        raw?.location?.long ??
-        raw?.location?.longitude ??
-        raw?.coords?.lng ??
-        raw?.coords?.longitude
-      );
+    function buildLocationSearch(city, province, country) {
+      return [
+        titleText(city),
+        titleText(province),
+        titleText(country),
+        provinceAliases(province),
+        countryAliases(country)
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
     }
 
     function normalizeProfile(raw, fallbackUid = "") {
       const d = raw || {};
 
       return {
-        uid: getField(d, ["uid", "id", "user_id", "userId"]) || fallbackUid || "",
-        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"]) || "Member",
-        username: getField(d, ["username", "handle", "user_name", "userName"]),
-        city: getField(d, ["city", "location_city", "locationCity", "current_city", "currentCity"]),
-        province: getField(d, ["province", "state", "region", "location_province", "locationProvince", "current_province", "currentProvince"]),
-        country: getField(d, ["country", "location_country", "locationCountry", "current_country", "currentCountry"]),
-        lat: readLat(d),
-        lng: readLng(d),
-        moderationStatus: getField(d, ["moderation_status", "moderationStatus", "status"]),
-        trustScore: Number(d.trust_score ?? d.trustScore ?? 50) || 50,
-        earnedPoints: Number(d.earned_points ?? d.earnedPoints ?? 0) || 0,
-        freeEventsUsed: Number(d.free_events_used ?? d.freeEventsUsed ?? 0) || 0,
-        suspended: !!d.suspended,
-        banned: !!(d.banned || d.soft_deleted || d.softDeleted || d.is_hidden_by_admin || d.isHiddenByAdmin)
+        uid: getField(d, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "",
+        displayName: getField(d, ["display_name", "displayName", "name", "full_name", "fullName", "username"], "Member") || "Member",
+        username: getField(d, ["username", "handle", "user_name", "userName"], ""),
+        isAdmin: getBool(d, ["is_admin", "isAdmin"], false) || getField(d, ["role"], "") === "admin",
+        moderationStatus: normalizeText(getField(d, ["moderation_status", "moderationStatus", "status"], "")),
+        softDeleted: getBool(d, ["soft_deleted", "softDeleted", "deactivated"], false)
       };
     }
 
@@ -988,111 +995,68 @@
       }, currentUser.id);
     }
 
-    function canCreateEvent() {
-      const status = normalizeText(currentProfile?.moderationStatus);
-
-      if (currentProfile?.banned || status === "banned") return "Your account cannot create events right now.";
-      if (currentProfile?.suspended || status === "suspended") return "Your account is suspended and cannot create events right now.";
-      if (["warned", "warning_active", "blocked"].includes(status)) return "Your account has an active warning. Event creation is blocked for now.";
-      if ((currentProfile?.trustScore || 50) < MIN_TRUST_TO_CREATE) return "Your Trust Bar is too low to create events right now.";
-
-      return "";
+    function canCreateCommunity() {
+      if (!currentProfile) return true;
+      if (currentProfile.softDeleted) return false;
+      if (["banned", "deleted", "removed", "suspended"].includes(currentProfile.moderationStatus)) return false;
+      return true;
     }
 
-    function fillProfileLocation(silent = false) {
-      if (!currentProfile) return;
-
-      cityInput.value = currentProfile.city || cityInput.value;
-      provinceInput.value = currentProfile.province || provinceInput.value;
-      countryInput.value = currentProfile.country || countryInput.value;
-
-      if (currentProfile.lat !== null && currentProfile.lat !== undefined) latInput.value = String(currentProfile.lat);
-      if (currentProfile.lng !== null && currentProfile.lng !== undefined) lngInput.value = String(currentProfile.lng);
-
-      if (!silent) showMessage("Profile location filled.", "success");
-    }
-
-    useProfileLocationBtn.addEventListener("click", () => fillProfileLocation(false));
-
-    useGpsBtn.addEventListener("click", () => {
-      if (!navigator.geolocation) {
-        showMessage("GPS is not supported on this device.", "error");
-        return;
-      }
-
-      useGpsBtn.disabled = true;
-      showMessage("Checking GPS...", "success");
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          latInput.value = String(position.coords.latitude);
-          lngInput.value = String(position.coords.longitude);
-          showMessage("GPS coordinates filled.", "success");
-          useGpsBtn.disabled = false;
-        },
-        () => {
-          showMessage("Could not get GPS permission/location.", "error");
-          useGpsBtn.disabled = false;
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    });
-
-    function clearPreview() {
+    function setPreviewFromFile(file) {
       if (previewObjectUrl) {
         URL.revokeObjectURL(previewObjectUrl);
         previewObjectUrl = "";
       }
 
-      previewWrap.classList.remove("show");
-      previewImg.removeAttribute("src");
-      previewCaption.textContent = "Image preview.";
-    }
-
-    function setPreviewFromFile(file) {
-      clearPreview();
-
-      if (!file) return;
-
-      if (!file.type || !file.type.startsWith("image/")) {
-        eventImageFile.value = "";
-        showMessage("Please upload image file only.", "error");
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        eventImageFile.value = "";
-        showMessage("Image is too large. Please upload under 5 MB.", "error");
+      if (!file) {
+        previewWrap.classList.remove("show");
+        previewImg.removeAttribute("src");
         return;
       }
 
       previewObjectUrl = URL.createObjectURL(file);
       previewImg.src = previewObjectUrl;
-      previewCaption.textContent = `${file.name} â¢ ${(file.size / 1024 / 1024).toFixed(2)} MB`;
       previewWrap.classList.add("show");
-      showMessage("");
     }
 
-    eventImageFile.addEventListener("change", () => {
-      const file = eventImageFile.files?.[0] || null;
+    imageFileInput.addEventListener("change", () => {
+      const file = imageFileInput.files?.[0] || null;
+
+      if (!file) {
+        setPreviewFromFile(null);
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        showMessage("Please upload an image file only.", "error");
+        imageFileInput.value = "";
+        setPreviewFromFile(null);
+        return;
+      }
+
+      if (file.size > MAX_IMAGE_BYTES) {
+        showMessage("Community photo must be under 5 MB.", "error");
+        imageFileInput.value = "";
+        setPreviewFromFile(null);
+        return;
+      }
+
       setPreviewFromFile(file);
+      showMessage("Photo selected. Press Create Community to upload it.", "success");
     });
 
-    async function uploadEventImage(file, eventId) {
+    async function uploadCommunityImage(file, userId) {
+      if (!file) return { path: "", publicUrl: "" };
+
       const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
       const safeExt = extension.replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `event-images/${currentUser.id}/${eventId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+      const path = `communities/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(path, file, {
           cacheControl: "3600",
-          upsert: false,
-          contentType: file.type || "image/jpeg"
+          upsert: false
         });
 
       if (uploadError) throw uploadError;
@@ -1105,145 +1069,47 @@
       };
     }
 
-    function countryAliases(country) {
-      const c = normalizeText(country);
+    async function communityNameExists(name) {
+      const clean = String(name || "").trim();
 
-      if (!c) return "";
+      if (!clean) return false;
 
-      const aliases = [c];
+      const attempts = [
+        { table: "communities", column: "name" },
+        { table: "communities", column: "community_name" },
+        { table: "communities", column: "title" },
+        { table: "community", column: "name" },
+        { table: "community", column: "community_name" },
+        { table: "community", column: "title" }
+      ];
 
-      if (c === "united states") aliases.push("usa", "us", "america");
-      if (c === "united kingdom") aliases.push("uk", "britain");
-      if (c === "canada") aliases.push("ca");
-      if (c === "india") aliases.push("bharat", "hindustan");
-
-      return aliases.join(" ");
-    }
-
-    function provinceAliases(province) {
-      const p = normalizeText(province);
-
-      if (!p) return "";
-
-      const aliases = [p];
-
-      if (p === "ontario") aliases.push("on", "ont");
-      if (p === "british columbia") aliases.push("bc", "b.c.");
-      if (p === "alberta") aliases.push("ab");
-      if (p === "quebec") aliases.push("qc");
-      if (p === "manitoba") aliases.push("mb");
-      if (p === "saskatchewan") aliases.push("sk");
-      if (p === "nova scotia") aliases.push("ns");
-      if (p === "new brunswick") aliases.push("nb");
-      if (p === "newfoundland and labrador") aliases.push("nl");
-      if (p === "prince edward island") aliases.push("pei", "pe");
-
-      return aliases.join(" ");
-    }
-
-    function buildLocationSearch(city, province, country) {
-      return [
-        titleText(city),
-        titleText(province),
-        titleText(country),
-        provinceAliases(province),
-        countryAliases(country)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
-    }
-
-    function buildSearchText(data) {
-      return [
-        data.title,
-        data.description,
-        data.city,
-        data.province,
-        data.country,
-        data.venue,
-        data.address,
-        data.creatorName,
-        buildLocationSearch(data.city, data.province, data.country)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
-        .toLowerCase();
-    }
-
-    async function loadEventSuggestions() {
-      try {
-        const { data, error } = await supabase
-          .from("events")
-          .select("city,province,state,country")
-          .limit(150);
-
-        if (error || !Array.isArray(data)) return;
-
-        const cities = new Set();
-        const provinces = new Set();
-        const countries = new Set();
-
-        data.forEach(row => {
-          const city = titleText(row.city);
-          const province = titleText(row.province || row.state);
-          const country = titleText(row.country);
-
-          if (city) cities.add(city);
-          if (province) provinces.add(province);
-          if (country) countries.add(country);
-        });
-
-        citySuggestions.innerHTML = Array.from(cities).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
-        provinceSuggestions.innerHTML = Array.from(provinces).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
-        countrySuggestions.innerHTML = Array.from(countries).sort().map(v => `<option value="${String(v).replaceAll('"', "&quot;")}"></option>`).join("");
-      } catch {}
-    }
-
-    async function insertEventWithFallback(payloadVariants) {
-      let lastError = null;
-
-      for (const payload of payloadVariants) {
+      for (const attempt of attempts) {
         try {
-          if (payload.id) {
-            const { error } = await supabase
-              .from("events")
-              .insert(payload);
+          const { data, error } = await supabase
+            .from(attempt.table)
+            .select("id")
+            .ilike(attempt.column, clean)
+            .limit(1);
 
-            if (!error) return { id: payload.id };
-
-            lastError = error || lastError;
-          } else {
-            const { data, error } = await supabase
-              .from("events")
-              .insert(payload)
-              .select("id")
-              .single();
-
-            if (!error && data?.id) return data;
-
-            lastError = error || lastError;
-          }
-        } catch (err) {
-          lastError = err;
-        }
+          if (!error && Array.isArray(data) && data.length) return true;
+        } catch {}
       }
 
-      throw lastError || new Error("Could not create event.");
+      return false;
     }
 
-    async function insertEventMemberWithFallback(payloadVariants) {
+    async function insertCommunityWithFallback(payloads) {
       let lastError = null;
 
-      for (const payload of payloadVariants) {
+      for (const payload of payloads) {
         try {
-          const { error } = await supabase
-            .from("event_members")
-            .insert(payload);
+          const { data, error } = await supabase
+            .from("communities")
+            .insert(payload)
+            .select()
+            .maybeSingle();
 
-          if (!error) return true;
+          if (!error) return data || null;
 
           lastError = error || lastError;
         } catch (err) {
@@ -1251,431 +1117,355 @@
         }
       }
 
-      throw lastError || new Error("Event created, but host member row could not be added.");
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from("community")
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (!error) return data || null;
+
+          lastError = error || lastError;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error("Could not create community.");
     }
 
-    async function updateCreatorCounters() {
-      const newValue = (currentProfile.freeEventsUsed || 0) + 1;
+    async function createCommunityMemberSafe(communityId, uid) {
+      if (!communityId || !uid) return;
 
-      const variants = [
+      const createdAt = nowIso();
+
+      const payloads = [
         {
-          table: "users",
-          match: "id",
-          payload: { free_events_used: newValue, updated_at: nowIso() }
+          community_id: communityId,
+          user_id: uid,
+          uid,
+          role: "owner",
+          status: "joined",
+          created_at: createdAt,
+          updated_at: createdAt
         },
         {
-          table: "users",
-          match: "uid",
-          payload: { free_events_used: newValue, updated_at: nowIso() }
+          communityId,
+          userId: uid,
+          uid,
+          role: "owner",
+          status: "joined",
+          createdAt: createdAt,
+          updatedAt: createdAt
         },
         {
-          table: "public_profiles",
-          match: "uid",
-          payload: { free_events_used: newValue, updated_at: nowIso() }
-        },
-        {
-          table: "public_profiles",
-          match: "id",
-          payload: { free_events_used: newValue, updated_at: nowIso() }
+          community_id: communityId,
+          user_id: uid,
+          role: "owner",
+          created_at: createdAt
         }
       ];
 
-      for (const item of variants) {
-        try {
-          await supabase
-            .from(item.table)
-            .update(item.payload)
-            .eq(item.match, currentUser.id);
-        } catch {}
+      const tables = ["community_members", "communityMembers", "members"];
+
+      for (const table of tables) {
+        for (const payload of payloads) {
+          try {
+            const { error } = await supabase
+              .from(table)
+              .insert(payload);
+
+            if (!error) return;
+          } catch {}
+        }
       }
     }
 
-    function validateEventForm() {
-      const title = titleInput.value.trim();
-      const visibility = visibilityInput.value || "public";
+    function resetSaveButton() {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+        <span>Create Community</span>
+      `;
+    }
+
+    communityForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser || !canCreateCommunity()) return;
+
+      const name = nameInput.value.trim();
+      const category = categoryInput.value || "General";
       const description = descriptionInput.value.trim();
-      const date = dateInput.value.trim();
-      const time = timeInput.value.trim();
+      const privacy = privacyInput.value || "public";
+      const postingMode = postingModeInput.value || "owner";
+      const allowMemberRequests = !!allowMemberRequestsInput.checked;
+      const allowPinnedPosts = !!allowPinnedPostsInput.checked;
       const city = cityInput.value.trim();
       const province = provinceInput.value.trim();
       const country = countryInput.value.trim();
-      const venue = venueInput.value.trim();
-      const address = addressInput.value.trim();
-      const latText = latInput.value.trim();
-      const lngText = lngInput.value.trim();
-      const imageFile = eventImageFile.files?.[0] || null;
+      const rules = rulesInput.value.trim();
+      const imageFile = imageFileInput.files?.[0] || null;
 
-      if (!title) throw new Error("Event title is required.");
-      if (title.length < 3) throw new Error("Event title should be at least 3 characters.");
-      if (!description) throw new Error("Description is required.");
-      if (!date || !time) throw new Error("Date and time are required.");
-      if (!city || !province || !country) throw new Error("City, province/state and country are required.");
-      if (!safetyCheck.checked) throw new Error("Please confirm the event safety rule.");
-
-      const eventDate = new Date(`${date}T${time}`);
-
-      if (Number.isNaN(eventDate.getTime())) throw new Error("Date or time is invalid.");
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (eventDate < today) throw new Error("Event date cannot be in the past.");
-
-      const lat = latText ? Number(latText) : null;
-      const lng = lngText ? Number(lngText) : null;
-
-      if (latText && !Number.isFinite(lat)) throw new Error("Latitude must be a valid number.");
-      if (lngText && !Number.isFinite(lng)) throw new Error("Longitude must be a valid number.");
-      if (lat !== null && (lat < -90 || lat > 90)) throw new Error("Latitude must be between -90 and 90.");
-      if (lng !== null && (lng < -180 || lng > 180)) throw new Error("Longitude must be between -180 and 180.");
-
-      if (imageFile) {
-        if (!imageFile.type || !imageFile.type.startsWith("image/")) throw new Error("Please upload image file only.");
-        if (imageFile.size > 5 * 1024 * 1024) throw new Error("Image is too large. Please upload under 5 MB.");
-      }
-
-      return {
-        title,
-        visibility,
-        description,
-        date,
-        time,
-        eventDate,
-        city,
-        province,
-        country,
-        venue,
-        address,
-        lat,
-        lng,
-        imageFile
-      };
-    }
-
-    eventForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!currentUser || !currentProfile) return;
-
-      const blockReason = canCreateEvent();
-
-      if (blockReason) {
-        showMessage(blockReason, "error");
+      if (!name) {
+        showMessage("Community name is required.", "error");
         return;
       }
 
-      let formData;
+      if (name.length < 3) {
+        showMessage("Community name should be at least 3 characters.", "error");
+        return;
+      }
 
-      try {
-        formData = validateEventForm();
-      } catch (err) {
-        showMessage(err?.message || "Please check the form.", "error");
+      if (!description) {
+        showMessage("Description is required.", "error");
+        return;
+      }
+
+      const hasAnyLocation = !!(city || province || country);
+
+      if (hasAnyLocation && !(city && province && country)) {
+        showMessage("Fill full location: city, province/state and country.", "error");
+        return;
+      }
+
+      if (imageFile && !imageFile.type.startsWith("image/")) {
+        showMessage("Please upload an image file only.", "error");
+        return;
+      }
+
+      if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
+        showMessage("Community photo must be under 5 MB.", "error");
         return;
       }
 
       saveBtn.disabled = true;
-      saveBtn.innerHTML = "<span>Creating...</span>";
+      saveBtn.innerHTML = "<span>Checking...</span>";
       showMessage("");
 
       try {
-        const eventId = generateId();
-        const createdAt = nowIso();
-        const eventDateTimeIso = formData.eventDate.toISOString();
-        const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || currentUser.email || "Member";
-        const creatorUsername = currentProfile.username || "";
+        const duplicate = await communityNameExists(name);
+
+        if (duplicate) {
+          showMessage("A community with this name already exists. Try another name.", "error");
+          resetSaveButton();
+          return;
+        }
+
         let uploadedImageUrl = "";
         let uploadedImagePath = "";
 
-        if (formData.imageFile) {
+        if (imageFile) {
           saveBtn.innerHTML = "<span>Uploading...</span>";
-          showMessage("Uploading event photo...", "success");
+          showMessage("Uploading community photo...", "success");
 
-          const uploadResult = await uploadEventImage(formData.imageFile, eventId);
+          const uploadResult = await uploadCommunityImage(imageFile, currentUser.id);
+
           uploadedImageUrl = uploadResult.publicUrl;
           uploadedImagePath = uploadResult.path;
         }
 
         saveBtn.innerHTML = "<span>Creating...</span>";
 
-        const locationSearch = buildLocationSearch(formData.city, formData.province, formData.country);
-        const searchText = buildSearchText({
-          ...formData,
-          creatorName
-        });
+        const locationSearch = hasAnyLocation ? buildLocationSearch(city, province, country) : "";
+        const createdAt = nowIso();
+
+        const creatorName = currentProfile?.displayName || currentUser.email || "Member";
+        const creatorUsername = currentProfile?.username || "";
 
         const richPayload = {
-          id: eventId,
-          title: formData.title,
-          name: formData.title,
-          description: formData.description,
-          visibility: formData.visibility,
-          event_visibility: formData.visibility,
+          name,
+          community_name: name,
+          title: name,
+          category,
+          description,
+          rules,
 
-          city: formData.city,
-          province: formData.province,
-          state: formData.province,
-          region: formData.province,
-          country: formData.country,
+          privacy,
+          visibility: privacy,
+
+          posting_mode: postingMode,
+          allow_member_requests: allowMemberRequests,
+          allow_pinned_posts: allowPinnedPosts,
+
+          city,
+          province,
+          state: province,
+          country,
           location_search: locationSearch,
-          search_text: searchText,
-          keywords: searchText,
 
-          venue: formData.venue,
-          spot: formData.venue,
-          address: formData.address,
-
-          date: formData.date,
-          time: formData.time,
-          event_at: eventDateTimeIso,
-          event_datetime: eventDateTimeIso,
-
+          cover_url: uploadedImageUrl,
           image_url: uploadedImageUrl,
           photo_url: uploadedImageUrl,
-          media_url: uploadedImageUrl,
-          cover_url: uploadedImageUrl,
           image_path: uploadedImagePath,
 
-          lat: formData.lat,
-          lng: formData.lng,
-
           creator_id: currentUser.id,
-          created_by: currentUser.id,
           owner_id: currentUser.id,
           user_id: currentUser.id,
+          created_by: currentUser.id,
+          uid: currentUser.id,
+
           creator_name: creatorName,
           creator_username: creatorUsername,
-          host_name: creatorName,
 
-          members_count: 1,
           member_count: 1,
-          comments_count: 0,
-
-          approved: true,
-          pending: false,
-          rejected: false,
+          members_count: 1,
           status: "active",
+          approved: true,
+          is_approved: true,
           hidden: false,
-          hidden_by_admin: false,
           soft_deleted: false,
 
           created_at: createdAt,
           updated_at: createdAt
         };
 
-        const compatiblePayload = {
-          id: eventId,
-          title: formData.title,
-          description: formData.description,
-          visibility: formData.visibility,
+        const camelPayload = {
+          name,
+          communityName: name,
+          title: name,
+          category,
+          description,
+          rules,
 
-          city: formData.city,
-          province: formData.province,
-          country: formData.country,
-          location_search: locationSearch,
-          search_text: searchText,
+          privacy,
+          visibility: privacy,
 
-          venue: formData.venue,
-          address: formData.address,
-          date: formData.date,
-          time: formData.time,
-          event_at: eventDateTimeIso,
+          postingMode,
+          allowMemberRequests,
+          allowPinnedPosts,
 
-          image_url: uploadedImageUrl,
-          photo_url: uploadedImageUrl,
-          cover_url: uploadedImageUrl,
+          city,
+          province,
+          state: province,
+          country,
+          locationSearch,
 
-          lat: formData.lat,
-          lng: formData.lng,
+          coverURL: uploadedImageUrl,
+          imageURL: uploadedImageUrl,
+          photoURL: uploadedImageUrl,
+          imagePath: uploadedImagePath,
 
-          creator_id: currentUser.id,
-          created_by: currentUser.id,
-          creator_name: creatorName,
-          creator_username: creatorUsername,
+          creatorId: currentUser.id,
+          ownerId: currentUser.id,
+          userId: currentUser.id,
+          createdBy: currentUser.id,
+          uid: currentUser.id,
 
-          member_count: 1,
-          comments_count: 0,
+          creatorName,
+          creatorUsername,
 
-          approved: true,
-          pending: false,
-          rejected: false,
+          memberCount: 1,
+          membersCount: 1,
           status: "active",
+          approved: true,
+          isApproved: true,
           hidden: false,
+          softDeleted: false,
 
+          createdAt,
+          updatedAt: createdAt
+        };
+
+        const creatorIdPayload = {
+          name,
+          category,
+          description,
+          privacy,
+          visibility: privacy,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          image_url: uploadedImageUrl,
+          cover_url: uploadedImageUrl,
+          creator_id: currentUser.id,
+          status: "active",
+          created_at: createdAt,
+          updated_at: createdAt
+        };
+
+        const createdByPayload = {
+          name,
+          category,
+          description,
+          privacy,
+          visibility: privacy,
+          city,
+          province,
+          country,
+          location_search: locationSearch,
+          image_url: uploadedImageUrl,
+          cover_url: uploadedImageUrl,
+          created_by: currentUser.id,
+          status: "active",
+          created_at: createdAt,
+          updated_at: createdAt
+        };
+
+        const userIdPayload = {
+          name,
+          category,
+          description,
+          privacy,
+          city,
+          province,
+          country,
+          image_url: uploadedImageUrl,
+          user_id: currentUser.id,
           created_at: createdAt,
           updated_at: createdAt
         };
 
         const minimalPayload = {
-          id: eventId,
-          title: formData.title,
-          description: formData.description,
-          city: formData.city,
-          province: formData.province,
-          country: formData.country,
-          event_at: eventDateTimeIso,
-          image_url: uploadedImageUrl,
-          creator_id: currentUser.id,
-          created_by: currentUser.id,
-          creator_name: creatorName,
-          status: "active",
-          hidden: false,
-          created_at: createdAt,
-          updated_at: createdAt
+          name,
+          category,
+          description,
+          privacy,
+          city,
+          province,
+          country,
+          image_url: uploadedImageUrl
         };
 
-        const camelPayload = {
-          id: eventId,
-          title: formData.title,
-          name: formData.title,
-          description: formData.description,
-          visibility: formData.visibility,
-          eventVisibility: formData.visibility,
-
-          city: formData.city,
-          province: formData.province,
-          state: formData.province,
-          region: formData.province,
-          country: formData.country,
-          locationSearch,
-          searchText,
-
-          venue: formData.venue,
-          spot: formData.venue,
-          address: formData.address,
-
-          date: formData.date,
-          time: formData.time,
-          eventAt: eventDateTimeIso,
-          eventDatetime: eventDateTimeIso,
-
-          imageURL: uploadedImageUrl,
-          photoURL: uploadedImageUrl,
-          mediaURL: uploadedImageUrl,
-          coverURL: uploadedImageUrl,
-
-          lat: formData.lat,
-          lng: formData.lng,
-
-          creatorId: currentUser.id,
-          createdBy: currentUser.id,
-          ownerId: currentUser.id,
-          userId: currentUser.id,
-          creatorName,
-          creatorUsername,
-          hostName: creatorName,
-
-          membersCount: 1,
-          memberCount: 1,
-          commentsCount: 0,
-
-          approved: true,
-          pending: false,
-          rejected: false,
-          status: "active",
-          hidden: false,
-          hiddenByAdmin: false,
-          softDeleted: false,
-
-          createdAt: createdAt,
-          updatedAt: createdAt
-        };
-
-        const noIdPayload = {
-          title: formData.title,
-          description: formData.description,
-          visibility: formData.visibility,
-          city: formData.city,
-          province: formData.province,
-          country: formData.country,
-          venue: formData.venue,
-          address: formData.address,
-          date: formData.date,
-          time: formData.time,
-          event_at: eventDateTimeIso,
-          image_url: uploadedImageUrl,
-          lat: formData.lat,
-          lng: formData.lng,
-          creator_id: currentUser.id,
-          created_by: currentUser.id,
-          creator_name: creatorName,
-          status: "active",
-          created_at: createdAt,
-          updated_at: createdAt
-        };
-
-        const createdEvent = await insertEventWithFallback([
+        const created = await insertCommunityWithFallback([
           richPayload,
-          compatiblePayload,
-          minimalPayload,
           camelPayload,
-          noIdPayload
+          creatorIdPayload,
+          createdByPayload,
+          userIdPayload,
+          minimalPayload
         ]);
 
-        const finalEventId = createdEvent.id || eventId;
+        const communityId = created?.id || created?.community_id || created?.communityId || "";
 
-        const memberRichPayload = {
-          event_id: finalEventId,
-          user_id: currentUser.id,
-          display_name: creatorName,
-          username: creatorUsername,
-          role: "host",
-          status: "approved",
-          creator_host: true,
-          is_host: true,
-          joined_at: createdAt,
-          created_at: createdAt,
-          updated_at: createdAt
-        };
-
-        const memberCompatiblePayload = {
-          event_id: finalEventId,
-          user_id: currentUser.id,
-          display_name: creatorName,
-          username: creatorUsername,
-          role: "host",
-          status: "active",
-          joined_at: createdAt,
-          created_at: createdAt,
-          updated_at: createdAt
-        };
-
-        const memberMinimalPayload = {
-          event_id: finalEventId,
-          user_id: currentUser.id,
-          role: "host",
-          joined_at: createdAt
-        };
-
-        const memberUltraMinimalPayload = {
-          event_id: finalEventId,
-          user_id: currentUser.id
-        };
-
-        try {
-          await insertEventMemberWithFallback([
-            memberRichPayload,
-            memberCompatiblePayload,
-            memberMinimalPayload,
-            memberUltraMinimalPayload
-          ]);
-        } catch (memberErr) {
-          console.warn("Host member insert warning:", memberErr?.message || memberErr);
+        if (communityId) {
+          await createCommunityMemberSafe(communityId, currentUser.id);
         }
 
-        updateCreatorCounters().catch(() => {});
-
-        showMessage("Event created successfully.", "success");
-
         try {
-          localStorage.setItem("ownspace_events_refresh", String(Date.now()));
+          localStorage.setItem("ownspace_communities_refresh", String(Date.now()));
           localStorage.setItem("ownspace_nearby_refresh", String(Date.now()));
+          localStorage.setItem("ownspace_profile_refresh", String(Date.now()));
         } catch {}
 
-        window.location.href = `event.html?eventId=${encodeURIComponent(finalEventId)}`;
+        showMessage("Community created successfully.", "success");
+
+        setTimeout(() => {
+          if (communityId) {
+            window.location.href = `community.html?communityId=${encodeURIComponent(communityId)}`;
+          } else {
+            window.location.href = "nearby-communities.html";
+          }
+        }, 600);
       } catch (err) {
         console.error(err);
-        showMessage(err?.message || "Could not create event.", "error");
-        setButtonDefault();
+        showMessage(err?.message || "Could not create community.", "error");
+        resetSaveButton();
       }
     });
 
@@ -1721,7 +1511,7 @@
 
           if (!error) {
             return (data || []).filter(row => {
-              const status = getField(row, ["status", "request_status", "requestStatus"]) || "pending";
+              const status = getField(row, ["status", "request_status", "requestStatus"], "pending") || "pending";
               return normalizeText(status) === "pending";
             }).length;
           }
@@ -1787,7 +1577,7 @@
 
           if (!error && Array.isArray(data)) {
             data.forEach(row => {
-              const status = normalizeText(getField(row, ["status"]) || "accepted");
+              const status = normalizeText(getField(row, ["status"], "accepted") || "accepted");
               if (row.id && status === "accepted") map.set(row.id, row);
             });
           }
@@ -1871,7 +1661,7 @@
     }
 
     async function loadInboxBadgeCount(uid) {
-      if (!inboxBadge) return;
+      if (!inboxBadge || !uid) return;
 
       try {
         const [requests, messages] = await Promise.all([
@@ -1908,7 +1698,7 @@
       ["message_requests", "chat_threads", "chat_messages"].forEach(table => {
         try {
           const channel = supabase
-            .channel(`ownspace-create-event-badge-${table}-${Math.random().toString(36).slice(2)}`)
+            .channel(`ownspace-create-community-badge-${table}-${Math.random().toString(36).slice(2)}`)
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table },
@@ -1935,7 +1725,7 @@
       rememberNearbyTab();
 
       if (document.referrer) history.back();
-      else window.location.href = "nearby-events.html";
+      else window.location.href = "nearby-communities.html";
     });
 
     async function initPage() {
@@ -1951,26 +1741,23 @@
       try {
         await Promise.all([
           loadProfile(),
-          loadInboxBadgeCount(currentUser.id),
-          loadEventSuggestions()
+          loadInboxBadgeCount(currentUser.id)
         ]);
 
-        const blockReason = canCreateEvent();
-
-        if (blockReason) {
-          loadingBox.textContent = blockReason;
-          content.classList.add("hidden");
-          return;
-        }
-
-        fillProfileLocation(true);
         setupRealtime();
 
         loadingBox.classList.add("hidden");
+
+        if (!canCreateCommunity()) {
+          notAllowedBox.textContent = "Your account cannot create communities right now.";
+          notAllowedBox.classList.remove("hidden");
+          return;
+        }
+
         content.classList.remove("hidden");
       } catch (err) {
         console.error(err);
-        loadingBox.textContent = "Could not load profile.";
+        loadingBox.textContent = "Could not load create community page.";
       }
 
       supabase.auth.onAuthStateChange((_event, session) => {
@@ -2004,28 +1791,28 @@
     initPage();
 
     /*
-      OWNSPACE CREATE EVENT COMPACT UPDATE:
+      OWNSPACE CREATE COMMUNITY PAGE
 
-      UPDATED TO MATCH create-community.html:
-      - Same compact topbar, 34px buttons, 14px radius.
-      - Same small panel, section, form, nav sizes.
-      - Same bottom nav sizing and inbox badge style.
-      - Same Nearby tab memory pattern, but set to events.
-      - Same tight mobile layout.
+      FILE:
+      - create-community.html
 
-      KEPT / FIXED:
-      - Profile location button.
-      - GPS coordinates button.
-      - City/province/country required.
-      - Date/time required and no past-date creation.
-      - Image upload to Supabase Storage bucket: media.
-      - Supabase insert fallbacks for events and event_members.
-      - Host member row added after event creation.
-      - Soft free_events_used counter update where column exists.
-      - Blocks banned/suspended/warned/very-low-trust accounts from creating events.
-      - Correct inbox badge logic:
-        pending message_requests + truly unread incoming chat_messages only.
-      - Does not count general notifications.
+      INCLUDED:
+      - Compact OwnSpace light theme.
+      - User-side community creation.
+      - No admin-only controls.
+      - Community name, category, description.
+      - Public / private / request-to-join privacy.
+      - Posting mode: owner, approved authors, members.
+      - Optional location: city, province/state, country.
+      - Rules / guidelines.
+      - Optional community photo upload to media bucket.
+      - Supabase insert fallback for different schema versions.
+      - Creates owner membership where community_members table exists.
+      - Inbox badge counts pending message_requests + unread chat_messages only.
+      - Keeps Nearby tab remembered as communities.
+
+      NEXT PAGE TO CHECK:
+      - nearby-communities.html, then community.html detail page.
     */
   </script>
 </body>
