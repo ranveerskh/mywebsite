@@ -32,6 +32,7 @@
       --yellow-soft:rgba(245,185,66,.13);
       --purple-soft:rgba(167,139,250,.13);
       --red-soft:rgba(255,93,115,.13);
+      --modal-bg:rgba(15,23,42,.62);
     }
 
     html[data-theme="dark"]{
@@ -57,6 +58,7 @@
       --yellow-soft:rgba(245,185,66,.13);
       --purple-soft:rgba(167,139,250,.13);
       --red-soft:rgba(255,93,115,.13);
+      --modal-bg:rgba(0,0,0,.72);
     }
 
     body{
@@ -424,6 +426,143 @@
       margin-bottom:7px;
     }
 
+    .proof-review-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:7px;
+      margin-bottom:7px;
+    }
+
+    .proof-tile{
+      overflow:hidden;
+      border-radius:13px;
+      background:var(--surface-3);
+      border:1px solid var(--line);
+      box-shadow:var(--soft-shadow);
+      min-width:0;
+    }
+
+    .proof-tile-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:6px;
+      padding:7px 8px;
+      border-bottom:1px solid var(--line-soft);
+      min-height:32px;
+    }
+
+    .proof-title{
+      font-size:10px;
+      font-weight:950;
+      line-height:1.2;
+      color:var(--text);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .proof-state{
+      font-size:8.8px;
+      font-weight:950;
+      padding:4px 6px;
+      border-radius:999px;
+      background:var(--blue-soft);
+      border:1px solid rgba(76,201,255,.20);
+      white-space:nowrap;
+      color:var(--text);
+    }
+
+    .proof-preview{
+      position:relative;
+      width:100%;
+      aspect-ratio:4/3;
+      background:
+        linear-gradient(135deg, rgba(76,201,255,.08), rgba(167,139,250,.06)),
+        var(--surface-2);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .proof-preview img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      opacity:0;
+      transform:scale(1.01);
+      transition:opacity .18s ease, transform .18s ease;
+    }
+
+    .proof-preview img.loaded{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    .proof-placeholder{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.35;
+      font-weight:900;
+    }
+
+    .proof-preview:hover img.loaded{
+      transform:scale(1.035);
+    }
+
+    .proof-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:5px;
+      padding:6px;
+    }
+
+    .proof-mini-btn{
+      border:none;
+      border-radius:10px;
+      padding:6px 6px;
+      font-size:9.5px;
+      font-weight:950;
+      cursor:pointer;
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      min-height:28px;
+    }
+
+    .proof-mini-btn.review{
+      background:var(--blue-soft);
+      border-color:rgba(76,201,255,.20);
+    }
+
+    .proof-mini-btn.open{
+      background:var(--purple-soft);
+      border-color:rgba(167,139,250,.20);
+    }
+
+    .proof-empty{
+      padding:10px;
+      border-radius:12px;
+      background:var(--surface-3);
+      border:1px dashed var(--line);
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.35;
+      margin-bottom:7px;
+      font-weight:850;
+      text-align:center;
+    }
+
     .review-note-block{
       display:grid;
       gap:5px;
@@ -480,6 +619,129 @@
       opacity:.65;
       cursor:not-allowed;
     }
+
+    .proof-modal{
+      position:fixed;
+      inset:0;
+      z-index:200;
+      background:var(--modal-bg);
+      backdrop-filter:blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
+    }
+
+    .proof-modal-card{
+      width:min(980px,100%);
+      height:min(92vh,860px);
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:0 24px 70px rgba(0,0,0,.34);
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      overflow:hidden;
+    }
+
+    .proof-modal-head{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:start;
+      padding:10px;
+      border-bottom:1px solid var(--line);
+      background:var(--surface);
+    }
+
+    .proof-modal-title{
+      font-size:15px;
+      font-weight:950;
+      line-height:1.2;
+      letter-spacing:-.02em;
+    }
+
+    .proof-modal-sub{
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.35;
+      margin-top:3px;
+      word-break:break-word;
+    }
+
+    .proof-close{
+      width:34px;
+      height:34px;
+      border:none;
+      border-radius:12px;
+      background:var(--red-soft);
+      border:1px solid rgba(255,93,115,.22);
+      color:var(--text);
+      font-size:18px;
+      font-weight:950;
+      cursor:pointer;
+      line-height:1;
+    }
+
+    .proof-modal-view{
+      background:
+        radial-gradient(circle at 20% 12%, rgba(76,201,255,.08), transparent 28%),
+        var(--surface-2);
+      overflow:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
+    }
+
+    .proof-modal-view img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+      transform-origin:center center;
+      transition:transform .16s ease;
+      border-radius:13px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      box-shadow:var(--soft-shadow);
+    }
+
+    .proof-modal-loading{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+      line-height:1.45;
+    }
+
+    .proof-modal-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      padding:8px;
+      border-top:1px solid var(--line);
+      background:var(--surface);
+    }
+
+    .modal-btn{
+      border:none;
+      border-radius:11px;
+      padding:8px 10px;
+      font-size:10.5px;
+      font-weight:950;
+      cursor:pointer;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      min-height:34px;
+      flex:1;
+      white-space:nowrap;
+    }
+
+    .modal-btn.blue{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .modal-btn.purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
+    .modal-btn.yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}
 
     .bottom-nav{
       position:fixed;
@@ -565,8 +827,15 @@
       .filters{grid-template-columns:1fr}
       .chip-row{grid-template-columns:repeat(2,1fr)}
       .info-grid{grid-template-columns:1fr}
+      .proof-review-grid{grid-template-columns:1fr}
       .card-head{display:grid;grid-template-columns:1fr}
       .actions .action-btn{flex:1}
+      .proof-modal{align-items:flex-end;padding:6px}
+      .proof-modal-card{
+        height:90vh;
+        border-radius:20px 20px 16px 16px;
+      }
+      .proof-modal-actions .modal-btn{min-width:calc(50% - 4px)}
       .bottom-nav{
         width:min(760px, calc(100% - 12px));
         padding:5px;
@@ -584,6 +853,8 @@
       .chip{font-size:8.8px}
       .action-btn{font-size:10px;padding:7px}
       .card-title{font-size:13.5px}
+      .proof-actions{grid-template-columns:1fr}
+      .proof-modal-actions .modal-btn{min-width:100%}
     }
   </style>
 </head>
@@ -621,7 +892,7 @@
           <div>
             <div class="hero-title">Verification Requests</div>
             <div class="hero-sub">
-              Review verified account, creator, and business requests. Proof files should be deleted after approval or rejection.
+              Review verified account, creator, and business requests. Tap proof photos to zoom before deciding.
             </div>
           </div>
           <div class="mode-pill">Admin</div>
@@ -660,6 +931,31 @@
         <div id="loading" class="loading-box">Loading verification requests...</div>
         <div id="list" class="list hidden"></div>
         <div id="emptyBox" class="empty-box hidden">No verification requests found.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="proofModal" class="proof-modal hidden" aria-hidden="true">
+    <div class="proof-modal-card" role="dialog" aria-modal="true" aria-labelledby="proofModalTitle">
+      <div class="proof-modal-head">
+        <div>
+          <div id="proofModalTitle" class="proof-modal-title">Proof Photo</div>
+          <div id="proofModalSub" class="proof-modal-sub">Loading proof...</div>
+        </div>
+        <button id="proofCloseBtn" class="proof-close" type="button" aria-label="Close">Ã</button>
+      </div>
+
+      <div id="proofModalView" class="proof-modal-view">
+        <div id="proofModalLoading" class="proof-modal-loading">Loading proof photo...</div>
+        <img id="proofModalImg" class="hidden" alt="Verification proof" />
+      </div>
+
+      <div class="proof-modal-actions">
+        <button id="proofZoomOutBtn" class="modal-btn" type="button">Zoom -</button>
+        <button id="proofZoomResetBtn" class="modal-btn yellow" type="button">Reset</button>
+        <button id="proofZoomInBtn" class="modal-btn" type="button">Zoom +</button>
+        <button id="proofOpenTabBtn" class="modal-btn blue" type="button">Open Tab</button>
+        <button id="proofCloseBottomBtn" class="modal-btn purple" type="button">Close</button>
       </div>
     </div>
   </div>
@@ -744,11 +1040,26 @@
     const emptyBox = document.getElementById("emptyBox");
     const inboxBadge = document.getElementById("inboxBadge");
 
+    const proofModal = document.getElementById("proofModal");
+    const proofModalTitle = document.getElementById("proofModalTitle");
+    const proofModalSub = document.getElementById("proofModalSub");
+    const proofModalImg = document.getElementById("proofModalImg");
+    const proofModalLoading = document.getElementById("proofModalLoading");
+    const proofCloseBtn = document.getElementById("proofCloseBtn");
+    const proofCloseBottomBtn = document.getElementById("proofCloseBottomBtn");
+    const proofOpenTabBtn = document.getElementById("proofOpenTabBtn");
+    const proofZoomInBtn = document.getElementById("proofZoomInBtn");
+    const proofZoomOutBtn = document.getElementById("proofZoomOutBtn");
+    const proofZoomResetBtn = document.getElementById("proofZoomResetBtn");
+
     let currentUser = null;
     let allRequests = [];
     let liveChannels = [];
     let refreshTimer = null;
     let badgeRefreshTimer = null;
+    let currentProofUrl = "";
+    let currentProofLabel = "";
+    let proofZoom = 1;
 
     const ICONS = {
       open: `
@@ -1267,6 +1578,39 @@
       return [...new Set(paths)];
     }
 
+    function getProofItems(item) {
+      return [
+        {
+          key: "id",
+          label: "Government ID",
+          shortLabel: "ID",
+          value: item.govtIdPath || item.govtIdUrl || "",
+          tone: "blue"
+        },
+        {
+          key: "selfie",
+          label: "Selfie With Code",
+          shortLabel: "Selfie",
+          value: item.selfiePath || item.selfieUrl || "",
+          tone: "purple"
+        },
+        {
+          key: "business",
+          label: "Business Proof",
+          shortLabel: "Business",
+          value: item.businessProofPath || item.businessProofUrl || "",
+          tone: "yellow"
+        }
+      ].filter(x => x.value);
+    }
+
+    function shortProofPath(value) {
+      const path = cleanStoragePath(value);
+      if (!path) return "Proof file";
+      const parts = path.split("/");
+      return parts.slice(-2).join("/");
+    }
+
     async function createSignedProofUrl(value) {
       if (!value) throw new Error("Proof file missing.");
 
@@ -1300,6 +1644,126 @@
         console.error("Proof open failed:", err);
         setMessage("Could not open proof file: " + (err?.message || "Unknown error"), "err");
       }
+    }
+
+    function applyProofZoom() {
+      proofModalImg.style.transform = `scale(${proofZoom})`;
+    }
+
+    function closeProofModal() {
+      proofModal.classList.add("hidden");
+      proofModal.setAttribute("aria-hidden", "true");
+      proofModalImg.classList.add("hidden");
+      proofModalImg.removeAttribute("src");
+      proofModalLoading.classList.remove("hidden");
+      proofModalLoading.textContent = "Loading proof photo...";
+      currentProofUrl = "";
+      currentProofLabel = "";
+      proofZoom = 1;
+      applyProofZoom();
+    }
+
+    async function openProofModal(value, label = "Proof Photo") {
+      try {
+        proofModal.classList.remove("hidden");
+        proofModal.setAttribute("aria-hidden", "false");
+        proofModalTitle.textContent = label;
+        proofModalSub.textContent = shortProofPath(value);
+        proofModalImg.classList.add("hidden");
+        proofModalImg.removeAttribute("src");
+        proofModalLoading.classList.remove("hidden");
+        proofModalLoading.textContent = "Loading proof photo...";
+        currentProofUrl = "";
+        currentProofLabel = label;
+        proofZoom = 1;
+        applyProofZoom();
+
+        const url = await createSignedProofUrl(value);
+        if (!url) throw new Error("Could not create proof link.");
+
+        currentProofUrl = url;
+        proofModalImg.onload = () => {
+          proofModalLoading.classList.add("hidden");
+          proofModalImg.classList.remove("hidden");
+        };
+        proofModalImg.onerror = () => {
+          proofModalLoading.classList.remove("hidden");
+          proofModalLoading.textContent = "Could not show image preview. Try Open Tab.";
+          proofModalImg.classList.add("hidden");
+        };
+        proofModalImg.src = url;
+      } catch (err) {
+        console.error("Proof review failed:", err);
+        proofModalLoading.classList.remove("hidden");
+        proofModalLoading.textContent = err?.message || "Could not load proof photo.";
+        setMessage("Could not load proof photo: " + (err?.message || "Unknown error"), "err");
+      }
+    }
+
+    async function hydrateProofPreviews() {
+      const imgs = list.querySelectorAll(".proof-thumb-img[data-proof]");
+
+      imgs.forEach(async img => {
+        if (img.dataset.loaded === "yes") return;
+
+        const proofValue = img.dataset.proof || "";
+        const placeholder = img.parentElement?.querySelector(".proof-placeholder");
+
+        try {
+          const url = await createSignedProofUrl(proofValue);
+
+          img.onload = () => {
+            img.classList.add("loaded");
+            img.dataset.loaded = "yes";
+            if (placeholder) placeholder.classList.add("hidden");
+          };
+
+          img.onerror = () => {
+            img.dataset.loaded = "error";
+            if (placeholder) placeholder.textContent = "Preview failed. Tap Review.";
+          };
+
+          img.src = url;
+        } catch {
+          img.dataset.loaded = "error";
+          if (placeholder) placeholder.textContent = "Preview unavailable. Tap Review.";
+        }
+      });
+    }
+
+    function renderProofGrid(req) {
+      if (req.proofDeleted) {
+        return `<div class="proof-empty">Proof files were deleted after final decision.</div>`;
+      }
+
+      const proofs = getProofItems(req);
+
+      if (!proofs.length) {
+        return `<div class="proof-empty">No proof files found for this request.</div>`;
+      }
+
+      return `
+        <div class="proof-review-grid">
+          ${proofs.map(item => `
+            <div class="proof-tile">
+              <div class="proof-tile-head">
+                <div class="proof-title">${escapeHtml(item.label)}</div>
+                <span class="proof-state">Tap photo</span>
+              </div>
+
+              <div class="proof-preview proof-review-click" data-proof="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">
+                <div class="proof-placeholder">Loading ${escapeHtml(item.shortLabel)} preview...</div>
+                <img class="proof-thumb-img" data-proof="${escapeHtml(item.value)}" alt="${escapeHtml(item.label)} preview" loading="lazy" />
+              </div>
+
+              <div class="proof-actions">
+                <button class="proof-mini-btn review proof-review-btn" data-proof="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}" type="button">Review</button>
+                <button class="proof-mini-btn open proof-open-tab-btn" data-proof="${escapeHtml(item.value)}" type="button">Open Tab</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     async function deleteProofFiles(item) {
@@ -1734,7 +2198,7 @@
       if (!value) return "";
 
       return `
-        <button class="action-btn ${className} open-proof-btn" data-proof="${escapeHtml(value)}" type="button">
+        <button class="action-btn ${className} open-proof-btn" data-proof="${escapeHtml(value)}" data-label="${escapeHtml(label)}" type="button">
           ${ICONS.open}
           <span>${escapeHtml(label)}</span>
         </button>
@@ -1792,8 +2256,10 @@
           </div>
 
           <div class="proof-warning">
-            Review proofs only for the verification decision. After approve/reject, proof files are deleted and sensitive fields are cleared where supported.
+            Review proof photos below. Tap a thumbnail or Review to open a large zoomable view. After approve/reject, proof files are deleted and sensitive fields are cleared where supported.
           </div>
+
+          ${renderProofGrid(req)}
 
           <div class="info-grid">
             <div class="info-box">
@@ -1855,9 +2321,9 @@
           </div>
 
           <div class="actions">
-            ${proofButton("Open ID", req.govtIdPath || req.govtIdUrl, "blue")}
-            ${proofButton("Open Selfie", req.selfiePath || req.selfieUrl, "purple")}
-            ${proofButton("Open Business Proof", req.businessProofPath || req.businessProofUrl, "yellow")}
+            ${proofButton("Review ID", req.govtIdPath || req.govtIdUrl, "blue")}
+            ${proofButton("Review Selfie", req.selfiePath || req.selfieUrl, "purple")}
+            ${proofButton("Review Business Proof", req.businessProofPath || req.businessProofUrl, "yellow")}
 
             <button class="action-btn purple action-run-btn" data-action="save-note" data-key="${escapeHtml(key)}" type="button">
               ${ICONS.save}
@@ -1893,7 +2359,13 @@
         list.appendChild(card);
       });
 
-      list.querySelectorAll(".open-proof-btn").forEach(btn => {
+      hydrateProofPreviews().catch(() => {});
+
+      list.querySelectorAll(".proof-review-click, .proof-review-btn, .open-proof-btn").forEach(btn => {
+        btn.addEventListener("click", () => openProofModal(btn.dataset.proof || "", btn.dataset.label || "Proof Photo"));
+      });
+
+      list.querySelectorAll(".proof-open-tab-btn").forEach(btn => {
         btn.addEventListener("click", () => openProof(btn.dataset.proof || ""));
       });
 
@@ -1970,6 +2442,40 @@
         });
       });
     }
+
+    proofCloseBtn.addEventListener("click", closeProofModal);
+    proofCloseBottomBtn.addEventListener("click", closeProofModal);
+
+    proofModal.addEventListener("click", (e) => {
+      if (e.target === proofModal) closeProofModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !proofModal.classList.contains("hidden")) {
+        closeProofModal();
+      }
+    });
+
+    proofOpenTabBtn.addEventListener("click", () => {
+      if (currentProofUrl) {
+        window.open(currentProofUrl, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    proofZoomInBtn.addEventListener("click", () => {
+      proofZoom = Math.min(3, proofZoom + 0.25);
+      applyProofZoom();
+    });
+
+    proofZoomOutBtn.addEventListener("click", () => {
+      proofZoom = Math.max(0.5, proofZoom - 0.25);
+      applyProofZoom();
+    });
+
+    proofZoomResetBtn.addEventListener("click", () => {
+      proofZoom = 1;
+      applyProofZoom();
+    });
 
     searchInput.addEventListener("input", renderList);
     statusFilter.addEventListener("change", renderList);
@@ -2385,30 +2891,18 @@
       FILE:
       - verification-admin.html
 
-      UPDATED:
-      - Compact OwnSpace UI matching latest pages.
-      - Admin-only access through admins table.
-      - Supports Verified Account, Verified Creator, Verified Business.
-      - Opens proof files using Supabase signed URLs from verification bucket.
+      NEW IN THIS VERSION:
+      - Clear proof photo thumbnails directly inside each request card.
+      - Tap thumbnail or Review button to open a large proof viewer.
+      - Proof viewer has zoom in, zoom out, reset, close, and open tab.
+      - Existing Approve / Reject / Need Info / Delete Proof logic preserved.
       - Approve / Reject deletes proof files where possible.
       - Approve / Reject clears sensitive fields where supported:
         legal name, DOB, daily code, ID proof, selfie proof, business proof.
       - Updates users + public_profiles verification fields.
       - Need More Info keeps proof because the request is not final.
-      - Review Note used instead of user-facing admin wording.
       - Inbox badge counts only pending message_requests + unread incoming chat_messages.
       - Realtime refresh for verification_requests and inbox badge tables.
-
-      TABLES:
-      - admins
-      - verification_requests
-      - users
-      - public_profiles
-      - notifications
-      - moderation_history
-      - message_requests
-      - chat_threads
-      - chat_messages
 
       STORAGE:
       - Bucket: verification
