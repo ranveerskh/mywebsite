@@ -442,15 +442,15 @@
     .verified-badge svg{width:9.5px;height:9.5px;display:block;stroke-width:3}
 
     .verified-badge.verified-account{
-      background:var(--blue);
-      color:#ffffff;
-      box-shadow:0 0 0 2px rgba(31,143,255,.14),0 6px 12px rgba(31,143,255,.16);
-    }
-
-    .verified-badge.verified-creator{
       background:var(--green);
       color:#ffffff;
       box-shadow:0 0 0 2px rgba(34,179,108,.14),0 6px 12px rgba(34,179,108,.16);
+    }
+
+    .verified-badge.verified-creator{
+      background:var(--blue);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(31,143,255,.14),0 6px 12px rgba(31,143,255,.16);
     }
 
     .verified-badge.verified-business{
@@ -1169,8 +1169,8 @@
         .replace(/^_+|_+$/g, "");
 
       if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
-      if (["creator", "verified_creator", "creator_verified", "green", "green_tick", "green_badge"].includes(clean)) return "creator";
-      if (["account", "verified_account", "account_verified", "blue", "blue_tick", "blue_badge", "verified"].includes(clean)) return "account";
+      if (["creator", "verified_creator", "creator_verified", "blue", "blue_tick", "blue_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "green", "green_tick", "green_badge", "verified"].includes(clean)) return "account";
 
       const verified = getBool(raw, [
         "is_verified",
@@ -2045,7 +2045,32 @@
         } catch {}
       }
 
-      return normalizeProfile({ ...(finalPublicRow || {}), ...(finalUserRow || {}), uid: currentUser.id }, currentUser.id);
+      const publicType = normalizeVerificationType(finalPublicRow || {});
+      const userType = normalizeVerificationType(finalUserRow || {});
+      const finalType = userType || publicType;
+      const finalVerified = !!finalType ||
+        getBool(finalPublicRow || {}, ["is_verified", "isVerified", "verified"], false) ||
+        getBool(finalUserRow || {}, ["is_verified", "isVerified", "verified"], false);
+
+      const mergedProfileRow = {
+        ...(finalPublicRow || {}),
+        ...(finalUserRow || {}),
+        uid: currentUser.id
+      };
+
+      if (finalType) {
+        mergedProfileRow.verification_badge = finalType;
+        mergedProfileRow.verification_type = finalType;
+        mergedProfileRow.badge_type = finalType;
+      }
+
+      if (finalVerified) {
+        mergedProfileRow.is_verified = true;
+        mergedProfileRow.verified = true;
+        mergedProfileRow.isVerified = true;
+      }
+
+      return normalizeProfile(mergedProfileRow, currentUser.id);
     }
 
     async function loadCurrentUserProfile() {
@@ -3481,65 +3506,3 @@
         window.location.href = "login.html";
         return;
       }
-
-      currentUser = userRes.user;
-
-      await detectOptionalTables();
-      await refreshFeedData();
-      setupRealtime();
-
-      if (window.location.hash === "#composerPanel") {
-        showComposer();
-      }
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session?.user) {
-          window.location.href = "login.html";
-        }
-      });
-    }
-
-    window.addEventListener("beforeunload", clearSubscriptions);
-
-    initFeed().catch((error) => {
-      console.error(error);
-      postsList.innerHTML = "";
-      emptyBox.classList.remove("hidden");
-      emptyBox.textContent = "Could not load feed.";
-    });
-
-    /*
-      OWNSPACE FEED UPDATE — BLOCKED USER FIX:
-
-      Main fix:
-      - Added blockedUserIds Set.
-      - Added loadBlockedUsers().
-      - Supports blocked_users, user_blocks, blocks, blockedUsers.
-      - Supports old users.blocked_users array fallback.
-      - Hides both directions:
-        1) users I blocked
-        2) users who blocked me
-      - Blocked authors are filtered before render and again inside renderPostItem.
-      - Blocked users' comments are hidden too.
-      - Community posts from blocked authors are hidden.
-      - Communities owned by blocked users are hidden from feed discovery.
-      - Realtime now listens to blocked_users / user_blocks / blocks changes.
-
-      Feed cleanup:
-      - Trust Score and Points are not shown on feed page.
-      - Removed feed points toast/realtime display from this page.
-      - Post header is more compact: smaller DP, name, username, verified badge, follow/request/delete buttons.
-      - Feed topbar and bottom nav now match the slimmer profile/member/post style.
-      - Community post header no longer shows a bulky Open button because the community name is already clickable.
-
-      Also preserved:
-      - All / Following / Communities feed tabs.
-      - Supabase Storage post image upload.
-      - Likes, comments, share, report.
-      - Follow / request follow top button.
-      - Community open/join/request buttons.
-      - Correct inbox badge logic: pending message_requests + unread incoming chat_messages only.
-    */
-  </script>
-</body>
-</html>
