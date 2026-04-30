@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OwnSpace - Trust Admin</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+
+    :root,
+    html[data-theme="light"]{
+      --bg:#f3f6fb;
+      --surface:#ffffff;
+      --surface-2:#f7f9fd;
+      --surface-3:#edf3ff;
+      --line:rgba(15,23,42,.09);
+      --line-soft:rgba(15,23,42,.05);
+      --text:#14213d;
+      --muted:#6b7893;
+      --blue:#1f8fff;
+      --green:#22b36c;
+      --yellow:#d59617;
+      --purple:#7f63ff;
+      --red:#e74c66;
+      --topbar-bg:rgba(255,255,255,.94);
+      --nav-bg:rgba(255,255,255,.98);
+      --shadow:0 10px 22px rgba(20,33,61,.06);
+      --soft-shadow:0 6px 14px rgba(20,33,61,.045);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+    }
+
+    html[data-theme="dark"]{
+      --bg:#07101f;
+      --surface:#0c1630;
+      --surface-2:#111d3d;
+      --surface-3:#15244a;
+      --line:rgba(255,255,255,.08);
+      --line-soft:rgba(255,255,255,.05);
+      --text:#ffffff;
+      --muted:#9aa7c7;
+      --blue:#4cc9ff;
+      --green:#3ddc84;
+      --yellow:#f5b942;
+      --purple:#a78bfa;
+      --red:#ff5d73;
+      --topbar-bg:rgba(9,15,31,.92);
+      --nav-bg:rgba(9,15,31,.98);
+      --shadow:0 14px 28px rgba(0,0,0,.16);
+      --soft-shadow:0 8px 18px rgba(0,0,0,.12);
+      --blue-soft:rgba(76,201,255,.13);
+      --green-soft:rgba(61,220,132,.13);
+      --yellow-soft:rgba(245,185,66,.13);
+      --purple-soft:rgba(167,139,250,.13);
+      --red-soft:rgba(255,93,115,.13);
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 15% 8%, rgba(76,201,255,.08), transparent 26%),
+        radial-gradient(circle at 86% 12%, rgba(167,139,250,.07), transparent 24%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:6px 6px 82px;
+    }
+
+    .app{max-width:900px;margin:0 auto}
+    .hidden{display:none!important}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:var(--topbar-bg);
+      border:1px solid var(--line-soft);
+      border-radius:14px;
+      padding:5px 6px;
+      margin-bottom:7px;
+      display:grid;
+      grid-template-columns:34px 1fr 34px;
+      align-items:center;
+      gap:6px;
+      box-shadow:var(--shadow);
+    }
+
+    .top-icon-btn{
+      width:34px;
+      height:34px;
+      border:none;
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:11px;
+      cursor:pointer;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+
+    .top-icon-btn.refresh-top{
+      background:var(--green-soft);
+      border-color:rgba(61,220,132,.22);
+    }
+
+    .top-icon-btn svg{width:17px;height:17px;display:block}
+    .top-center{text-align:center;min-width:0}
+
+    .brand{
+      font-size:15.5px;
+      font-weight:950;
+      line-height:1;
+      letter-spacing:-.02em;
+    }
+
+    .brand-sub{
+      font-size:9px;
+      color:var(--muted);
+      margin-top:1px;
+      font-weight:800;
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:8px;
+      margin-bottom:7px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at 85% 18%, rgba(167,139,250,.10), transparent 30%),
+        linear-gradient(135deg, rgba(76,201,255,.11), rgba(61,220,132,.06)),
+        var(--surface);
+    }
+
+    .hero-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:start;
+      gap:8px;
+      margin-bottom:7px;
+    }
+
+    .hero-title{
+      font-size:17px;
+      font-weight:950;
+      letter-spacing:-.03em;
+      line-height:1.15;
+      margin-bottom:2px;
+    }
+
+    .hero-sub{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.38;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:5px;
+      flex-wrap:wrap;
+      margin-bottom:7px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 7px;
+      border-radius:999px;
+      font-size:9.8px;
+      font-weight:950;
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      color:var(--text);
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .chip-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.20)}
+    .chip-green{background:var(--green-soft);border-color:rgba(61,220,132,.20)}
+    .chip-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.20)}
+    .chip-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.20)}
+    .chip-red{background:var(--red-soft);border-color:rgba(255,93,115,.20)}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:7px;
+    }
+
+    .search-grid{
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:6px;
+      align-items:center;
+    }
+
+    .field{display:grid;gap:4px}
+
+    .label{
+      font-size:10.8px;
+      font-weight:950;
+      color:var(--text);
+    }
+
+    .input,
+    .textarea,
+    .select{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:9px 10px;
+      border-radius:12px;
+      background:var(--surface-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      font-size:12.5px;
+      min-height:36px;
+    }
+
+    .textarea{
+      min-height:76px;
+      resize:vertical;
+      line-height:1.45;
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{color:var(--muted)}
+    .select option{color:#000}
+
+    .btn{
+      border:none;
+      border-radius:11px;
+      padding:8px 9px;
+      font-size:11px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      cursor:pointer;
+      min-height:34px;
+      color:var(--text);
+      border:1px solid var(--line);
+      background:var(--surface-2);
+      white-space:nowrap;
+      line-height:1;
+    }
+
+    .btn svg{width:14px;height:14px;display:block;flex-shrink:0}
+    .btn:disabled{opacity:.65;cursor:not-allowed}
+    .btn-blue{background:var(--blue-soft);border-color:rgba(76,201,255,.22)}
+    .btn-green{background:var(--green-soft);border-color:rgba(61,220,132,.22)}
+    .btn-purple{background:var(--purple-soft);border-color:rgba(167,139,250,.22)}
+    .btn-yellow{background:var(--yellow-soft);border-color:rgba(245,185,66,.22)}
+    .btn-red{background:var(--red-soft);border-color:rgba(255,93,115,.22)}
+    .btn-dark{background:var(--text);color:var(--surface);border-color:transparent}
+
+    .message{
+      min-height:0;
+      font-size:11.5px;
+      color:var(--muted);
+      line-height:1.35;
+      margin-top:5px;
+    }
+
+    .message:not(:empty){min-height:16px}
+    .message.ok{color:#16a34a}
+    .message.err{color:#e11d48}
+    html[data-theme="dark"] .message.ok{color:#9cf0bf}
+    html[data-theme="dark"] .message.err{color:#ffb3bd}
+
+    .state-card{
+      padding:18px 8px;
+      text-align:center;
+      color:var(--muted);
+      line-height:1.45;
+      background:var(--surface-2);
+      border-radius:14px;
+      border:1px dashed var(--line);
+      font-size:12.5px;
+      font-weight:850;
+    }
+
+    .state-card strong{
+      display:block;
+      color:var(--text);
+      font-size:15px;
+      margin-bottom:3px;
+      font-weight:950;
+    }
+
+    .user-list{display:grid;gap:6px}
+
+    .user-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:8px;
+      display:grid;
+      grid-template-columns:42px 1fr auto;
+      gap:8px;
+      align-items:center;
+      box-shadow:var(--soft-shadow);
+      cursor:pointer;
+    }
+
+    .user-card.active{
+      border-color:rgba(76,201,255,.32);
+      background:linear-gradient(135deg, rgba(76,201,255,.07), transparent 45%), var(--surface-2);
+    }
+
+    .avatar,
+    .avatar-fallback{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface-3);
+      display:block;
+      flex-shrink:0;
+    }
+
+    .avatar{object-fit:cover}
+
+    .avatar-fallback{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:15px;
+      font-weight:950;
+      color:var(--blue);
+    }
+
+    .user-main{min-width:0}
+
+    .user-name{
+      font-size:13px;
+      font-weight:950;
+      line-height:1.2;
+      word-break:break-word;
+      margin-bottom:2px;
+    }
+
+    .user-sub{
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.35;
+      word-break:break-word;
+    }
+
+    .trust-pill{
+      min-width:56px;
+      text-align:center;
+      padding:7px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid rgba(76,201,255,.20);
+      background:var(--blue-soft);
+      color:var(--text);
+      white-space:nowrap;
+    }
+
+    .selected-shell{
+      display:grid;
+      gap:7px;
+    }
+
+    .selected-head{
+      display:grid;
+      grid-template-columns:58px 1fr;
+      gap:9px;
+      align-items:start;
+      padding:8px;
+      border-radius:14px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+    }
+
+    .selected-head .avatar,
+    .selected-head .avatar-fallback{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      font-size:20px;
+    }
+
+    .selected-name{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.03em;
+      line-height:1.15;
+      margin-bottom:2px;
+      word-break:break-word;
+    }
+
+    .selected-sub{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.4;
+      word-break:break-word;
+    }
+
+    .score-box{
+      background:linear-gradient(135deg, rgba(76,201,255,.13), rgba(61,220,132,.10));
+      border:1px solid rgba(76,201,255,.18);
+      border-radius:15px;
+      padding:10px;
+      display:grid;
+      gap:7px;
+    }
+
+    .score-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .score-number{
+      font-size:30px;
+      font-weight:950;
+      line-height:1;
+      letter-spacing:-.05em;
+    }
+
+    .score-level{
+      padding:6px 9px;
+      border-radius:999px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      font-size:11px;
+      font-weight:950;
+    }
+
+    .score-track{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:var(--surface-3);
+      border:1px solid var(--line-soft);
+      overflow:hidden;
+    }
+
+    .score-fill{
+      height:100%;
+      width:50%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--red), var(--yellow), var(--green));
+      transition:width .22s ease;
+    }
+
+    .adjust-grid{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:6px;
+    }
+
+    .check-row{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      padding:8px;
+      border-radius:12px;
+      background:var(--surface-2);
+      border:1px solid var(--line);
+    }
+
+    .check-row input{
+      width:auto;
+      margin-top:1px;
+      accent-color:var(--blue);
+    }
+
+    .check-row label{
+      color:var(--text);
+      font-size:11.3px;
+      font-weight:850;
+      line-height:1.35;
+    }
+
+    .history-list{display:grid;gap:6px}
+
+    .history-card{
+      background:var(--surface-2);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:8px;
+    }
+
+    .history-top{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:flex-start;
+      margin-bottom:5px;
+    }
+
+    .history-title{
+      font-size:12px;
+      font-weight:950;
+      line-height:1.3;
+    }
+
+    .history-time{
+      font-size:9.8px;
+      color:var(--muted);
+      font-weight:850;
+      white-space:nowrap;
+    }
+
+    .history-note{
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.4;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:8px;
+      width:min(900px, calc(100% - 12px));
+      background:var(--nav-bg);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:5px;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:4px;
+      z-index:50;
+      box-shadow:0 14px 32px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+
+    .nav-link{
+      text-decoration:none;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:2px;
+      padding:5px 3px;
+      border-radius:12px;
+      font-size:9.5px;
+      font-weight:850;
+      min-height:43px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .nav-link.active{
+      background:var(--blue-soft);
+      color:var(--text);
+    }
+
+    .nav-link svg{width:17px;height:17px;display:block}
+
+    @media(max-width:760px){
+      body{padding:6px 6px 82px}
+      .grid-2,.grid-3,.search-grid{grid-template-columns:1fr}
+      .adjust-grid{grid-template-columns:repeat(3,1fr)}
+      .user-card{grid-template-columns:40px 1fr auto}
+      .avatar,.avatar-fallback{width:40px;height:40px;border-radius:13px}
+      .bottom-nav{width:calc(100% - 12px);padding:5px;gap:4px}
+      .nav-link{font-size:9.2px;padding:5px 2px;min-height:41px}
+    }
+
+    @media(max-width:420px){
+      .adjust-grid{grid-template-columns:repeat(2,1fr)}
+      .user-card{grid-template-columns:38px 1fr}
+      .trust-pill{grid-column:1/-1;width:100%}
+      .selected-head{grid-template-columns:1fr}
+      .selected-head .avatar,.selected-head .avatar-fallback{width:62px;height:62px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button id="backBtn" class="top-icon-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <div class="top-center">
+        <div class="brand">OwnSpace</div>
+        <div class="brand-sub">Trust Admin</div>
+      </div>
+
+      <button id="refreshBtn" class="top-icon-btn refresh-top" type="button" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 11a8 8 0 0 0-14.9-3"></path>
+          <path d="M4 4v5h5"></path>
+          <path d="M4 13a8 8 0 0 0 14.9 3"></path>
+          <path d="M20 20v-5h-5"></path>
+        </svg>
+      </button>
+    </header>
+
+    <section id="accessPanel" class="panel">
+      <div id="accessLoading" class="state-card">
+        <strong>Checking admin access</strong>
+        Please wait...
+      </div>
+      <div id="accessDenied" class="state-card hidden">
+        <strong>Access denied</strong>
+        Admin only page.
+      </div>
+    </section>
+
+    <main id="mainWrap" class="hidden">
+      <section class="panel hero">
+        <div class="hero-row">
+          <div>
+            <div class="hero-title">Manual Trust Control</div>
+            <div class="hero-sub">Search a user, adjust Trust safely, and save a reason/history for every change.</div>
+          </div>
+          <span id="adminChip" class="chip chip-green">Admin</span>
+        </div>
+
+        <div class="chip-row">
+          <span class="chip chip-blue">Trust 0-100%</span>
+          <span class="chip chip-purple">Reason required</span>
+          <span class="chip chip-yellow">History saved</span>
+          <span class="chip chip-green">Points separate</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="search-grid">
+          <div class="field">
+            <label class="label" for="searchInput">Search user</label>
+            <input id="searchInput" class="input" type="text" placeholder="Name, username, email, or user id" />
+          </div>
+
+          <button id="searchBtn" class="btn btn-blue" type="button">Search</button>
+          <button id="clearBtn" class="btn" type="button">Clear</button>
+        </div>
+
+        <div id="searchMessage" class="message"></div>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel">
+          <div class="hero-row" style="margin-bottom:7px;">
+            <div>
+              <div class="hero-title" style="font-size:15px;">Users</div>
+              <div id="usersSub" class="hero-sub">Loading users...</div>
+            </div>
+          </div>
+
+          <div id="usersLoading" class="state-card">
+            <strong>Loading</strong>
+            Getting users...
+          </div>
+
+          <div id="usersList" class="user-list hidden"></div>
+
+          <div id="usersEmpty" class="state-card hidden">
+            <strong>No users found</strong>
+            Try another search.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="hero-row" style="margin-bottom:7px;">
+            <div>
+              <div class="hero-title" style="font-size:15px;">Selected User</div>
+              <div class="hero-sub">Adjust Trust only when you have a real reason.</div>
+            </div>
+          </div>
+
+          <div id="noUserBox" class="state-card">
+            <strong>No user selected</strong>
+            Select a user from the list first.
+          </div>
+
+          <div id="selectedShell" class="selected-shell hidden">
+            <div class="selected-head">
+              <div id="selectedAvatarWrap"></div>
+              <div>
+                <div id="selectedName" class="selected-name">Member</div>
+                <div id="selectedSub" class="selected-sub">-</div>
+                <div id="selectedChips" class="chip-row" style="margin:7px 0 0;"></div>
+              </div>
+            </div>
+
+            <div class="score-box">
+              <div class="score-top">
+                <div id="scoreNumber" class="score-number">50%</div>
+                <div id="scoreLevel" class="score-level">Normal</div>
+              </div>
+              <div class="score-track">
+                <div id="scoreFill" class="score-fill"></div>
+              </div>
+            </div>
+
+            <div class="adjust-grid">
+              <button class="btn btn-green adjust-btn" data-mode="delta" data-value="5" type="button">+5</button>
+              <button class="btn btn-green adjust-btn" data-mode="delta" data-value="10" type="button">+10</button>
+              <button class="btn btn-green adjust-btn" data-mode="delta" data-value="20" type="button">+20</button>
+              <button class="btn btn-red adjust-btn" data-mode="delta" data-value="-5" type="button">-5</button>
+              <button class="btn btn-red adjust-btn" data-mode="delta" data-value="-10" type="button">-10</button>
+              <button class="btn btn-yellow adjust-btn" data-mode="set" data-value="50" type="button">Reset 50</button>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label class="label" for="customTrustInput">Set custom Trust</label>
+                <input id="customTrustInput" class="input" type="number" min="0" max="100" placeholder="0-100" />
+              </div>
+
+              <div class="field">
+                <label class="label">Custom action</label>
+                <button id="setCustomBtn" class="btn btn-purple" type="button">Set Custom Trust</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="reasonInput">Admin reason / note</label>
+              <textarea id="reasonInput" class="textarea" placeholder="Example: Verified identity manually, false report cleared, repeated safe community behavior..."></textarea>
+            </div>
+
+            <div class="check-row">
+              <input id="notifyUserInput" type="checkbox" />
+              <label for="notifyUserInput">Notify user about this Trust update</label>
+            </div>
+
+            <div class="grid-2">
+              <a id="openProfileLink" class="btn btn-blue" href="#" target="_blank" rel="noopener noreferrer">Open Profile</a>
+              <button id="reloadSelectedBtn" class="btn" type="button">Reload User</button>
+            </div>
+
+            <div id="trustMessage" class="message"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="hero-row" style="margin-bottom:7px;">
+          <div>
+            <div class="hero-title" style="font-size:15px;">Trust History</div>
+            <div class="hero-sub">Shows recent Trust changes when history table or moderation history is available.</div>
+          </div>
+          <button id="reloadHistoryBtn" class="btn" type="button">Reload</button>
+        </div>
+
+        <div id="historyLoading" class="state-card hidden">
+          <strong>Loading history</strong>
+          Checking records...
+        </div>
+
+        <div id="historyList" class="history-list hidden"></div>
+
+        <div id="historyEmpty" class="state-card">
+          <strong>No user selected</strong>
+          Select a user to view Trust history.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="admin.html" class="nav-link active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3 4 7v6c0 5 3.4 7.7 8 8 4.6-.3 8-3 8-8V7l-8-4z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
+      <span>Admin</span>
+    </a>
+
+    <a href="verification-admin.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"></path>
+        <circle cx="12" cy="12" r="9"></circle>
+      </svg>
+      <span>Verify</span>
+    </a>
+
+    <a href="feed.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 10.5 12 3l9 7.5"></path>
+        <path d="M5 10v10h14V10"></path>
+      </svg>
+      <span>Feed</span>
+    </a>
+
+    <a href="search.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="M20 20l-4.2-4.2"></path>
+      </svg>
+      <span>Search</span>
+    </a>
+
+    <a href="profile.html" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      backBtn: $("backBtn"),
+      refreshBtn: $("refreshBtn"),
+      accessPanel: $("accessPanel"),
+      accessLoading: $("accessLoading"),
+      accessDenied: $("accessDenied"),
+      mainWrap: $("mainWrap"),
+      adminChip: $("adminChip"),
+      searchInput: $("searchInput"),
+      searchBtn: $("searchBtn"),
+      clearBtn: $("clearBtn"),
+      searchMessage: $("searchMessage"),
+      usersSub: $("usersSub"),
+      usersLoading: $("usersLoading"),
+      usersList: $("usersList"),
+      usersEmpty: $("usersEmpty"),
+      noUserBox: $("noUserBox"),
+      selectedShell: $("selectedShell"),
+      selectedAvatarWrap: $("selectedAvatarWrap"),
+      selectedName: $("selectedName"),
+      selectedSub: $("selectedSub"),
+      selectedChips: $("selectedChips"),
+      scoreNumber: $("scoreNumber"),
+      scoreLevel: $("scoreLevel"),
+      scoreFill: $("scoreFill"),
+      customTrustInput: $("customTrustInput"),
+      setCustomBtn: $("setCustomBtn"),
+      reasonInput: $("reasonInput"),
+      notifyUserInput: $("notifyUserInput"),
+      openProfileLink: $("openProfileLink"),
+      reloadSelectedBtn: $("reloadSelectedBtn"),
+      trustMessage: $("trustMessage"),
+      reloadHistoryBtn: $("reloadHistoryBtn"),
+      historyLoading: $("historyLoading"),
+      historyList: $("historyList"),
+      historyEmpty: $("historyEmpty")
+    };
+
+    let currentUser = null;
+    let isAdmin = false;
+    let allUsers = [];
+    let shownUsers = [];
+    let selectedUser = null;
+
+    function getStoredTheme() {
+      return localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    }
+
+    function resolveTheme(themeValue) {
+      if (themeValue === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      return themeValue === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(themeValue = getStoredTheme()) {
+      document.documentElement.setAttribute("data-theme", resolveTheme(themeValue));
+    }
+
+    applyTheme();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "osTheme" || e.key === "bwTheme") applyTheme();
+    });
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", () => {
+        if (getStoredTheme() === "system") applyTheme("system");
+      });
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = value == null ? "" : String(value);
+      return div.innerHTML;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function getField(raw, names, fallback = "") {
+      for (const name of names) {
+        const value = raw?.[name];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return fallback;
+    }
+
+    function getBool(raw, names, fallback = false) {
+      for (const name of names) {
+        if (raw?.[name] !== undefined && raw?.[name] !== null) return !!raw[name];
+      }
+      return fallback;
+    }
+
+    function clampTrust(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return 50;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function getTrustLevel(score) {
+      const s = clampTrust(score);
+      if (s <= 24) return "Risky";
+      if (s <= 49) return "Low Trust";
+      if (s <= 69) return "Normal";
+      if (s <= 84) return "Trusted";
+      return "Highly Trusted";
+    }
+
+    function formatDate(value) {
+      if (!value) return "Just now";
+
+      try {
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return "Just now";
+        return d.toLocaleString();
+      } catch {
+        return "Just now";
+      }
+    }
+
+    function setMessage(el, text = "", type = "") {
+      el.textContent = text || "";
+      el.className = `message ${type}`;
+    }
+
+    function isSchemaError(error) {
+      const msg = String(error?.message || "").toLowerCase();
+      return (
+        msg.includes("schema cache") ||
+        msg.includes("could not find") ||
+        msg.includes("column") ||
+        msg.includes("does not exist") ||
+        msg.includes("relation")
+      );
+    }
+
+    function normalizeUser(raw = {}, fallbackUid = "") {
+      const uid = String(getField(raw, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid || "");
+
+      return {
+        uid,
+        displayName: String(getField(raw, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member"),
+        username: String(getField(raw, ["username", "handle", "user_name", "userName"], "") || ""),
+        email: String(getField(raw, ["email"], "") || ""),
+        photoURL: String(getField(raw, ["photo_url", "photoURL", "avatar", "avatar_url", "avatarUrl", "user_photo_url", "userPhotoURL"], "") || ""),
+        trustScore: clampTrust(getField(raw, ["trust_score", "trustScore"], 50)),
+        pointsBalance: Number(getField(raw, ["points_balance", "pointsBalance", "earned_points", "earnedPoints"], 0)) || 0,
+        isVerified: getBool(raw, ["is_verified", "isVerified", "verified"], false),
+        isAdmin: getBool(raw, ["is_admin", "isAdmin"], false) || normalizeText(getField(raw, ["role"], "")) === "admin",
+        moderationStatus: String(getField(raw, ["moderation_status", "moderationStatus", "status"], "") || ""),
+        sourceTables: Array.isArray(raw.__sourceTables) ? raw.__sourceTables : []
+      };
+    }
+
+    function userKey(user) {
+      return String(user?.uid || "");
+    }
+
+    function firstLetter(text) {
+      return String(text || "M").trim().charAt(0).toUpperCase() || "M";
+    }
+
+    function avatarHtml(user, big = false) {
+      const sizeClass = big ? "" : "";
+
+      if (user?.photoURL) {
+        return `<img class="avatar ${sizeClass}" src="${escapeHtml(user.photoURL)}" alt="Profile photo" loading="lazy">`;
+      }
+
+      return `<div class="avatar-fallback ${sizeClass}">${escapeHtml(firstLetter(user?.displayName || user?.username || "M"))}</div>`;
+    }
+
+    function mergeUsers(rows) {
+      const map = new Map();
+
+      rows.forEach(item => {
+        const uid = String(item?.uid || item?.id || item?.user_id || item?.userId || "").trim();
+        if (!uid) return;
+
+        const existing = map.get(uid) || { uid, __sourceTables: [] };
+        const sourceTables = new Set([...(existing.__sourceTables || []), ...(item.__sourceTables || [])]);
+
+        map.set(uid, {
+          ...existing,
+          ...item,
+          uid,
+          __sourceTables: [...sourceTables]
+        });
+      });
+
+      return [...map.values()].map(row => normalizeUser(row, row.uid));
+    }
+
+    async function safeSelectAll(table, limit = 120) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .limit(limit);
+
+        if (error) {
+          if (!isSchemaError(error)) console.warn(`Select failed ${table}:`, error.message || error);
+          return [];
+        }
+
+        return (data || []).map(row => ({ ...row, __sourceTables: [table] }));
+      } catch (err) {
+        console.warn(`Select skipped ${table}:`, err?.message || err);
+        return [];
+      }
+    }
+
+    async function loadUsers() {
+      els.usersLoading.classList.remove("hidden");
+      els.usersList.classList.add("hidden");
+      els.usersEmpty.classList.add("hidden");
+      els.usersList.innerHTML = "";
+      setMessage(els.searchMessage, "");
+
+      try {
+        const [usersRows, profileRows] = await Promise.all([
+          safeSelectAll("users", 200),
+          safeSelectAll("public_profiles", 200)
+        ]);
+
+        allUsers = mergeUsers([...profileRows, ...usersRows])
+          .filter(user => user.uid)
+          .sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+        renderUserSearch();
+      } catch (err) {
+        console.error(err);
+        setMessage(els.searchMessage, "Could not load users.", "err");
+      }
+
+      els.usersLoading.classList.add("hidden");
+    }
+
+    function renderUserSearch() {
+      const q = normalizeText(els.searchInput.value);
+
+      shownUsers = allUsers.filter(user => {
+        if (!q) return true;
+
+        const text = [
+          user.uid,
+          user.displayName,
+          user.username,
+          user.email,
+          user.moderationStatus,
+          String(user.trustScore)
+        ].join(" ").toLowerCase();
+
+        return text.includes(q);
+      }).slice(0, 80);
+
+      els.usersSub.textContent = q
+        ? `${shownUsers.length} result${shownUsers.length === 1 ? "" : "s"}`
+        : `${allUsers.length} user${allUsers.length === 1 ? "" : "s"} loaded`;
+
+      renderUsersList();
+    }
+
+    function renderUsersList() {
+      els.usersList.innerHTML = "";
+
+      if (!shownUsers.length) {
+        els.usersList.classList.add("hidden");
+        els.usersEmpty.classList.remove("hidden");
+        return;
+      }
+
+      els.usersEmpty.classList.add("hidden");
+      els.usersList.classList.remove("hidden");
+
+      shownUsers.forEach(user => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = `user-card ${selectedUser?.uid === user.uid ? "active" : ""}`;
+
+        card.innerHTML = `
+          ${avatarHtml(user)}
+          <div class="user-main">
+            <div class="user-name">${escapeHtml(user.displayName || "Member")}</div>
+            <div class="user-sub">
+              ${user.username ? `@${escapeHtml(user.username)} Â· ` : ""}${escapeHtml(user.email || user.uid)}
+            </div>
+          </div>
+          <div class="trust-pill">${escapeHtml(String(user.trustScore))}%</div>
+        `;
+
+        card.addEventListener("click", () => selectUser(user));
+
+        card.querySelectorAll("img").forEach(img => {
+          img.addEventListener("error", () => {
+            img.replaceWith(fallbackAvatarEl(firstLetter(user.displayName || user.username)));
+          });
+        });
+
+        els.usersList.appendChild(card);
+      });
+    }
+
+    function fallbackAvatarEl(letter) {
+      const div = document.createElement("div");
+      div.className = "avatar-fallback";
+      div.textContent = letter || "M";
+      return div;
+    }
+
+    function renderSelectedUser() {
+      if (!selectedUser) {
+        els.noUserBox.classList.remove("hidden");
+        els.selectedShell.classList.add("hidden");
+        els.historyList.classList.add("hidden");
+        els.historyEmpty.classList.remove("hidden");
+        els.historyEmpty.innerHTML = `<strong>No user selected</strong>Select a user to view Trust history.`;
+        return;
+      }
+
+      els.noUserBox.classList.add("hidden");
+      els.selectedShell.classList.remove("hidden");
+
+      els.selectedAvatarWrap.innerHTML = avatarHtml(selectedUser, true);
+      els.selectedName.textContent = selectedUser.displayName || "Member";
+      els.selectedSub.innerHTML = `
+        ${selectedUser.username ? `@${escapeHtml(selectedUser.username)}<br>` : ""}
+        ${escapeHtml(selectedUser.email || "No email loaded")}<br>
+        UID: ${escapeHtml(selectedUser.uid)}
+      `;
+
+      els.selectedChips.innerHTML = `
+        <span class="chip chip-blue">Trust: ${escapeHtml(String(selectedUser.trustScore))}%</span>
+        <span class="chip chip-purple">Points: ${escapeHtml(String(selectedUser.pointsBalance || 0))}</span>
+        ${selectedUser.isVerified ? `<span class="chip chip-green">Verified</span>` : `<span class="chip chip-yellow">Not verified</span>`}
+        ${selectedUser.isAdmin ? `<span class="chip chip-red">Admin</span>` : ""}
+      `;
+
+      els.scoreNumber.textContent = `${selectedUser.trustScore}%`;
+      els.scoreLevel.textContent = getTrustLevel(selectedUser.trustScore);
+      els.scoreFill.style.width = `${selectedUser.trustScore}%`;
+      els.customTrustInput.value = selectedUser.trustScore;
+      els.openProfileLink.href = `member.html?uid=${encodeURIComponent(selectedUser.uid)}`;
+
+      els.selectedAvatarWrap.querySelectorAll("img").forEach(img => {
+        img.addEventListener("error", () => {
+          img.replaceWith(fallbackAvatarEl(firstLetter(selectedUser.displayName || selectedUser.username)));
+        });
+      });
+
+      renderUsersList();
+    }
+
+    async function selectUser(user) {
+      selectedUser = user;
+      setMessage(els.trustMessage, "");
+      renderSelectedUser();
+      await loadTrustHistory();
+    }
+
+    async function reloadSelectedUser() {
+      if (!selectedUser?.uid) return;
+
+      const rows = [];
+
+      const lookups = [
+        { table:"users", columns:["uid", "id", "user_id", "userId"] },
+        { table:"public_profiles", columns:["uid", "id", "user_id", "userId"] }
+      ];
+
+      for (const lookup of lookups) {
+        for (const column of lookup.columns) {
+          try {
+            const { data, error } = await supabase
+              .from(lookup.table)
+              .select("*")
+              .eq(column, selectedUser.uid)
+              .maybeSingle();
+
+            if (!error && data) {
+              rows.push({ ...data, __sourceTables: [lookup.table] });
+              break;
+            }
+          } catch {}
+        }
+      }
+
+      const merged = mergeUsers(rows);
+      if (merged.length) {
+        selectedUser = merged[0];
+
+        const index = allUsers.findIndex(user => user.uid === selectedUser.uid);
+        if (index >= 0) allUsers[index] = selectedUser;
+        else allUsers.push(selectedUser);
+
+        renderSelectedUser();
+      }
+    }
+
+    async function updateProfileTable(table, uid, payloadVariants) {
+      const matchColumns = ["uid", "id", "user_id", "userId"];
+      let worked = false;
+      let lastError = null;
+
+      for (const column of matchColumns) {
+        for (const payload of payloadVariants) {
+          try {
+            const { data, error } = await supabase
+              .from(table)
+              .update(payload)
+              .eq(column, uid)
+              .select("*");
+
+            if (!error && Array.isArray(data) && data.length) {
+              worked = true;
+              break;
+            }
+
+            if (error) lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+
+        if (worked) break;
+      }
+
+      if (!worked && lastError && !isSchemaError(lastError)) {
+        console.warn(`Update failed for ${table}:`, lastError?.message || lastError);
+      }
+
+      return worked;
+    }
+
+    async function insertWithFallback(table, payloads) {
+      let lastError = null;
+
+      for (const payload of payloads) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .insert(payload)
+            .select("*")
+            .maybeSingle();
+
+          if (!error) return data || null;
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      throw lastError || new Error(`Could not insert into ${table}.`);
+    }
+
+    async function logTrustHistory(targetUser, oldTrust, newTrust, reason) {
+      const changeAmount = Number(newTrust) - Number(oldTrust);
+      const createdAt = nowIso();
+
+      const trustHistoryPayloads = [
+        {
+          user_id: targetUser.uid,
+          target_user_id: targetUser.uid,
+          admin_id: currentUser.id,
+          old_trust: oldTrust,
+          new_trust: newTrust,
+          change_amount: changeAmount,
+          reason,
+          action: "trust_adjusted",
+          created_at: createdAt
+        },
+        {
+          userId: targetUser.uid,
+          targetUserId: targetUser.uid,
+          adminId: currentUser.id,
+          oldTrust,
+          newTrust,
+          changeAmount,
+          reason,
+          action: "trust_adjusted",
+          createdAt: createdAt
+        },
+        {
+          uid: targetUser.uid,
+          admin_uid: currentUser.id,
+          old_score: oldTrust,
+          new_score: newTrust,
+          amount: changeAmount,
+          note: reason,
+          created_at: createdAt
+        }
+      ];
+
+      try {
+        await insertWithFallback("trust_history", trustHistoryPayloads);
+        return;
+      } catch (err) {
+        console.warn("trust_history insert skipped:", err?.message || err);
+      }
+
+      const moderationPayloads = [
+        {
+          action: "trust_adjusted",
+          action_type: "trust_adjusted",
+          admin_uid: currentUser.id,
+          admin_id: currentUser.id,
+          target_user_id: targetUser.uid,
+          target_id: targetUser.uid,
+          target_type: "user",
+          old_trust: oldTrust,
+          new_trust: newTrust,
+          change_amount: changeAmount,
+          reason,
+          note: reason,
+          admin_note: reason,
+          created_at: createdAt
+        },
+        {
+          action: "trust_adjusted",
+          actionType: "trust_adjusted",
+          adminUid: currentUser.id,
+          adminId: currentUser.id,
+          targetUserId: targetUser.uid,
+          targetId: targetUser.uid,
+          targetType: "user",
+          oldTrust,
+          newTrust,
+          changeAmount,
+          reason,
+          note: reason,
+          adminNote: reason,
+          createdAt: createdAt
+        }
+      ];
+
+      try {
+        await insertWithFallback("moderation_history", moderationPayloads);
+      } catch (err) {
+        console.warn("moderation_history insert skipped:", err?.message || err);
+      }
+    }
+
+    async function createNotificationSafe(targetUid, oldTrust, newTrust) {
+      if (!targetUid || targetUid === currentUser.id) return;
+      if (!els.notifyUserInput.checked) return;
+
+      const createdAt = nowIso();
+      const text = `Your Trust score was updated from ${oldTrust}% to ${newTrust}%.`;
+
+      try {
+        await insertWithFallback("notifications", [
+          {
+            type: "trust_update",
+            title: "Trust score updated",
+            text,
+            from_user_id: currentUser.id,
+            to_user_id: targetUid,
+            user_id: targetUid,
+            created_at: createdAt,
+            is_read: false,
+            read: false
+          },
+          {
+            type: "trust_update",
+            title: "Trust score updated",
+            text,
+            fromUserId: currentUser.id,
+            toUserId: targetUid,
+            userId: targetUid,
+            createdAt: createdAt,
+            isRead: false,
+            read: false
+          },
+          {
+            type: "trust_update",
+            text,
+            user_id: targetUid,
+            created_at: createdAt,
+            is_read: false
+          }
+        ]);
+      } catch (err) {
+        console.warn("Trust notification skipped:", err?.message || err);
+      }
+    }
+
+    async function applyTrustChange(mode, value) {
+      if (!selectedUser?.uid) {
+        setMessage(els.trustMessage, "Select a user first.", "err");
+        return;
+      }
+
+      const reason = els.reasonInput.value.trim();
+
+      if (!reason || reason.length < 6) {
+        setMessage(els.trustMessage, "Write a clear admin reason before changing Trust.", "err");
+        els.reasonInput.focus();
+        return;
+      }
+
+      const oldTrust = clampTrust(selectedUser.trustScore);
+      const rawNewTrust = mode === "delta" ? oldTrust + Number(value) : Number(value);
+      const newTrust = clampTrust(rawNewTrust);
+
+      if (oldTrust === newTrust) {
+        setMessage(els.trustMessage, "Trust is already at this value.", "err");
+        return;
+      }
+
+      const ok = confirm(`Change ${selectedUser.displayName || "this user"} Trust from ${oldTrust}% to ${newTrust}%?`);
+      if (!ok) return;
+
+      setMessage(els.trustMessage, "Saving Trust update...", "ok");
+      setButtonsDisabled(true);
+
+      try {
+        const updatedAt = nowIso();
+
+        const snakePayload = {
+          trust_score: newTrust,
+          trust_updated_at: updatedAt,
+          trust_updated_by: currentUser.id,
+          updated_at: updatedAt
+        };
+
+        const camelPayload = {
+          trustScore: newTrust,
+          trustUpdatedAt: updatedAt,
+          trustUpdatedBy: currentUser.id,
+          updatedAt: updatedAt
+        };
+
+        const minimalPayload = {
+          trust_score: newTrust,
+          updated_at: updatedAt
+        };
+
+        const results = await Promise.allSettled([
+          updateProfileTable("users", selectedUser.uid, [snakePayload, camelPayload, minimalPayload]),
+          updateProfileTable("public_profiles", selectedUser.uid, [snakePayload, camelPayload, minimalPayload])
+        ]);
+
+        const worked = results.some(result => result.status === "fulfilled" && result.value === true);
+
+        if (!worked) {
+          throw new Error("Could not update Trust. Check RLS policy or trust_score column.");
+        }
+
+        await logTrustHistory(selectedUser, oldTrust, newTrust, reason);
+        await createNotificationSafe(selectedUser.uid, oldTrust, newTrust);
+
+        selectedUser.trustScore = newTrust;
+
+        const index = allUsers.findIndex(user => user.uid === selectedUser.uid);
+        if (index >= 0) allUsers[index].trustScore = newTrust;
+
+        renderSelectedUser();
+        renderUsersList();
+        await loadTrustHistory();
+
+        setMessage(els.trustMessage, `Trust updated from ${oldTrust}% to ${newTrust}%.`, "ok");
+
+        try {
+          localStorage.setItem("ownspace_profile_refresh", String(Date.now()));
+          localStorage.setItem("ownspace_admin_refresh", String(Date.now()));
+        } catch {}
+      } catch (err) {
+        console.error(err);
+        setMessage(els.trustMessage, err?.message || "Could not update Trust.", "err");
+      }
+
+      setButtonsDisabled(false);
+    }
+
+    function setButtonsDisabled(disabled) {
+      document.querySelectorAll(".adjust-btn, #setCustomBtn, #reloadSelectedBtn, #reloadHistoryBtn").forEach(btn => {
+        btn.disabled = disabled;
+      });
+    }
+
+    function normalizeHistoryRow(row = {}, source = "history") {
+      const oldTrust = getField(row, ["old_trust", "oldTrust", "old_score", "oldScore"], "");
+      const newTrust = getField(row, ["new_trust", "newTrust", "new_score", "newScore"], "");
+      const changeAmount = getField(row, ["change_amount", "changeAmount", "amount"], "");
+
+      return {
+        id: String(getField(row, ["id"], Math.random().toString(36).slice(2)) || ""),
+        source,
+        action: String(getField(row, ["action", "action_type", "actionType"], "trust_adjusted") || "trust_adjusted"),
+        adminId: String(getField(row, ["admin_id", "adminId", "admin_uid", "adminUid"], "") || ""),
+        oldTrust: oldTrust === "" ? null : Number(oldTrust),
+        newTrust: newTrust === "" ? null : Number(newTrust),
+        changeAmount: changeAmount === "" ? null : Number(changeAmount),
+        reason: String(getField(row, ["reason", "note", "admin_note", "adminNote", "text"], "") || ""),
+        createdAt: row.created_at ?? row.createdAt ?? row.timestamp ?? null
+      };
+    }
+
+    async function queryHistoryFromTable(table, uid) {
+      const userColumns = ["user_id", "userId", "target_user_id", "targetUserId", "uid", "target_id", "targetId"];
+      const rows = [];
+      const seen = new Set();
+
+      for (const column of userColumns) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq(column, uid)
+            .limit(30);
+
+          if (!error && Array.isArray(data)) {
+            data.forEach(row => {
+              const key = row.id || JSON.stringify(row);
+              if (!seen.has(key)) {
+                seen.add(key);
+                rows.push(row);
+              }
+            });
+          }
+        } catch {}
+      }
+
+      return rows;
+    }
+
+    async function loadTrustHistory() {
+      if (!selectedUser?.uid) {
+        els.historyList.classList.add("hidden");
+        els.historyEmpty.classList.remove("hidden");
+        els.historyEmpty.innerHTML = `<strong>No user selected</strong>Select a user to view Trust history.`;
+        return;
+      }
+
+      els.historyLoading.classList.remove("hidden");
+      els.historyList.classList.add("hidden");
+      els.historyEmpty.classList.add("hidden");
+      els.historyList.innerHTML = "";
+
+      try {
+        const [trustRows, moderationRows] = await Promise.all([
+          queryHistoryFromTable("trust_history", selectedUser.uid),
+          queryHistoryFromTable("moderation_history", selectedUser.uid)
+        ]);
+
+        const rows = [
+          ...trustRows.map(row => normalizeHistoryRow(row, "trust_history")),
+          ...moderationRows
+            .filter(row => normalizeText(getField(row, ["action", "action_type", "actionType"], "")).includes("trust"))
+            .map(row => normalizeHistoryRow(row, "moderation_history"))
+        ];
+
+        rows.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+        renderHistory(rows.slice(0, 25));
+      } catch (err) {
+        console.error(err);
+        els.historyEmpty.innerHTML = `<strong>Could not load history</strong>Check trust_history / moderation_history permissions.`;
+        els.historyEmpty.classList.remove("hidden");
+      }
+
+      els.historyLoading.classList.add("hidden");
+    }
+
+    function renderHistory(rows) {
+      els.historyList.innerHTML = "";
+
+      if (!rows.length) {
+        els.historyList.classList.add("hidden");
+        els.historyEmpty.classList.remove("hidden");
+        els.historyEmpty.innerHTML = `<strong>No Trust history yet</strong>New manual changes will appear here after saving.`;
+        return;
+      }
+
+      els.historyEmpty.classList.add("hidden");
+      els.historyList.classList.remove("hidden");
+
+      rows.forEach(row => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+
+        const oldText = row.oldTrust === null || Number.isNaN(row.oldTrust) ? "?" : `${row.oldTrust}%`;
+        const newText = row.newTrust === null || Number.isNaN(row.newTrust) ? "?" : `${row.newTrust}%`;
+        const changeText = row.changeAmount === null || Number.isNaN(row.changeAmount)
+          ? ""
+          : ` (${row.changeAmount > 0 ? "+" : ""}${row.changeAmount})`;
+
+        card.innerHTML = `
+          <div class="history-top">
+            <div class="history-title">${escapeHtml(oldText)} â ${escapeHtml(newText)}${escapeHtml(changeText)}</div>
+            <div class="history-time">${escapeHtml(formatDate(row.createdAt))}</div>
+          </div>
+          <div class="chip-row" style="margin-bottom:6px;">
+            <span class="chip chip-blue">${escapeHtml(row.source)}</span>
+            ${row.adminId ? `<span class="chip chip-purple">Admin: ${escapeHtml(row.adminId.slice(0, 8))}</span>` : ""}
+          </div>
+          <div class="history-note">${escapeHtml(row.reason || "No reason saved.")}</div>
+        `;
+
+        els.historyList.appendChild(card);
+      });
+    }
+
+    async function selectByColumn(table, column, value) {
+      if (!value) return null;
+
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq(column, value)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch {}
+
+      return null;
+    }
+
+    async function checkAdminAccess(uid) {
+      const checks = [
+        ["admins", "id"],
+        ["admins", "uid"],
+        ["admins", "user_id"],
+        ["admins", "userId"]
+      ];
+
+      for (const [table, column] of checks) {
+        const row = await selectByColumn(table, column, uid);
+        if (row) return true;
+      }
+
+      try {
+        const [userRow, profileRow] = await Promise.all([
+          selectByColumn("users", "uid", uid),
+          selectByColumn("public_profiles", "uid", uid)
+        ]);
+
+        const merged = { ...(profileRow || {}), ...(userRow || {}) };
+        if (getBool(merged, ["is_admin", "isAdmin"], false)) return true;
+        if (normalizeText(getField(merged, ["role"], "")) === "admin") return true;
+      } catch {}
+
+      return false;
+    }
+
+    els.backBtn.addEventListener("click", () => {
+      if (document.referrer) history.back();
+      else window.location.href = "admin.html";
+    });
+
+    els.searchBtn.addEventListener("click", renderUserSearch);
+
+    els.searchInput.addEventListener("input", () => {
+      renderUserSearch();
+    });
+
+    els.searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        renderUserSearch();
+      }
+    });
+
+    els.clearBtn.addEventListener("click", () => {
+      els.searchInput.value = "";
+      renderUserSearch();
+      els.searchInput.focus();
+    });
+
+    els.refreshBtn.addEventListener("click", async () => {
+      els.refreshBtn.disabled = true;
+      await loadUsers();
+      if (selectedUser?.uid) await reloadSelectedUser();
+      if (selectedUser?.uid) await loadTrustHistory();
+      els.refreshBtn.disabled = false;
+    });
+
+    document.querySelectorAll(".adjust-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        applyTrustChange(btn.dataset.mode, btn.dataset.value).catch(console.error);
+      });
+    });
+
+    els.setCustomBtn.addEventListener("click", () => {
+      applyTrustChange("set", els.customTrustInput.value).catch(console.error);
+    });
+
+    els.reloadSelectedBtn.addEventListener("click", async () => {
+      els.reloadSelectedBtn.disabled = true;
+      await reloadSelectedUser();
+      await loadTrustHistory();
+      els.reloadSelectedBtn.disabled = false;
+    });
+
+    els.reloadHistoryBtn.addEventListener("click", () => {
+      loadTrustHistory().catch(console.error);
+    });
+
+    async function initPage() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = data.user;
+      isAdmin = await checkAdminAccess(currentUser.id);
+
+      els.accessLoading.classList.add("hidden");
+
+      if (!isAdmin) {
+        els.accessDenied.classList.remove("hidden");
+        return;
+      }
+
+      els.accessPanel.classList.add("hidden");
+      els.mainWrap.classList.remove("hidden");
+      els.adminChip.textContent = `Admin: ${currentUser.email || currentUser.id.slice(0, 8)}`;
+
+      await loadUsers();
+
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (!session?.user) window.location.href = "login.html";
+      });
+    }
+
+    initPage().catch(err => {
+      console.error(err);
+      els.accessLoading.classList.add("hidden");
+      els.accessDenied.classList.remove("hidden");
+      els.accessDenied.innerHTML = `<strong>Could not load Trust Admin</strong>${escapeHtml(err?.message || "Unknown error")}`;
+    });
+
+    /*
+      OWNSPACE TRUST ADMIN PAGE
+
+      FILE NAME SUGGESTION:
+      - trust-admin.html
+
+      WHAT THIS PAGE DOES:
+      - Admin-only access through admins table / profile admin fallback.
+      - Loads users from users + public_profiles.
+      - Lets admin manually increase/decrease/set Trust.
+      - Trust is clamped between 0 and 100.
+      - Admin reason is required before every change.
+      - Saves Trust to users and public_profiles using fallback field names:
+        trust_score / trustScore
+      - Saves history first to trust_history, fallback to moderation_history.
+      - Optional notification to user when Trust changes.
+      - Points are shown but not changed here because Points and Trust must stay separate.
+
+      RECOMMENDED TABLE FOR HISTORY:
+
+      create table if not exists public.trust_history (
+        id uuid primary key default gen_random_uuid(),
+        user_id uuid not null,
+        target_user_id uuid,
+        admin_id uuid,
+        old_trust int,
+        new_trust int,
+        change_amount int,
+        reason text,
+        action text default 'trust_adjusted',
+        created_at timestamptz default now()
+      );
+
+      NOTE:
+      If update fails with RLS, add admin policies for users, public_profiles, trust_history, notifications.
+    */
+  </script>
+</body>
+</html>
