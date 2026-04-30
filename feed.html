@@ -441,6 +441,24 @@
 
     .verified-badge svg{width:9.5px;height:9.5px;display:block;stroke-width:3}
 
+    .verified-badge.verified-account{
+      background:var(--blue);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(31,143,255,.14),0 6px 12px rgba(31,143,255,.16);
+    }
+
+    .verified-badge.verified-creator{
+      background:var(--green);
+      color:#ffffff;
+      box-shadow:0 0 0 2px rgba(34,179,108,.14),0 6px 12px rgba(34,179,108,.16);
+    }
+
+    .verified-badge.verified-business{
+      background:linear-gradient(135deg,#ffe08a,var(--yellow));
+      color:#3f2a00;
+      box-shadow:0 0 0 2px rgba(245,185,66,.18),0 6px 12px rgba(245,185,66,.18);
+    }
+
     .post-username,
     .community-poster-line{
       color:var(--blue);
@@ -617,7 +635,15 @@
 
     .comment-item{background:var(--surface-2);border:1px solid var(--line);border-radius:16px;padding:11px}
     .comment-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
-    .comment-author{font-weight:950;font-size:13px;color:var(--text)}
+    .comment-author{
+      font-weight:950;
+      font-size:13px;
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      gap:5px;
+      flex-wrap:wrap;
+    }
     .comment-username{color:var(--blue);font-size:11px;font-weight:850;margin-top:2px}
     .comment-date{color:var(--muted);font-size:11px;margin-top:2px}
 
@@ -1122,6 +1148,65 @@
       return fallback;
     }
 
+    function normalizeVerificationType(raw = {}) {
+      const explicitType = getField(raw, [
+        "verification_badge",
+        "verificationBadge",
+        "verification_type",
+        "verificationType",
+        "badge_type",
+        "badgeType",
+        "verified_badge",
+        "verifiedBadge",
+        "verified_type",
+        "verifiedType"
+      ], "");
+
+      const clean = String(explicitType || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+      if (["business", "verified_business", "business_verified", "gold", "gold_tick", "gold_badge"].includes(clean)) return "business";
+      if (["creator", "verified_creator", "creator_verified", "green", "green_tick", "green_badge"].includes(clean)) return "creator";
+      if (["account", "verified_account", "account_verified", "blue", "blue_tick", "blue_badge", "verified"].includes(clean)) return "account";
+
+      const verified = getBool(raw, [
+        "is_verified",
+        "isVerified",
+        "verified",
+        "author_verified",
+        "authorVerified",
+        "user_verified",
+        "userVerified"
+      ], false);
+
+      return verified ? "account" : "";
+    }
+
+    function getVerificationLabel(type) {
+      if (type === "business") return "Verified Business";
+      if (type === "creator") return "Verified Creator";
+      if (type === "account") return "Verified Account";
+      return "Verified";
+    }
+
+    function buildVerifiedBadge(raw = {}) {
+      const type = normalizeVerificationType(raw);
+      if (!type) return "";
+
+      const label = getVerificationLabel(type);
+
+      return [
+        '<span class="verified-badge verified-' + type + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">',
+        '<path d="M20 6 9 17l-5-5"></path>',
+        '</svg>',
+        '</span>'
+      ].join("");
+    }
+
     function getArray(raw, names) {
       for (const name of names) {
         const value = raw?.[name];
@@ -1198,7 +1283,8 @@
         username: getField(d, ["username", "handle", "userName", "user_name"]),
         photoURL: getField(d, ["photo_url", "photoURL", "avatar", "avatarUrl", "avatar_url", "user_photo_url", "userPhotoURL"]),
         isPrivate: !!(d.is_private ?? d.isPrivate ?? d.privateProfile ?? d.private ?? d.accountPrivate),
-        verified: !!(d.is_verified ?? d.verified ?? d.isVerified),
+        verified: !!normalizeVerificationType(d),
+        verificationType: normalizeVerificationType(d),
         moderationStatus: String(getField(d, ["moderation_status", "moderationStatus", "status"]) || "").toLowerCase(),
         isHiddenByAdmin: !!(d.is_hidden_by_admin ?? d.isHiddenByAdmin ?? d.hidden_by_admin ?? d.hiddenByAdmin),
         softDeleted: !!(d.soft_deleted ?? d.softDeleted ?? d.deleted),
@@ -1238,6 +1324,8 @@
         displayName: getField(d, ["author_name", "authorName", "display_name", "displayName", "name"]),
         username: getField(d, ["username"]),
         userPhotoURL: getField(d, ["user_photo_url", "userPhotoURL", "photo_url", "photoURL", "avatar_url", "avatarUrl"]),
+        userVerified: !!normalizeVerificationType(d),
+        userVerificationType: normalizeVerificationType(d),
         caption: getField(d, ["caption", "text", "content", "body", "description"]),
         imageURL: getField(d, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl", "cover_url", "coverURL"]),
         source,
@@ -2597,6 +2685,8 @@
         }
 
         comments.forEach((comment) => {
+          const commentProfile = getAuthorProfile(comment.userId);
+          const commentVerifiedHtml = buildVerifiedBadge(commentProfile || {});
           const canDelete = comment.userId === currentUser.id || postOwnerId === currentUser.id;
 
           const commentEl = document.createElement("div");
@@ -2605,7 +2695,7 @@
           commentEl.innerHTML = `
             <div class="comment-top">
               <div>
-                <div class="comment-author">${escapeHtml(comment.displayName || "Member")}</div>
+                <div class="comment-author"><span>${escapeHtml(comment.displayName || "Member")}</span>${commentVerifiedHtml}</div>
                 ${comment.username ? `<div class="comment-username">@${escapeHtml(comment.username)}</div>` : ""}
                 <div class="comment-date">${formatDate(comment.createdAt)}</div>
               </div>
@@ -3004,7 +3094,18 @@
       const imageUrl = post.imageURL;
       const communityPost = isCommunityPost(post);
 
-      const verifiedHtml = author?.verified ? ICONS.verified : "";
+      const badgeSource = author
+        ? {
+            ...author,
+            verified: author.verified || post.userVerified,
+            verificationType: author.verificationType || post.userVerificationType
+          }
+        : {
+            verified: post.userVerified,
+            verificationType: post.userVerificationType
+          };
+
+      const verifiedHtml = buildVerifiedBadge(badgeSource);
 
       const canDeleteOwnPost =
         currentUser &&
@@ -3408,7 +3509,7 @@
     });
 
     /*
-      OWNSPACE FEED UPDATE â BLOCKED USER FIX:
+      OWNSPACE FEED UPDATE — BLOCKED USER FIX:
 
       Main fix:
       - Added blockedUserIds Set.
