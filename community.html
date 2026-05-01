@@ -1150,2176 +1150,1869 @@
     </a>
   </nav>
 
-  <script type="module">
-    import { supabase } from "./supabase.js";
+<script type="module">
+  import { supabase } from "./supabase.js";
 
-    const STORAGE_BUCKET = "media";
-    const POSTS_PAGE_SIZE = 12;
-    const PHOTOS_LIMIT = 45;
-    const MEMBERS_LIMIT = 80;
-    const POST_TABLES = ["community_posts", "posts"];
-    const COMMUNITY_COLUMNS = ["community_id", "communityId", "group_id", "groupId"];
+  /*
+    OwnSpace Community — healthy version
+    Clean database contract used by this page:
+    - communities.id
+    - public_profiles.uid
+    - community_members.community_id + community_members.user_id
+    - community_join_requests.community_id + requester_id
+    - community_posts.community_id + user_id
+    - post_likes.post_id + user_id
+    - post_comments.post_id
 
-    const $ = (id) => document.getElementById(id);
+    This page intentionally avoids the old broad fallback spaghetti.
+    Small fallback payloads remain only where optional columns may not exist yet.
+  */
 
-    const els = {
-      backBtn: $("backBtn"),
-      refreshBtn: $("refreshBtn"),
-      loadingPanel: $("loadingPanel"),
-      notFoundPanel: $("notFoundPanel"),
-      notFoundText: $("notFoundText"),
-      lockedPanel: $("lockedPanel"),
-      lockedText: $("lockedText"),
-      lockedActionRow: $("lockedActionRow"),
-      lockedMessage: $("lockedMessage"),
-      communityShell: $("communityShell"),
-      coverImage: $("coverImage"),
-      communityAvatar: $("communityAvatar"),
-      communityAvatarFallback: $("communityAvatarFallback"),
-      communityTitle: $("communityTitle"),
-      communityDesc: $("communityDesc"),
-      chipRow: $("chipRow"),
-      postsStat: $("postsStat"),
-      photosStat: $("photosStat"),
-      membersStat: $("membersStat"),
-      topActions: $("topActions"),
-      topMessage: $("topMessage"),
-      quickPostBtn: $("quickPostBtn"),
-      composerPanel: $("composerPanel"),
-      composerLockedPanel: $("composerLockedPanel"),
-      composerLockedText: $("composerLockedText"),
-      closeComposerBtn: $("closeComposerBtn"),
-      postForm: $("postForm"),
-      postTitleInput: $("postTitleInput"),
-      postTextInput: $("postTextInput"),
-      postTypeInput: $("postTypeInput"),
-      postAudienceInput: $("postAudienceInput"),
-      postImageFile: $("postImageFile"),
-      previewWrap: $("previewWrap"),
-      previewImg: $("previewImg"),
-      submitPostBtn: $("submitPostBtn"),
-      postMessage: $("postMessage"),
-      postsList: $("postsList"),
-      postsEmpty: $("postsEmpty"),
-      postsCountChip: $("postsCountChip"),
-      loadMorePostsBtn: $("loadMorePostsBtn"),
-      photoGrid: $("photoGrid"),
-      photosEmpty: $("photosEmpty"),
-      photosCountChip: $("photosCountChip"),
-      descriptionText: $("descriptionText"),
-      detailsText: $("detailsText"),
-      rulesBox: $("rulesBox"),
-      rulesText: $("rulesText"),
-      aboutStatusChip: $("aboutStatusChip"),
-      ownerCard: $("ownerCard"),
-      membersList: $("membersList"),
-      membersEmpty: $("membersEmpty"),
-      membersCountChip: $("membersCountChip"),
-      inboxBadge: $("inboxBadge")
+  const STORAGE_BUCKET = "media";
+  const POSTS_PAGE_SIZE = 12;
+  const PHOTOS_LIMIT = 45;
+  const MEMBERS_LIMIT = 80;
+
+  const T = {
+    communities: "communities",
+    profiles: "public_profiles",
+    members: "community_members",
+    requests: "community_join_requests",
+    posts: "community_posts",
+    likes: "post_likes",
+    comments: "post_comments",
+    notifications: "notifications",
+    admins: "admins",
+    messageRequests: "message_requests",
+    chatThreads: "chat_threads",
+    chatMessages: "chat_messages"
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  const els = {
+    backBtn: $("backBtn"),
+    refreshBtn: $("refreshBtn"),
+    loadingPanel: $("loadingPanel"),
+    notFoundPanel: $("notFoundPanel"),
+    notFoundText: $("notFoundText"),
+    lockedPanel: $("lockedPanel"),
+    lockedText: $("lockedText"),
+    lockedActionRow: $("lockedActionRow"),
+    lockedMessage: $("lockedMessage"),
+    communityShell: $("communityShell"),
+    coverImage: $("coverImage"),
+    communityAvatar: $("communityAvatar"),
+    communityAvatarFallback: $("communityAvatarFallback"),
+    communityTitle: $("communityTitle"),
+    communityDesc: $("communityDesc"),
+    chipRow: $("chipRow"),
+    postsStat: $("postsStat"),
+    photosStat: $("photosStat"),
+    membersStat: $("membersStat"),
+    topActions: $("topActions"),
+    topMessage: $("topMessage"),
+    quickPostBtn: $("quickPostBtn"),
+    composerPanel: $("composerPanel"),
+    composerLockedPanel: $("composerLockedPanel"),
+    composerLockedText: $("composerLockedText"),
+    closeComposerBtn: $("closeComposerBtn"),
+    postForm: $("postForm"),
+    postTitleInput: $("postTitleInput"),
+    postTextInput: $("postTextInput"),
+    postTypeInput: $("postTypeInput"),
+    postAudienceInput: $("postAudienceInput"),
+    postImageFile: $("postImageFile"),
+    previewWrap: $("previewWrap"),
+    previewImg: $("previewImg"),
+    submitPostBtn: $("submitPostBtn"),
+    postMessage: $("postMessage"),
+    postsList: $("postsList"),
+    postsEmpty: $("postsEmpty"),
+    postsCountChip: $("postsCountChip"),
+    loadMorePostsBtn: $("loadMorePostsBtn"),
+    photoGrid: $("photoGrid"),
+    photosEmpty: $("photosEmpty"),
+    photosCountChip: $("photosCountChip"),
+    descriptionText: $("descriptionText"),
+    detailsText: $("detailsText"),
+    rulesBox: $("rulesBox"),
+    rulesText: $("rulesText"),
+    aboutStatusChip: $("aboutStatusChip"),
+    ownerCard: $("ownerCard"),
+    membersList: $("membersList"),
+    membersEmpty: $("membersEmpty"),
+    membersCountChip: $("membersCountChip"),
+    inboxBadge: $("inboxBadge")
+  };
+
+  const tabButtons = document.querySelectorAll(".tab");
+  const tabPanels = {
+    posts: $("postsTab"),
+    photos: $("photosTab"),
+    about: $("aboutTab")
+  };
+
+  let currentUser = null;
+  let currentUserProfile = null;
+  let communityId = "";
+  let community = null;
+  let ownerProfile = null;
+  let userMember = null;
+  let joinRequestPending = false;
+  let pendingJoinRequestCount = 0;
+  let approvedAuthor = false;
+  let isOwner = false;
+  let isAdmin = false;
+  let canView = false;
+  let canPost = false;
+
+  let posts = [];
+  let allLoadedPosts = [];
+  let totalPostCount = 0;
+  let totalPhotoCount = 0;
+  let totalMemberCount = 0;
+  let postsVisibleLimit = POSTS_PAGE_SIZE;
+  let hasMorePosts = false;
+  let photosLoaded = false;
+  let aboutLoaded = false;
+  let realtimeChannels = [];
+  let refreshTimer = null;
+  let badgeRefreshTimer = null;
+  let previewUrl = "";
+  let hasPostLikesTable = false;
+
+  const ICON = {
+    check:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"></path>
+      </svg>
+    `,
+    lock:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+      </svg>
+    `,
+    share:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"></circle>
+        <circle cx="6" cy="12" r="3"></circle>
+        <circle cx="18" cy="19" r="3"></circle>
+        <path d="m8.6 13.5 6.8 4"></path>
+        <path d="m15.4 6.5-6.8 4"></path>
+      </svg>
+    `,
+    heart:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"></path>
+      </svg>
+    `,
+    comment:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+      </svg>
+    `,
+    edit:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+      </svg>
+    `,
+    pin:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 17v5"></path>
+        <path d="M9 7 7 3h10l-2 4"></path>
+        <path d="M7 14h10l-2-7H9Z"></path>
+      </svg>
+    `,
+    trash:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18"></path>
+        <path d="M8 6V4h8v2"></path>
+        <path d="M19 6l-1 14H6L5 6"></path>
+        <path d="M10 11v5"></path>
+        <path d="M14 11v5"></path>
+      </svg>
+    `,
+    report:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 9v4"></path>
+        <path d="M12 17h.01"></path>
+        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+      </svg>
+    `,
+    users:`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    `
+  };
+
+  function rememberNearbyTab() {
+    try {
+      localStorage.setItem("ownspace_nearby_tab", "communities");
+      localStorage.setItem("ownspace_nearby_last_tab", "communities");
+    } catch {}
+  }
+
+  function setTheme() {
+    const stored = localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
+    const theme = stored === "system"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : (stored === "dark" ? "dark" : "light");
+
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+
+  function escapeHtml(value) {
+    const div = document.createElement("div");
+    div.textContent = value == null ? "" : String(value);
+    return div.innerHTML;
+  }
+
+  function getField(obj, names, fallback = "") {
+    for (const name of names) {
+      const value = obj?.[name];
+      if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+    }
+    return fallback;
+  }
+
+  function getBool(obj, names, fallback = false) {
+    for (const name of names) {
+      const value = obj?.[name];
+      if (value === undefined || value === null || value === "") continue;
+      if (typeof value === "boolean") return value;
+      if (typeof value === "number") return value === 1;
+
+      const clean = String(value).trim().toLowerCase();
+      if (["true", "1", "yes", "y", "on"].includes(clean)) return true;
+      if (["false", "0", "no", "n", "off", "null", "undefined"].includes(clean)) return false;
+    }
+    return fallback;
+  }
+
+  function cleanKey(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  function toMillis(value) {
+    if (!value) return 0;
+    if (typeof value === "object" && typeof value.toDate === "function") return value.toDate().getTime();
+    if (typeof value === "object" && typeof value.seconds === "number") return value.seconds * 1000;
+    const ms = new Date(value).getTime();
+    return Number.isFinite(ms) ? ms : 0;
+  }
+
+  function formatDate(value) {
+    const ms = toMillis(value);
+    if (!ms) return "Just now";
+
+    const diff = Date.now() - ms;
+    const minute = 60000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diff < minute) return "Now";
+    if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+    if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+    if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
+
+    return new Date(ms).toLocaleDateString([], { month:"short", day:"numeric" });
+  }
+
+  function pretty(value) {
+    return String(value || "")
+      .replaceAll("_", " ")
+      .replaceAll("-", " ")
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function firstLetter(text, fallback = "C") {
+    return String(text || fallback).trim().charAt(0).toUpperCase() || fallback;
+  }
+
+  function setMsg(el, text = "", type = "") {
+    if (!el) return;
+    el.textContent = text;
+    el.className = `msg ${type}`;
+  }
+
+  function getErrorMessage(err) {
+    return String(err?.message || err?.details || err?.hint || err || "").trim();
+  }
+
+  function isDuplicateOrAlreadyError(err) {
+    const msg = getErrorMessage(err).toLowerCase();
+    return msg.includes("duplicate") || msg.includes("already") || msg.includes("unique") || msg.includes("23505");
+  }
+
+  function isPermissionError(err) {
+    const msg = getErrorMessage(err).toLowerCase();
+    return msg.includes("permission") || msg.includes("policy") || msg.includes("rls") || msg.includes("row-level") || msg.includes("42501");
+  }
+
+  function logWarn(label, err) {
+    console.warn(`[OwnSpace community] ${label}:`, err?.message || err);
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof CSS.escape === "function") return CSS.escape(String(value));
+    return String(value).replace(/["\\]/g, "\\$&");
+  }
+
+  function normalizeProfile(row = {}, fallbackUid = "") {
+    return {
+      uid: getField(row, ["uid", "id"], fallbackUid) || fallbackUid,
+      displayName: getField(row, ["display_name", "displayName", "full_name", "name", "username", "email"], "Member") || "Member",
+      username: getField(row, ["username", "handle"]),
+      photoURL: getField(row, ["photo_url", "photoURL", "avatar_url", "avatarUrl"]),
+      bio: getField(row, ["bio", "about", "description"]),
+      verified: getBool(row, ["is_verified", "verified"]),
+      isAdmin: getBool(row, ["is_admin", "isAdmin"]) || cleanKey(row?.role) === "admin"
     };
+  }
 
-    const tabButtons = document.querySelectorAll(".tab");
-    const tabPanels = {
-      posts: $("postsTab"),
-      photos: $("photosTab"),
-      about: $("aboutTab")
+  function normalizeCommunity(row = {}) {
+    const privacy = cleanKey(getField(row, ["privacy", "visibility", "community_privacy"], "public") || "public");
+    const postingMode = cleanKey(getField(row, ["posting_mode", "post_permission"], "members") || "members");
+    const status = cleanKey(getField(row, ["status"], "active"));
+
+    return {
+      id: getField(row, ["id"]),
+      name: getField(row, ["name", "title", "community_name"], "Community") || "Community",
+      category: getField(row, ["category", "topic"], "General") || "General",
+      description: getField(row, ["description", "desc", "about"]),
+      rules: getField(row, ["rules", "community_rules"]),
+      privacy,
+      postingMode,
+      status,
+      imageURL: getField(row, ["image_url", "cover_url", "photo_url", "media_url"]),
+      ownerId: getField(row, ["owner_id", "creator_id", "created_by", "user_id", "uid"]),
+      ownerName: getField(row, ["owner_name", "creator_name", "display_name"], "Member"),
+      featured: getBool(row, ["featured", "is_featured"]),
+      pinned: getBool(row, ["pinned", "is_pinned"]),
+      hidden: getBool(row, ["hidden", "hidden_by_admin", "soft_deleted"]) || ["deleted", "removed", "hidden"].includes(status),
+      memberCount: Number(row.member_count ?? row.members_count ?? 0) || 0,
+      createdAt: row.created_at ?? row.createdAt ?? null
     };
+  }
 
-    let currentUser = null;
-    let currentUserProfile = null;
-    let communityId = "";
-    let community = null;
-    let ownerProfile = null;
-    let userMember = null;
-    let joinRequestPending = false;
-    let pendingJoinRequestCount = 0;
-    let approvedAuthor = false;
-    let isOwner = false;
-    let isAdmin = false;
-    let canView = false;
-    let canPost = false;
+  function normalizeMember(row = {}) {
+    const status = cleanKey(getField(row, ["status"], "approved") || "approved");
+    const role = cleanKey(getField(row, ["role"], "member") || "member");
 
-    let posts = [];
-    let allLoadedPosts = [];
-    let totalPostCount = 0;
-    let totalPhotoCount = 0;
-    let totalMemberCount = 0;
-    let postsVisibleLimit = POSTS_PAGE_SIZE;
-    let hasMorePosts = false;
-    let photosLoaded = false;
-    let aboutLoaded = false;
-    let realtimeChannels = [];
-    let refreshTimer = null;
-    let badgeRefreshTimer = null;
-    let previewUrl = "";
-    let hasPostLikesTable = false;
-
-    const ICON = {
-      check:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 6 9 17l-5-5"></path>
-        </svg>
-      `,
-      lock:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="11" width="16" height="10" rx="2"></rect>
-          <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
-        </svg>
-      `,
-      share:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="18" cy="5" r="3"></circle>
-          <circle cx="6" cy="12" r="3"></circle>
-          <circle cx="18" cy="19" r="3"></circle>
-          <path d="m8.6 13.5 6.8 4"></path>
-          <path d="m15.4 6.5-6.8 4"></path>
-        </svg>
-      `,
-      heart:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6z"></path>
-        </svg>
-      `,
-      comment:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-        </svg>
-      `,
-      edit:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20h9"></path>
-          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-        </svg>
-      `,
-      pin:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 17v5"></path>
-          <path d="M9 7 7 3h10l-2 4"></path>
-          <path d="M7 14h10l-2-7H9Z"></path>
-        </svg>
-      `,
-      trash:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18"></path>
-          <path d="M8 6V4h8v2"></path>
-          <path d="M19 6l-1 14H6L5 6"></path>
-          <path d="M10 11v5"></path>
-          <path d="M14 11v5"></path>
-        </svg>
-      `,
-      report:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 9v4"></path>
-          <path d="M12 17h.01"></path>
-          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
-        </svg>
-      `,
-      users:`
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      `
+    return {
+      id: getField(row, ["id"]),
+      communityId: getField(row, ["community_id"]),
+      userId: getField(row, ["user_id"]),
+      role,
+      status,
+      approved: ["approved", "active", "member", "owner", "admin", "moderator", "mod"].includes(status),
+      approvedAuthor: getBool(row, ["approved_author", "can_post", "is_author"]),
+      joinedAt: row.joined_at ?? row.created_at ?? null
     };
+  }
 
-    function rememberNearbyTab() {
-      try {
-        localStorage.setItem("ownspace_nearby_tab", "communities");
-        localStorage.setItem("ownspace_nearby_last_tab", "communities");
-      } catch {}
+  function normalizePost(row = {}) {
+    const status = cleanKey(getField(row, ["status"], "active"));
+    const createdAt = row.created_at ?? row.createdAt ?? row.timestamp ?? null;
+
+    return {
+      id: getField(row, ["id"]),
+      sourceTable: T.posts,
+      communityId: getField(row, ["community_id"]),
+      authorId: getField(row, ["user_id", "author_id", "created_by", "owner_id"]),
+      authorName: getField(row, ["display_name", "author_name", "name"], "Member"),
+      authorUsername: getField(row, ["username", "author_username"]),
+      title: getField(row, ["title", "heading"]),
+      text: getField(row, ["text", "body", "content", "caption", "description"]),
+      imageURL: getField(row, ["image_url", "photo_url", "media_url"]),
+      type: getField(row, ["type", "post_type"], "post") || "post",
+      audience: getField(row, ["audience"], "community") || "community",
+      pinned: getBool(row, ["pinned", "is_pinned"]),
+      featured: getBool(row, ["featured", "is_featured"]),
+      hidden: getBool(row, ["hidden", "hidden_by_admin", "soft_deleted"]) || ["deleted", "removed", "hidden"].includes(status),
+      createdAt,
+      createdAtMs: toMillis(createdAt)
+    };
+  }
+
+  function postDomKey(post) {
+    return `${post.sourceTable || T.posts}__${post.id || ""}`;
+  }
+
+  function buildPostUrl(post, hash = "") {
+    const url = new URL("post.html", window.location.href);
+    url.searchParams.set("postId", post.id);
+    url.searchParams.set("source", post.sourceTable || T.posts);
+    if (hash) url.hash = hash.replace(/^#/, "");
+    return url.toString();
+  }
+
+  function buildShareUrl() {
+    const url = new URL(window.location.href);
+    url.pathname = url.pathname.replace(/[^/]*$/, "community.html");
+    url.searchParams.set("communityId", communityId);
+    return url.toString();
+  }
+
+  async function selectSingle(table, queryBuilder, label) {
+    const { data, error } = await queryBuilder(supabase.from(table).select("*")).maybeSingle();
+    if (error) {
+      logWarn(label || `select ${table}`, error);
+      return null;
+    }
+    return data || null;
+  }
+
+  async function loadCurrentUserProfile() {
+    const row = await selectSingle(T.profiles, q => q.eq("uid", currentUser.id), "load current profile");
+    currentUserProfile = normalizeProfile(row || {
+      uid: currentUser.id,
+      display_name: currentUser.user_metadata?.display_name || currentUser.email || "Member",
+      username: currentUser.user_metadata?.username || "",
+      photo_url: currentUser.user_metadata?.photo_url || ""
+    }, currentUser.id);
+  }
+
+  async function fetchProfiles(uids) {
+    const clean = [...new Set((uids || []).filter(Boolean))];
+    const map = new Map();
+    if (!clean.length) return map;
+
+    try {
+      const { data, error } = await supabase
+        .from(T.profiles)
+        .select("*")
+        .in("uid", clean);
+
+      if (error) throw error;
+
+      (data || []).forEach(row => {
+        const profile = normalizeProfile(row, row.uid);
+        if (profile.uid) map.set(profile.uid, profile);
+      });
+    } catch (err) {
+      logWarn("fetch public_profiles", err);
     }
 
-    rememberNearbyTab();
-
-    function setTheme() {
-      const stored = localStorage.getItem("osTheme") || localStorage.getItem("bwTheme") || "light";
-      const theme = stored === "system"
-        ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-        : (stored === "dark" ? "dark" : "light");
-
-      document.documentElement.setAttribute("data-theme", theme);
-    }
-
-    setTheme();
-
-    window.addEventListener("storage", e => {
-      if (e.key === "osTheme" || e.key === "bwTheme") setTheme();
-
-      if (
-        e.key === "ownspace_badges_refresh" ||
-        e.key === "ownspace_inbox_refresh" ||
-        e.key === "ownspace_chat_read_refresh"
-      ) {
-        scheduleBadgeRefresh(120);
-      }
-
-      if (
-        e.key === "ownspace_communities_refresh" ||
-        e.key === "ownspace_nearby_refresh" ||
-        e.key === "ownspace_join_requests_refresh"
-      ) {
-        scheduleRefresh(180);
-      }
+    clean.forEach(uid => {
+      if (!map.has(uid)) map.set(uid, normalizeProfile({ uid }, uid));
     });
 
-    function escapeHtml(value) {
-      const div = document.createElement("div");
-      div.textContent = value == null ? "" : String(value);
-      return div.innerHTML;
+    return map;
+  }
+
+  async function loadCommunity() {
+    const { data, error } = await supabase
+      .from(T.communities)
+      .select("*")
+      .eq("id", communityId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+    return normalizeCommunity(data);
+  }
+
+  async function loadOwnerProfile() {
+    if (!community?.ownerId) {
+      ownerProfile = normalizeProfile({ display_name: community?.ownerName || "Member" });
+      return;
     }
 
-    function getField(obj, names, fallback = "") {
-      for (const name of names) {
-        const value = obj?.[name];
-        if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
-      }
+    const profiles = await fetchProfiles([community.ownerId]);
+    ownerProfile = profiles.get(community.ownerId) || normalizeProfile({ uid: community.ownerId, display_name: community.ownerName }, community.ownerId);
+  }
 
-      return fallback;
+  async function loadCurrentMembership() {
+    userMember = null;
+
+    try {
+      const { data, error } = await supabase
+        .from(T.members)
+        .select("*")
+        .eq("community_id", communityId)
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) userMember = normalizeMember(data);
+    } catch (err) {
+      logWarn("load membership", err);
     }
+  }
 
-    function cleanKey(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "");
+  async function loadJoinRequestState() {
+    joinRequestPending = false;
+
+    try {
+      const { data, error } = await supabase
+        .from(T.requests)
+        .select("status")
+        .eq("community_id", communityId)
+        .eq("requester_id", currentUser.id)
+        .order("created_at", { ascending:false })
+        .limit(1);
+
+      if (error) throw error;
+
+      const status = cleanKey(data?.[0]?.status || "");
+      joinRequestPending = ["pending", "requested"].includes(status);
+    } catch (err) {
+      logWarn("load join request", err);
     }
-
-    function getBool(obj, names, fallback = false) {
-      for (const name of names) {
-        const value = obj?.[name];
-
-        if (value === undefined || value === null || value === "") continue;
-        if (typeof value === "boolean") return value;
-        if (typeof value === "number") return value === 1;
-
-        const clean = String(value).trim().toLowerCase();
-
-        if (["true", "1", "yes", "y", "on"].includes(clean)) return true;
-        if (["false", "0", "no", "n", "off", "null", "undefined"].includes(clean)) return false;
-
-        return fallback;
-      }
-
-      return fallback;
-    }
-
-    function nowIso() {
-      return new Date().toISOString();
-    }
-
-    function toMillis(value) {
-      if (!value) return 0;
-      if (typeof value === "object" && typeof value.toDate === "function") return value.toDate().getTime();
-      if (typeof value === "object" && typeof value.seconds === "number") return value.seconds * 1000;
-
-      const ms = new Date(value).getTime();
-      return Number.isFinite(ms) ? ms : 0;
-    }
-
-    function formatDate(value) {
-      const ms = toMillis(value);
-      if (!ms) return "Just now";
-
-      const diff = Date.now() - ms;
-      const minute = 60000;
-      const hour = 60 * minute;
-      const day = 24 * hour;
-
-      if (diff < minute) return "Now";
-      if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
-      if (diff < day) return `${Math.floor(diff / hour)}h ago`;
-      if (diff < day * 7) return `${Math.floor(diff / day)}d ago`;
-
-      return new Date(ms).toLocaleDateString([], { month:"short", day:"numeric" });
-    }
-
-    function pretty(value) {
-      return String(value || "")
-        .replaceAll("_", " ")
-        .replaceAll("-", " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    function firstLetter(text, fallback = "C") {
-      return String(text || fallback).trim().charAt(0).toUpperCase() || fallback;
-    }
-
-    function setMsg(el, text = "", type = "") {
-      el.textContent = text;
-      el.className = `msg ${type}`;
-    }
-
-    function isUuid(value) {
-      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(String(value || "").trim());
-    }
-
-    function isSchemaError(error) {
-      const msg = String(error?.message || "").toLowerCase();
-
-      return (
-        msg.includes("column") ||
-        msg.includes("schema cache") ||
-        msg.includes("does not exist") ||
-        msg.includes("could not find") ||
-        msg.includes("relation")
-      );
-    }
-
-    function normalizeProfile(row = {}, fallbackUid = "") {
-      return {
-        uid: getField(row, ["uid", "id", "user_id", "userId"], fallbackUid) || fallbackUid,
-        displayName: getField(row, ["display_name", "displayName", "full_name", "fullName", "name", "username", "email"], "Member") || "Member",
-        username: getField(row, ["username", "handle", "user_name", "userName"]),
-        photoURL: getField(row, ["photo_url", "photoURL", "avatar_url", "avatarUrl", "avatar", "user_photo_url", "userPhotoURL"]),
-        bio: getField(row, ["bio", "about", "description"]),
-        verified: getBool(row, ["verified", "is_verified", "isVerified"]),
-        isAdmin: getBool(row, ["is_admin", "isAdmin"]) || getField(row, ["role"]) === "admin"
-      };
-    }
-
-    function normalizeCommunity(row = {}, fallbackId = "") {
-      const privacy = String(getField(row, ["privacy", "visibility", "community_privacy", "communityPrivacy"], "public") || "public").toLowerCase();
-      const postingMode = String(getField(row, ["posting_mode", "postingMode", "post_permission", "postPermission"], "members") || "members").toLowerCase();
-
-      return {
-        id: getField(row, ["id"], fallbackId) || fallbackId,
-        name: getField(row, ["name", "title", "community_name", "communityName"], "Community") || "Community",
-        category: getField(row, ["category", "topic"], "General") || "General",
-        description: getField(row, ["description", "desc", "about"]),
-        rules: getField(row, ["rules", "community_rules", "communityRules"]),
-        privacy,
-        postingMode,
-        imageURL: getField(row, ["image_url", "imageURL", "imageUrl", "cover_url", "coverURL", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        ownerId: getField(row, ["owner_id", "ownerId", "creator_id", "creatorId", "created_by", "createdBy", "user_id", "userId", "uid"]),
-        ownerName: getField(row, ["owner_name", "ownerName", "creator_name", "creatorName", "display_name", "displayName"], "Member"),
-        featured: getBool(row, ["featured", "is_featured", "isFeatured"]),
-        pinned: getBool(row, ["pinned", "is_pinned", "isPinned"]),
-        hidden: getBool(row, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || String(row.status || "").toLowerCase() === "deleted",
-        memberCount: Number(row.member_count ?? row.memberCount ?? row.members_count ?? row.membersCount ?? 0) || 0,
-        createdAt: row.created_at ?? row.createdAt ?? null
-      };
-    }
-
-    function normalizeMember(row = {}) {
-      const status = String(getField(row, ["status"], "approved") || "approved").toLowerCase();
-      const role = String(getField(row, ["role"], "member") || "member").toLowerCase();
-
-      return {
-        id: getField(row, ["id"]),
-        communityId: getField(row, ["community_id", "communityId", "group_id", "groupId"]),
-        userId: getField(row, ["user_id", "userId", "uid", "member_id", "memberId"]),
-        role,
-        status,
-        approved: ["approved", "active", "member", "owner", "admin", "moderator", "mod", ""].includes(status),
-        approvedAuthor: getBool(row, ["approved_author", "approvedAuthor", "can_post", "canPost", "is_author", "isAuthor"]),
-        joinedAt: row.joined_at ?? row.joinedAt ?? row.created_at ?? row.createdAt ?? null
-      };
-    }
-
-    function normalizePost(row = {}, sourceTable = "posts") {
-      const createdAt = row.created_at ?? row.createdAt ?? row.timestamp ?? null;
-
-      return {
-        id: getField(row, ["id"]),
-        sourceTable,
-        communityId: getField(row, ["community_id", "communityId", "group_id", "groupId"]),
-        authorId: getField(row, ["author_id", "authorId", "user_id", "userId", "uid", "created_by", "createdBy", "owner_id", "ownerId"]),
-        authorName: getField(row, ["author_name", "authorName", "display_name", "displayName", "name"], "Member"),
-        authorUsername: getField(row, ["username", "author_username", "authorUsername"]),
-        title: getField(row, ["title", "heading"]),
-        text: getField(row, ["text", "body", "content", "caption", "description"]),
-        imageURL: getField(row, ["image_url", "imageURL", "imageUrl", "photo_url", "photoURL", "media_url", "mediaUrl"]),
-        type: getField(row, ["type", "post_type", "postType"], sourceTable === "community_posts" ? "community" : "post") || "post",
-        audience: getField(row, ["audience"], "community") || "community",
-        pinned: getBool(row, ["pinned", "is_pinned", "isPinned"]),
-        featured: getBool(row, ["featured", "is_featured", "isFeatured"]),
-        hidden: getBool(row, ["hidden", "hidden_by_admin", "hiddenByAdmin", "soft_deleted", "softDeleted"]) || ["deleted", "removed", "hidden"].includes(String(row.status || "").toLowerCase()),
-        createdAt,
-        createdAtMs: toMillis(createdAt)
-      };
-    }
-
-    function buildPostUrl(post, hash = "") {
-      const url = new URL("post.html", window.location.href);
-      url.searchParams.set("postId", post.id);
-
-      if (post.sourceTable) url.searchParams.set("source", post.sourceTable);
-      if (hash) url.hash = hash.replace(/^#/, "");
-
-      return url.toString();
-    }
-
-    async function maybeOne(table, column, value) {
-      try {
-        const { data, error } = await supabase.from(table).select("*").eq(column, value).maybeSingle();
-        if (!error && data) return data;
-      } catch {}
-
-      return null;
-    }
-
-    async function findCommunity(id) {
-      for (const table of ["communities", "community"]) {
-        const row = await maybeOne(table, "id", id);
-        if (row) return normalizeCommunity({ ...row, id: row.id || id }, row.id || id);
-      }
-
-      return null;
-    }
-
-    async function fetchProfiles(uids) {
-      const clean = [...new Set((uids || []).filter(Boolean))];
-      const map = new Map();
-
-      if (!clean.length) return map;
-
-      const attempts = [
-        { table:"public_profiles", col:"uid" },
-        { table:"public_profiles", col:"id" },
-        { table:"public_profiles", col:"user_id" },
-        { table:"users", col:"uid" },
-        { table:"users", col:"id" },
-        { table:"users", col:"user_id" }
-      ];
-
-      for (const attempt of attempts) {
-        try {
-          const missing = clean.filter(uid => !map.has(uid));
-          if (!missing.length) break;
-
-          const { data, error } = await supabase.from(attempt.table).select("*").in(attempt.col, missing);
-
-          if (!error && Array.isArray(data)) {
-            data.forEach(row => {
-              const profile = normalizeProfile(row, row?.[attempt.col]);
-              if (profile.uid) map.set(profile.uid, profile);
-            });
-          }
-        } catch {}
-      }
-
-      clean.forEach(uid => {
-        if (!map.has(uid)) map.set(uid, normalizeProfile({ uid }, uid));
-      });
-
-      return map;
-    }
-
-    async function loadCurrentUserProfile() {
-      const profiles = await fetchProfiles([currentUser.id]);
-      currentUserProfile = profiles.get(currentUser.id) || normalizeProfile({ uid: currentUser.id }, currentUser.id);
-    }
-
-    async function loadOwnerProfile() {
-      const profiles = await fetchProfiles([community.ownerId]);
-      ownerProfile = profiles.get(community.ownerId) || normalizeProfile({ uid: community.ownerId, display_name: community.ownerName }, community.ownerId);
-    }
-
-    async function countForTableByCommunity(table, extraBuilder = null) {
-      for (const col of COMMUNITY_COLUMNS) {
-        try {
-          let q = supabase.from(table).select("id", { count:"exact", head:true }).eq(col, communityId);
-
-          if (extraBuilder) q = extraBuilder(q, table, col);
-
-          const { count, error } = await q;
-
-          if (!error) return count || 0;
-          if (error && !isSchemaError(error)) console.warn("Count failed:", table, col, error.message || error);
-        } catch {}
-      }
-
-      return null;
-    }
-
-    async function countAcrossPostTables(extraBuilder = null) {
-      let total = 0;
-      let foundAny = false;
-
-      for (const table of POST_TABLES) {
-        const count = await countForTableByCommunity(table, extraBuilder);
-
-        if (count !== null) {
-          total += count;
-          foundAny = true;
-        }
-      }
-
-      return foundAny ? total : null;
-    }
-
-    async function countMembersSafe() {
-      const attempts = [
-        { table:"community_members", col:"community_id" },
-        { table:"community_members", col:"communityId" },
-        { table:"communities_members", col:"community_id" },
-        { table:"communityMembers", col:"communityId" }
-      ];
-
-      for (const a of attempts) {
-        try {
-          const { count, error } = await supabase
-            .from(a.table)
-            .select("id", { count:"exact", head:true })
-            .eq(a.col, communityId);
-
-          if (!error) return count || 0;
-        } catch {}
-      }
-
-      return null;
-    }
-
-    async function countPendingJoinRequestsSafe() {
-      if (!communityId) return 0;
-
-      const attempts = [
-        { table:"community_join_requests", c:"community_id", s:"status" },
-        { table:"community_join_requests", c:"communityId", s:"status" },
-        { table:"community_requests", c:"community_id", s:"status" },
-        { table:"join_requests", c:"community_id", s:"status" }
-      ];
-
-      for (const a of attempts) {
-        try {
-          const { count, error } = await supabase
-            .from(a.table)
-            .select("id", { count:"exact", head:true })
-            .eq(a.c, communityId)
-            .eq(a.s, "pending");
-
-          if (!error) return count || 0;
-        } catch {}
-      }
-
-      for (const a of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from(a.table)
-            .select("*")
-            .eq(a.c, communityId);
-
-          if (!error && Array.isArray(data)) {
-            return data.filter(row => {
-              const status = String(row.status || "pending").toLowerCase();
-              return ["pending", "requested"].includes(status);
-            }).length;
-          }
-        } catch {}
-      }
-
-      return 0;
-    }
-
-    async function loadCounts() {
-      const postCount = await countAcrossPostTables();
-      totalPostCount = postCount !== null ? postCount : allLoadedPosts.length;
-
-      let photoCount = await countAcrossPostTables(q => q.not("image_url", "is", null));
-      if (photoCount === null) photoCount = await countAcrossPostTables(q => q.not("imageURL", "is", null));
-      totalPhotoCount = photoCount !== null ? photoCount : allLoadedPosts.filter(p => p.imageURL).length;
-
-      const memberCount = await countMembersSafe();
-      totalMemberCount = memberCount !== null ? memberCount : Math.max(community.memberCount || 0, userMember?.approved ? 1 : 0);
-
-      if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
-      else pendingJoinRequestCount = 0;
-
-      els.postsStat.textContent = String(totalPostCount);
-      els.photosStat.textContent = String(totalPhotoCount);
-      els.membersStat.textContent = String(totalMemberCount);
-      els.postsCountChip.textContent = `${totalPostCount} post${totalPostCount === 1 ? "" : "s"}`;
-      els.photosCountChip.textContent = `${totalPhotoCount} photo${totalPhotoCount === 1 ? "" : "s"}`;
-      els.membersCountChip.textContent = `${totalMemberCount} member${totalMemberCount === 1 ? "" : "s"}`;
-    }
-
-    async function loadCurrentMembership() {
-      userMember = null;
-
-      const attempts = [
-        { table:"community_members", c:"community_id", u:"user_id" },
-        { table:"community_members", c:"communityId", u:"userId" },
-        { table:"communities_members", c:"community_id", u:"user_id" },
-        { table:"communityMembers", c:"communityId", u:"userId" }
-      ];
-
-      for (const a of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from(a.table)
-            .select("*")
-            .eq(a.c, communityId)
-            .eq(a.u, currentUser.id)
-            .limit(1);
-
-          if (!error && data && data.length) {
-            userMember = normalizeMember(data[0]);
-            return;
-          }
-        } catch {}
-      }
-    }
-
-    async function loadJoinRequestState() {
-      joinRequestPending = false;
-
-      const attempts = [
-        { table:"community_join_requests", c:"community_id", u:"requester_id" },
-        { table:"community_join_requests", c:"community_id", u:"user_id" },
-        { table:"community_requests", c:"community_id", u:"requester_id" },
-        { table:"join_requests", c:"community_id", u:"user_id" }
-      ];
-
-      for (const a of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from(a.table)
-            .select("status")
-            .eq(a.c, communityId)
-            .eq(a.u, currentUser.id)
-            .limit(1);
-
-          if (!error && data && data.length) {
-            const status = String(data[0].status || "pending").toLowerCase();
-            joinRequestPending = ["pending", "requested"].includes(status);
-            return;
-          }
-        } catch {}
-      }
-    }
-
-    async function loadApprovedAuthorState() {
-      approvedAuthor = !!userMember?.approvedAuthor;
-      if (approvedAuthor) return;
-
-      const attempts = [
-        { table:"community_authors", c:"community_id", u:"user_id" },
-        { table:"community_approved_authors", c:"community_id", u:"user_id" },
-        { table:"approved_authors", c:"community_id", u:"user_id" }
-      ];
-
-      for (const a of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from(a.table)
-            .select("status")
-            .eq(a.c, communityId)
-            .eq(a.u, currentUser.id)
-            .limit(1);
-
-          if (!error && data && data.length) {
-            const status = String(data[0].status || "approved").toLowerCase();
-            approvedAuthor = ["approved", "active"].includes(status);
-            return;
-          }
-        } catch {}
-      }
-    }
-
-    async function loadAdminState() {
-      isAdmin = false;
-
-      const uid = currentUser?.id || "";
-      const email = currentUser?.email || "";
-
-      const attempts = [
-        { col:"uid", value:uid },
-        { col:"user_id", value:uid },
-        { col:"id", value:uid },
-        { col:"email", value:email }
-      ];
-
-      for (const attempt of attempts) {
-        if (!attempt.value) continue;
-
-        try {
-          const { data, error } = await supabase
-            .from("admins")
-            .select("id")
-            .eq(attempt.col, attempt.value)
-            .limit(1);
-
-          if (!error && Array.isArray(data) && data.length) {
-            isAdmin = true;
-            return;
-          }
-        } catch {}
-      }
-
-      const appRole = cleanKey(currentUser?.app_metadata?.role || "");
-
-      isAdmin = appRole === "admin";
-    }
-
-    function evaluateAccess() {
-      isOwner = !!community.ownerId && String(community.ownerId) === String(currentUser.id);
-      const memberApproved = !!userMember?.approved;
-      const role = String(userMember?.role || "").toLowerCase();
-      const privileged = ["owner", "admin", "moderator", "mod"].includes(role);
-      const privacy = community.privacy || "public";
-
-      canView = !community.hidden && (["public", "open"].includes(privacy) || isOwner || isAdmin || memberApproved);
-
-      if (["private", "request", "approval", "request_only"].includes(privacy) && !isOwner && !isAdmin && !memberApproved) {
-        canView = false;
-      }
-
-      if (!canView) {
-        canPost = false;
+  }
+
+  async function loadApprovedAuthorState() {
+    approvedAuthor = !!userMember?.approvedAuthor;
+  }
+
+  async function loadAdminState() {
+    isAdmin = cleanKey(currentUser?.app_metadata?.role || "") === "admin";
+    if (isAdmin) return;
+
+    try {
+      const { data, error } = await supabase
+        .from(T.admins)
+        .select("id")
+        .eq("uid", currentUser.id)
+        .limit(1);
+
+      if (!error && data?.length) {
+        isAdmin = true;
         return;
       }
-
-      if (isOwner || isAdmin || privileged) {
-        canPost = true;
-        return;
-      }
-
-      const mode = community.postingMode || "members";
-
-      if (["public", "everyone"].includes(mode)) canPost = true;
-      else if (["members", "member"].includes(mode)) canPost = memberApproved;
-      else if (["approved", "approved_authors", "authors"].includes(mode)) canPost = memberApproved && approvedAuthor;
-      else if (["owner", "admin", "owner_only", "admins"].includes(mode)) canPost = false;
-      else canPost = false;
+    } catch (err) {
+      logWarn("admin uid check", err);
     }
 
-    async function fetchPostsFromTable(table, limit) {
-      const orderColumns = ["created_at", "createdAt", "timestamp"];
+    try {
+      const { data, error } = await supabase
+        .from(T.admins)
+        .select("id")
+        .eq("email", currentUser.email || "")
+        .limit(1);
 
-      for (const col of COMMUNITY_COLUMNS) {
-        for (const orderCol of orderColumns) {
-          try {
-            const { data, error } = await supabase
-              .from(table)
-              .select("*")
-              .eq(col, communityId)
-              .order(orderCol, { ascending:false })
-              .limit(limit);
+      if (!error && data?.length) isAdmin = true;
+    } catch (err) {
+      logWarn("admin email check", err);
+    }
+  }
 
-            if (!error && Array.isArray(data)) {
-              return data.map(row => normalizePost(row, table)).filter(p => p.id && !p.hidden);
-            }
-          } catch {}
-        }
-      }
+  function evaluateAccess() {
+    isOwner = !!community?.ownerId && String(community.ownerId) === String(currentUser.id);
+    const memberApproved = !!userMember?.approved;
+    const role = cleanKey(userMember?.role || "");
+    const privileged = ["owner", "admin", "moderator", "mod"].includes(role);
+    const privacy = cleanKey(community?.privacy || "public");
 
-      return [];
+    canView = !community?.hidden && (["public", "open", ""].includes(privacy) || isOwner || isAdmin || memberApproved);
+
+    if (["private", "request", "approval", "request_only"].includes(privacy) && !isOwner && !isAdmin && !memberApproved) {
+      canView = false;
     }
 
-    function dedupePosts(list) {
-      const byKey = new Map();
-
-      list.forEach(post => {
-        const key = `${post.sourceTable}:${post.id}`;
-
-        if (!post.id || byKey.has(key)) return;
-
-        byKey.set(key, post);
-      });
-
-      return [...byKey.values()].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (b.pinned && !a.pinned) return 1;
-        if (a.featured && !b.featured) return -1;
-        if (b.featured && !a.featured) return 1;
-        return b.createdAtMs - a.createdAtMs;
-      });
+    if (!canView) {
+      canPost = false;
+      return;
     }
 
-    async function fetchMergedPosts(limit) {
-      const fetchLimit = Math.max(limit, POSTS_PAGE_SIZE) + 8;
-      const batches = await Promise.all(POST_TABLES.map(table => fetchPostsFromTable(table, fetchLimit)));
-      const merged = dedupePosts(batches.flat());
+    if (isOwner || isAdmin || privileged) {
+      canPost = true;
+      return;
+    }
 
-      const authorIds = merged.map(p => p.authorId).filter(Boolean);
+    const mode = cleanKey(community?.postingMode || "members");
+
+    if (["public", "everyone"].includes(mode)) canPost = true;
+    else if (["members", "member", ""].includes(mode)) canPost = memberApproved;
+    else if (["approved", "approved_authors", "authors"].includes(mode)) canPost = memberApproved && approvedAuthor;
+    else canPost = false;
+  }
+
+  async function countRows(table, builder, label) {
+    try {
+      const { count, error } = await builder(supabase.from(table).select("id", { count:"exact", head:true }));
+      if (error) throw error;
+      return count || 0;
+    } catch (err) {
+      logWarn(label || `count ${table}`, err);
+      return null;
+    }
+  }
+
+  async function countMembersSafe() {
+    const approved = await countRows(T.members, q => q.eq("community_id", communityId).eq("status", "approved"), "count approved members");
+    if (approved !== null) return approved;
+
+    const total = await countRows(T.members, q => q.eq("community_id", communityId), "count members fallback");
+    return total;
+  }
+
+  async function countPendingJoinRequestsSafe() {
+    if (!communityId) return 0;
+
+    const count = await countRows(T.requests, q => q.eq("community_id", communityId).eq("status", "pending"), "count pending join requests");
+    return count || 0;
+  }
+
+  async function loadCounts() {
+    const [postCount, photoCount, memberCount] = await Promise.all([
+      countRows(T.posts, q => q.eq("community_id", communityId), "count community posts"),
+      countRows(T.posts, q => q.eq("community_id", communityId).not("image_url", "is", null), "count community photos"),
+      countMembersSafe()
+    ]);
+
+    totalPostCount = postCount !== null ? postCount : allLoadedPosts.length;
+    totalPhotoCount = photoCount !== null ? photoCount : allLoadedPosts.filter(p => p.imageURL).length;
+    totalMemberCount = memberCount !== null ? memberCount : Math.max(community?.memberCount || 0, userMember?.approved ? 1 : 0);
+
+    if (isOwner || isAdmin) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+    else pendingJoinRequestCount = 0;
+
+    els.postsStat.textContent = String(totalPostCount);
+    els.photosStat.textContent = String(totalPhotoCount);
+    els.membersStat.textContent = String(totalMemberCount);
+    els.postsCountChip.textContent = `${totalPostCount} post${totalPostCount === 1 ? "" : "s"}`;
+    els.photosCountChip.textContent = `${totalPhotoCount} photo${totalPhotoCount === 1 ? "" : "s"}`;
+    els.membersCountChip.textContent = `${totalMemberCount} member${totalMemberCount === 1 ? "" : "s"}`;
+  }
+
+  async function fetchCommunityPosts(limit) {
+    try {
+      const { data, error } = await supabase
+        .from(T.posts)
+        .select("*")
+        .eq("community_id", communityId)
+        .order("created_at", { ascending:false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      const normalized = (data || [])
+        .map(normalizePost)
+        .filter(p => p.id && !p.hidden);
+
+      const authorIds = normalized.map(p => p.authorId).filter(Boolean);
       const profileMap = await fetchProfiles(authorIds);
 
-      return merged.map(post => ({
+      return normalized.map(post => ({
         ...post,
         profile: profileMap.get(post.authorId) || normalizeProfile({ uid: post.authorId, display_name: post.authorName }, post.authorId)
       }));
+    } catch (err) {
+      logWarn("fetch community posts", err);
+      throw err;
+    }
+  }
+
+  async function loadPostsPage(reset = false) {
+    if (reset) postsVisibleLimit = POSTS_PAGE_SIZE;
+
+    allLoadedPosts = await fetchCommunityPosts(postsVisibleLimit + 1);
+    posts = allLoadedPosts.slice(0, postsVisibleLimit);
+    hasMorePosts = allLoadedPosts.length > postsVisibleLimit || (totalPostCount || 0) > posts.length;
+
+    renderPosts();
+  }
+
+  async function loadMorePosts() {
+    postsVisibleLimit += POSTS_PAGE_SIZE;
+    await loadPostsPage(false);
+  }
+
+  async function loadPhotos() {
+    photosLoaded = true;
+    els.photoGrid.innerHTML = "";
+    els.photosEmpty.classList.add("hidden");
+    els.photoGrid.classList.remove("hidden");
+
+    let rows = [];
+
+    try {
+      const { data, error } = await supabase
+        .from(T.posts)
+        .select("*")
+        .eq("community_id", communityId)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending:false })
+        .limit(PHOTOS_LIMIT);
+
+      if (error) throw error;
+      rows = (data || []).map(normalizePost).filter(p => p.id && p.imageURL && !p.hidden);
+    } catch (err) {
+      logWarn("load photos", err);
+      rows = allLoadedPosts.filter(p => p.imageURL).slice(0, PHOTOS_LIMIT);
     }
 
-    async function loadPostsPage(reset = false) {
-      if (reset) postsVisibleLimit = POSTS_PAGE_SIZE;
+    renderPhotos(rows);
+  }
 
-      allLoadedPosts = await fetchMergedPosts(postsVisibleLimit);
-      posts = allLoadedPosts.slice(0, postsVisibleLimit);
-      hasMorePosts = (totalPostCount || allLoadedPosts.length) > posts.length;
+  async function loadAboutData() {
+    aboutLoaded = true;
+    renderAboutBase();
+    await loadMembersList();
+  }
 
-      renderPosts();
+  async function loadMembersList() {
+    els.membersList.innerHTML = "";
+    els.membersEmpty.classList.add("hidden");
+
+    let rows = [];
+
+    try {
+      const { data, error } = await supabase
+        .from(T.members)
+        .select("*")
+        .eq("community_id", communityId)
+        .eq("status", "approved")
+        .order("joined_at", { ascending:false })
+        .limit(MEMBERS_LIMIT);
+
+      if (error) throw error;
+      rows = (data || []).map(normalizeMember).filter(m => m.userId && m.approved);
+    } catch (err) {
+      logWarn("load members list", err);
     }
 
-    async function loadMorePosts() {
-      postsVisibleLimit += POSTS_PAGE_SIZE;
-      await loadPostsPage(false);
+    if (community?.ownerId && !rows.some(m => m.userId === community.ownerId)) {
+      rows.unshift({ userId: community.ownerId, role:"owner", approved:true, joinedAt: community.createdAt });
     }
 
-    async function loadPhotos() {
-      photosLoaded = true;
-      els.photoGrid.innerHTML = "";
-      els.photosEmpty.classList.add("hidden");
-      els.photoGrid.classList.remove("hidden");
+    const profileMap = await fetchProfiles(rows.map(m => m.userId));
 
-      let rows = [];
+    rows = rows.map(m => ({
+      ...m,
+      isOwner: m.userId === community.ownerId,
+      profile: profileMap.get(m.userId) || normalizeProfile({ uid:m.userId }, m.userId)
+    }));
 
-      for (const table of POST_TABLES) {
-        const loaded = await fetchPostsFromTable(table, PHOTOS_LIMIT);
-        rows.push(...loaded.filter(p => p.imageURL));
-      }
+    rows.sort((a, b) => {
+      if (a.isOwner && !b.isOwner) return -1;
+      if (b.isOwner && !a.isOwner) return 1;
+      return toMillis(b.joinedAt) - toMillis(a.joinedAt);
+    });
 
-      rows = dedupePosts(rows).slice(0, PHOTOS_LIMIT);
-
-      if (!rows.length) rows = allLoadedPosts.filter(p => p.imageURL).slice(0, PHOTOS_LIMIT);
-
-      renderPhotos(rows);
+    if (!rows.length) {
+      els.membersList.classList.add("hidden");
+      els.membersEmpty.classList.remove("hidden");
+      return;
     }
 
-    async function loadAboutData() {
-      aboutLoaded = true;
-      renderAboutBase();
-      await loadMembersList();
+    els.membersList.classList.remove("hidden");
+    rows.forEach(member => els.membersList.appendChild(memberCard(member)));
+  }
+
+  function profileAvatar(profile, className = "person") {
+    const letter = firstLetter(profile?.displayName || profile?.username || "M", "M");
+
+    if (profile?.photoURL) {
+      return `<img class="${className}-pic person-pic" src="${escapeHtml(profile.photoURL)}" alt="Profile photo" loading="lazy">`;
     }
 
-    async function loadMembersList() {
-      els.membersList.innerHTML = "";
-      els.membersEmpty.classList.add("hidden");
+    return `<div class="person-fallback">${escapeHtml(letter)}</div>`;
+  }
 
-      let rows = [];
+  function fallbackEl(letter) {
+    const div = document.createElement("div");
+    div.className = "person-fallback";
+    div.textContent = letter;
+    return div;
+  }
 
-      const attempts = [
-        { table:"community_members", col:"community_id" },
-        { table:"community_members", col:"communityId" },
-        { table:"communities_members", col:"community_id" },
-        { table:"communityMembers", col:"communityId" }
-      ];
+  function verifiedHtml(profile) {
+    return profile?.verified ? `<span class="verified" title="Verified">${ICON.check}</span>` : "";
+  }
 
-      for (const a of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from(a.table)
-            .select("*")
-            .eq(a.col, communityId)
-            .limit(MEMBERS_LIMIT);
+  function memberCard(member) {
+    const profile = member.profile || normalizeProfile({}, member.userId);
+    const card = document.createElement("div");
+    card.className = "member-card";
 
-          if (!error && Array.isArray(data)) {
-            rows = data.map(normalizeMember).filter(m => m.userId && m.approved);
-            break;
-          }
-        } catch {}
-      }
-
-      if (community.ownerId && !rows.some(m => m.userId === community.ownerId)) {
-        rows.unshift({
-          userId: community.ownerId,
-          role:"owner",
-          approved:true,
-          joinedAt: community.createdAt
-        });
-      }
-
-      const profileMap = await fetchProfiles(rows.map(m => m.userId));
-
-      rows = rows.map(m => ({
-        ...m,
-        isOwner: m.userId === community.ownerId,
-        profile: profileMap.get(m.userId) || normalizeProfile({ uid:m.userId }, m.userId)
-      }));
-
-      rows.sort((a, b) => {
-        if (a.isOwner && !b.isOwner) return -1;
-        if (b.isOwner && !a.isOwner) return 1;
-        return toMillis(b.joinedAt) - toMillis(a.joinedAt);
-      });
-
-      if (!rows.length) {
-        els.membersList.classList.add("hidden");
-        els.membersEmpty.classList.remove("hidden");
-        return;
-      }
-
-      els.membersList.classList.remove("hidden");
-
-      rows.forEach(member => els.membersList.appendChild(memberCard(member)));
-    }
-
-    function profileAvatar(profile, className = "person") {
-      const letter = firstLetter(profile?.displayName || profile?.username || "M", "M");
-
-      if (profile?.photoURL) {
-        return `<img class="${className}-pic person-pic" src="${escapeHtml(profile.photoURL)}" alt="Profile photo" loading="lazy">`;
-      }
-
-      return `<div class="person-fallback">${escapeHtml(letter)}</div>`;
-    }
-
-    function verifiedHtml(profile) {
-      return profile?.verified ? `<span class="verified" title="Verified">${ICON.check}</span>` : "";
-    }
-
-    function memberCard(member) {
-      const profile = member.profile || normalizeProfile({}, member.userId);
-      const card = document.createElement("div");
-
-      card.className = "member-card";
-
-      card.innerHTML = `
-        ${profileAvatar(profile)}
-        <div class="person-main">
-          <div class="person-name">
-            <a href="member.html?uid=${encodeURIComponent(member.userId)}">${escapeHtml(profile.displayName || "Member")}</a>
-            ${verifiedHtml(profile)}
-            ${member.isOwner ? `<span class="chip purple">Owner</span>` : ""}
-            ${member.role && !["member", "owner"].includes(member.role) ? `<span class="chip blue">${escapeHtml(pretty(member.role))}</span>` : ""}
-          </div>
-          ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+    card.innerHTML = `
+      ${profileAvatar(profile)}
+      <div class="person-main">
+        <div class="person-name">
+          <a href="member.html?uid=${encodeURIComponent(member.userId)}">${escapeHtml(profile.displayName || "Member")}</a>
+          ${verifiedHtml(profile)}
+          ${member.isOwner ? `<span class="chip purple">Owner</span>` : ""}
+          ${member.role && !["member", "owner"].includes(member.role) ? `<span class="chip blue">${escapeHtml(pretty(member.role))}</span>` : ""}
         </div>
-      `;
+        ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+      </div>
+    `;
 
-      card.querySelectorAll("img").forEach(img => {
-        img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
-      });
+    card.querySelectorAll("img").forEach(img => {
+      img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
+    });
 
-      return card;
+    return card;
+  }
+
+  function renderHero() {
+    const name = community.name || "Community";
+
+    els.communityTitle.textContent = name;
+    els.communityDesc.textContent = community.description || (community.featured ? "Featured OwnSpace community." : "OwnSpace community.");
+    els.communityAvatarFallback.textContent = firstLetter(name, "C");
+
+    if (community.imageURL) {
+      els.coverImage.src = community.imageURL;
+      els.coverImage.classList.remove("hidden");
+      els.communityAvatar.src = community.imageURL;
+      els.communityAvatar.classList.remove("hidden");
+      els.communityAvatarFallback.classList.add("hidden");
+    } else {
+      els.coverImage.classList.add("hidden");
+      els.coverImage.removeAttribute("src");
+      els.communityAvatar.classList.add("hidden");
+      els.communityAvatar.removeAttribute("src");
+      els.communityAvatarFallback.classList.remove("hidden");
     }
 
-    function fallbackEl(letter) {
-      const div = document.createElement("div");
-      div.className = "person-fallback";
-      div.textContent = letter;
-      return div;
+    renderChips();
+    renderTopActions();
+  }
+
+  function renderChips() {
+    const chips = [];
+
+    chips.push(`<span class="chip blue">${escapeHtml(community.category || "General")}</span>`);
+
+    if (["private", "request", "approval", "request_only"].includes(community.privacy)) {
+      chips.push(`<span class="chip yellow">${ICON.lock} ${community.privacy === "private" ? "Private" : "Request"}</span>`);
+    } else {
+      chips.push(`<span class="chip green">${ICON.check} Public</span>`);
     }
 
-    function renderHero() {
-      const name = community.name || "Community";
+    if (isOwner) chips.push(`<span class="chip purple">Owner</span>`);
+    else if (userMember?.approved) chips.push(`<span class="chip green">Member</span>`);
+    else if (joinRequestPending) chips.push(`<span class="chip yellow">Request Sent</span>`);
 
-      els.communityTitle.textContent = name;
-      els.communityDesc.textContent = community.description || (community.featured ? "Featured OwnSpace community." : "OwnSpace community.");
-      els.communityAvatarFallback.textContent = firstLetter(name, "C");
-
-      if (community.imageURL) {
-        els.coverImage.src = community.imageURL;
-        els.coverImage.classList.remove("hidden");
-        els.communityAvatar.src = community.imageURL;
-        els.communityAvatar.classList.remove("hidden");
-        els.communityAvatarFallback.classList.add("hidden");
-      } else {
-        els.coverImage.classList.add("hidden");
-        els.coverImage.removeAttribute("src");
-        els.communityAvatar.classList.add("hidden");
-        els.communityAvatar.removeAttribute("src");
-        els.communityAvatarFallback.classList.remove("hidden");
-      }
-
-      renderChips();
-      renderTopActions();
+    if ((isOwner || isAdmin) && pendingJoinRequestCount > 0) {
+      chips.push(`<span class="chip yellow">${pendingJoinRequestCount} Pending Request${pendingJoinRequestCount === 1 ? "" : "s"}</span>`);
     }
 
-    function renderChips() {
-      const chips = [];
+    if (community.featured) chips.push(`<span class="chip purple">Featured</span>`);
+    if (community.pinned) chips.push(`<span class="chip blue">${ICON.pin} Pinned</span>`);
 
-      chips.push(`<span class="chip blue">${escapeHtml(community.category || "General")}</span>`);
+    els.chipRow.innerHTML = chips.join("");
+  }
 
-      if (["private", "request", "approval", "request_only"].includes(community.privacy)) {
-        chips.push(`<span class="chip yellow">${ICON.lock} ${community.privacy === "private" ? "Private" : "Request"}</span>`);
-      } else {
-        chips.push(`<span class="chip green">${ICON.check} Public</span>`);
-      }
+  function renderTopActions() {
+    const actions = [];
 
-      if (isOwner) chips.push(`<span class="chip purple">Owner</span>`);
-      else if (userMember?.approved) chips.push(`<span class="chip green">Member</span>`);
-      else if (joinRequestPending) chips.push(`<span class="chip yellow">Request Sent</span>`);
-
-      if (isOwner && pendingJoinRequestCount > 0) {
-        chips.push(`<span class="chip yellow">${pendingJoinRequestCount} Pending Request${pendingJoinRequestCount === 1 ? "" : "s"}</span>`);
-      }
-
-      if (community.featured) chips.push(`<span class="chip purple">Featured</span>`);
-      if (community.pinned) chips.push(`<span class="chip blue">${ICON.pin} Pinned</span>`);
-
-      els.chipRow.innerHTML = chips.join("");
-    }
-
-    function renderTopActions() {
-      const actions = [];
+    if (isOwner || isAdmin) {
+      actions.push(`<a class="btn primary" href="edit-community.html?communityId=${encodeURIComponent(communityId)}">${ICON.edit} Edit</a>`);
 
       if (isOwner || isAdmin) {
-        actions.push(`<a class="btn primary" href="edit-community.html?communityId=${encodeURIComponent(communityId)}">${ICON.edit} Edit</a>`);
+        const requestText = pendingJoinRequestCount > 0
+          ? `Requests (${pendingJoinRequestCount > 99 ? "99+" : pendingJoinRequestCount})`
+          : "Requests";
 
-        if (isOwner) {
-          const requestText = pendingJoinRequestCount > 0
-            ? `Requests (${pendingJoinRequestCount > 99 ? "99+" : pendingJoinRequestCount})`
-            : "Requests";
-
-          actions.push(`<a class="btn yellow" href="community-requests.html?communityId=${encodeURIComponent(communityId)}">${ICON.users} ${requestText}</a>`);
-        }
-
-        actions.push(`<button id="hideCommunityBtn" class="btn red" type="button">${ICON.trash} Hide</button>`);
-      } else if (userMember?.approved) {
-        actions.push(`<button id="leaveCommunityBtn" class="btn red" type="button">Leave</button>`);
-      } else if (joinRequestPending) {
-        actions.push(`<button class="btn yellow" type="button" disabled>Request Sent</button>`);
-      } else {
-        const requestOnly = ["private", "request", "approval", "request_only"].includes(community.privacy);
-        actions.push(`<button id="joinCommunityBtn" class="btn ${requestOnly ? "yellow" : "green"}" type="button">${requestOnly ? "Request" : "Join"}</button>`);
+        actions.push(`<a class="btn yellow" href="community-requests.html?communityId=${encodeURIComponent(communityId)}">${ICON.users} ${requestText}</a>`);
       }
 
-      actions.push(`<button id="shareCommunityBtn" class="btn purple" type="button">${ICON.share} Share</button>`);
-
-      if (!isOwner) {
-        actions.push(`<a class="btn yellow" href="report.html?type=community&targetId=${encodeURIComponent(communityId)}&targetUserId=${encodeURIComponent(community.ownerId || "")}">${ICON.report} Report</a>`);
-      }
-
-      els.topActions.innerHTML = actions.join("");
-
-      $("joinCommunityBtn")?.addEventListener("click", e => joinCommunity(e.currentTarget));
-      $("leaveCommunityBtn")?.addEventListener("click", e => leaveCommunity(e.currentTarget));
-      $("hideCommunityBtn")?.addEventListener("click", e => hideCommunity(e.currentTarget));
-      $("shareCommunityBtn")?.addEventListener("click", e => shareCommunity(e.currentTarget));
+      actions.push(`<button id="hideCommunityBtn" class="btn red" type="button">${ICON.trash} Hide</button>`);
+    } else if (userMember?.approved) {
+      actions.push(`<button id="leaveCommunityBtn" class="btn red" type="button">Leave</button>`);
+    } else if (joinRequestPending) {
+      actions.push(`<button class="btn yellow" type="button" disabled>Request Sent</button>`);
+    } else {
+      const requestOnly = ["private", "request", "approval", "request_only"].includes(community.privacy);
+      actions.push(`<button id="joinCommunityBtn" class="btn ${requestOnly ? "yellow" : "green"}" type="button">${requestOnly ? "Request" : "Join"}</button>`);
     }
 
-    function renderPosts() {
-      els.postsList.innerHTML = "";
+    actions.push(`<button id="shareCommunityBtn" class="btn purple" type="button">${ICON.share} Share</button>`);
 
-      const count = totalPostCount || posts.length;
-
-      els.postsCountChip.textContent = `${count} post${count === 1 ? "" : "s"}`;
-      els.postsStat.textContent = String(count);
-
-      if (!posts.length) {
-        els.postsEmpty.classList.remove("hidden");
-        els.loadMorePostsBtn.classList.add("hidden");
-        return;
-      }
-
-      els.postsEmpty.classList.add("hidden");
-
-      posts.forEach(post => {
-        els.postsList.appendChild(postCard(post));
-        refreshPostMeta(post).catch(() => {});
-      });
-
-      els.loadMorePostsBtn.classList.toggle("hidden", !hasMorePosts);
+    if (!isOwner) {
+      actions.push(`<a class="btn yellow" href="report.html?type=community&targetId=${encodeURIComponent(communityId)}&targetUserId=${encodeURIComponent(community.ownerId || "")}">${ICON.report} Report</a>`);
     }
 
-    function postCard(post) {
-      const profile = post.profile || normalizeProfile({ uid:post.authorId, display_name:post.authorName }, post.authorId);
-      const canManage = isOwner || isAdmin || post.authorId === currentUser.id;
-      const canReport = post.authorId && post.authorId !== currentUser.id;
-      const postUrl = buildPostUrl(post);
-      const commentUrl = buildPostUrl(post, "comments");
+    els.topActions.innerHTML = actions.join("");
 
-      const card = document.createElement("article");
+    $("joinCommunityBtn")?.addEventListener("click", e => joinCommunity(e.currentTarget));
+    $("leaveCommunityBtn")?.addEventListener("click", e => leaveCommunity(e.currentTarget));
+    $("hideCommunityBtn")?.addEventListener("click", e => hideCommunity(e.currentTarget));
+    $("shareCommunityBtn")?.addEventListener("click", e => shareCommunity(e.currentTarget));
+  }
 
-      card.className = "post-card";
+  function renderPosts() {
+    els.postsList.innerHTML = "";
 
-      card.innerHTML = `
-        <div class="person-row">
-          ${profileAvatar(profile)}
-          <div class="person-main">
-            <div class="person-name">
-              <a href="member.html?uid=${encodeURIComponent(post.authorId || "")}">${escapeHtml(profile.displayName || post.authorName || "Member")}</a>
-              ${verifiedHtml(profile)}
-            </div>
-            ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
-            <div class="time">${escapeHtml(formatDate(post.createdAt))}</div>
-          </div>
-        </div>
+    const count = totalPostCount || posts.length;
+    els.postsCountChip.textContent = `${count} post${count === 1 ? "" : "s"}`;
+    els.postsStat.textContent = String(count);
 
-        <div class="chip-row" style="margin:0 0 7px;">
-          ${post.pinned ? `<span class="chip yellow">${ICON.pin} Pinned</span>` : ""}
-          ${post.featured ? `<span class="chip purple">Featured</span>` : ""}
-          <span class="chip blue">${escapeHtml(pretty(post.type || "Post"))}</span>
-        </div>
-
-        <a class="post-click" href="${postUrl}" aria-label="Open post">
-          ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ""}
-          ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
-          ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Community post image" loading="lazy">` : ""}
-        </a>
-
-        <div class="post-actions">
-          <button class="mini-action like-post" data-post-key="${escapeHtml(postDomKey(post))}" data-liked="no" type="button" aria-label="Like post">
-            ${ICON.heart}<span class="like-count" data-post-key="${escapeHtml(postDomKey(post))}">0</span>
-          </button>
-
-          <a class="mini-action comment-post" href="${commentUrl}" aria-label="Open comments">
-            ${ICON.comment}<span class="comment-count" data-post-key="${escapeHtml(postDomKey(post))}">0</span>
-          </a>
-
-          <button class="mini-action share-post" type="button" aria-label="Share post">${ICON.share}<span>Share</span></button>
-
-          ${canReport ? `<a class="mini-action report-post" href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.authorId || "")}&source=${encodeURIComponent(post.sourceTable || "")}" aria-label="Report post">${ICON.report}<span>Report</span></a>` : ""}
-
-          ${canManage ? `<span class="manage-actions"><button class="mini-action pin-post" type="button">${ICON.pin}<span>${post.pinned ? "Unpin" : "Pin"}</span></button><button class="mini-action delete-post" type="button">${ICON.trash}<span>Hide</span></button></span>` : ""}
-        </div>
-      `;
-
-      card.querySelectorAll("img.person-pic").forEach(img => {
-        img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
-      });
-
-      card.querySelectorAll("img.post-img").forEach(img => {
-        img.addEventListener("error", () => img.style.display = "none");
-      });
-
-      card.querySelector(".like-post")?.addEventListener("click", e => toggleLikePost(post, e.currentTarget));
-      card.querySelector(".share-post")?.addEventListener("click", () => sharePost(post));
-      card.querySelector(".pin-post")?.addEventListener("click", e => togglePinPost(post, e.currentTarget));
-      card.querySelector(".delete-post")?.addEventListener("click", e => hidePost(post, e.currentTarget));
-
-      return card;
+    if (!posts.length) {
+      els.postsEmpty.classList.remove("hidden");
+      els.loadMorePostsBtn.classList.add("hidden");
+      return;
     }
 
-    function renderPhotos(rows) {
-      els.photoGrid.innerHTML = "";
+    els.postsEmpty.classList.add("hidden");
 
-      const count = totalPhotoCount || rows.length;
+    posts.forEach(post => {
+      els.postsList.appendChild(postCard(post));
+      refreshPostMeta(post).catch(err => logWarn("refresh post meta", err));
+    });
 
-      els.photosCountChip.textContent = `${count} photo${count === 1 ? "" : "s"}`;
-      els.photosStat.textContent = String(count);
+    els.loadMorePostsBtn.classList.toggle("hidden", !hasMorePosts);
+  }
 
-      if (!rows.length) {
-        els.photoGrid.classList.add("hidden");
-        els.photosEmpty.classList.remove("hidden");
-        return;
-      }
+  function postCard(post) {
+    const profile = post.profile || normalizeProfile({ uid:post.authorId, display_name:post.authorName }, post.authorId);
+    const canManage = isOwner || isAdmin || post.authorId === currentUser.id;
+    const canReport = post.authorId && post.authorId !== currentUser.id;
+    const postUrl = buildPostUrl(post);
+    const commentUrl = buildPostUrl(post, "comments");
 
-      els.photosEmpty.classList.add("hidden");
-      els.photoGrid.classList.remove("hidden");
+    const card = document.createElement("article");
+    card.className = "post-card";
 
-      rows.forEach(post => {
-        const a = document.createElement("a");
-
-        a.className = "photo-tile";
-        a.href = buildPostUrl(post);
-        a.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Community photo" loading="lazy">`;
-
-        a.querySelector("img")?.addEventListener("error", () => a.style.display = "none");
-
-        els.photoGrid.appendChild(a);
-      });
-    }
-
-    function renderAboutBase() {
-      els.descriptionText.textContent = community.description || "No description added.";
-
-      els.detailsText.textContent = [
-        `Category: ${community.category || "General"}`,
-        `Privacy: ${pretty(community.privacy || "Public")}`,
-        `Posting: ${pretty(community.postingMode || "Members")}`,
-        `Created: ${formatDate(community.createdAt)}`
-      ].join("\n");
-
-      if (community.rules) {
-        els.rulesText.textContent = community.rules;
-        els.rulesBox.classList.remove("hidden");
-      } else {
-        els.rulesBox.classList.add("hidden");
-      }
-
-      renderOwner();
-    }
-
-    function renderOwner() {
-      const profile = ownerProfile || normalizeProfile({ uid: community.ownerId, display_name: community.ownerName }, community.ownerId);
-
-      els.ownerCard.innerHTML = `
+    card.innerHTML = `
+      <div class="person-row">
         ${profileAvatar(profile)}
         <div class="person-main">
           <div class="person-name">
-            <a href="member.html?uid=${encodeURIComponent(profile.uid || community.ownerId || "")}">${escapeHtml(profile.displayName || community.ownerName || "Member")}</a>
+            <a href="member.html?uid=${encodeURIComponent(post.authorId || "")}">${escapeHtml(profile.displayName || post.authorName || "Member")}</a>
             ${verifiedHtml(profile)}
-            <span class="chip purple">Owner</span>
           </div>
           ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
-          <div class="bio">${escapeHtml(profile.bio || "Community owner")}</div>
+          <div class="time">${escapeHtml(formatDate(post.createdAt))}</div>
         </div>
-      `;
+      </div>
 
-      els.ownerCard.querySelectorAll("img").forEach(img => {
-        img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
-      });
+      <div class="chip-row" style="margin:0 0 7px;">
+        ${post.pinned ? `<span class="chip yellow">${ICON.pin} Pinned</span>` : ""}
+        ${post.featured ? `<span class="chip purple">Featured</span>` : ""}
+        <span class="chip blue">${escapeHtml(pretty(post.type || "Post"))}</span>
+      </div>
+
+      <a class="post-click" href="${postUrl}" aria-label="Open post">
+        ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ""}
+        ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
+        ${post.imageURL ? `<img class="post-img" src="${escapeHtml(post.imageURL)}" alt="Community post image" loading="lazy">` : ""}
+      </a>
+
+      <div class="post-actions">
+        <button class="mini-action like-post" data-post-key="${escapeHtml(postDomKey(post))}" data-liked="no" type="button" aria-label="Like post">
+          ${ICON.heart}<span class="like-count" data-post-key="${escapeHtml(postDomKey(post))}">0</span>
+        </button>
+
+        <a class="mini-action comment-post" href="${commentUrl}" aria-label="Open comments">
+          ${ICON.comment}<span class="comment-count" data-post-key="${escapeHtml(postDomKey(post))}">0</span>
+        </a>
+
+        <button class="mini-action share-post" type="button" aria-label="Share post">${ICON.share}<span>Share</span></button>
+
+        ${canReport ? `<a class="mini-action report-post" href="report.html?type=post&targetId=${encodeURIComponent(post.id)}&targetUserId=${encodeURIComponent(post.authorId || "")}&source=${encodeURIComponent(post.sourceTable || "")}" aria-label="Report post">${ICON.report}<span>Report</span></a>` : ""}
+
+        ${canManage ? `<span class="manage-actions"><button class="mini-action pin-post" type="button">${ICON.pin}<span>${post.pinned ? "Unpin" : "Pin"}</span></button><button class="mini-action delete-post" type="button">${ICON.trash}<span>Hide</span></button></span>` : ""}
+      </div>
+    `;
+
+    card.querySelectorAll("img.person-pic").forEach(img => {
+      img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
+    });
+
+    card.querySelectorAll("img.post-img").forEach(img => {
+      img.addEventListener("error", () => img.style.display = "none");
+    });
+
+    card.querySelector(".like-post")?.addEventListener("click", e => toggleLikePost(post, e.currentTarget));
+    card.querySelector(".share-post")?.addEventListener("click", () => sharePost(post));
+    card.querySelector(".pin-post")?.addEventListener("click", e => togglePinPost(post, e.currentTarget));
+    card.querySelector(".delete-post")?.addEventListener("click", e => hidePost(post, e.currentTarget));
+
+    return card;
+  }
+
+  function renderPhotos(rows) {
+    els.photoGrid.innerHTML = "";
+
+    const count = totalPhotoCount || rows.length;
+    els.photosCountChip.textContent = `${count} photo${count === 1 ? "" : "s"}`;
+    els.photosStat.textContent = String(count);
+
+    if (!rows.length) {
+      els.photoGrid.classList.add("hidden");
+      els.photosEmpty.classList.remove("hidden");
+      return;
     }
 
-    function renderLocked() {
-      els.loadingPanel.classList.add("hidden");
-      els.communityShell.classList.add("hidden");
-      els.notFoundPanel.classList.add("hidden");
-      els.lockedPanel.classList.remove("hidden");
+    els.photosEmpty.classList.add("hidden");
+    els.photoGrid.classList.remove("hidden");
 
-      els.lockedText.innerHTML = joinRequestPending
-        ? `<strong>Request pending</strong> You can view this community after approval.`
-        : `<strong>Private community</strong> Request to join before viewing posts.`;
+    rows.forEach(post => {
+      const a = document.createElement("a");
+      a.className = "photo-tile";
+      a.href = buildPostUrl(post);
+      a.innerHTML = `<img src="${escapeHtml(post.imageURL)}" alt="Community photo" loading="lazy">`;
+      a.querySelector("img")?.addEventListener("error", () => a.style.display = "none");
+      els.photoGrid.appendChild(a);
+    });
+  }
 
-      renderLockedActions();
+  function renderAboutBase() {
+    els.descriptionText.textContent = community.description || "No description added.";
+
+    els.detailsText.textContent = [
+      `Category: ${community.category || "General"}`,
+      `Privacy: ${pretty(community.privacy || "Public")}`,
+      `Posting: ${pretty(community.postingMode || "Members")}`,
+      `Created: ${formatDate(community.createdAt)}`
+    ].join("\n");
+
+    if (community.rules) {
+      els.rulesText.textContent = community.rules;
+      els.rulesBox.classList.remove("hidden");
+    } else {
+      els.rulesBox.classList.add("hidden");
     }
 
-    function renderLockedActions() {
-      if (joinRequestPending) {
-        els.lockedActionRow.innerHTML = `<button class="btn yellow" disabled>Request Sent</button>`;
-        return;
+    renderOwner();
+  }
+
+  function renderOwner() {
+    const profile = ownerProfile || normalizeProfile({ uid: community.ownerId, display_name: community.ownerName }, community.ownerId);
+
+    els.ownerCard.innerHTML = `
+      ${profileAvatar(profile)}
+      <div class="person-main">
+        <div class="person-name">
+          <a href="member.html?uid=${encodeURIComponent(profile.uid || community.ownerId || "")}">${escapeHtml(profile.displayName || community.ownerName || "Member")}</a>
+          ${verifiedHtml(profile)}
+          <span class="chip purple">Owner</span>
+        </div>
+        ${profile.username ? `<div class="username">@${escapeHtml(profile.username)}</div>` : ""}
+        <div class="bio">${escapeHtml(profile.bio || "Community owner")}</div>
+      </div>
+    `;
+
+    els.ownerCard.querySelectorAll("img").forEach(img => {
+      img.addEventListener("error", () => img.replaceWith(fallbackEl(firstLetter(profile.displayName, "M"))));
+    });
+  }
+
+  function renderLocked() {
+    els.loadingPanel.classList.add("hidden");
+    els.communityShell.classList.add("hidden");
+    els.notFoundPanel.classList.add("hidden");
+    els.lockedPanel.classList.remove("hidden");
+
+    els.lockedText.innerHTML = joinRequestPending
+      ? `<strong>Request pending</strong> You can view this community after approval.`
+      : `<strong>Private community</strong> Request to join before viewing posts.`;
+
+    renderLockedActions();
+  }
+
+  function renderLockedActions() {
+    if (joinRequestPending) {
+      els.lockedActionRow.innerHTML = `<button class="btn yellow" disabled>Request Sent</button>`;
+      return;
+    }
+
+    els.lockedActionRow.innerHTML = `<button id="lockedJoinBtn" class="btn yellow" type="button">Request to Join</button>`;
+    $("lockedJoinBtn")?.addEventListener("click", e => joinCommunity(e.currentTarget, true));
+  }
+
+  function showMain() {
+    els.loadingPanel.classList.add("hidden");
+    els.notFoundPanel.classList.add("hidden");
+    els.lockedPanel.classList.add("hidden");
+    els.communityShell.classList.remove("hidden");
+  }
+
+  function showNotFound(text) {
+    els.loadingPanel.classList.add("hidden");
+    els.communityShell.classList.add("hidden");
+    els.lockedPanel.classList.add("hidden");
+    els.notFoundPanel.classList.remove("hidden");
+    els.notFoundText.innerHTML = `<strong>Community unavailable</strong> ${escapeHtml(text)}`;
+  }
+
+  async function shareCommunity(button) {
+    button.disabled = true;
+    setMsg(els.topMessage, "");
+
+    const url = buildShareUrl();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title:`${community.name} on OwnSpace`, text:`Check out ${community.name} on OwnSpace.`, url });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setMsg(els.topMessage, "Community link copied.", "ok");
+      } else {
+        prompt("Copy this community link:", url);
       }
-
-      els.lockedActionRow.innerHTML = `<button id="lockedJoinBtn" class="btn yellow" type="button">Request to Join</button>`;
-      $("lockedJoinBtn")?.addEventListener("click", e => joinCommunity(e.currentTarget, true));
+    } catch (err) {
+      if (err?.name !== "AbortError") setMsg(els.topMessage, "Could not share community.", "err");
     }
 
-    function showMain() {
-      els.loadingPanel.classList.add("hidden");
-      els.notFoundPanel.classList.add("hidden");
-      els.lockedPanel.classList.add("hidden");
-      els.communityShell.classList.remove("hidden");
-    }
+    button.disabled = false;
+  }
 
-    function showNotFound(text) {
-      els.loadingPanel.classList.add("hidden");
-      els.communityShell.classList.add("hidden");
-      els.lockedPanel.classList.add("hidden");
-      els.notFoundPanel.classList.remove("hidden");
-      els.notFoundText.innerHTML = `<strong>Community unavailable</strong> ${escapeHtml(text)}`;
-    }
+  async function sharePost(post) {
+    const url = buildPostUrl(post);
 
-    function buildShareUrl() {
-      const url = new URL(window.location.href);
-      url.pathname = url.pathname.replace(/[^/]*$/, "community.html");
-      url.searchParams.set("communityId", communityId);
-      return url.toString();
-    }
-
-    async function shareCommunity(button) {
-      button.disabled = true;
-      setMsg(els.topMessage, "");
-
-      const url = buildShareUrl();
-
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title:`${community.name} on OwnSpace`,
-            text:`Check out ${community.name} on OwnSpace.`,
-            url
-          });
-        } else if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(url);
-          setMsg(els.topMessage, "Community link copied.", "ok");
-        } else {
-          prompt("Copy this community link:", url);
-        }
-      } catch (err) {
-        if (err?.name !== "AbortError") setMsg(els.topMessage, "Could not share community.", "err");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title:post.title || "OwnSpace post", text:post.text || "Check this post on OwnSpace.", url });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        alert("Post link copied.");
+      } else {
+        prompt("Copy this post link:", url);
       }
+    } catch {}
+  }
 
-      button.disabled = false;
+  async function detectPostLikesTable() {
+    try {
+      const { error } = await supabase.from(T.likes).select("id", { count:"exact", head:true }).limit(1);
+      hasPostLikesTable = !error;
+    } catch {
+      hasPostLikesTable = false;
     }
+  }
 
-    async function sharePost(post) {
-      const url = buildPostUrl(post);
+  async function findLikeRow(post) {
+    try {
+      const { data, error } = await supabase
+        .from(T.likes)
+        .select("*")
+        .eq("post_id", post.id)
+        .eq("user_id", currentUser.id)
+        .limit(1);
 
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title:post.title || "OwnSpace post",
-            text:post.text || "Check this post on OwnSpace.",
-            url
-          });
-        } else if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(url);
-          alert("Post link copied.");
-        } else {
-          prompt("Copy this post link:", url);
-        }
-      } catch {}
-    }
-
-    async function detectPostLikesTable() {
-      try {
-        const { error } = await supabase.from("post_likes").select("id", { count:"exact", head:true }).limit(1);
-        hasPostLikesTable = !error;
-      } catch {
-        hasPostLikesTable = false;
-      }
-    }
-
-    function postDomKey(post) {
-      return `${post.sourceTable || "posts"}__${post.id || ""}`;
-    }
-
-    function cssEscape(value) {
-      if (window.CSS && typeof CSS.escape === "function") return CSS.escape(String(value));
-      return String(value).replace(/["\\]/g, "\\$&");
-    }
-
-    async function findLikeRow(post) {
-      const variants = [
-        { postCol:"post_id", userCol:"user_id", sourceCol:"source" },
-        { postCol:"post_id", userCol:"user_id", sourceCol:"source_table" },
-        { postCol:"post_id", userCol:"user_id", sourceCol:"sourceTable" },
-        { postCol:"postId", userCol:"userId", sourceCol:"source" },
-        { postCol:"postId", userCol:"userId", sourceCol:"sourceTable" },
-        { postCol:"post_id", userCol:"user_id", sourceCol:"" },
-        { postCol:"postId", userCol:"userId", sourceCol:"" }
-      ];
-
-      for (const v of variants) {
-        try {
-          let q = supabase
-            .from("post_likes")
-            .select("*")
-            .eq(v.postCol, post.id)
-            .eq(v.userCol, currentUser.id);
-
-          if (v.sourceCol && post.sourceTable) q = q.eq(v.sourceCol, post.sourceTable);
-
-          const { data, error } = await q.limit(1);
-
-          if (!error && data && data.length) return data[0];
-        } catch {}
-      }
-
+      if (error) throw error;
+      return data?.[0] || null;
+    } catch (err) {
+      logWarn("find like", err);
       return null;
     }
+  }
 
-    async function countLikes(post) {
-      const variants = [
-        { postCol:"post_id", sourceCol:"source" },
-        { postCol:"post_id", sourceCol:"source_table" },
-        { postCol:"post_id", sourceCol:"sourceTable" },
-        { postCol:"postId", sourceCol:"source" },
-        { postCol:"postId", sourceCol:"sourceTable" },
-        { postCol:"post_id", sourceCol:"" },
-        { postCol:"postId", sourceCol:"" }
-      ];
+  async function countLikes(post) {
+    const count = await countRows(T.likes, q => q.eq("post_id", post.id), "count likes");
+    return count || 0;
+  }
 
-      for (const v of variants) {
-        try {
-          let q = supabase.from("post_likes").select("id", { count:"exact", head:true }).eq(v.postCol, post.id);
+  async function countComments(post) {
+    const count = await countRows(T.comments, q => q.eq("post_id", post.id), "count comments");
+    return count || 0;
+  }
 
-          if (v.sourceCol && post.sourceTable) q = q.eq(v.sourceCol, post.sourceTable);
+  async function refreshPostMeta(post) {
+    let likeCount = 0;
+    let liked = false;
+    let commentCount = 0;
 
-          const { count, error } = await q;
-
-          if (!error) return count || 0;
-        } catch {}
-      }
-
-      return 0;
+    if (hasPostLikesTable) {
+      const [likes, myLike] = await Promise.all([countLikes(post), findLikeRow(post)]);
+      likeCount = likes || 0;
+      liked = !!myLike;
     }
 
-    async function countComments(post) {
-      const variants = [
-        { postCol:"post_id", sourceCol:"source" },
-        { postCol:"post_id", sourceCol:"source_table" },
-        { postCol:"post_id", sourceCol:"sourceTable" },
-        { postCol:"postId", sourceCol:"source" },
-        { postCol:"postId", sourceCol:"sourceTable" },
-        { postCol:"post_id", sourceCol:"" },
-        { postCol:"postId", sourceCol:"" }
-      ];
+    commentCount = await countComments(post);
+    const safeKey = cssEscape(postDomKey(post));
 
-      for (const v of variants) {
-        try {
-          let q = supabase.from("post_comments").select("id", { count:"exact", head:true }).eq(v.postCol, post.id);
+    document.querySelectorAll(`.like-post[data-post-key="${safeKey}"]`).forEach(btn => {
+      btn.dataset.liked = liked ? "yes" : "no";
+    });
 
-          if (v.sourceCol && post.sourceTable) q = q.eq(v.sourceCol, post.sourceTable);
+    document.querySelectorAll(`.like-count[data-post-key="${safeKey}"]`).forEach(el => {
+      el.textContent = String(likeCount || 0);
+    });
 
-          const { count, error } = await q;
+    document.querySelectorAll(`.comment-count[data-post-key="${safeKey}"]`).forEach(el => {
+      el.textContent = String(commentCount || 0);
+    });
+  }
 
-          if (!error) return count || 0;
-        } catch {}
-      }
+  async function insertWithFallback(table, payloads, label) {
+    let lastError = null;
 
-      return 0;
-    }
-
-    async function loadPostMeta(post) {
-      let likeCount = 0;
-      let liked = false;
-      let commentCount = 0;
-
-      if (hasPostLikesTable) {
-        const [likes, myLike] = await Promise.all([
-          countLikes(post),
-          findLikeRow(post)
-        ]);
-
-        likeCount = likes || 0;
-        liked = !!myLike;
-      }
-
-      commentCount = await countComments(post);
-
-      return { likeCount, liked, commentCount };
-    }
-
-    async function refreshPostMeta(post) {
-      const meta = await loadPostMeta(post);
-      const safeKey = cssEscape(postDomKey(post));
-
-      document.querySelectorAll(`.like-post[data-post-key="${safeKey}"]`).forEach(btn => {
-        btn.dataset.liked = meta.liked ? "yes" : "no";
-      });
-
-      document.querySelectorAll(`.like-count[data-post-key="${safeKey}"]`).forEach(el => {
-        el.textContent = String(meta.likeCount || 0);
-      });
-
-      document.querySelectorAll(`.comment-count[data-post-key="${safeKey}"]`).forEach(el => {
-        el.textContent = String(meta.commentCount || 0);
-      });
-    }
-
-    async function awardLikeMilestonePoints(postId) {
-      if (!postId || !isUuid(postId)) return null;
-
-      const argVariants = [
-        { p_post_id: postId },
-        { post_id: postId },
-        { postid: postId },
-        { p_id: postId },
-        { id: postId }
-      ];
-
-      for (const args of argVariants) {
-        try {
-          const { data, error } = await supabase.rpc("award_like_milestone_points", args);
-
-          if (!error) return data;
-
-          const msg = String(error?.message || "").toLowerCase();
-
-          if (
-            msg.includes("function") ||
-            msg.includes("parameter") ||
-            msg.includes("argument") ||
-            msg.includes("schema cache") ||
-            msg.includes("not found")
-          ) continue;
-
-          return null;
-        } catch {}
-      }
-
-      return null;
-    }
-
-    async function toggleLikePost(post, button) {
-      if (!currentUser) return;
-
-      if (!hasPostLikesTable) {
-        alert("Like system is not ready yet.");
-        return;
-      }
-
-      button.disabled = true;
-      let createdNewLike = false;
-
+    for (const payload of payloads) {
       try {
-        const existing = await findLikeRow(post);
-
-        if (existing?.id) {
-          const { error } = await supabase.from("post_likes").delete().eq("id", existing.id);
-          if (error) throw error;
-        } else {
-          await insertWithFallback("post_likes", [
-            { post_id:post.id, user_id:currentUser.id, source:post.sourceTable, community_id:communityId, created_at:nowIso() },
-            { postId:post.id, userId:currentUser.id, source:post.sourceTable, communityId:communityId, createdAt:nowIso() },
-            { post_id:post.id, user_id:currentUser.id, created_at:nowIso() }
-          ]);
-
-          createdNewLike = true;
-        }
-
-        await refreshPostMeta(post);
-
-        if (createdNewLike) {
-          await awardLikeMilestonePoints(post.id);
-
-          if (post.authorId && post.authorId !== currentUser.id) {
-            await createNotificationSafe(post.authorId, {
-              type:"like",
-              title:"New like",
-              text:`${currentUserProfile?.displayName || "Someone"} liked your community post.`,
-              post_id:post.id,
-              source:post.sourceTable
-            });
-          }
-        }
+        const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
+        if (!error) return data || null;
+        lastError = error;
+        logWarn(`${label || table} payload failed`, error);
       } catch (err) {
-        console.error("Like failed:", err);
-        alert("Could not update like.");
+        lastError = err;
+        logWarn(`${label || table} payload failed`, err);
       }
-
-      button.disabled = false;
     }
 
-    async function insertWithFallback(table, payloads) {
-      let lastError = null;
+    throw lastError || new Error(`Could not insert into ${table}.`);
+  }
 
-      for (const payload of payloads) {
-        try {
-          const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
+  async function createNotificationSafe(targetUid, payload = {}) {
+    if (!targetUid || targetUid === currentUser?.id) return;
 
-          if (!error) return data || null;
+    const createdAt = nowIso();
 
-          lastError = error;
-        } catch (err) {
-          lastError = err;
+    try {
+      await insertWithFallback(T.notifications, [
+        {
+          type:payload.type || "notification",
+          title:payload.title || "",
+          text:payload.text || "",
+          from_user_id:currentUser.id,
+          to_user_id:targetUid,
+          user_id:targetUid,
+          community_id:communityId,
+          post_id:payload.post_id || null,
+          source:payload.source || "",
+          created_at:createdAt,
+          is_read:false,
+          read:false
+        },
+        {
+          type:payload.type || "notification",
+          text:payload.text || "",
+          to_user_id:targetUid,
+          user_id:targetUid,
+          community_id:communityId,
+          created_at:createdAt,
+          is_read:false
         }
+      ], "notification");
+    } catch (err) {
+      logWarn("create notification", err);
+    }
+  }
+
+  async function toggleLikePost(post, button) {
+    if (!currentUser) return;
+
+    if (!hasPostLikesTable) {
+      alert("Like system is not ready yet.");
+      return;
+    }
+
+    button.disabled = true;
+    let createdNewLike = false;
+
+    try {
+      const existing = await findLikeRow(post);
+
+      if (existing?.id) {
+        const { error } = await supabase.from(T.likes).delete().eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        await insertWithFallback(T.likes, [
+          { post_id:post.id, user_id:currentUser.id, community_id:communityId, created_at:nowIso() },
+          { post_id:post.id, user_id:currentUser.id, created_at:nowIso() }
+        ], "like");
+        createdNewLike = true;
       }
 
-      throw lastError || new Error(`Could not insert into ${table}.`);
-    }
+      await refreshPostMeta(post);
 
-    async function updateWithFallback(table, id, payloads) {
-      let lastError = null;
-
-      for (const payload of payloads) {
-        try {
-          const { error } = await supabase.from(table).update(payload).eq("id", id);
-
-          if (!error) return;
-
-          lastError = error;
-        } catch (err) {
-          lastError = err;
-        }
+      if (createdNewLike && post.authorId && post.authorId !== currentUser.id) {
+        await createNotificationSafe(post.authorId, {
+          type:"like",
+          title:"New like",
+          text:`${currentUserProfile?.displayName || "Someone"} liked your community post.`,
+          post_id:post.id,
+          source:T.posts
+        });
       }
-
-      throw lastError || new Error(`Could not update ${table}.`);
+    } catch (err) {
+      console.error("Like failed:", err);
+      alert("Could not update like.");
     }
 
-    async function createNotificationSafe(targetUid, payload = {}) {
-      if (!targetUid || targetUid === currentUser?.id) return;
+    button.disabled = false;
+  }
 
-      const createdAt = nowIso();
+  async function joinCommunity(button, forceRequest = false) {
+    button.disabled = true;
+    setMsg(els.topMessage, "");
+    setMsg(els.lockedMessage, "");
 
-      try {
-        await insertWithFallback("notifications", [
-          {
-            type:payload.type || "notification",
-            title:payload.title || "",
-            text:payload.text || "",
-            from_user_id:currentUser.id,
-            to_user_id:targetUid,
-            user_id:targetUid,
-            community_id:communityId,
-            post_id:payload.post_id || "",
-            source:payload.source || "",
-            created_at:createdAt,
-            is_read:false,
-            read:false
-          },
-          {
-            type:payload.type || "notification",
-            title:payload.title || "",
-            text:payload.text || "",
-            fromUserId:currentUser.id,
-            toUserId:targetUid,
-            userId:targetUid,
-            communityId:communityId,
-            postId:payload.post_id || "",
-            source:payload.source || "",
-            createdAt:createdAt,
-            isRead:false,
-            read:false
-          },
-          {
-            type:payload.type || "notification",
-            text:payload.text || "",
-            to_user_id:targetUid,
-            user_id:targetUid,
-            community_id:communityId,
-            created_at:createdAt,
-            is_read:false
-          }
-        ]);
-      } catch {}
-    }
+    const oldText = button.textContent;
+    const requestOnly = forceRequest || ["private", "request", "approval", "request_only"].includes(community.privacy);
+    button.textContent = requestOnly ? "Sending..." : "Joining...";
 
-    function getErrorMessage(err) {
-      return String(err?.message || err?.details || err?.hint || err || "").trim();
-    }
+    try {
+      if (requestOnly) {
+        await loadJoinRequestState();
 
-    function isDuplicateOrAlreadyError(err) {
-      const msg = getErrorMessage(err).toLowerCase();
-      return msg.includes("duplicate") || msg.includes("already") || msg.includes("unique") || msg.includes("23505");
-    }
-
-    function isPermissionError(err) {
-      const msg = getErrorMessage(err).toLowerCase();
-      return (
-        msg.includes("permission") ||
-        msg.includes("policy") ||
-        msg.includes("rls") ||
-        msg.includes("row-level") ||
-        msg.includes("violates row-level security") ||
-        msg.includes("not authorized") ||
-        msg.includes("42501")
-      );
-    }
-
-    async function joinCommunity(button, forceRequest = false) {
-      button.disabled = true;
-      setMsg(els.topMessage, "");
-      setMsg(els.lockedMessage, "");
-
-      const oldText = button.textContent;
-      const requestOnly = forceRequest || ["private", "request", "approval", "request_only"].includes(community.privacy);
-
-      button.textContent = requestOnly ? "Sending..." : "Joining...";
-
-      try {
-        if (requestOnly) {
-          await loadJoinRequestState();
-
-          if (!joinRequestPending) {
-            try {
-              await insertWithFallback("community_join_requests", [
-                { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || null, status:"pending", created_at:nowIso(), updated_at:nowIso() },
-                { community_id:communityId, requester_id:currentUser.id, status:"pending", created_at:nowIso(), updated_at:nowIso() },
-                { community_id:communityId, user_id:currentUser.id, status:"pending", created_at:nowIso() },
-                { communityId:communityId, requesterId:currentUser.id, targetUserId:community.ownerId || null, status:"pending", createdAt:nowIso(), updatedAt:nowIso() }
-              ]);
-            } catch (err) {
-              if (!isDuplicateOrAlreadyError(err)) throw err;
-            }
-          }
-
-          joinRequestPending = true;
-
-          await createNotificationSafe(community.ownerId, {
-            type:"community_join_request",
-            title:"Community join request",
-            text:`${currentUserProfile?.displayName || "Someone"} requested to join ${community.name}.`
-          });
-
+        if (!joinRequestPending) {
           try {
-            const stamp = String(Date.now());
-            localStorage.setItem("ownspace_join_requests_refresh", stamp);
-            localStorage.setItem("ownspace_communities_refresh", stamp);
-            localStorage.setItem("ownspace_nearby_refresh", stamp);
-          } catch {}
-
-          renderChips();
-          renderTopActions();
-          renderLockedActions();
-          setMsg(els.topMessage, "Join request sent.", "ok");
-          setMsg(els.lockedMessage, "Join request sent.", "ok");
-          return;
-        }
-
-        await loadCurrentMembership();
-
-        if (!userMember?.approved) {
-          try {
-            const createdAt = nowIso();
-            const displayName = currentUserProfile?.displayName || "Member";
-            const username = currentUserProfile?.username || "";
-
-            await insertWithFallback("community_members", [
-              { community_id:communityId, user_id:currentUser.id, display_name:displayName, username, role:"member", status:"approved", joined_at:createdAt, created_at:createdAt, updated_at:createdAt },
-              { communityId:communityId, userId:currentUser.id, displayName, username, role:"member", status:"approved", joinedAt:createdAt, createdAt:createdAt, updatedAt:createdAt },
-              { community_id:communityId, user_id:currentUser.id, role:"member", status:"approved", joined_at:createdAt, created_at:createdAt },
-              { community_id:communityId, user_id:currentUser.id, status:"approved" }
-            ]);
+            await insertWithFallback(T.requests, [
+              {
+                community_id:communityId,
+                requester_id:currentUser.id,
+                target_user_id:community.ownerId || null,
+                status:"pending",
+                created_at:nowIso(),
+                updated_at:nowIso()
+              },
+              {
+                community_id:communityId,
+                requester_id:currentUser.id,
+                status:"pending",
+                created_at:nowIso()
+              }
+            ], "join request");
           } catch (err) {
             if (!isDuplicateOrAlreadyError(err)) throw err;
           }
         }
 
-        userMember = {
-          communityId,
-          userId:currentUser.id,
-          role:"member",
-          status:"approved",
-          approved:true,
-          approvedAuthor:false,
-          joinedAt:nowIso()
-        };
+        joinRequestPending = true;
 
         await createNotificationSafe(community.ownerId, {
-          type:"community_join",
-          title:"Community joined",
-          text:`${currentUserProfile?.displayName || "Someone"} joined ${community.name}.`
+          type:"community_join_request",
+          title:"Community join request",
+          text:`${currentUserProfile?.displayName || "Someone"} requested to join ${community.name}.`
         });
 
         try {
           const stamp = String(Date.now());
+          localStorage.setItem("ownspace_join_requests_refresh", stamp);
           localStorage.setItem("ownspace_communities_refresh", stamp);
           localStorage.setItem("ownspace_nearby_refresh", stamp);
         } catch {}
 
-        await refreshLight();
-
-        setMsg(els.topMessage, "Joined community.", "ok");
-      } catch (err) {
-        console.error("Community join failed:", err);
-
-        button.disabled = false;
-        button.textContent = oldText;
-
-        const msg = getErrorMessage(err);
-        const friendly = isPermissionError(err)
-          ? "Join is blocked by Supabase policy/RLS. Community_members or join_requests insert policy needs update."
-          : (msg || (requestOnly ? "Could not send request." : "Could not join community."));
-
-        setMsg(els.topMessage, friendly, "err");
-        setMsg(els.lockedMessage, friendly, "err");
-      }
-    }
-
-    async function leaveCommunity(button) {
-      if (isOwner || !confirm("Leave this community?")) return;
-
-      button.disabled = true;
-
-      try {
-        const attempts = [
-          { table:"community_members", c:"community_id", u:"user_id" },
-          { table:"community_members", c:"communityId", u:"userId" },
-          { table:"communities_members", c:"community_id", u:"user_id" },
-          { table:"communityMembers", c:"communityId", u:"userId" }
-        ];
-
-        for (const a of attempts) {
-          try {
-            await supabase.from(a.table).delete().eq(a.c, communityId).eq(a.u, currentUser.id);
-          } catch {}
-        }
-
-        await refreshLight();
-
-        setMsg(els.topMessage, "Left community.", "ok");
-      } catch {
-        button.disabled = false;
-        setMsg(els.topMessage, "Could not leave community.", "err");
-      }
-    }
-
-    async function hideCommunity(button) {
-      if (!isOwner && !isAdmin) return;
-      if (!confirm("Hide this community?")) return;
-
-      button.disabled = true;
-
-      try {
-        await updateWithFallback("communities", communityId, [
-          { hidden:true, soft_deleted:true, deleted_at:nowIso(), updated_at:nowIso() },
-          { hidden:true, softDeleted:true, deletedAt:nowIso(), updatedAt:nowIso() },
-          { hidden:true }
-        ]);
-
-        window.location.href = "nearby-communities.html";
-      } catch {
-        button.disabled = false;
-        setMsg(els.topMessage, "Could not hide community.", "err");
-      }
-    }
-
-    async function togglePinPost(post, button) {
-      if (!isOwner && !isAdmin) return;
-
-      button.disabled = true;
-
-      try {
-        const next = !post.pinned;
-
-        await updateWithFallback(post.sourceTable || "posts", post.id, [
-          { pinned:next, is_pinned:next, updated_at:nowIso() },
-          { pinned:next, isPinned:next, updatedAt:nowIso() },
-          { pinned:next }
-        ]);
-
-        await refreshPostsOnly();
-      } catch {
-        button.disabled = false;
-        alert("Could not update pin.");
-      }
-    }
-
-    async function hidePost(post, button) {
-      if (!isOwner && !isAdmin && post.authorId !== currentUser.id) return;
-      if (!confirm("Hide this post?")) return;
-
-      button.disabled = true;
-
-      try {
-        await updateWithFallback(post.sourceTable || "posts", post.id, [
-          { hidden:true, soft_deleted:true, deleted_at:nowIso(), updated_at:nowIso() },
-          { hidden:true, softDeleted:true, deletedAt:nowIso(), updatedAt:nowIso() },
-          { hidden:true }
-        ]);
-
-        await refreshPostsOnly();
-      } catch {
-        button.disabled = false;
-        alert("Could not hide post.");
-      }
-    }
-
-    function showComposer() {
-      els.composerLockedPanel.classList.add("hidden");
-
-      if (canPost) {
-        els.composerPanel.classList.remove("hidden");
-        els.composerPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+        renderChips();
+        renderTopActions();
+        renderLockedActions();
+        setMsg(els.topMessage, "Join request sent.", "ok");
+        setMsg(els.lockedMessage, "Join request sent.", "ok");
         return;
       }
 
-      let text = "Join this community to post.";
-      const mode = community?.postingMode || "members";
+      await loadCurrentMembership();
 
-      if (["approved", "approved_authors", "authors"].includes(mode)) text = "Only approved authors can post in this community.";
-      if (["owner", "admin", "owner_only", "admins"].includes(mode)) text = "Only the owner or admin can post in this community.";
+      if (!userMember?.approved) {
+        try {
+          const createdAt = nowIso();
+          await insertWithFallback(T.members, [
+            {
+              community_id:communityId,
+              user_id:currentUser.id,
+              display_name:currentUserProfile?.displayName || "Member",
+              username:currentUserProfile?.username || "",
+              role:"member",
+              status:"approved",
+              joined_at:createdAt,
+              created_at:createdAt,
+              updated_at:createdAt
+            },
+            {
+              community_id:communityId,
+              user_id:currentUser.id,
+              role:"member",
+              status:"approved",
+              joined_at:createdAt,
+              created_at:createdAt
+            }
+          ], "community member");
+        } catch (err) {
+          if (!isDuplicateOrAlreadyError(err)) throw err;
+        }
+      }
 
-      els.composerLockedText.innerHTML = `<strong>Posting locked</strong> ${escapeHtml(text)}`;
-      els.composerLockedPanel.classList.remove("hidden");
-      els.composerLockedPanel.scrollIntoView({ behavior:"smooth", block:"start" });
-    }
+      userMember = {
+        communityId,
+        userId:currentUser.id,
+        role:"member",
+        status:"approved",
+        approved:true,
+        approvedAuthor:false,
+        joinedAt:nowIso()
+      };
 
-    async function uploadPostImage(file) {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `community-posts/${communityId}/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
-        cacheControl:"3600",
-        upsert:false
+      await createNotificationSafe(community.ownerId, {
+        type:"community_join",
+        title:"Community joined",
+        text:`${currentUserProfile?.displayName || "Someone"} joined ${community.name}.`
       });
+
+      try {
+        const stamp = String(Date.now());
+        localStorage.setItem("ownspace_communities_refresh", stamp);
+        localStorage.setItem("ownspace_nearby_refresh", stamp);
+      } catch {}
+
+      await refreshLight();
+      setMsg(els.topMessage, "Joined community.", "ok");
+    } catch (err) {
+      console.error("Community join failed:", err);
+      button.disabled = false;
+      button.textContent = oldText;
+
+      const friendly = isPermissionError(err)
+        ? "Join is blocked by Supabase RLS. Check insert policy for community_members or community_join_requests."
+        : (getErrorMessage(err) || (requestOnly ? "Could not send request." : "Could not join community."));
+
+      setMsg(els.topMessage, friendly, "err");
+      setMsg(els.lockedMessage, friendly, "err");
+    }
+  }
+
+  async function leaveCommunity(button) {
+    if (isOwner || !confirm("Leave this community?")) return;
+    button.disabled = true;
+
+    try {
+      const { error } = await supabase
+        .from(T.members)
+        .delete()
+        .eq("community_id", communityId)
+        .eq("user_id", currentUser.id);
 
       if (error) throw error;
 
-      const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      await refreshLight();
+      setMsg(els.topMessage, "Left community.", "ok");
+    } catch (err) {
+      button.disabled = false;
+      setMsg(els.topMessage, getErrorMessage(err) || "Could not leave community.", "err");
+    }
+  }
 
-      return { path, publicUrl:data?.publicUrl || "" };
+  async function hideCommunity(button) {
+    if (!isOwner && !isAdmin) return;
+    if (!confirm("Hide this community?")) return;
+
+    button.disabled = true;
+
+    try {
+      const { error } = await supabase
+        .from(T.communities)
+        .update({ hidden:true, updated_at:nowIso() })
+        .eq("id", communityId);
+
+      if (error) throw error;
+      window.location.href = "nearby-communities.html";
+    } catch (err) {
+      button.disabled = false;
+      setMsg(els.topMessage, getErrorMessage(err) || "Could not hide community.", "err");
+    }
+  }
+
+  async function togglePinPost(post, button) {
+    if (!isOwner && !isAdmin) return;
+    button.disabled = true;
+
+    try {
+      const next = !post.pinned;
+      const { error } = await supabase
+        .from(T.posts)
+        .update({ pinned:next, updated_at:nowIso() })
+        .eq("id", post.id);
+
+      if (error) throw error;
+      await refreshPostsOnly();
+    } catch (err) {
+      button.disabled = false;
+      alert(getErrorMessage(err) || "Could not update pin.");
+    }
+  }
+
+  async function hidePost(post, button) {
+    if (!isOwner && !isAdmin && post.authorId !== currentUser.id) return;
+    if (!confirm("Hide this post?")) return;
+
+    button.disabled = true;
+
+    try {
+      const { error } = await supabase
+        .from(T.posts)
+        .update({ hidden:true, updated_at:nowIso() })
+        .eq("id", post.id);
+
+      if (error) throw error;
+      await refreshPostsOnly();
+    } catch (err) {
+      button.disabled = false;
+      alert(getErrorMessage(err) || "Could not hide post.");
+    }
+  }
+
+  function showComposer() {
+    els.composerLockedPanel.classList.add("hidden");
+
+    if (canPost) {
+      els.composerPanel.classList.remove("hidden");
+      els.composerPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+      return;
     }
 
-    async function insertCommunityPost(payloadsByTable) {
-      let lastError = null;
+    let text = "Join this community to post.";
+    const mode = cleanKey(community?.postingMode || "members");
 
-      for (const table of POST_TABLES) {
-        const payloads = payloadsByTable[table] || payloadsByTable.default || [];
+    if (["approved", "approved_authors", "authors"].includes(mode)) text = "Only approved authors can post in this community.";
+    if (["owner", "admin", "owner_only", "admins"].includes(mode)) text = "Only the owner or admin can post in this community.";
 
-        for (const payload of payloads) {
-          try {
-            const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
+    els.composerLockedText.innerHTML = `<strong>Posting locked</strong> ${escapeHtml(text)}`;
+    els.composerLockedPanel.classList.remove("hidden");
+    els.composerLockedPanel.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
 
-            if (!error) return { table, row:data || null };
+  async function uploadPostImage(file) {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `community-posts/${communityId}/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-            lastError = error;
-          } catch (err) {
-            lastError = err;
-          }
-        }
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
+      cacheControl:"3600",
+      upsert:false
+    });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    return { path, publicUrl:data?.publicUrl || "" };
+  }
+
+  async function refreshPostsOnly() {
+    await loadCounts();
+    renderChips();
+    renderTopActions();
+    await loadPostsPage(true);
+    photosLoaded = false;
+  }
+
+  async function refreshLight() {
+    community = await loadCommunity();
+
+    if (!community || community.hidden) return showNotFound("Community not found or hidden.");
+
+    await Promise.all([
+      loadOwnerProfile(),
+      loadCurrentMembership(),
+      loadJoinRequestState(),
+      loadAdminState()
+    ]);
+
+    await loadApprovedAuthorState();
+    evaluateAccess();
+
+    if (isOwner || isAdmin) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+    else pendingJoinRequestCount = 0;
+
+    if (!canView) return renderLocked();
+
+    renderHero();
+    showMain();
+
+    await loadCounts();
+    renderChips();
+    renderTopActions();
+    await loadPostsPage(true);
+
+    if (aboutLoaded) loadAboutData().catch(err => logWarn("refresh about", err));
+    if (photosLoaded) loadPhotos().catch(err => logWarn("refresh photos", err));
+  }
+
+  function scheduleRefresh(delay = 450) {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => refreshLight().catch(err => logWarn("scheduled refresh", err)), delay);
+  }
+
+  function scheduleBadgeRefresh(delay = 350) {
+    clearTimeout(badgeRefreshTimer);
+    badgeRefreshTimer = setTimeout(() => updateInboxBadge().catch(err => logWarn("scheduled badge refresh", err)), delay);
+  }
+
+  function setupRealtime() {
+    clearRealtime();
+
+    const watched = [
+      { table:T.communities, filter:`id=eq.${communityId}` },
+      { table:T.members, filter:`community_id=eq.${communityId}` },
+      { table:T.posts, filter:`community_id=eq.${communityId}` },
+      { table:T.requests, filter:`community_id=eq.${communityId}` }
+    ];
+
+    watched.forEach(w => {
+      try {
+        const ch = supabase.channel(`ownspace-community-${w.table}-${communityId}`)
+          .on("postgres_changes", { event:"*", schema:"public", table:w.table, filter:w.filter }, () => scheduleRefresh())
+          .subscribe();
+
+        realtimeChannels.push(ch);
+      } catch (err) {
+        logWarn(`realtime ${w.table}`, err);
       }
+    });
 
-      throw lastError || new Error("Could not create community post.");
-    }
+    [T.messageRequests, T.chatThreads, T.chatMessages].forEach(table => {
+      try {
+        const ch = supabase.channel(`ownspace-community-badge-${table}-${communityId}`)
+          .on("postgres_changes", { event:"*", schema:"public", table }, () => scheduleBadgeRefresh())
+          .subscribe();
 
-    async function refreshPostsOnly() {
-      await loadCounts();
-      renderChips();
-      renderTopActions();
-      await loadPostsPage(true);
-      photosLoaded = false;
-    }
-
-    async function refreshLight() {
-      community = await findCommunity(communityId);
-
-      if (!community || community.hidden) return showNotFound("Community not found or hidden.");
-
-      await Promise.all([
-        loadOwnerProfile(),
-        loadCurrentMembership(),
-        loadJoinRequestState(),
-        loadAdminState()
-      ]);
-
-      await loadApprovedAuthorState();
-
-      evaluateAccess();
-
-      if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
-      else pendingJoinRequestCount = 0;
-
-      if (!canView) return renderLocked();
-
-      renderHero();
-      showMain();
-
-      await loadCounts();
-      renderChips();
-      renderTopActions();
-      await loadPostsPage(true);
-
-      if (aboutLoaded) loadAboutData().catch(() => {});
-      if (photosLoaded) loadPhotos().catch(() => {});
-    }
-
-    function scheduleRefresh(delay = 450) {
-      clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => refreshLight().catch(console.warn), delay);
-    }
-
-    function scheduleBadgeRefresh(delay = 350) {
-      clearTimeout(badgeRefreshTimer);
-      badgeRefreshTimer = setTimeout(() => updateInboxBadge().catch(() => {}), delay);
-    }
-
-    function setupRealtime() {
-      clearRealtime();
-
-      const watched = [
-        { table:"communities", filter:`id=eq.${communityId}` },
-        { table:"community_members", filter:`community_id=eq.${communityId}` },
-        { table:"posts", filter:`community_id=eq.${communityId}` },
-        { table:"community_posts", filter:`community_id=eq.${communityId}` },
-        { table:"community_join_requests", filter:`community_id=eq.${communityId}` }
-      ];
-
-      watched.forEach(w => {
-        try {
-          const ch = supabase.channel(`ownspace-community-${w.table}-${communityId}`)
-            .on("postgres_changes", { event:"*", schema:"public", table:w.table, filter:w.filter }, () => scheduleRefresh())
-            .subscribe();
-
-          realtimeChannels.push(ch);
-        } catch {}
-      });
-
-      ["message_requests", "chat_threads", "chat_messages"].forEach(table => {
-        try {
-          const ch = supabase.channel(`ownspace-community-badge-${table}-${communityId}`)
-            .on("postgres_changes", { event:"*", schema:"public", table }, () => scheduleBadgeRefresh())
-            .subscribe();
-
-          realtimeChannels.push(ch);
-        } catch {}
-      });
-    }
-
-    function clearRealtime() {
-      realtimeChannels.forEach(ch => {
-        try {
-          supabase.removeChannel(ch);
-        } catch {}
-      });
-
-      realtimeChannels = [];
-    }
-
-    function readThreadForBadge(raw, fallbackId = "") {
-      const d = raw || {};
-
-      return {
-        id: getField(d, ["id"], fallbackId) || fallbackId || "",
-        status: String(getField(d, ["status"], "accepted") || "accepted").toLowerCase(),
-        participantA: getField(d, ["participant_a", "participantA"]),
-        participantB: getField(d, ["participant_b", "participantB"]),
-        lastMessageAt: d.last_message_at ?? d.lastMessageAt ?? d.updated_at ?? d.updatedAt ?? d.created_at ?? d.createdAt ?? null
-      };
-    }
-
-    function readMessageForBadge(raw, fallbackId = "") {
-      const d = raw || {};
-      const seenValue = d.seen_at ?? d.read_at ?? d.seenAt ?? d.readAt ?? null;
-      const readValue = d.is_read ?? d.read ?? d.isRead ?? null;
-
-      return {
-        id: getField(d, ["id"], fallbackId) || fallbackId || "",
-        threadId: getField(d, ["thread_id", "threadId"]),
-        senderId: getField(d, ["sender_id", "senderId", "from_user_id", "fromUserId"]),
-        createdAt: d.created_at ?? d.createdAt ?? d.timestamp ?? null,
-        seenValue,
-        readValue,
-        hasSeenColumn:
-          Object.prototype.hasOwnProperty.call(d, "seen_at") ||
-          Object.prototype.hasOwnProperty.call(d, "read_at") ||
-          Object.prototype.hasOwnProperty.call(d, "seenAt") ||
-          Object.prototype.hasOwnProperty.call(d, "readAt"),
-        hasReadColumn:
-          Object.prototype.hasOwnProperty.call(d, "is_read") ||
-          Object.prototype.hasOwnProperty.call(d, "read") ||
-          Object.prototype.hasOwnProperty.call(d, "isRead")
-      };
-    }
-
-    function isInboxMessageUnreadForBadge(msg, uid) {
-      if (!msg || msg.senderId === uid) return false;
-
-      if (msg.hasReadColumn) {
-        if (msg.readValue === true) return false;
-        if (msg.readValue === false) return true;
+        realtimeChannels.push(ch);
+      } catch (err) {
+        logWarn(`badge realtime ${table}`, err);
       }
+    });
+  }
 
-      if (msg.hasSeenColumn) return !msg.seenValue;
+  function clearRealtime() {
+    realtimeChannels.forEach(ch => {
+      try { supabase.removeChannel(ch); } catch {}
+    });
+    realtimeChannels = [];
+  }
 
-      return false;
-    }
+  async function countPendingMessageRequests(uid) {
+    try {
+      const { count, error } = await supabase
+        .from(T.messageRequests)
+        .select("id", { count:"exact", head:true })
+        .eq("target_id", uid)
+        .eq("status", "pending");
 
-    async function countPendingMessageRequests(uid) {
-      const targetColumns = ["target_id", "to_user_id", "receiver_id", "recipient_id", "targetId", "toUserId", "receiverId", "recipientId"];
-      const statusColumns = ["status", "request_status", "requestStatus"];
-
-      for (const targetColumn of targetColumns) {
-        for (const statusColumn of statusColumns) {
-          try {
-            const { count, error } = await supabase
-              .from("message_requests")
-              .select("id", { count:"exact", head:true })
-              .eq(targetColumn, uid)
-              .eq(statusColumn, "pending");
-
-            if (!error) return count || 0;
-          } catch {}
-        }
-
-        try {
-          const { data, error } = await supabase
-            .from("message_requests")
-            .select("*")
-            .eq(targetColumn, uid);
-
-          if (!error) {
-            return (data || []).filter(row => {
-              const status = String(getField(row, statusColumns, "pending") || "pending").toLowerCase();
-              return status === "pending";
-            }).length;
-          }
-        } catch {}
-      }
-
+      if (error) throw error;
+      return count || 0;
+    } catch (err) {
+      logWarn("count pending message requests", err);
       return 0;
     }
+  }
 
-    async function loadInboxThreadsForBadge(uid) {
-      const attempts = [
-        ["participant_a", "participant_b"],
-        ["participantA", "participantB"]
-      ];
+  async function loadInboxThreadsForBadge(uid) {
+    try {
+      const { data, error } = await supabase
+        .from(T.chatThreads)
+        .select("*")
+        .or(`participant_a.eq.${uid},participant_b.eq.${uid}`);
 
-      for (const [colA, colB] of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from("chat_threads")
-            .select("*")
-            .or(`${colA}.eq.${uid},${colB}.eq.${uid}`);
+      if (error) throw error;
 
-          if (!error) {
-            return (data || [])
-              .map(row => readThreadForBadge(row, row.id || ""))
-              .filter(thread => thread.id)
-              .filter(thread => !thread.status || thread.status === "accepted");
-          }
-        } catch {}
-      }
-
+      return (data || [])
+        .map(row => ({
+          id:getField(row, ["id"]),
+          status:cleanKey(getField(row, ["status"], "accepted") || "accepted")
+        }))
+        .filter(thread => thread.id)
+        .filter(thread => !thread.status || thread.status === "accepted");
+    } catch (err) {
+      logWarn("load inbox threads badge", err);
       return [];
     }
+  }
 
-    async function fetchInboxMessagesForBadge(threadIds) {
-      if (!threadIds.length) return [];
+  async function countUnreadChatMessages(uid) {
+    const threads = await loadInboxThreadsForBadge(uid);
+    const threadIds = threads.map(thread => thread.id).filter(Boolean);
+    if (!threadIds.length) return 0;
 
-      const attempts = [
-        { threadColumn:"thread_id", orderColumn:"created_at" },
-        { threadColumn:"threadId", orderColumn:"createdAt" }
-      ];
+    try {
+      const { data, error } = await supabase
+        .from(T.chatMessages)
+        .select("id, thread_id, sender_id, created_at, seen_at, read_at, is_read")
+        .in("thread_id", threadIds)
+        .order("created_at", { ascending:true });
 
-      for (const attempt of attempts) {
-        try {
-          const { data, error } = await supabase
-            .from("chat_messages")
-            .select("*")
-            .in(attempt.threadColumn, threadIds)
-            .order(attempt.orderColumn, { ascending:true });
+      if (error) throw error;
 
-          if (!error) return (data || []).map(row => readMessageForBadge(row, row.id || ""));
-        } catch {}
-
-        try {
-          const { data, error } = await supabase
-            .from("chat_messages")
-            .select("*")
-            .in(attempt.threadColumn, threadIds);
-
-          if (!error) return (data || []).map(row => readMessageForBadge(row, row.id || ""));
-        } catch {}
-      }
-
-      return [];
-    }
-
-    async function countUnreadChatMessages(uid) {
-      const threads = await loadInboxThreadsForBadge(uid);
-      const threadIds = threads.map(thread => thread.id).filter(Boolean);
-
-      if (!threadIds.length) return 0;
-
-      const messages = await fetchInboxMessagesForBadge(threadIds);
-      const byThread = new Map();
-
-      messages.forEach(msg => {
-        if (!msg.threadId) return;
-        if (!byThread.has(msg.threadId)) byThread.set(msg.threadId, []);
-        byThread.get(msg.threadId).push(msg);
-      });
-
+      const messages = data || [];
       let total = 0;
 
-      threads.forEach(thread => {
-        const list = (byThread.get(thread.id) || []).sort((a, b) => toMillis(a.createdAt) - toMillis(b.createdAt));
+      const byThread = new Map();
+      messages.forEach(msg => {
+        if (!msg.thread_id) return;
+        if (!byThread.has(msg.thread_id)) byThread.set(msg.thread_id, []);
+        byThread.get(msg.thread_id).push(msg);
+      });
 
+      threads.forEach(thread => {
+        const list = byThread.get(thread.id) || [];
         if (!list.length) return;
 
-        const newest = [...list].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))[0];
-
-        if (newest?.senderId === uid) return;
+        const newest = [...list].sort((a, b) => toMillis(b.created_at) - toMillis(a.created_at))[0];
+        if (newest?.sender_id === uid) return;
 
         const lastOutgoingMs = list
-          .filter(msg => msg.senderId === uid)
-          .reduce((max, msg) => Math.max(max, toMillis(msg.createdAt)), 0);
+          .filter(msg => msg.sender_id === uid)
+          .reduce((max, msg) => Math.max(max, toMillis(msg.created_at)), 0);
 
-        const unreadCount = list.filter(msg => {
-          if (msg.senderId === uid) return false;
-          if (toMillis(msg.createdAt) <= lastOutgoingMs) return false;
-          return isInboxMessageUnreadForBadge(msg, uid);
+        total += list.filter(msg => {
+          if (msg.sender_id === uid) return false;
+          if (toMillis(msg.created_at) <= lastOutgoingMs) return false;
+          if (typeof msg.is_read === "boolean") return msg.is_read === false;
+          return !msg.seen_at && !msg.read_at;
         }).length;
-
-        total += unreadCount;
       });
 
       return total;
+    } catch (err) {
+      logWarn("count unread chat messages", err);
+      return 0;
     }
+  }
 
-    async function updateInboxBadge() {
-      if (!currentUser || !els.inboxBadge) return;
+  async function updateInboxBadge() {
+    if (!currentUser || !els.inboxBadge) return;
 
-      try {
-        const [requests, messages] = await Promise.all([
-          countPendingMessageRequests(currentUser.id),
-          countUnreadChatMessages(currentUser.id)
-        ]);
+    try {
+      const [requests, messages] = await Promise.all([
+        countPendingMessageRequests(currentUser.id),
+        countUnreadChatMessages(currentUser.id)
+      ]);
 
-        const total = Number(requests || 0) + Number(messages || 0);
+      const total = Number(requests || 0) + Number(messages || 0);
 
-        if (!total) {
-          els.inboxBadge.classList.add("hidden");
-        } else {
-          els.inboxBadge.textContent = total > 99 ? "99+" : String(total);
-          els.inboxBadge.classList.remove("hidden");
-        }
-      } catch {
+      if (!total) {
         els.inboxBadge.classList.add("hidden");
+      } else {
+        els.inboxBadge.textContent = total > 99 ? "99+" : String(total);
+        els.inboxBadge.classList.remove("hidden");
       }
+    } catch (err) {
+      logWarn("update inbox badge", err);
+      els.inboxBadge.classList.add("hidden");
     }
+  }
+
+  async function createCommunityPost({ title, text, type, audience, imageURL, imagePath }) {
+    const createdAt = nowIso();
+    const displayName = currentUserProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
+    const username = currentUserProfile?.username || "";
+
+    const fullPayload = {
+      community_id:communityId,
+      user_id:currentUser.id,
+      display_name:displayName,
+      username,
+      title:title || null,
+      text:text || null,
+      image_url:imageURL || null,
+      image_path:imagePath || null,
+      type:type || "post",
+      audience:audience || "community",
+      pinned:false,
+      featured:false,
+      hidden:false,
+      created_at:createdAt,
+      updated_at:createdAt
+    };
+
+    const simplePayload = {
+      community_id:communityId,
+      user_id:currentUser.id,
+      display_name:displayName,
+      username,
+      title:title || null,
+      text:text || null,
+      image_url:imageURL || null,
+      type:type || "post",
+      created_at:createdAt,
+      updated_at:createdAt
+    };
+
+    return insertWithFallback(T.posts, [fullPayload, simplePayload], "community post");
+  }
+
+  async function handlePostSubmit(e) {
+    e.preventDefault();
+
+    if (!canPost) {
+      setMsg(els.postMessage, "You cannot post in this community yet.", "err");
+      return;
+    }
+
+    const title = els.postTitleInput.value.trim();
+    const text = els.postTextInput.value.trim();
+    const type = els.postTypeInput.value || "post";
+    const audience = els.postAudienceInput.value || "community";
+    const imageFile = els.postImageFile.files?.[0] || null;
+
+    if (!title && !text && !imageFile) {
+      setMsg(els.postMessage, "Write something or add a photo first.", "err");
+      return;
+    }
+
+    els.submitPostBtn.disabled = true;
+    els.submitPostBtn.textContent = "Posting...";
+    setMsg(els.postMessage, "");
+
+    try {
+      let imageURL = "";
+      let imagePath = "";
+
+      if (imageFile) {
+        setMsg(els.postMessage, "Uploading photo...", "ok");
+        const uploaded = await uploadPostImage(imageFile);
+        imageURL = uploaded.publicUrl;
+        imagePath = uploaded.path;
+      }
+
+      const row = await createCommunityPost({ title, text, type, audience, imageURL, imagePath });
+
+      if (community.ownerId && community.ownerId !== currentUser.id) {
+        await createNotificationSafe(community.ownerId, {
+          type:"community_post",
+          title:"New community post",
+          text:`${currentUserProfile?.displayName || "Someone"} posted in ${community.name}.`,
+          post_id:row?.id || null,
+          source:T.posts
+        });
+      }
+
+      els.postTitleInput.value = "";
+      els.postTextInput.value = "";
+      els.postImageFile.value = "";
+      els.previewWrap.classList.remove("show");
+      els.previewImg.removeAttribute("src");
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = "";
+      }
+
+      await refreshPostsOnly();
+      setMsg(els.postMessage, "Posted.", "ok");
+    } catch (err) {
+      console.error("Create post failed:", err);
+      setMsg(els.postMessage, getErrorMessage(err) || "Could not post.", "err");
+    }
+
+    els.submitPostBtn.disabled = false;
+    els.submitPostBtn.textContent = "Post";
+  }
+
+  function bindEvents() {
+    window.addEventListener("storage", e => {
+      if (e.key === "osTheme" || e.key === "bwTheme") setTheme();
+
+      if (["ownspace_badges_refresh", "ownspace_inbox_refresh", "ownspace_chat_read_refresh"].includes(e.key)) {
+        scheduleBadgeRefresh(120);
+      }
+
+      if (["ownspace_communities_refresh", "ownspace_nearby_refresh", "ownspace_join_requests_refresh"].includes(e.key)) {
+        scheduleRefresh(180);
+      }
+    });
 
     els.backBtn.addEventListener("click", () => {
       rememberNearbyTab();
-
       if (document.referrer) history.back();
       else location.href = "nearby-communities.html";
     });
@@ -3332,8 +3025,8 @@
         await refreshLight();
         await updateInboxBadge();
         setMsg(els.topMessage, "Community refreshed.", "ok");
-      } catch {
-        setMsg(els.topMessage, "Could not refresh community.", "err");
+      } catch (err) {
+        setMsg(els.topMessage, getErrorMessage(err) || "Could not refresh community.", "err");
       }
 
       els.refreshBtn.disabled = false;
@@ -3353,7 +3046,7 @@
       els.composerLockedPanel.classList.add("hidden");
     });
 
-    els.loadMorePostsBtn.addEventListener("click", () => loadMorePosts().catch(console.warn));
+    els.loadMorePostsBtn.addEventListener("click", () => loadMorePosts().catch(err => logWarn("load more posts", err)));
 
     tabButtons.forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -3371,7 +3064,6 @@
       const file = els.postImageFile.files?.[0] || null;
 
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-
       previewUrl = "";
 
       if (!file) {
@@ -3385,231 +3077,10 @@
       els.previewWrap.classList.add("show");
     });
 
-    els.postForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    els.postForm.addEventListener("submit", handlePostSubmit);
 
-      if (!canPost) {
-        setMsg(els.postMessage, "You cannot post in this community yet.", "err");
-        return;
-      }
-
-      const title = els.postTitleInput.value.trim();
-      const text = els.postTextInput.value.trim();
-      const type = els.postTypeInput.value || "post";
-      const audience = els.postAudienceInput.value || "community";
-      const imageFile = els.postImageFile.files?.[0] || null;
-
-      if (!title && !text && !imageFile) {
-        setMsg(els.postMessage, "Write something or add a photo first.", "err");
-        return;
-      }
-
-      els.submitPostBtn.disabled = true;
-      els.submitPostBtn.textContent = "Posting...";
-      setMsg(els.postMessage, "");
-
-      try {
-        let imageURL = "";
-        let imagePath = "";
-
-        if (imageFile) {
-          setMsg(els.postMessage, "Uploading photo...", "ok");
-
-          const uploaded = await uploadPostImage(imageFile);
-
-          imageURL = uploaded.publicUrl;
-          imagePath = uploaded.path;
-        }
-
-        const displayName = currentUserProfile?.displayName || currentUser.user_metadata?.display_name || "Member";
-        const username = currentUserProfile?.username || "";
-        const createdAt = nowIso();
-
-        const commonSnake = {
-          community_id:communityId,
-          group_id:communityId,
-          user_id:currentUser.id,
-          author_id:currentUser.id,
-          created_by:currentUser.id,
-          author_name:displayName,
-          display_name:displayName,
-          username,
-          title,
-          text,
-          body:text,
-          content:text,
-          caption:text,
-          type,
-          post_type:type,
-          audience,
-          image_url:imageURL,
-          media_url:imageURL,
-          image_path:imagePath,
-          pinned:false,
-          featured:false,
-          hidden:false,
-          soft_deleted:false,
-          created_at:createdAt,
-          updated_at:createdAt
-        };
-
-        const commonCamel = {
-          communityId:communityId,
-          groupId:communityId,
-          userId:currentUser.id,
-          authorId:currentUser.id,
-          createdBy:currentUser.id,
-          authorName:displayName,
-          displayName,
-          username,
-          title,
-          text,
-          body:text,
-          content:text,
-          caption:text,
-          type,
-          postType:type,
-          audience,
-          imageURL,
-          mediaUrl:imageURL,
-          imagePath,
-          pinned:false,
-          featured:false,
-          hidden:false,
-          softDeleted:false,
-          createdAt:createdAt,
-          updatedAt:createdAt
-        };
-
-        await insertCommunityPost({
-          community_posts: [
-            commonSnake,
-            commonCamel,
-            {
-              community_id:communityId,
-              user_id:currentUser.id,
-              display_name:displayName,
-              username,
-              title,
-              text,
-              image_url:imageURL,
-              type,
-              created_at:createdAt
-            }
-          ],
-          posts: [
-            commonSnake,
-            commonCamel,
-            {
-              community_id:communityId,
-              user_id:currentUser.id,
-              display_name:displayName,
-              username,
-              title,
-              text,
-              image_url:imageURL,
-              type,
-              created_at:createdAt
-            }
-          ]
-        });
-
-        await createNotificationSafe(community.ownerId, {
-          type:"community_post",
-          title:"New community post",
-          text:`${displayName} posted in ${community.name}.`
-        });
-
-        els.postTitleInput.value = "";
-        els.postTextInput.value = "";
-        els.postImageFile.value = "";
-        els.previewWrap.classList.remove("show");
-        els.previewImg.removeAttribute("src");
-
-        await refreshPostsOnly();
-
-        setMsg(els.postMessage, "Posted.", "ok");
-      } catch (err) {
-        console.error("Create post failed:", err);
-        setMsg(els.postMessage, err?.message || "Could not post.", "err");
-      }
-
-      els.submitPostBtn.disabled = false;
-      els.submitPostBtn.textContent = "Post";
-    });
-
-    async function init() {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data?.user) {
-        location.href = "login.html";
-        return;
-      }
-
-      currentUser = data.user;
-
-      const params = new URLSearchParams(location.search);
-      communityId = params.get("communityId") || params.get("id") || "";
-
-      if (!communityId) return showNotFound("No community selected.");
-
-      try {
-        await detectPostLikesTable();
-
-        community = await findCommunity(communityId);
-
-        if (!community || community.hidden) return showNotFound("Community not found or hidden.");
-
-        await Promise.all([
-          loadCurrentUserProfile(),
-          loadOwnerProfile(),
-          loadCurrentMembership(),
-          loadJoinRequestState()
-        ]);
-
-        await Promise.all([
-          loadApprovedAuthorState(),
-          loadAdminState()
-        ]);
-
-        evaluateAccess();
-
-        if (isOwner) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
-        else pendingJoinRequestCount = 0;
-
-        if (!canView) {
-          await updateInboxBadge();
-          return renderLocked();
-        }
-
-        await loadCounts();
-        renderHero();
-        renderAboutBase();
-        showMain();
-
-        await loadPostsPage(true);
-
-        setupRealtime();
-
-        updateInboxBadge().catch(() => els.inboxBadge?.classList.add("hidden"));
-      } catch (err) {
-        console.error("Community page failed:", err);
-        showNotFound("Could not load community. Check Supabase permissions or community ID.");
-      }
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session?.user) location.href = "login.html";
-      });
-    }
-
-    window.addEventListener("pageshow", () => {
-      scheduleBadgeRefresh(120);
-    });
-
-    window.addEventListener("focus", () => {
-      scheduleBadgeRefresh(180);
-    });
-
+    window.addEventListener("pageshow", () => scheduleBadgeRefresh(120));
+    window.addEventListener("focus", () => scheduleBadgeRefresh(180));
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) scheduleBadgeRefresh(160);
     });
@@ -3622,40 +3093,80 @@
       clearTimeout(refreshTimer);
       clearTimeout(badgeRefreshTimer);
       clearRealtime();
-
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     });
+  }
 
-    init();
+  async function init() {
+    rememberNearbyTab();
+    setTheme();
+    bindEvents();
 
-    /*
-      OWNSPACE COMMUNITY PAGE UPDATE — BASED ON YESTERDAY WORKING CODE:
+    const { data, error } = await supabase.auth.getUser();
 
-      IMPORTANT FIXES KEPT MINIMAL:
-      - Kept yesterday working UI/layout and existing community/post logic.
-      - Fixed getBool so text "false" does not become true.
-      - Removed profile/user_metadata admin fallback from this page.
-      - Admin is now only from admins table or app_metadata role.
-      - Owner comparison is string-safe.
-      - Join/request handles duplicate request/member rows without breaking the page.
-      - target_user_id now uses null instead of empty string for UUID safety.
+    if (error || !data?.user) {
+      location.href = "login.html";
+      return;
+    }
 
-      ADDED:
-      - Creator-only Requests link aligned inside existing top action row.
-      - It links to community-requests.html?communityId=...
-      - Shows pending count as Requests (1), Requests (2), etc.
-      - Pending request chip appears only for creator when count is above 0.
-      - No new floating button or extra separate section added.
+    currentUser = data.user;
 
-      KEPT:
-      - Compact Nearby-style topbar, hero, tabs and bottom nav.
-      - community_posts + posts fallback.
-      - post.html links with source.
-      - source-aware like/comment/share/report/pin/hide logic.
-      - private/request/join/community owner/admin logic.
-      - inbox badge still counts only pending message_requests + unread incoming chat_messages.
-      - realtime community, member, post, request and inbox badge refresh.
-    */
-  </script>
+    const params = new URLSearchParams(location.search);
+    communityId = params.get("communityId") || params.get("id") || "";
+
+    if (!communityId) {
+      showNotFound("No community selected.");
+      return;
+    }
+
+    try {
+      await detectPostLikesTable();
+      await loadCurrentUserProfile();
+
+      community = await loadCommunity();
+      if (!community || community.hidden) {
+        showNotFound("Community not found or hidden.");
+        return;
+      }
+
+      await Promise.all([
+        loadOwnerProfile(),
+        loadCurrentMembership(),
+        loadJoinRequestState(),
+        loadAdminState()
+      ]);
+
+      await loadApprovedAuthorState();
+      evaluateAccess();
+
+      if (isOwner || isAdmin) pendingJoinRequestCount = await countPendingJoinRequestsSafe();
+      else pendingJoinRequestCount = 0;
+
+      if (!canView) {
+        await updateInboxBadge();
+        renderLocked();
+        setupRealtime();
+        return;
+      }
+
+      await loadCounts();
+      renderHero();
+      renderAboutBase();
+      showMain();
+      await loadPostsPage(true);
+      setupRealtime();
+      updateInboxBadge().catch(err => logWarn("initial inbox badge", err));
+    } catch (err) {
+      console.error("Community page failed:", err);
+      showNotFound(getErrorMessage(err) || "Could not load community. Check Supabase permissions or community ID.");
+    }
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) location.href = "login.html";
+    });
+  }
+
+  init();
+</script>
 </body>
 </html>
