@@ -1380,7 +1380,18 @@
       try {
         const eventId = generateId();
         const createdAt = nowIso();
+
+        /*
+          DATE/TIME FIX:
+          - event_at is the main datetime field.
+          - start_at is saved as a backup datetime field for pages that read start_at.
+          - event_date and event_time are saved for pages that display split date/time.
+          - date and time are kept for old pages.
+        */
         const eventDateTimeIso = formData.eventDate.toISOString();
+        const eventDateOnly = formData.date || null;
+        const eventTimeOnly = formData.time || null;
+
         const creatorName = currentProfile.displayName || currentUser.user_metadata?.display_name || currentUser.email || "Member";
         const creatorUsername = currentProfile.username || "";
         let uploadedImageUrl = "";
@@ -1427,6 +1438,9 @@
           date: formData.date,
           time: formData.time,
           event_at: eventDateTimeIso,
+          start_at: eventDateTimeIso,
+          event_date: eventDateOnly,
+          event_time: eventTimeOnly,
           event_datetime: eventDateTimeIso,
 
           image_url: uploadedImageUrl,
@@ -1479,6 +1493,9 @@
           date: formData.date,
           time: formData.time,
           event_at: eventDateTimeIso,
+          start_at: eventDateTimeIso,
+          event_date: eventDateOnly,
+          event_time: eventTimeOnly,
 
           image_url: uploadedImageUrl,
           photo_url: uploadedImageUrl,
@@ -1513,6 +1530,9 @@
           province: formData.province,
           country: formData.country,
           event_at: eventDateTimeIso,
+          start_at: eventDateTimeIso,
+          event_date: eventDateOnly,
+          event_time: eventTimeOnly,
           image_url: uploadedImageUrl,
           creator_id: currentUser.id,
           created_by: currentUser.id,
@@ -1546,6 +1566,9 @@
           date: formData.date,
           time: formData.time,
           eventAt: eventDateTimeIso,
+          startAt: eventDateTimeIso,
+          eventDate: eventDateOnly,
+          eventTime: eventTimeOnly,
           eventDatetime: eventDateTimeIso,
 
           imageURL: uploadedImageUrl,
@@ -1592,6 +1615,9 @@
           date: formData.date,
           time: formData.time,
           event_at: eventDateTimeIso,
+          start_at: eventDateTimeIso,
+          event_date: eventDateOnly,
+          event_time: eventTimeOnly,
           image_url: uploadedImageUrl,
           lat: formData.lat,
           lng: formData.lng,
@@ -1603,12 +1629,49 @@
           updated_at: createdAt
         };
 
+        /*
+          Legacy fallback:
+          This keeps create-event working even if you have not added start_at / event_date / event_time columns yet.
+          It still saves date, time, and event_at like your old page did.
+        */
+        const legacyDatePayload = {
+          id: eventId,
+          title: formData.title,
+          description: formData.description,
+          visibility: formData.visibility,
+
+          city: formData.city,
+          province: formData.province,
+          country: formData.country,
+          venue: formData.venue,
+          address: formData.address,
+
+          date: formData.date,
+          time: formData.time,
+          event_at: eventDateTimeIso,
+
+          image_url: uploadedImageUrl,
+
+          lat: formData.lat,
+          lng: formData.lng,
+
+          creator_id: currentUser.id,
+          created_by: currentUser.id,
+          creator_name: creatorName,
+
+          status: "active",
+          hidden: false,
+          created_at: createdAt,
+          updated_at: createdAt
+        };
+
         const createdEvent = await insertEventWithFallback([
           richPayload,
           compatiblePayload,
           minimalPayload,
           camelPayload,
-          noIdPayload
+          noIdPayload,
+          legacyDatePayload
         ]);
 
         const finalEventId = createdEvent.id || eventId;
@@ -2004,28 +2067,20 @@
     initPage();
 
     /*
-      OWNSPACE CREATE EVENT COMPACT UPDATE:
+      OWNSPACE CREATE EVENT â DATE/TIME FIX ONLY:
 
-      UPDATED TO MATCH create-community.html:
-      - Same compact topbar, 34px buttons, 14px radius.
-      - Same small panel, section, form, nav sizes.
-      - Same bottom nav sizing and inbox badge style.
-      - Same Nearby tab memory pattern, but set to events.
-      - Same tight mobile layout.
+      CHANGED:
+      - Saves event_at as the main datetime.
+      - Saves start_at as a backup datetime field.
+      - Saves event_date and event_time as split fields.
+      - Keeps old date and time fields for older pages.
+      - Added legacyDatePayload fallback so creation can still work even before new columns exist.
 
-      KEPT / FIXED:
-      - Profile location button.
-      - GPS coordinates button.
-      - City/province/country required.
-      - Date/time required and no past-date creation.
-      - Image upload to Supabase Storage bucket: media.
-      - Supabase insert fallbacks for events and event_members.
-      - Host member row added after event creation.
-      - Soft free_events_used counter update where column exists.
-      - Blocks banned/suspended/warned/very-low-trust accounts from creating events.
-      - Correct inbox badge logic:
-        pending message_requests + truly unread incoming chat_messages only.
-      - Does not count general notifications.
+      NOT CHANGED:
+      - No private-event join logic changed.
+      - No event_members policy changed.
+      - No private/public rules changed.
+      - UI kept the same.
     */
   </script>
 </body>
