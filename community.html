@@ -2863,6 +2863,218 @@
       throw lastError || new Error(`Could not insert into ${table}.`);
     }
 
+
+
+    function getErrorMessage(err) {
+      return String(err?.message || err?.details || err?.hint || err || "").trim();
+    }
+
+    function isDuplicateOrAlreadyError(err) {
+      const msg = getErrorMessage(err).toLowerCase();
+      return msg.includes("duplicate") || msg.includes("already") || msg.includes("unique") || msg.includes("23505");
+    }
+
+    function isPermissionError(err) {
+      const msg = getErrorMessage(err).toLowerCase();
+      return msg.includes("permission") || msg.includes("policy") || msg.includes("rls") || msg.includes("row-level") || msg.includes("violates row-level security") || msg.includes("not authorized") || msg.includes("42501");
+    }
+
+    async function callCommunityRpcFallback(rpcNames, argVariants) {
+      let lastError = null;
+
+      for (const fnName of rpcNames) {
+        for (const args of argVariants) {
+          try {
+            const { data, error } = await supabase.rpc(fnName, args);
+
+            if (!error) return data ?? null;
+
+            lastError = error;
+
+            const msg = getErrorMessage(error).toLowerCase();
+
+            if (
+              msg.includes("function") ||
+              msg.includes("schema cache") ||
+              msg.includes("not found") ||
+              msg.includes("does not exist") ||
+              msg.includes("parameter") ||
+              msg.includes("argument")
+            ) {
+              continue;
+            }
+          } catch (err) {
+            lastError = err;
+          }
+        }
+      }
+
+      throw lastError || new Error("No community join function available.");
+    }
+
+    async function insertIntoTablesWithPayloadFallback(attempts) {
+      let lastError = null;
+
+      for (const attempt of attempts) {
+        for (const payload of attempt.payloads) {
+          try {
+            const { data, error } = await supabase
+              .from(attempt.table)
+              .insert(payload)
+              .select()
+              .maybeSingle();
+
+            if (!error) return data || null;
+
+            lastError = error;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+      }
+
+      throw lastError || new Error("Could not save community action.");
+    }
+
+    async function joinPublicCommunitySafe() {
+      await loadCurrentMembership();
+
+      if (userMember?.approved) return { already:true };
+
+      const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || "Member";
+      const username = currentUserProfile?.username || "";
+      const createdAt = nowIso();
+
+      try {
+        await callCommunityRpcFallback(
+          [
+            "join_community",
+            "join_public_community",
+            "community_join",
+            "community_join_public",
+            "toggle_community_membership"
+          ],
+          [
+            { p_community_id:communityId },
+            { community_id:communityId },
+            { communityId:communityId },
+            { p_id:communityId },
+            { id:communityId }
+          ]
+        );
+
+        return { rpc:true };
+      } catch (rpcErr) {
+        if (isPermissionError(rpcErr)) throw rpcErr;
+      }
+
+      try {
+        return await insertIntoTablesWithPayloadFallback([
+          {
+            table:"community_members",
+            payloads:[
+              { community_id:communityId, user_id:currentUser.id, display_name:displayName, username, role:"member", status:"approved", joined_at:createdAt, created_at:createdAt, updated_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, role:"member", status:"approved", joined_at:createdAt, created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, role:"member", status:"approved", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"approved" },
+              { community_id:communityId, user_id:currentUser.id },
+              { communityId:communityId, userId:currentUser.id, displayName, username, role:"member", status:"approved", joinedAt:createdAt, createdAt:createdAt, updatedAt:createdAt },
+              { communityId:communityId, userId:currentUser.id, role:"member", status:"approved" }
+            ]
+          },
+          {
+            table:"communities_members",
+            payloads:[
+              { community_id:communityId, user_id:currentUser.id, role:"member", status:"approved", joined_at:createdAt, created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"approved" },
+              { community_id:communityId, user_id:currentUser.id }
+            ]
+          },
+          {
+            table:"communityMembers",
+            payloads:[
+              { communityId:communityId, userId:currentUser.id, role:"member", status:"approved", joinedAt:createdAt, createdAt:createdAt },
+              { communityId:communityId, userId:currentUser.id, status:"approved" },
+              { communityId:communityId, userId:currentUser.id }
+            ]
+          }
+        ]);
+      } catch (err) {
+        if (isDuplicateOrAlreadyError(err)) return { already:true };
+        throw err;
+      }
+    }
+
+    async function requestToJoinCommunitySafe() {
+      await loadJoinRequestState();
+
+      if (joinRequestPending) return { already:true };
+
+      const createdAt = nowIso();
+      const displayName = currentUserProfile?.displayName || currentUser?.user_metadata?.display_name || "Member";
+      const username = currentUserProfile?.username || "";
+
+      try {
+        await callCommunityRpcFallback(
+          [
+            "request_join_community",
+            "request_to_join_community",
+            "create_community_join_request",
+            "community_request_join",
+            "join_private_community"
+          ],
+          [
+            { p_community_id:communityId },
+            { community_id:communityId },
+            { communityId:communityId },
+            { p_id:communityId },
+            { id:communityId }
+          ]
+        );
+
+        return { rpc:true };
+      } catch (rpcErr) {
+        if (isPermissionError(rpcErr)) throw rpcErr;
+      }
+
+      try {
+        return await insertIntoTablesWithPayloadFallback([
+          {
+            table:"community_join_requests",
+            payloads:[
+              { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || null, display_name:displayName, username, status:"pending", created_at:createdAt, updated_at:createdAt },
+              { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || null, status:"pending", created_at:createdAt, updated_at:createdAt },
+              { community_id:communityId, requester_id:currentUser.id, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending" },
+              { communityId:communityId, requesterId:currentUser.id, targetUserId:community.ownerId || null, displayName, username, status:"pending", createdAt:createdAt, updatedAt:createdAt },
+              { communityId:communityId, requesterId:currentUser.id, status:"pending", createdAt:createdAt },
+              { communityId:communityId, userId:currentUser.id, status:"pending", createdAt:createdAt }
+            ]
+          },
+          {
+            table:"community_requests",
+            payloads:[
+              { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || null, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending" }
+            ]
+          },
+          {
+            table:"join_requests",
+            payloads:[
+              { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || null, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending", created_at:createdAt },
+              { community_id:communityId, user_id:currentUser.id, status:"pending" }
+            ]
+          }
+        ]);
+      } catch (err) {
+        if (isDuplicateOrAlreadyError(err)) return { already:true };
+        throw err;
+      }
+    }
+
     async function updateWithFallback(table, id, payloads) {
       let lastError = null;
 
@@ -2934,20 +3146,13 @@
       setMsg(els.topMessage, "");
       setMsg(els.lockedMessage, "");
 
-      try {
-        const requestOnly = forceRequest || isPrivateCommunityPrivacy(community.privacy);
+      const oldText = button.textContent;
+      const requestOnly = forceRequest || isPrivateCommunityPrivacy(community.privacy);
+      button.textContent = requestOnly ? "Sending..." : "Joining...";
 
+      try {
         if (requestOnly) {
-          try {
-            await insertWithFallback("community_join_requests", [
-              { community_id:communityId, requester_id:currentUser.id, target_user_id:community.ownerId || "", status:"pending", created_at:nowIso(), updated_at:nowIso() },
-              { community_id:communityId, user_id:currentUser.id, status:"pending", created_at:nowIso() },
-              { communityId:communityId, requesterId:currentUser.id, targetUserId:community.ownerId || "", status:"pending", createdAt:nowIso(), updatedAt:nowIso() }
-            ]);
-          } catch (err) {
-            const msg = String(err?.message || "").toLowerCase();
-            if (!msg.includes("duplicate") && !msg.includes("already")) throw err;
-          }
+          await requestToJoinCommunitySafe();
 
           joinRequestPending = true;
 
@@ -2972,11 +3177,17 @@
           return;
         }
 
-        await insertWithFallback("community_members", [
-          { community_id:communityId, user_id:currentUser.id, display_name:currentUserProfile?.displayName || "Member", username:currentUserProfile?.username || "", role:"member", status:"approved", joined_at:nowIso(), created_at:nowIso(), updated_at:nowIso() },
-          { communityId:communityId, userId:currentUser.id, displayName:currentUserProfile?.displayName || "Member", username:currentUserProfile?.username || "", role:"member", status:"approved", joinedAt:nowIso(), createdAt:nowIso(), updatedAt:nowIso() },
-          { community_id:communityId, user_id:currentUser.id, role:"member", status:"approved", joined_at:nowIso() }
-        ]);
+        await joinPublicCommunitySafe();
+
+        userMember = {
+          communityId,
+          userId:currentUser.id,
+          role:"member",
+          status:"approved",
+          approved:true,
+          approvedAuthor:false,
+          joinedAt:nowIso()
+        };
 
         await createNotificationSafe(community.ownerId, {
           type:"community_join",
@@ -2984,13 +3195,27 @@
           text:`${currentUserProfile?.displayName || "Someone"} joined ${community.name}.`
         });
 
+        try {
+          const stamp = String(Date.now());
+          localStorage.setItem("ownspace_communities_refresh", stamp);
+          localStorage.setItem("ownspace_nearby_refresh", stamp);
+        } catch {}
+
         await refreshLight();
 
         setMsg(els.topMessage, "Joined community.", "ok");
       } catch (err) {
+        console.error("Community join failed:", err);
         button.disabled = false;
-        setMsg(els.topMessage, err?.message || "Could not join community.", "err");
-        setMsg(els.lockedMessage, err?.message || "Could not send request.", "err");
+        button.textContent = oldText;
+
+        const msg = getErrorMessage(err);
+        const friendly = isPermissionError(err)
+          ? "Join is blocked by Supabase RLS/policy. Run the community_members / join_requests insert policy SQL."
+          : (msg || (requestOnly ? "Could not send join request." : "Could not join community."));
+
+        setMsg(els.topMessage, friendly, "err");
+        setMsg(els.lockedMessage, friendly, "err");
       }
     }
 
